@@ -7,7 +7,7 @@ import type { TopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 export function buildOverviewPayload(input: {
   raidTop10: OverviewPayload['raidTop10']
   dungeonTop10: OverviewPayload['dungeonTop10']
-  clanTop5: OverviewPayload['clanTop5']
+  guardiansTop3: OverviewPayload['guardiansTop3']
   recentRuns: OverviewPayload['recentRuns']
   lookingForGroup: OverviewPayload['lookingForGroup']
   trendingBuilds: OverviewPayload['trendingBuilds']
@@ -23,7 +23,8 @@ export function buildOverviewPayload(input: {
   return {
     raidTop10: input.raidTop10,
     dungeonTop10: input.dungeonTop10,
-    clanTop5: input.clanTop5,
+    guardiansTop3: input.guardiansTop3,
+    clanTop5: input.guardiansTop3,
     recentRuns: input.recentRuns,
     weeklyReset: {
       resetAt: weekly.resetAt,

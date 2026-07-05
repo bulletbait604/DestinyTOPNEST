@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 const CATEGORY_LABELS: Record<string, string> = {
   raid: 'Raid leaders',
   dungeon: 'Dungeon leaders',
-  full_clan_team: 'Full clan team',
+  top_guardians: 'Top Guardians (Commanders)',
 }
 
 export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
@@ -62,7 +62,7 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
   const grouped = {
     raid: hallOfFame.filter((w) => w.category === 'raid'),
     dungeon: hallOfFame.filter((w) => w.category === 'dungeon'),
-    full_clan_team: hallOfFame.filter((w) => w.category === 'full_clan_team'),
+    top_guardians: hallOfFame.filter((w) => w.category === 'top_guardians'),
   }
 
   return (
@@ -188,12 +188,15 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
           </ul>
         </GlassCard>
         <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Full clan team" darkMode={darkMode} />
+          <SectionTitle title="Top Guardians (Commanders)" darkMode={darkMode} />
           <ul className={cn('text-xs space-y-1', t.muted)}>
-            <li>1st: {rules.fullClanTeam.first}</li>
-            <li>2nd: {rules.fullClanTeam.second}</li>
-            <li>3rd: {rules.fullClanTeam.third}</li>
+            <li>1st Commander: {rules.topGuardians.first}</li>
+            <li>2nd Commander: {rules.topGuardians.second}</li>
+            <li>3rd Commander: {rules.topGuardians.third}</li>
           </ul>
+          <p className={cn('text-[11px] mt-2', t.caption)}>
+            Earn points by voting MVP in Previous Activities (+1 you, +3 them).
+          </p>
         </GlassCard>
       </div>
 
@@ -203,6 +206,7 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
         <ul className={cn('text-xs mt-3 space-y-1 list-disc list-inside', t.muted)}>
           <li>Points only for verified full completions</li>
           <li>2 pts per clan member · 5 pts per rando (raid max 2 randos, dungeon max 1)</li>
+          <li>MVP votes: +1 pt for voting, +3 pts for the Guardian you pick (Top Guardians board)</li>
           <li>Checkpoint runs tracked but not scored unless admin approved</li>
           <li>Suspicious runs blocked until review (score 70+)</li>
         </ul>

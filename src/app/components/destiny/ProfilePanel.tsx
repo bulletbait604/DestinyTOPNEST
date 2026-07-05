@@ -10,6 +10,7 @@ import StatCardEditor from '@/app/components/destiny/StatCardEditor'
 import FireteamReviewSection from '@/app/components/destiny/FireteamReviewSection'
 import ReputationSummarySection from '@/app/components/destiny/ReputationSummarySection'
 import ProfileLoadoutsSection from '@/app/components/destiny/ProfileLoadoutsSection'
+import PreviousActivitiesSection from '@/app/components/destiny/PreviousActivitiesSection'
 import {
   GlassCard,
   LoadingBlock,
@@ -22,7 +23,7 @@ import { DEFAULT_PROFILE_FLEX_STATS } from '@/lib/destiny/profileFlex'
 import { useBungieLink } from '@/hooks/useBungieLink'
 import { cn } from '@/lib/utils'
 
-type ProfileView = 'guardian' | 'loadouts'
+type ProfileView = 'guardian' | 'activities' | 'loadouts'
 type LoadoutSection = 'mine' | 'community' | 'builder'
 
 interface Props {
@@ -114,11 +115,14 @@ export default function ProfilePanel({
         onChange={setView}
         options={[
           { value: 'guardian', label: 'Guardian' },
+          { value: 'activities', label: 'Previous Activities' },
           { value: 'loadouts', label: 'Loadouts' },
         ]}
       />
 
-      {view === 'loadouts' ? (
+      {view === 'activities' ? (
+        <PreviousActivitiesSection darkMode={darkMode} />
+      ) : view === 'loadouts' ? (
         <ProfileLoadoutsSection darkMode={darkMode} initialSection={initialLoadoutSection} />
       ) : (
         <>
@@ -176,7 +180,7 @@ export default function ProfilePanel({
             {[
               { label: 'Raid pts', value: profile.raidPoints },
               { label: 'Dungeon pts', value: profile.dungeonPoints },
-              { label: 'Clan team pts', value: profile.fullClanPoints },
+              { label: 'Guardian pts', value: profile.guardianPoints ?? profile.fullClanPoints ?? 0 },
               { label: 'Verified clears', value: profile.verifiedClears },
             ].map((stat) => (
               <div key={stat.label} className="d2-profile-stat-tile">

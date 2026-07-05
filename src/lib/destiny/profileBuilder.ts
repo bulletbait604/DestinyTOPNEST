@@ -17,6 +17,7 @@ export function emptyPlayerProfile(userId: string): PlayerProfile {
     platform: 'steam',
     raidPoints: 0,
     dungeonPoints: 0,
+    guardianPoints: 0,
     fullClanPoints: 0,
     verifiedClears: 0,
     reputationScore: 0,
@@ -37,6 +38,7 @@ export function buildPlayerProfileFromStored(
     reviews?: ReputationReview[]
     trustReviews?: TrustReview[]
     seasonLeaderboardEntries?: LeaderboardEntry[]
+    guardianPoints?: number
     displayEmblem?: ResolvedEmblem | null
     characters?: CharacterSummary[]
   }
@@ -51,6 +53,7 @@ export function buildPlayerProfileFromStored(
   const fullClanPoints = verified
     .filter((r) => r.isFullClanTeam)
     .reduce((s, r) => s + (r.pointsAwarded ?? 0), 0)
+  const guardianPoints = options?.guardianPoints ?? 0
 
   const topCompletions = [...verified]
     .filter((r) => r.durationSeconds > 0)
@@ -77,8 +80,8 @@ export function buildPlayerProfileFromStored(
   const reviews = options?.reviews ?? []
   const reputationScore = computeReputationScore(reviews)
   const badges = reputationBadges(reviews, verified.length)
-  if (fullClanPoints > 0 && !badges.includes('Clan team scorer')) {
-    badges.push('Clan team scorer')
+  if (guardianPoints > 0 && !badges.includes('Top Guardian')) {
+    badges.push('Top Guardian')
   }
 
   const seasonEntries = options?.seasonLeaderboardEntries ?? []
@@ -115,6 +118,7 @@ export function buildPlayerProfileFromStored(
     raidPoints,
     dungeonPoints,
     fullClanPoints,
+    guardianPoints,
     verifiedClears: verified.length,
     reputationScore,
     badges,

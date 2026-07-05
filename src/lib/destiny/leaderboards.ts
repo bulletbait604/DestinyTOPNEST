@@ -2,11 +2,13 @@
   LeaderboardCategory,
   LeaderboardEntry,
   LeaderboardPeriod,
+  MvpVote,
   RunRecord,
   Season,
 } from '@/lib/destiny/types'
-import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
+import { aggregateGuardianLeaderboard } from '@/lib/destiny/mvpVoting'
+import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
 interface UserAgg {
   userId: string
@@ -47,7 +49,7 @@ function runMatchesCategory(run: RunRecord, category: LeaderboardCategory): bool
   if (run.verificationStatus !== 'verified') return false
   if (category === 'raid') return run.type === 'raid'
   if (category === 'dungeon') return run.type === 'dungeon'
-  return run.isFullClanTeam === true
+  return false
 }
 
 export function aggregateLeaderboard(
@@ -65,7 +67,7 @@ export function aggregateLeaderboard(
     if (!runMatchesCategory(run, category)) continue
 
     const pts = run.pointsAwarded ?? 0
-    if (pts <= 0 && category !== 'full_clan_team') continue
+    if (pts <= 0) continue
 
     const existing = agg.get(run.ownerUserId) ?? {
       userId: run.ownerUserId,
@@ -116,47 +118,4 @@ function runDisplayName(runs: RunRecord[], userId: string): string {
   return run?.ownerDisplayName ?? userId
 }
 
-export function aggregateClanLeaderboard(
-  runs: RunRecord[],
-  usersById: Map<string, StoredDestinyUser>,
-  period: LeaderboardPeriod,
-  season: Season
-): LeaderboardEntry[] {
-  const byClan = new Map<string, UserAgg & { clanTag?: string; clanName?: string }>()
-
-  for (const run of runs) {
-    if (!run.ownerUserId || !run.isFullClanTeam) continue
-    if (!runMatchesPeriod(run, period, season)) continue
-    if (run.verificationStatus !== 'verified') continue
-
-    const user = usersById.get(run.ownerUserId)
-    const clanKey = user?.clanId ?? user?.clanTag ?? 'unknown'
-    const existing = byClan.get(clanKey) ?? {
-      userId: clanKey,
-      points: 0,
-      verifiedClears: 0,
-      clanTag: user?.clanTag,
-      clanName: user?.clanName,
-    }
-
-    existing.points += run.pointsAwarded ?? 0
-    existing.verifiedClears += 1
-    byClan.set(clanKey, existing)
-  }
-
-  return Array.from(byClan.values())
-    .sort((a, b) => b.points - a.points)
-    .slice(0, 5)
-    .map((row, index) => ({
-      userId: row.userId,
-      bungieDisplayName: row.clanName ?? row.clanTag ?? 'Clan',
-      clanTag: row.clanTag,
-      platform: 'steam' as const,
-      category: 'full_clan_team' as const,
-      seasonId: season.id,
-      period,
-      points: row.points,
-      verifiedClears: row.verifiedClears,
-      rank: index + 1,
-    }))
-}
+export { aggregateGuardianLeaderboard }

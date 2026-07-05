@@ -10,11 +10,14 @@ import { getDestinyUserBySiteUserId, getValidAccessToken, upsertDestinyUser } fr
 import { fetchLiveClan, fetchLiveLoadout, refreshGuardianFromBungie } from '@/lib/destiny/liveBungieData'
 import { buildPlayerProfileFromStored, emptyPlayerProfile } from '@/lib/destiny/profileBuilder'
 import { sanitizeFlexPreferences } from '@/lib/destiny/profileFlex'
+import { guardianPointsForUser } from '@/lib/destiny/mvpVoting'
 import {
   getReputationReviewsForUser,
   getRunsForUser,
+  getSeasonData,
   getSeasonStandingForUser,
   getTrustReviewsForUser,
+  loadAllMvpVotes,
 } from '@/lib/destiny/store'
 
 export const dynamic = 'force-dynamic'
@@ -68,12 +71,16 @@ async function buildProfile(
     loadout = (await fetchLiveLoadout(stored, activeCharacterId).catch(() => null)) ?? undefined
   }
 
-  const [runs, reviews, trustReviews, seasonLeaderboardEntries] = await Promise.all([
+  const [runs, reviews, trustReviews, seasonLeaderboardEntries, season, mvpVotes] = await Promise.all([
     scope === 'full' ? getRunsForUser(siteUserId) : Promise.resolve([]),
     scope === 'full' ? getReputationReviewsForUser(siteUserId) : Promise.resolve([]),
     getTrustReviewsForUser(siteUserId),
     scope === 'full' ? getSeasonStandingForUser(siteUserId) : Promise.resolve([]),
+    getSeasonData(),
+    loadAllMvpVotes(),
   ])
+
+  const guardianPoints = guardianPointsForUser(siteUserId, mvpVotes, 'monthly', season)
 
   const profile = syncProfileWithActiveCharacter(
     buildPlayerProfileFromStored(stored, runs, {
@@ -83,6 +90,7 @@ async function buildProfile(
       seasonLeaderboardEntries,
       displayEmblem,
       characters,
+      guardianPoints,
     })
   )
 

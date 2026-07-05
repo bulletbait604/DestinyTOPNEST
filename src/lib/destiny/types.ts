@@ -5,7 +5,7 @@ export type DestinyCharacterClass = 'titan' | 'hunter' | 'warlock'
 export type ActivityType = 'raid' | 'dungeon'
 export type VerificationStatus = 'verified' | 'pending' | 'flagged' | 'rejected'
 export type LegitimacyStatus = 'clean' | 'warning' | 'suspicious' | 'highly_suspicious'
-export type LeaderboardCategory = 'raid' | 'dungeon' | 'full_clan_team'
+export type LeaderboardCategory = 'raid' | 'dungeon' | 'top_guardians'
 export type LeaderboardPeriod = 'weekly' | 'monthly' | 'season' | 'all_time'
 export type Difficulty = 'normal' | 'master'
 export type FireteamGoal =
@@ -310,7 +310,41 @@ export interface BuildSnapshot {
 export interface SeasonPrizeRules {
   raid: { first: string; second: string; thirdToFifth: string; participation: string }
   dungeon: { first: string; second: string; thirdToFifth: string; participation: string }
-  fullClanTeam: { first: string; second: string; third: string }
+  topGuardians: { first: string; second: string; third: string }
+}
+
+/** Fireteam MVP vote — voter earns 1 pt, selected Guardian earns 3 pts toward Top Guardians. */
+export interface MvpVote {
+  id: string
+  runId: string
+  voterId: string
+  selectedUserId: string
+  selectedMembershipId: string
+  selectedDisplayName: string
+  createdAt: string
+}
+
+export interface ActivityRunGuardian {
+  membershipId: string
+  displayName: string
+  characterClass?: DestinyCharacterClass
+  siteUserId?: string
+  isSelf: boolean
+  canVoteFor: boolean
+}
+
+export interface ActivityRunForVote {
+  runId: string
+  activityName: string
+  type: ActivityType
+  completedAt: string
+  durationSeconds: number
+  pointsAwarded: number
+  verificationStatus: VerificationStatus
+  userHasVoted: boolean
+  selectedUserId?: string
+  selectedDisplayName?: string
+  guardians: ActivityRunGuardian[]
 }
 
 export interface SeasonWinner {
@@ -377,7 +411,10 @@ export interface CharacterSummary {
 export interface PlayerProfile extends DestinyUser {
   raidPoints: number
   dungeonPoints: number
-  fullClanPoints: number
+  /** Top Guardians score from MVP votes (current month). */
+  guardianPoints: number
+  /** @deprecated Use guardianPoints — kept for legacy profile reads */
+  fullClanPoints?: number
   verifiedClears: number
   reputationScore: number
   badges: string[]
@@ -467,7 +504,10 @@ export interface ClanProfile {
 export interface OverviewPayload {
   raidTop10: LeaderboardEntry[]
   dungeonTop10: LeaderboardEntry[]
-  clanTop5: LeaderboardEntry[]
+  /** Top 3 monthly Commanders (Top Guardians board). */
+  guardiansTop3: LeaderboardEntry[]
+  /** @deprecated Renamed to guardiansTop3 */
+  clanTop5?: LeaderboardEntry[]
   recentRuns: RunRecord[]
   featuredRaid: FeaturedActivity
   featuredDungeon: FeaturedActivity

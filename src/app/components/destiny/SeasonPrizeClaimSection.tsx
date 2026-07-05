@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 const CATEGORY_LABELS: Record<LeaderboardCategory, string> = {
   raid: 'Raid',
   dungeon: 'Dungeon',
-  full_clan_team: 'Full clan team',
+  top_guardians: 'Top Guardians',
 }
 
 interface Props {

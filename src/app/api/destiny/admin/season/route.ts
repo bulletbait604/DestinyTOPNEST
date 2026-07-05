@@ -15,8 +15,8 @@ export const dynamic = 'force-dynamic'
 export async function GET(req: NextRequest) {
   return destinyStaffHandler(req, async () => {
     const season = await getSeasonData()
-    const { runs, usersById } = await getSeasonStandingsInput()
-    const { hallOfFame } = computeSeasonStandings(runs, usersById, season)
+    const { runs, usersById, votes } = await getSeasonStandingsInput()
+    const { hallOfFame } = computeSeasonStandings(runs, usersById, season, votes)
     const pendingClaims = await getPendingPrizeClaims()
 
     return NextResponse.json({

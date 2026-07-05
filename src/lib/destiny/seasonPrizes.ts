@@ -1,5 +1,5 @@
-﻿import { aggregateClanLeaderboard, aggregateLeaderboard } from '@/lib/destiny/leaderboards'
-import type { LeaderboardCategory, LeaderboardEntry, RunRecord, Season, SeasonWinner } from '@/lib/destiny/types'
+﻿import { aggregateGuardianLeaderboard, aggregateLeaderboard } from '@/lib/destiny/leaderboards'
+import type { LeaderboardCategory, LeaderboardEntry, MvpVote, RunRecord, Season, SeasonWinner } from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 
 function prizeForRank(
@@ -7,40 +7,49 @@ function prizeForRank(
   rank: number,
   rules: Season['prizeRules']
 ): string {
+  const legacy = rules as Season['prizeRules'] & { fullClanTeam?: Season['prizeRules']['topGuardians'] }
   const bucket =
-    category === 'raid' ? rules.raid : category === 'dungeon' ? rules.dungeon : rules.fullClanTeam
+    category === 'raid'
+      ? rules.raid
+      : category === 'dungeon'
+        ? rules.dungeon
+        : rules.topGuardians ?? legacy.fullClanTeam!
 
   if (rank === 1) return bucket.first
   if (rank === 2) return bucket.second
-  if (rank === 3) return 'third' in bucket ? bucket.third : bucket.thirdToFifth
+  if (rank === 3) {
+    if ('third' in bucket) return bucket.third
+    if ('thirdToFifth' in bucket) return bucket.thirdToFifth
+  }
   if (rank <= 5 && 'thirdToFifth' in bucket) return bucket.thirdToFifth
   return 'participation' in bucket ? bucket.participation : 'Season participant'
 }
 
-/** Live season standings â†’ hall of fame preview (Phase 5). */
+/** Live season standings → hall of fame preview (Phase 5). */
 export function computeSeasonStandings(
   runs: RunRecord[],
   usersById: Map<string, StoredDestinyUser>,
-  season: Season
+  season: Season,
+  votes: MvpVote[] = []
 ): {
   hallOfFame: SeasonWinner[]
   eligibility: string
 } {
   const raidTop = aggregateLeaderboard(runs, usersById, 'raid', 'season', season).slice(0, 5)
   const dungeonTop = aggregateLeaderboard(runs, usersById, 'dungeon', 'season', season).slice(0, 5)
-  const clanTop = aggregateClanLeaderboard(runs, usersById, 'season', season).slice(0, 3)
+  const guardianTop = aggregateGuardianLeaderboard(votes, usersById, 'monthly', season, 3)
 
   const hallOfFame: SeasonWinner[] = [
     ...toWinners(raidTop, 'raid', season, 5),
     ...toWinners(dungeonTop, 'dungeon', season, 5),
-    ...toWinners(clanTop, 'full_clan_team', season, 3),
+    ...toWinners(guardianTop, 'top_guardians', season, 3),
   ]
 
   const storedWinners = season.winners ?? []
   const eligibility =
-    raidTop.length || dungeonTop.length
-      ? `Season ends ${new Date(season.endDate).toLocaleDateString()}. Current leaders are shown below — final prizes lock at season end.`
-      : 'Sync verified raid and dungeon clears to appear on season leaderboards and prize tracks.'
+    raidTop.length || dungeonTop.length || guardianTop.length
+      ? `Season ends ${new Date(season.endDate).toLocaleDateString()}. Top 3 monthly Commanders are crowned from MVP votes — vote in Previous Activities.`
+      : 'Sync verified runs and cast MVP votes in Previous Activities to climb the Top Guardians board.'
 
   return {
     hallOfFame: storedWinners.length ? storedWinners : hallOfFame,
@@ -75,7 +84,7 @@ export function prizeEligibilityForUser(
 
   const best = entries.sort((a, b) => a.rank - b.rank)[0]
   if (!best) {
-    return 'Eligible for verified run scoring this season. Climb a leaderboard to track prize status.'
+    return 'Eligible for verified run scoring this season. Vote MVP in Previous Activities to climb Top Guardians.'
   }
 
   return `Season rank #${best.rank} in ${best.category.replace(/_/g, ' ')} — ${best.points} pts. Top 5 at season end win prizes.`

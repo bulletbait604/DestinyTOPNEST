@@ -20,10 +20,10 @@ export const ACTIVE_SEASON: Season = {
       thirdToFifth: '3D print prize',
       participation: 'Leaderboard history mention',
     },
-    fullClanTeam: {
-      first: '$50 CAD platform card or clan prize',
-      second: '$25 CAD platform card',
-      third: '3D print prize',
+    topGuardians: {
+      first: 'Commander — $50 CAD platform card',
+      second: 'Commander — $25 CAD platform card',
+      third: 'Commander — 3D print prize',
     },
   },
   winners: [],
@@ -43,4 +43,4 @@ export function getSeasonCountdown(season: Season = ACTIVE_SEASON): {
 }
 
 export const PRIZE_SUMMARY =
-  'Raid & Dungeon Top 5 win platform cards or 3D prints. Full Clan Team prizes for same-clan clears.'
+  'Raid & Dungeon Top 5 win platform cards or 3D prints. Top 3 monthly Commanders earn prizes from MVP votes.'

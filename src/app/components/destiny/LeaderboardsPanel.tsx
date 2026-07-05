@@ -9,6 +9,8 @@ import {
   PageIntro,
   SegmentedControl,
 } from '@/app/components/destiny/DestinyUi'
+import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import { cn } from '@/lib/utils'
 
 const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
   { value: 'weekly', label: 'This week' },
@@ -20,7 +22,7 @@ const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
 const CATEGORIES: { value: LeaderboardCategory; label: string }[] = [
   { value: 'raid', label: 'Raids' },
   { value: 'dungeon', label: 'Dungeons' },
-  { value: 'full_clan_team', label: 'Clan teams' },
+  { value: 'top_guardians', label: 'Top Guardians' },
 ]
 
 export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
@@ -28,6 +30,7 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
   const [category, setCategory] = useState<LeaderboardCategory>('raid')
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const t = getDestinyTheme(darkMode)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -47,19 +50,41 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
     load()
   }, [load])
 
+  useEffect(() => {
+    if (category === 'top_guardians' && period === 'season') {
+      setPeriod('monthly')
+    }
+  }, [category, period])
+
+  const description =
+    category === 'top_guardians'
+      ? 'Monthly MVP scores — vote in Previous Activities (+1 pt for you, +3 pts for your pick). Top 3 Guardians become next month\'s Commanders.'
+      : 'Verified full clears only. Earn points with clanmates and randos — caps apply per activity type.'
+
   return (
     <div className="space-y-6">
-      <PageIntro
-        darkMode={darkMode}
-        title="Leaderboards"
-        description="Verified full clears only. Earn points with clanmates and randos — caps apply per activity type."
-      />
+      <PageIntro darkMode={darkMode} title="Leaderboards" description={description} />
+
+      {category === 'top_guardians' && period === 'monthly' && entries.length > 0 ? (
+        <GlassCard darkMode={darkMode} padding="compact">
+          <p className={cn('text-xs uppercase tracking-wide mb-2', t.gold)}>Monthly Commanders (top 3)</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {entries.slice(0, 3).map((entry) => (
+              <div key={entry.userId} className="d2-panel-inset rounded-lg px-3 py-2 text-center">
+                <p className={cn('text-[10px] uppercase tracking-wide', t.caption)}>#{entry.rank} Commander</p>
+                <p className={cn('text-sm font-bold truncate', t.heading)}>{entry.bungieDisplayName}</p>
+                <p className={cn('text-xs tabular-nums', t.gold)}>{entry.points} pts</p>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+      ) : null}
 
       <GlassCard darkMode={darkMode}>
         <div className="space-y-5 mb-6">
           <SegmentedControl
             label="Time period"
-            options={PERIODS}
+            options={PERIODS.filter((p) => category !== 'top_guardians' || p.value !== 'weekly')}
             value={period}
             onChange={setPeriod}
             darkMode={darkMode}

@@ -158,11 +158,11 @@ export async function enrichOverview(payload: OverviewPayload): Promise<Overview
   const primaryRaid = weeklyReset.featuredRaids[0]
   const primaryDungeon = weeklyReset.featuredDungeons[0]
 
-  const [raidTop10, dungeonTop10, clanTop5, recentRuns, lookingForGroup, trendingBuilds, topLoadoutsByClass] =
+  const [raidTop10, dungeonTop10, guardiansTop3, recentRuns, lookingForGroup, trendingBuilds, topLoadoutsByClass] =
     await Promise.all([
       Promise.all(payload.raidTop10.map(enrichLeaderboardEntry)),
       Promise.all(payload.dungeonTop10.map(enrichLeaderboardEntry)),
-      Promise.all(payload.clanTop5.map(enrichLeaderboardEntry)),
+      Promise.all(payload.guardiansTop3.map(enrichLeaderboardEntry)),
       Promise.all(
         payload.recentRuns.map(async (run) => {
           const activityRef = await resolveActivityRef(run.activityName, run.activityId)
@@ -197,7 +197,8 @@ export async function enrichOverview(payload: OverviewPayload): Promise<Overview
     },
     raidTop10,
     dungeonTop10,
-    clanTop5,
+    guardiansTop3,
+    clanTop5: guardiansTop3,
     recentRuns,
     lookingForGroup,
     trendingBuilds,

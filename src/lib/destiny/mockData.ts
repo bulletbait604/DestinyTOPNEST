@@ -78,10 +78,10 @@ export const MOCK_SEASON: Season = {
       thirdToFifth: '3D print prize',
       participation: 'Leaderboard history mention',
     },
-    fullClanTeam: {
-      first: '$50 CAD platform card or clan prize',
-      second: '$25 CAD platform card',
-      third: '3D print prize',
+    topGuardians: {
+      first: 'Commander — $50 CAD platform card',
+      second: 'Commander — $25 CAD platform card',
+      third: 'Commander — 3D print prize',
     },
   },
   winners: [
@@ -122,13 +122,14 @@ export const MOCK_DUNGEON_TOP10: LeaderboardEntry[] = [
   lbEntry(10, 'SpireSprint', 'dungeon', 110),
 ]
 
-export const MOCK_CLAN_TOP5: LeaderboardEntry[] = [
-  lbEntry(1, 'NestFireteam Alpha', 'full_clan_team', 320, { clanTag: '[NEST]', verifiedClears: 14 }),
-  lbEntry(2, 'StreamDreams Six', 'full_clan_team', 298, { clanTag: '[SDHQ]' }),
-  lbEntry(3, 'Void Collective', 'full_clan_team', 276, { clanTag: '[VOID]' }),
-  lbEntry(4, 'Solar Syndicate', 'full_clan_team', 254, { clanTag: '[SOLR]' }),
-  lbEntry(5, 'Arc Assembly', 'full_clan_team', 231, { clanTag: '[ARC]' }),
+export const MOCK_GUARDIANS_TOP3: LeaderboardEntry[] = [
+  lbEntry(1, 'VoidWalkerPrime', 'top_guardians', 42, { verifiedClears: 8 }),
+  lbEntry(2, 'SolarSlinger99', 'top_guardians', 36, { platform: 'xbox', verifiedClears: 6 }),
+  lbEntry(3, 'ArcMissileMike', 'top_guardians', 31, { platform: 'playstation', verifiedClears: 5 }),
 ]
+
+/** @deprecated Use MOCK_GUARDIANS_TOP3 */
+export const MOCK_CLAN_TOP5 = MOCK_GUARDIANS_TOP3
 
 export const MOCK_RECENT_RUNS: RunRecord[] = [
   {
@@ -310,7 +311,8 @@ export const MOCK_PROFILE: PlayerProfile = {
   connectedAt: '2026-04-01T12:00:00Z',
   raidPoints: 248,
   dungeonPoints: 86,
-  fullClanPoints: 64,
+    guardianPoints: 12,
+    fullClanPoints: 64,
   verifiedClears: 22,
   reputationScore: 4.7,
   badges: ['Verified Raider', 'Sherpa', 'Full Clan Clear', 'Speed Runner'],
@@ -440,7 +442,8 @@ export function buildOverviewPayload(bungieApiConfigured: boolean): OverviewPayl
   return {
     raidTop10: MOCK_RAID_TOP10,
     dungeonTop10: MOCK_DUNGEON_TOP10,
-    clanTop5: MOCK_CLAN_TOP5,
+    guardiansTop3: MOCK_GUARDIANS_TOP3,
+    clanTop5: MOCK_GUARDIANS_TOP3,
     recentRuns: MOCK_RECENT_RUNS,
     weeklyReset: weekly,
     featuredRaid: {

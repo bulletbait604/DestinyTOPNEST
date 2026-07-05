@@ -124,8 +124,8 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
           <LeaderboardTable entries={data.dungeonTop10} darkMode={darkMode} compact />
         </GlassCard>
         <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Clan Teams" darkMode={darkMode} />
-          <LeaderboardTable entries={data.clanTop5} darkMode={darkMode} compact />
+          <SectionTitle title="Top Guardians" subtitle="Monthly Commanders" darkMode={darkMode} />
+          <LeaderboardTable entries={data.guardiansTop3 ?? data.clanTop5 ?? []} darkMode={darkMode} compact />
         </GlassCard>
       </div>
 

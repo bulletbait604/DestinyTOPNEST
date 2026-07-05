@@ -14,4 +14,5 @@ export const DESTINY_COLLECTIONS = {
   oauthStates: 'bungie_oauth_states',
   prizeClaims: 'destiny_prize_claims',
   trustReviews: 'destiny_trust_reviews',
+  mvpVotes: 'destiny_mvp_votes',
 } as const
