@@ -14,6 +14,7 @@ import {
 } from '@/lib/destiny/bungieClient'
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
 import { activityIconPathFallback } from '@/lib/destiny/activityIconPaths'
+import { itemIconPathFallback } from '@/lib/destiny/itemIconPaths'
 import { catalogLookup, type ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 import { DESTINY_MANIFEST_URL, destinyApiConfigured } from '@/lib/destiny/env'
 
@@ -124,10 +125,14 @@ function iconRefFromInfo(info: ManifestDefinitionInfo): DestinyIconRef {
 }
 
 function catalogIconUrl(name: string): string | undefined {
-  const catalog = activityCatalogLookup(name)
-  if (catalog?.iconPath) return buildBungieIconUrl(catalog.iconPath)
-  const fallback = activityIconPathFallback(name)
-  return fallback ? buildBungieIconUrl(fallback) : undefined
+  const activity = activityCatalogLookup(name)
+  if (activity?.iconPath) return buildBungieIconUrl(activity.iconPath)
+  const activityFallback = activityIconPathFallback(name)
+  if (activityFallback) return buildBungieIconUrl(activityFallback)
+  const item = catalogLookup(name)
+  if (item?.iconPath) return buildBungieIconUrl(item.iconPath)
+  const itemFallback = itemIconPathFallback(name)
+  return itemFallback ? buildBungieIconUrl(itemFallback) : undefined
 }
 
 function withCatalogIcon(ref: DestinyIconRef, name: string): DestinyIconRef {

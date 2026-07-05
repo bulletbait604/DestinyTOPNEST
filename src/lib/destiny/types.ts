@@ -295,6 +295,9 @@ export interface BuildSnapshot {
   kineticWeaponRef?: DestinyIconRef
   energyWeaponRef?: DestinyIconRef
   powerWeaponRef?: DestinyIconRef
+  kineticWeaponPerks?: DestinyIconRef[]
+  energyWeaponPerks?: DestinyIconRef[]
+  powerWeaponPerks?: DestinyIconRef[]
   aspectRefs?: DestinyIconRef[]
   fragmentRefs?: DestinyIconRef[]
   superRef?: DestinyIconRef

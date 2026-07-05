@@ -13,6 +13,7 @@ export interface ArmoryRow {
   slot: string
   item?: DestinyIconRef
   fallback?: string
+  perks?: DestinyIconRef[]
 }
 
 function tierShort(tier?: string) {
@@ -36,6 +37,21 @@ function ElementStripe({ label }: { label?: string }) {
   )
 }
 
+function WeaponPerkRow({ perks }: { perks: DestinyIconRef[] }) {
+  if (!perks.length) return null
+
+  return (
+    <div className="d2-armory-perks">
+      {perks.map((perk) => (
+        <span key={`${perk.hash ?? perk.name}`} className="d2-armory-perk">
+          <ItemIcon item={perk} name={perk.name} size={18} className="shrink-0 rounded-sm" />
+          <span className="truncate">{perk.name}</span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function ArmoryRowView({ row }: { row: ArmoryRow }) {
   const name = row.item?.name ?? row.fallback
   if (!name) return null
@@ -50,9 +66,7 @@ function ArmoryRowView({ row }: { row: ArmoryRow }) {
       <ItemIcon item={row.item} name={row.fallback} size={40} className="d2-armory-icon" />
       <div className="d2-armory-name-wrap min-w-0">
         <p className="d2-armory-name truncate">{name}</p>
-        {row.item?.entityType ? (
-          <p className="d2-armory-type truncate">{row.item.entityType}</p>
-        ) : null}
+        <WeaponPerkRow perks={row.perks ?? []} />
       </div>
       <span className={cn('d2-armory-tier', `d2-armory-tier-${rarityClass}`)}>{tierShort(tier)}</span>
     </div>
@@ -96,19 +110,41 @@ export default function WeaponArmoryTable({
 export function buildWeaponRows(build: {
   kineticWeaponRef?: DestinyIconRef
   kineticWeapon?: string
+  kineticWeaponPerks?: DestinyIconRef[]
   energyWeaponRef?: DestinyIconRef
   energyWeapon?: string
+  energyWeaponPerks?: DestinyIconRef[]
   powerWeaponRef?: DestinyIconRef
   powerWeapon?: string
+  powerWeaponPerks?: DestinyIconRef[]
   exoticWeaponRef?: DestinyIconRef
   exoticWeapon?: string
   exoticArmorRef?: DestinyIconRef
   exoticArmor?: string
 }): ArmoryRow[] {
   return [
-    { slot: 'Kin', item: build.kineticWeaponRef, fallback: build.kineticWeapon },
-    { slot: 'Eng', item: build.energyWeaponRef, fallback: build.energyWeapon },
-    { slot: 'Pow', item: build.powerWeaponRef, fallback: build.powerWeapon },
-    { slot: 'Exo', item: build.exoticWeaponRef ?? build.exoticArmorRef, fallback: build.exoticWeapon ?? build.exoticArmor },
+    {
+      slot: 'Kin',
+      item: build.kineticWeaponRef,
+      fallback: build.kineticWeapon,
+      perks: build.kineticWeaponPerks,
+    },
+    {
+      slot: 'Eng',
+      item: build.energyWeaponRef,
+      fallback: build.energyWeapon,
+      perks: build.energyWeaponPerks,
+    },
+    {
+      slot: 'Pow',
+      item: build.powerWeaponRef,
+      fallback: build.powerWeapon,
+      perks: build.powerWeaponPerks,
+    },
+    {
+      slot: 'Exo',
+      item: build.exoticWeaponRef ?? build.exoticArmorRef,
+      fallback: build.exoticWeapon ?? build.exoticArmor,
+    },
   ]
 }

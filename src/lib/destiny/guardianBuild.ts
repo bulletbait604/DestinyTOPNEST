@@ -43,6 +43,38 @@ function iconRefFromInfo(info: ManifestDefinitionInfo): DestinyIconRef {
   }
 }
 
+const WEAPON_PERK_SKIP =
+  /shader|ornament|weapon mod|mod socket|masterwork|intrinsic|tracker|default|ghost|emote|projection/i
+
+function isWeaponPerkPlug(info: ManifestDefinitionInfo): boolean {
+  const type = (info.itemTypeDisplayName ?? '').toLowerCase()
+  const name = info.name.toLowerCase()
+  if (!type && !name) return false
+  if (WEAPON_PERK_SKIP.test(type) || WEAPON_PERK_SKIP.test(name)) return false
+  return /perk|trait/i.test(type)
+}
+
+async function resolveWeaponPerks(
+  itemInstanceId: string | undefined,
+  socketsData?: Record<
+    string,
+    { sockets?: Array<{ plugHash?: number; isEnabled?: boolean; isVisible?: boolean }> }
+  >
+): Promise<DestinyIconRef[]> {
+  if (!itemInstanceId) return []
+  const sockets = socketsData?.[itemInstanceId]?.sockets ?? []
+  const perks: DestinyIconRef[] = []
+
+  for (const socket of sockets) {
+    if (!socket.plugHash || socket.isEnabled === false) continue
+    const info = await resolveInventoryItem(socket.plugHash, 'Perk')
+    if (!isWeaponPerkPlug(info)) continue
+    perks.push(iconRefFromInfo(info))
+  }
+
+  return perks
+}
+
 function categorizePlug(info: ManifestDefinitionInfo): PlugCategory {
   const type = (info.itemTypeDisplayName ?? '').toLowerCase()
   const name = info.name.toLowerCase()
@@ -130,6 +162,9 @@ export async function fetchCharacterBuild(
   let kineticWeaponRef: DestinyIconRef | undefined
   let energyWeaponRef: DestinyIconRef | undefined
   let powerWeaponRef: DestinyIconRef | undefined
+  let kineticInstanceId: string | undefined
+  let energyInstanceId: string | undefined
+  let powerInstanceId: string | undefined
   let subclass = 'Subclass'
   let subclassRef: DestinyIconRef | undefined
   const aspects: string[] = []
@@ -171,9 +206,18 @@ export async function fetchCharacterBuild(
     } else if (WEAPON_BUCKETS[bucket]) {
       const slot = WEAPON_BUCKETS[bucket]
       weapons[slot] = name
-      if (slot === 'kinetic') kineticWeaponRef = ref
-      if (slot === 'energy') energyWeaponRef = ref
-      if (slot === 'power') powerWeaponRef = ref
+      if (slot === 'kinetic') {
+        kineticWeaponRef = ref
+        kineticInstanceId = item.itemInstanceId
+      }
+      if (slot === 'energy') {
+        energyWeaponRef = ref
+        energyInstanceId = item.itemInstanceId
+      }
+      if (slot === 'power') {
+        powerWeaponRef = ref
+        powerInstanceId = item.itemInstanceId
+      }
       if (isExotic) {
         exoticWeapon = name
         exoticWeaponRef = ref
@@ -192,6 +236,13 @@ export async function fetchCharacterBuild(
       }
     }
   }
+
+  const socketData = profile.itemComponents?.sockets?.data
+  const [kineticWeaponPerks, energyWeaponPerks, powerWeaponPerks] = await Promise.all([
+    resolveWeaponPerks(kineticInstanceId, socketData),
+    resolveWeaponPerks(energyInstanceId, socketData),
+    resolveWeaponPerks(powerInstanceId, socketData),
+  ])
 
   const superRef = plugsByCategory.super
   const classAbilityRef = plugsByCategory.class
@@ -225,6 +276,9 @@ export async function fetchCharacterBuild(
     kineticWeaponRef,
     energyWeaponRef,
     powerWeaponRef,
+    kineticWeaponPerks,
+    energyWeaponPerks,
+    powerWeaponPerks,
     armorMods: [],
     artifactPerks: [],
     stats,

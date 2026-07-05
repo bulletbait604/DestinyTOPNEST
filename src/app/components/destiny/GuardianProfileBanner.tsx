@@ -12,6 +12,8 @@ interface Props {
   /** Character tiles or other content below the identity row. */
   children?: React.ReactNode
   compact?: boolean
+  /** Hide emblem avatar and display name (e.g. when shown in the app header). */
+  hideIdentity?: boolean
 }
 
 /** Destiny Tracker–style wide profile header with emblem backdrop. */
@@ -21,6 +23,7 @@ export default function GuardianProfileBanner({
   stats,
   children,
   compact,
+  hideIdentity,
 }: Props) {
   const bg =
     profile.displayEmblem?.backgroundUrl ??
@@ -41,22 +44,28 @@ export default function GuardianProfileBanner({
     >
       <div className="d2-profile-banner-vignette" />
       <div className="d2-profile-banner-content">
-        <div className="d2-profile-identity">
-          {icon ? (
-            <img src={icon} alt="" className="d2-profile-avatar" />
-          ) : (
-            <div className="d2-profile-avatar d2-profile-avatar-fallback" />
-          )}
-          <div className="min-w-0 flex-1">
-            <h2 className="d2-profile-name truncate">{profile.bungieDisplayName}</h2>
-            {clan ? (
-              <p className="d2-profile-clan-primary truncate">{clan}</p>
+        {hideIdentity ? (
+          stats ? (
+            <div className="d2-profile-stats flex justify-end">{stats}</div>
+          ) : null
+        ) : (
+          <div className="d2-profile-identity">
+            {icon ? (
+              <img src={icon} alt="" className="d2-profile-avatar" />
             ) : (
-              <p className="d2-profile-clan-empty">No clan</p>
+              <div className="d2-profile-avatar d2-profile-avatar-fallback" />
             )}
+            <div className="min-w-0 flex-1">
+              <h2 className="d2-profile-name truncate">{profile.bungieDisplayName}</h2>
+              {clan ? (
+                <p className="d2-profile-clan-primary truncate">{clan}</p>
+              ) : (
+                <p className="d2-profile-clan-empty">No clan</p>
+              )}
+            </div>
+            {stats ? <div className="d2-profile-stats shrink-0">{stats}</div> : null}
           </div>
-          {stats ? <div className="d2-profile-stats shrink-0">{stats}</div> : null}
-        </div>
+        )}
         {children}
       </div>
     </div>

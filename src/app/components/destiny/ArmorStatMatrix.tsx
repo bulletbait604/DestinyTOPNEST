@@ -3,14 +3,22 @@
 import { D2_STAT_COLORS } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
+/** In-game character screen order: Mobility → Strength. */
 const STAT_ORDER = [
-  { key: 'Mobility' as const, label: 'Mob', short: 'CL' },
-  { key: 'Resilience' as const, label: 'Res', short: 'HP' },
-  { key: 'Recovery' as const, label: 'Rec', short: 'WE' },
-  { key: 'Discipline' as const, label: 'Dis', short: 'GN' },
-  { key: 'Intellect' as const, label: 'Int', short: 'SU' },
-  { key: 'Strength' as const, label: 'Str', short: 'ME' },
+  { key: 'Mobility' as const, label: 'Mobility' },
+  { key: 'Resilience' as const, label: 'Resilience' },
+  { key: 'Recovery' as const, label: 'Recovery' },
+  { key: 'Discipline' as const, label: 'Discipline' },
+  { key: 'Intellect' as const, label: 'Intellect' },
+  { key: 'Strength' as const, label: 'Strength' },
 ] as const
+
+function statValue(stats: Record<string, number>, key: string): number {
+  const direct = stats[key]
+  if (typeof direct === 'number') return direct
+  const lower = stats[key.toLowerCase()]
+  return typeof lower === 'number' ? lower : 0
+}
 
 /** light.gg / DIM-style horizontal stat bars (0–100). */
 export default function ArmorStatMatrix({
@@ -24,14 +32,14 @@ export default function ArmorStatMatrix({
 }) {
   return (
     <div className={cn('d2-stat-matrix', compact && 'd2-stat-matrix-compact')}>
-      {STAT_ORDER.map(({ key, label, short }) => {
-        const value = stats[key] ?? 0
+      {STAT_ORDER.map(({ key, label }) => {
+        const value = statValue(stats, key)
         const pct = Math.min(100, Math.max(0, (value / tier) * 100))
         const color = D2_STAT_COLORS[key]
 
         return (
           <div key={key} className="d2-stat-matrix-row" title={`${label}: ${value}`}>
-            <span className="d2-stat-matrix-label">{compact ? short : label}</span>
+            <span className="d2-stat-matrix-label">{label}</span>
             <div className="d2-stat-matrix-track">
               <div
                 className="d2-stat-matrix-fill"

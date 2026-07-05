@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import type { CharacterSummary, DestinyCharacterClass } from '@/lib/destiny/types'
+import { ItemIcon } from '@/app/components/destiny/DestinyUi'
 import { DIM_CLASS_COLORS } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
@@ -38,9 +39,12 @@ export default function CharacterTile({
 
   const body = (
     <>
-      {character.classRef?.iconUrl ? (
-        <img src={character.classRef.iconUrl} alt="" className="dim-character-tile-icon" />
-      ) : null}
+      <ItemIcon
+        item={character.classRef}
+        name={character.characterClass}
+        size={28}
+        className="dim-character-tile-icon"
+      />
 
       <span className="dim-character-tile-class">{classLabel(character.characterClass)}</span>
 

@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useState } from 'react'
 import type { DestinyIconRef } from '@/lib/destiny/types'
 import { D2_STAT_COLORS, getDestinyTheme, tierGlowClass } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
@@ -25,6 +26,7 @@ export function GlowIcon({
   const url = item?.iconUrl ?? iconUrl
   const label = item?.name ?? name ?? ''
   const resolvedGlow = glow === 'auto' ? tierGlowClass(item?.tierLabel) : glow
+  const [failed, setFailed] = useState(false)
 
   const glowMap = {
     gold: 'd2-glow-gold',
@@ -42,8 +44,13 @@ export function GlowIcon({
       style={className?.includes('w-full') ? undefined : { width: size, height: size }}
       title={title ?? label}
     >
-      {url ? (
-        <img src={url} alt="" className="h-full w-full object-cover" />
+      {url && !failed ? (
+        <img
+          src={url}
+          alt=""
+          onError={() => setFailed(true)}
+          className="h-full w-full object-cover"
+        />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-white/25 text-lg">?</div>
       )}

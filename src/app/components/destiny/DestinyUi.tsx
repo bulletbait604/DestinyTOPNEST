@@ -359,11 +359,7 @@ function LeaderboardRow({
         {entry.rank}
       </span>
       {entry.emblemUrl ? (
-        <img
-          src={entry.emblemUrl}
-          alt=""
-          className="w-10 h-10 rounded-sm shrink-0 object-cover ring-1 ring-white/15"
-        />
+        <ItemIcon iconUrl={entry.emblemUrl} name={entry.bungieDisplayName} size={40} />
       ) : (
         <div className="w-10 h-10 rounded-sm bg-black/40 shrink-0 ring-1 ring-white/10" />
       )}

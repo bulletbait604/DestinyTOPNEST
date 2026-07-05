@@ -870,12 +870,33 @@ a { color: inherit; text-decoration: none; }
   }
 
   .d2-profile-build-bar {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    min-height: 48px;
     padding: 0.65rem 0.85rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(0, 0, 0, 0.28);
+    background-color: #12151c;
+    background-image: var(--build-bar-url), linear-gradient(135deg, #1a1f2a 0%, #0d0f14 100%);
+    background-size: cover, cover;
+    background-position: center, center;
+    overflow: hidden;
+  }
+
+  .d2-profile-build-bar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgba(13, 15, 20, 0.88) 0%, rgba(13, 15, 20, 0.55) 45%, rgba(13, 15, 20, 0.82) 100%),
+      linear-gradient(0deg, rgba(13, 15, 20, 0.92) 0%, transparent 55%);
+    pointer-events: none;
+  }
+
+  .d2-profile-build-bar > * {
+    position: relative;
+    z-index: 1;
   }
 
   .d2-profile-build-body {
@@ -904,6 +925,42 @@ a { color: inherit; text-decoration: none; }
   .d2-ability-grid-profile {
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0.35rem;
+  }
+
+  .d2-mod-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.5rem;
+    margin-top: 0.65rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .d2-mod-cell {
+    flex: 0 0 calc(20% - 0.4rem);
+    min-width: 56px;
+    max-width: 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    text-align: center;
+  }
+
+  .d2-mod-kind {
+    font-size: 7px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .d2-mod-name {
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.15;
+    color: rgba(255, 255, 255, 0.72);
+    width: 100%;
   }
 
   .d2-profile-stat-tile {
@@ -1382,6 +1439,23 @@ a { color: inherit; text-decoration: none; }
     margin-top: 1px;
   }
 
+  .d2-armory-perks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+    margin-top: 0.2rem;
+  }
+
+  .d2-armory-perk {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    max-width: 100%;
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
   .d2-armory-tier {
     font-size: 9px;
     font-weight: 700;
@@ -1464,21 +1538,26 @@ a { color: inherit; text-decoration: none; }
 
   .d2-stat-matrix-row {
     display: grid;
-    grid-template-columns: 2rem 1fr 1.75rem;
+    grid-template-columns: 5.5rem 1fr 1.75rem;
     gap: 0.5rem;
     align-items: center;
   }
 
   .d2-stat-matrix-compact .d2-stat-matrix-row {
-    grid-template-columns: 1.5rem 1fr 1.5rem;
+    grid-template-columns: 5.25rem 1fr 1.5rem;
   }
 
   .d2-stat-matrix-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    color: rgba(255, 255, 255, 0.55);
+    text-align: left;
+  }
+
+  .d2-stat-matrix-compact .d2-stat-matrix-label {
     font-size: 9px;
-    font-weight: 800;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.35);
-    text-align: right;
   }
 
   .d2-stat-matrix-track {
@@ -1506,9 +1585,9 @@ a { color: inherit; text-decoration: none; }
 
   /* â”€â”€ Step 3: Build synergy rail â”€â”€ */
   .d2-synergy-rail {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 0.5rem 1rem;
     padding: 0.75rem;
     border-radius: 6px;
@@ -1579,11 +1658,12 @@ a { color: inherit; text-decoration: none; }
   }
 
   .d2-synergy-exotic {
-    grid-column: 1;
+    margin-left: auto;
     font-size: 10px;
     font-weight: 600;
     color: #c3a019;
     font-style: italic;
+    max-width: 12rem;
   }
 
   .d2-synergy-arc { border-left: 3px solid #79bbe8; }

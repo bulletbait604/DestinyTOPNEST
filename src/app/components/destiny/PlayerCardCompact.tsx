@@ -65,6 +65,7 @@ export default function PlayerCardCompact({ profile, darkMode, linked = true, lo
       <GuardianProfileBanner
         profile={profile}
         compact
+        hideIdentity
         clanLine={clanLine}
         stats={
           <div className="flex items-end gap-1.5 shrink-0 flex-wrap justify-end">

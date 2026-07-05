@@ -8,7 +8,6 @@ import {
   BuildSection,
   GameCard,
   GlowIcon,
-  IconTooltip,
   PowerBadge,
   TrustRankBadge,
 } from '@/app/components/destiny/destinyGameUi'
@@ -54,6 +53,26 @@ function AbilitySlotCell({
   )
 }
 
+function ModSlotCell({
+  item,
+  kind,
+  glow,
+}: {
+  item: DestinyIconRef
+  kind: 'Aspect' | 'Fragment'
+  glow: 'gold' | 'arc' | 'void' | 'solar' | 'strand' | 'stasis' | 'neutral' | 'auto'
+}) {
+  return (
+    <div className="d2-mod-cell">
+      <span className="d2-mod-kind">{kind}</span>
+      <GlowIcon item={item} size={36} glow={glow} className="rounded-lg mx-auto" />
+      <p className="d2-mod-name line-clamp-2" title={item.name}>
+        {item.name}
+      </p>
+    </div>
+  )
+}
+
 function classLabel(className?: string) {
   if (!className) return 'Guardian'
   return className.charAt(0).toUpperCase() + className.slice(1)
@@ -74,6 +93,10 @@ export default function PlayerCardDetail({
   const characters = profile.characters ?? []
   const canSwitch = characters.length > 1 && !!onCharacterSelect
   const clanLine = profile.clanName ?? null
+  const emblemBackground =
+    viewProfile.displayEmblem?.backgroundUrl ??
+    viewProfile.emblemBackgroundUrl ??
+    undefined
 
   return (
     <GameCard className="w-full overflow-hidden p-0 d2-profile-build-card">
@@ -105,18 +128,21 @@ export default function PlayerCardDetail({
         ) : null}
       </GuardianProfileBanner>
 
-      <div className="d2-profile-build-bar">
+      <div
+        className="d2-profile-build-bar"
+        style={
+          emblemBackground
+            ? ({ '--build-bar-url': `url("${emblemBackground}")` } as React.CSSProperties)
+            : undefined
+        }
+      >
         <TrustRankBadge trust={profile.trustRank} darkMode={darkMode} compact />
-        <div className="ml-auto flex items-center gap-2">
-          <span className={cn('text-sm font-semibold capitalize', t.body)}>
+        <div className="ml-auto flex items-center gap-2 min-w-0">
+          <span className={cn('text-sm font-semibold capitalize truncate', t.body)}>
             {classLabel(viewProfile.characterClass)}
             {loadout?.subclass ? ` · ${loadout.subclass}` : ''}
           </span>
-          <PowerBadge
-            power={viewProfile.powerLevel}
-            rank={profile.guardianRank}
-            showRankAlways
-          />
+          <PowerBadge power={viewProfile.powerLevel} rank={profile.guardianRank} showRankAlways />
         </div>
       </div>
 
@@ -145,23 +171,18 @@ export default function PlayerCardDetail({
                   />
                 ))}
               </div>
+              {loadout.aspectRefs?.length || loadout.fragmentRefs?.length ? (
+                <div className="d2-mod-grid">
+                  {loadout.aspectRefs?.map((aspect) => (
+                    <ModSlotCell key={aspect.name} item={aspect} kind="Aspect" glow={elementGlow} />
+                  ))}
+                  {loadout.fragmentRefs?.map((fragment) => (
+                    <ModSlotCell key={fragment.name} item={fragment} kind="Fragment" glow={elementGlow} />
+                  ))}
+                </div>
+              ) : null}
             </BuildSection>
           </div>
-
-          {(loadout.aspectRefs?.length || loadout.fragmentRefs?.length) ? (
-            <BuildSection label="Aspects & fragments" className="d2-profile-build-panel">
-              <div className="flex flex-wrap gap-2">
-                {loadout.aspectRefs?.map((a) => (
-                  <AbilityChip key={a.name} item={a} size={40} glow={elementGlow} slotLabel="Aspect" />
-                ))}
-                {loadout.fragmentRefs?.map((f) => (
-                  <IconTooltip key={f.name} slotLabel="Fragment" name={f.name} tier={f.tierLabel}>
-                    <GlowIcon item={f} size={34} glow={elementGlow} className="rounded-lg" />
-                  </IconTooltip>
-                ))}
-              </div>
-            </BuildSection>
-          ) : null}
 
           <BuildSection label="Armor stats" className="d2-profile-build-panel">
             <ArmorStatMatrix stats={loadout.stats} compact />

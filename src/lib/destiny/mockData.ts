@@ -14,6 +14,7 @@
 } from '@/lib/destiny/types'
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
+import { emblemIconUrlForRank } from '@/lib/destiny/emblemIconPaths'
 
 const SEASON_ID = 'dtn-nest-s1'
 
@@ -42,7 +43,7 @@ function lbEntry(
   return {
     userId: `user-${rank}`,
     bungieDisplayName: name,
-    emblemUrl: undefined,
+    emblemUrl: overrides.emblemUrl ?? emblemIconUrlForRank(rank),
     clanTag: overrides.clanTag ?? '[SDHQ]',
     platform: overrides.platform ?? 'steam',
     guardianRank: overrides.guardianRank ?? 12 - Math.floor(rank / 2),
@@ -213,7 +214,7 @@ export const MOCK_LFG: FireteamLobby[] = [
     id: 'lfg-1',
     hostUserId: 'user-1',
     hostDisplayName: 'VoidWalkerPrime',
-    hostEmblemUrl: undefined,
+    hostEmblemUrl: emblemIconUrlForRank(1),
     hostClass: 'warlock',
     hostPowerLevel: 2010,
     hostGuardianRank: 12,
@@ -234,6 +235,7 @@ export const MOCK_LFG: FireteamLobby[] = [
     id: 'lfg-2',
     hostUserId: 'user-3',
     hostDisplayName: 'DeepDiver_D',
+    hostEmblemUrl: emblemIconUrlForRank(2),
     hostClass: 'hunter',
     hostPowerLevel: 2005,
     activityType: 'dungeon',
@@ -252,6 +254,7 @@ export const MOCK_LFG: FireteamLobby[] = [
     id: 'lfg-3',
     hostUserId: 'user-5',
     hostDisplayName: 'WellOfRadiance',
+    hostEmblemUrl: emblemIconUrlForRank(3),
     hostClass: 'warlock',
     hostPowerLevel: 2008,
     activityType: 'raid',
@@ -304,7 +307,7 @@ export const MOCK_PROFILE: PlayerProfile = {
   clanId: 'nest-clan',
   clanName: 'Top Nest',
   clanTag: '[NEST]',
-  emblemUrl: undefined,
+  emblemUrl: emblemIconUrlForRank(1),
   guardianRank: 12,
   powerLevel: 2010,
   characterClass: 'warlock',
@@ -407,9 +410,9 @@ export const MOCK_CLAN: ClanProfile = {
   avgRaidClearSeconds: 3420,
   avgDungeonClearSeconds: 1240,
   topMembers: [
-    { displayName: 'VoidWalkerPrime', points: 248, emblemUrl: undefined },
-    { displayName: 'SolarSlinger99', points: 231 },
-    { displayName: 'BannerLord', points: 176 },
+    { displayName: 'VoidWalkerPrime', points: 248, emblemUrl: emblemIconUrlForRank(1) },
+    { displayName: 'SolarSlinger99', points: 231, emblemUrl: emblemIconUrlForRank(2) },
+    { displayName: 'BannerLord', points: 176, emblemUrl: emblemIconUrlForRank(3) },
   ],
   achievements: ['Full Clan Master Clear', 'Season Raid #1', 'Sherpa Squad'],
 }

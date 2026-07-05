@@ -25,34 +25,51 @@ export default function AppUserHeader({ displayName, onLogout }: Props) {
   }, [bungie.lastSyncedAt])
 
   const recentlySynced = bungie.isRecentlySynced
-  const canSync = bungie.linked && !bungie.status?.needsReconnect
+  const needsReconnect = Boolean(bungie.status?.needsReconnect)
+  const canSync = bungie.linked && !needsReconnect
+  const refreshBusy = bungie.loading || bungie.syncing
+  const refreshTitle = bungie.loading
+    ? 'Loading Bungie status…'
+    : needsReconnect
+      ? 'Reconnect Bungie to sync runs'
+      : canSync
+        ? 'Sync runs from Bungie'
+        : 'Link Bungie to sync runs'
+
+  const handleRefresh = () => {
+    if (bungie.loading || bungie.syncing) return
+    if (needsReconnect || !bungie.linked) {
+      bungie.connect()
+      return
+    }
+    void bungie.syncRuns()
+  }
 
   return (
     <header className="d2-app-header flex items-center gap-2 px-3 sm:px-4 py-2">
       <div className="flex items-center gap-2 min-w-0 mr-auto">
         <span className="text-xs text-white/55 truncate max-w-[40vw] sm:max-w-none">{displayName}</span>
-        {canSync ? (
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              title="Sync runs from Bungie"
-              disabled={bungie.syncing}
-              onClick={() => void bungie.syncRuns()}
-              className="inline-flex items-center justify-center w-7 h-7 rounded-md text-white/70 ring-1 ring-white/10 hover:bg-white/[0.06] hover:text-white transition-colors disabled:opacity-50"
-            >
-              {bungie.syncing ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="w-3.5 h-3.5" />
-              )}
-            </button>
-            {recentlySynced ? (
-              <span className="text-[10px] font-semibold text-emerald-400/90 uppercase tracking-wide">
-                Synced
-              </span>
-            ) : null}
-          </div>
-        ) : null}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            title={refreshTitle}
+            aria-label={refreshTitle}
+            disabled={refreshBusy}
+            onClick={handleRefresh}
+            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-white/70 ring-1 ring-white/10 hover:bg-white/[0.06] hover:text-white transition-colors disabled:opacity-50"
+          >
+            {refreshBusy ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3.5 h-3.5" />
+            )}
+          </button>
+          {recentlySynced && canSync ? (
+            <span className="text-[10px] font-semibold text-emerald-400/90 uppercase tracking-wide">
+              Synced
+            </span>
+          ) : null}
+        </div>
       </div>
       <button
         type="button"
