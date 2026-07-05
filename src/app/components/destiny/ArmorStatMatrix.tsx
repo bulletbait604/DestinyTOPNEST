@@ -1,29 +1,17 @@
 ﻿'use client'
 
-import { D2_STAT_COLORS } from '@/app/components/destiny/destinyTheme'
+import {
+  ARMOR_STAT_ORDER,
+  D2_ARMOR_STAT_COLORS,
+  armorStatValue,
+  type ArmorStatKey,
+} from '@/lib/destiny/armorStats'
 import { cn } from '@/lib/utils'
 
-/** In-game character screen order: Mobility → Strength. */
-const STAT_ORDER = [
-  { key: 'Mobility' as const, label: 'Mobility' },
-  { key: 'Resilience' as const, label: 'Resilience' },
-  { key: 'Recovery' as const, label: 'Recovery' },
-  { key: 'Discipline' as const, label: 'Discipline' },
-  { key: 'Intellect' as const, label: 'Intellect' },
-  { key: 'Strength' as const, label: 'Strength' },
-] as const
-
-function statValue(stats: Record<string, number>, key: string): number {
-  const direct = stats[key]
-  if (typeof direct === 'number') return direct
-  const lower = stats[key.toLowerCase()]
-  return typeof lower === 'number' ? lower : 0
-}
-
-/** light.gg / DIM-style horizontal stat bars (0–100). */
+/** Armor 3.0 horizontal stat bars (0–200 per stat). */
 export default function ArmorStatMatrix({
   stats,
-  tier = 100,
+  tier = 200,
   compact,
 }: {
   stats: Record<string, number>
@@ -32,10 +20,10 @@ export default function ArmorStatMatrix({
 }) {
   return (
     <div className={cn('d2-stat-matrix', compact && 'd2-stat-matrix-compact')}>
-      {STAT_ORDER.map(({ key, label }) => {
-        const value = statValue(stats, key)
+      {ARMOR_STAT_ORDER.map(({ key, legacyKey, label }) => {
+        const value = armorStatValue(stats, key, legacyKey)
         const pct = Math.min(100, Math.max(0, (value / tier) * 100))
-        const color = D2_STAT_COLORS[key]
+        const color = D2_ARMOR_STAT_COLORS[key as ArmorStatKey]
 
         return (
           <div key={key} className="d2-stat-matrix-row" title={`${label}: ${value}`}>

@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import type { DestinyIconRef } from '@/lib/destiny/types'
-import { D2_STAT_COLORS, getDestinyTheme, tierGlowClass } from '@/app/components/destiny/destinyTheme'
+import { D2_ARMOR_STAT_COLORS, type ArmorStatKey } from '@/lib/destiny/armorStats'
+import { getDestinyTheme, tierGlowClass } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
 /** Large glowing Bungie icon — abilities, weapons, aspects. */
@@ -67,10 +68,10 @@ export function StatOrb({
 }: {
   value: number | string
   label: string
-  statKey: keyof typeof D2_STAT_COLORS
+  statKey: ArmorStatKey
   darkMode: boolean
 }) {
-  const color = D2_STAT_COLORS[statKey]
+  const color = D2_ARMOR_STAT_COLORS[statKey]
   return (
     <div
       className={cn('d2-stat-orb', darkMode ? 'd2-stat-orb-dark' : 'd2-stat-orb-light')}

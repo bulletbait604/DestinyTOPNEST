@@ -289,7 +289,7 @@ export const MOCK_BUILD: BuildSnapshot = {
   powerWeapon: 'Zephyr Reward',
   armorMods: ['Harmonic Siphon', 'Ashes to Assets', 'Solar Resistance'],
   artifactPerks: ['Anti-Barrier Pulse', 'Overload Scout'],
-  stats: { mobility: 45, resilience: 90, recovery: 100, discipline: 85, intellect: 70, strength: 55 },
+  stats: { Weapons: 45, Health: 90, Class: 100, Grenade: 85, Super: 70, Melee: 55 },
   activityId: 2659723068,
   activityName: 'Garden of Salvation',
   difficulty: 'master',

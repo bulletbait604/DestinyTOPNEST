@@ -48,15 +48,8 @@ export const DIM_CLASS_COLORS: Record<'titan' | 'hunter' | 'warlock', string> = 
   warlock: '#5a3d8f',
 }
 
-/** D2 armor stat colors (Health, Melee, Grenade, Super, Class, Weapons). */
-export const D2_STAT_COLORS = {
-  Resilience: '#e74c3c',
-  Strength: '#e67e22',
-  Discipline: '#f1c40f',
-  Intellect: '#9b59b6',
-  Mobility: '#3498db',
-  Recovery: '#2ecc71',
-} as const
+/** @deprecated Use D2_ARMOR_STAT_COLORS from @/lib/destiny/armorStats */
+export { D2_ARMOR_STAT_COLORS as D2_STAT_COLORS } from '@/lib/destiny/armorStats'
 
 export function tierBorderClass(tierLabel?: string): string {
   const tier = (tierLabel ?? '').toLowerCase()

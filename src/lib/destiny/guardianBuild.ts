@@ -6,6 +6,7 @@ import { getCharacterLoadout } from '@/lib/destiny/bungieClient'
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 import { resolveInventoryItem, type ManifestDefinitionInfo } from '@/lib/destiny/manifest'
 import type { BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
+import { ARMOR_STAT_HASH_LABEL } from '@/lib/destiny/armorStats'
 
 const CLASS_MAP: Record<number, DestinyCharacterClass> = {
   0: 'titan',
@@ -21,15 +22,6 @@ const WEAPON_BUCKETS: Record<number, 'kinetic' | 'energy' | 'power'> = {
 
 const SUBCLASS_BUCKET = 3284755031
 const ARMOR_BUCKETS = new Set([14239492, 20886954, 1585787867, 3551918588])
-
-const STAT_HASH_LABEL: Record<number, string> = {
-  2996146975: 'Mobility',
-  392767087: 'Resilience',
-  1943323491: 'Recovery',
-  1735777505: 'Discipline',
-  144602215: 'Intellect',
-  4244567218: 'Strength',
-}
 
 type PlugCategory = 'super' | 'class' | 'jump' | 'melee' | 'grenade' | 'aspect' | 'fragment' | 'other'
 
@@ -230,7 +222,7 @@ export async function fetchCharacterBuild(
       const statRow = profile.itemComponents?.stats?.data?.[item.itemInstanceId ?? '']
       if (statRow?.stats) {
         for (const [hash, val] of Object.entries(statRow.stats)) {
-          const label = STAT_HASH_LABEL[Number(hash)] ?? hash
+          const label = ARMOR_STAT_HASH_LABEL[Number(hash)] ?? hash
           stats[label] = (stats[label] ?? 0) + (val.value ?? 0)
         }
       }
