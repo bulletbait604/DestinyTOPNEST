@@ -9,7 +9,7 @@ const REVIEW_FIELDS = [
   'punctual',
 ] as const
 
-/** Average 1â€“5 reputation from fireteam reviews (Phase 5). */
+/** Average 1–5 reputation from fireteam reviews (Phase 5). */
 export function computeReputationScore(reviews: ReputationReview[]): number {
   if (!reviews.length) return 0
 

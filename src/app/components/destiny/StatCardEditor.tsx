@@ -83,7 +83,7 @@ export default function StatCardEditor({ darkMode, initialSelection, onSaved }: 
         <div>
           <SectionTitle
             title="Stat card"
-            subtitle="Choose up to four stats on your Guardian card â€” Bungie live + Top Nest"
+            subtitle="Choose up to four stats on your Guardian card — Bungie live + Top Nest"
             darkMode={darkMode}
           />
         </div>

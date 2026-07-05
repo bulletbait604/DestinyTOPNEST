@@ -9,7 +9,7 @@ const LORE: Record<string, { summary: string; tips: string[] }> = {
     tips: ['Bring strong add-clear for Warpriest', 'Oryx requires coordinated plate runners'],
   },
   'Vault of Glass': {
-    summary: "Time-travel raid on Venus. The template for Destiny raiding â€” Oracles, Gorgons, and Atheon's judgment.",
+    summary: "Time-travel raid on Venus. The template for Destiny raiding — Oracles, Gorgons, and Atheon's judgment.",
     tips: ['Oracle callouts win Templar', 'Gorgon maze rewards patience over speed'],
   },
   'Garden of Salvation': {
@@ -41,16 +41,16 @@ const LORE: Record<string, { summary: string; tips: string[] }> = {
     tips: ['Treat each encounter as a puzzle first', 'Save heavy for boss DPS windows'],
   },
   'Grasp of Avarice': {
-    summary: 'Loot cave dungeon. Gjallarhorn quest origin â€” star map navigation and wealth of riches.',
+    summary: 'Loot cave dungeon. Gjallarhorn quest origin — star map navigation and wealth of riches.',
     tips: ['Ogre keys gate progress', 'Final chest room is a DPS check'],
   },
   'Shattered Throne': {
-    summary: 'First dungeon â€” weekly ascendant challenge roots. Short but punishing solo flawless route.',
+    summary: 'First dungeon — weekly ascendant challenge roots. Short but punishing solo flawless route.',
     tips: ['Wish-ender or strong bows help', 'Soloable in ~20 minutes with practice'],
   },
   'Spire of the Watcher': {
     summary: 'Seraph bunker dungeon. Horizontal platforming and scorch cannon puzzles.',
-    tips: ['Assign two players to beacon duty', 'Persys adds hit hard â€” play cover'],
+    tips: ['Assign two players to beacon duty', 'Persys adds hit hard — play cover'],
   },
   'Duality': {
     summary: 'Nightmare realm dungeon with bell swaps between timelines. Caiatl co-op finale.',
@@ -62,7 +62,7 @@ const LORE: Record<string, { summary: string; tips: string[] }> = {
   },
   'Pit of Heresy': {
     summary: 'Moon heresy dungeon. Crucible ball mechanics and a stomping boss finale.',
-    tips: ['Wizard plates rotate â€” call early', 'Boss damage window after bell slam'],
+    tips: ['Wizard plates rotate — call early', 'Boss damage window after bell slam'],
   },
   'Prophecy': {
     summary: 'Nine-inspired dungeon with elemental themed arenas. Ball and Kell echo mechanics.',

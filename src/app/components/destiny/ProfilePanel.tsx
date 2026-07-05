@@ -93,10 +93,17 @@ export default function ProfilePanel({
     [load, profile]
   )
 
-  if (loading) return <LoadingBlock darkMode={darkMode} label="Loading profile from Bungieâ€¦" />
-  if (!profile) return null
+  if (loading) return <LoadingBlock darkMode={darkMode} label="Loading profile from Bungie…" />
 
   const linked = bungie.linked
+
+  if (!profile) {
+    return (
+      <div className="space-y-4">
+        <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="compact" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4 d2-profile-page">

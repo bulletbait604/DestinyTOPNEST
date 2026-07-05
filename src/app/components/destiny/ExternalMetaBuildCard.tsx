@@ -40,7 +40,7 @@ export default function ExternalMetaBuildCard({
           <p className={cn('text-xs mt-0.5', t.muted)}>
             {build.source}
             {build.publishedAt && (
-              <> Â· {new Date(build.publishedAt).toLocaleDateString()}</>
+              <> · {new Date(build.publishedAt).toLocaleDateString()}</>
             )}
           </p>
         </div>

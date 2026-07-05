@@ -14,7 +14,7 @@ interface Props {
   compact?: boolean
 }
 
-/** Destiny Trackerâ€“style wide profile header with emblem backdrop. */
+/** Destiny Tracker–style wide profile header with emblem backdrop. */
 export default function GuardianProfileBanner({
   profile,
   clanLine,

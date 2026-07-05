@@ -222,13 +222,13 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
 
   const accessToken = await getValidAccessToken(stored)
   if (!accessToken) {
-    throw new Error('Bungie session expired â€” reconnect your account from Overview.')
+    throw new Error('Bungie session expired — reconnect your account from Overview.')
   }
 
   const membershipType = stored.destinyMembershipType
   const membershipId = stored.bungieMembershipId
   if (!membershipType || !membershipId) {
-    throw new Error('Missing Destiny membership â€” disconnect and reconnect Bungie.')
+    throw new Error('Missing Destiny membership — disconnect and reconnect Bungie.')
   }
 
   const profile = (await getPlayerProfile(membershipType, membershipId, [100, 200])) as {

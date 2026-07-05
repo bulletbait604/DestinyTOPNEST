@@ -16,7 +16,7 @@ export interface RotationWeek {
   pantheon?: string
 }
 
-/** Featured raid/dungeon pairs by reset week (postâ€“Monument of Triumph rotator). */
+/** Featured raid/dungeon pairs by reset week (post–Monument of Triumph rotator). */
 export const ROTATION_SCHEDULE: RotationWeek[] = [
   {
     resetStart: '2026-06-09',
@@ -28,7 +28,7 @@ export const ROTATION_SCHEDULE: RotationWeek[] = [
     resetStart: '2026-06-16',
     raids: ['Garden of Salvation', "King's Fall"],
     dungeons: ['Spire of the Watcher', 'Pit of Heresy'],
-    pantheon: 'Reprise: Gahlran Â· Encore: Consecrated Mind',
+    pantheon: 'Reprise: Gahlran · Encore: Consecrated Mind',
   },
   {
     resetStart: '2026-06-23',
@@ -128,13 +128,13 @@ export function getWeeklyResetState(now = new Date()): WeeklyResetState {
     nextResetAt: nextResetDate.toISOString(),
     weekStart: weekStartDate.toISOString().slice(0, 10),
     weekEnd: weekEndDate.toISOString().slice(0, 10),
-    weekLabel: `${formatShortDate(weekStartDate)} â€“ ${formatShortDate(weekEndDate)}`,
+    weekLabel: `${formatShortDate(weekStartDate)} – ${formatShortDate(weekEndDate)}`,
     resetsInMs,
     resetsInLabel: formatCountdown(resetsInMs),
     featuredRaids: entry.raids.map((name) => ({ name, difficulty: 'normal' as Difficulty })),
     featuredDungeons: entry.dungeons.map((name) => ({ name, difficulty: 'normal' as Difficulty })),
     pantheon: entry.pantheon,
-    resetTimeLabel: 'Every Tuesday Â· 10:00 AM Pacific (17:00 UTC)',
+    resetTimeLabel: 'Every Tuesday · 10:00 AM Pacific (17:00 UTC)',
   }
 }
 

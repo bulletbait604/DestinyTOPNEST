@@ -1,5 +1,5 @@
 ﻿/**
- * Bungie OAuth â€” authorization code flow (confidential client).
+ * Bungie OAuth — authorization code flow (confidential client).
  */
 
 import JSONbig from 'json-bigint'

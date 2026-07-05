@@ -21,7 +21,7 @@ function tierShort(tier?: string) {
   if (t.includes('legendary')) return 'Legendary'
   if (t.includes('rare')) return 'Rare'
   if (t.includes('uncommon')) return 'Uncommon'
-  return tier ?? 'â€”'
+  return tier ?? '—'
 }
 
 function ElementStripe({ label }: { label?: string }) {
@@ -59,7 +59,7 @@ function ArmoryRowView({ row }: { row: ArmoryRow }) {
   )
 }
 
-/** light.ggâ€“style weapon / gear table rows. */
+/** light.gg–style weapon / gear table rows. */
 export default function WeaponArmoryTable({
   rows,
   title = 'Armory',

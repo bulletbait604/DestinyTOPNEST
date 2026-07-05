@@ -141,7 +141,7 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
         <GlassCard darkMode={darkMode}>
           <SectionTitle
             title="Season Hall of Fame preview"
-            subtitle="Current leaders â€” see Season tab for prizes and your track"
+            subtitle="Current leaders — see Season tab for prizes and your track"
             darkMode={darkMode}
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
@@ -176,7 +176,7 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
                   <div>
                     <p className="text-white text-sm font-medium">{run.activityName}</p>
                     <p className={cn('text-xs', t.muted)}>
-                      {run.type} Â· {formatDuration(run.durationSeconds)} Â· +{run.pointsAwarded} pts
+                      {run.type} · {formatDuration(run.durationSeconds)} · +{run.pointsAwarded} pts
                     </p>
                   </div>
                 </div>
@@ -207,7 +207,7 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
                   </span>
                 </div>
                 <p className={cn('text-xs', t.muted)}>
-                  {lobby.hostDisplayName} Â· {lobby.goal.replace(/_/g, ' ')}
+                  {lobby.hostDisplayName} · {lobby.goal.replace(/_/g, ' ')}
                 </p>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {lobby.tags.slice(0, 4).map((tag) => (

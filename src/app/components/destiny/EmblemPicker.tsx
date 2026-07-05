@@ -80,7 +80,7 @@ export default function EmblemPicker({ darkMode, selectedSource, selectedHash, o
       {loading ? (
         <p className={cn('text-sm flex items-center gap-2', t.muted)}>
           <Loader2 className="w-4 h-4 animate-spin" />
-          Loading emblemsâ€¦
+          Loading emblems…
         </p>
       ) : (
         <div className="space-y-4">
@@ -136,7 +136,7 @@ export default function EmblemPicker({ darkMode, selectedSource, selectedHash, o
               </div>
             </div>
           ) : (
-            <p className={cn('text-xs', t.muted)}>No collection emblems found â€” equipped emblem will be used.</p>
+            <p className={cn('text-xs', t.muted)}>No collection emblems found — equipped emblem will be used.</p>
           )}
         </div>
       )}

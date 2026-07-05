@@ -10,7 +10,7 @@ interface Props {
   onProfileLoaded?: (profile: PlayerProfile | null) => void
 }
 
-/** Compact player banner â€” summary only (no loadout fetch). */
+/** Compact player banner — summary only (no loadout fetch). */
 export default function PlayerCardShell({ darkMode, onProfileLoaded }: Props) {
   const [profile, setProfile] = useState<PlayerProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -45,7 +45,7 @@ export default function PlayerCardShell({ darkMode, onProfileLoaded }: Props) {
   }, [load])
 
   return (
-    <div className="mb-4 flex justify-start w-full max-w-4xl">
+    <div className="w-full min-w-0">
       <PlayerCardCompact
         profile={profile}
         darkMode={darkMode}

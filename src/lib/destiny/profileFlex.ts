@@ -115,37 +115,37 @@ export function buildProfileFlexStats(
     bungie_fastest_raid: {
       id: 'bungie_fastest_raid',
       label: STAT_CARD_LABELS.bungie_fastest_raid,
-      value: bungie?.fastestRaidSeconds ? formatSeconds(bungie.fastestRaidSeconds) : 'â€”',
+      value: bungie?.fastestRaidSeconds ? formatSeconds(bungie.fastestRaidSeconds) : '—',
       detail: bungie?.fastestRaidName,
     },
     bungie_fastest_dungeon: {
       id: 'bungie_fastest_dungeon',
       label: STAT_CARD_LABELS.bungie_fastest_dungeon,
-      value: bungie?.fastestDungeonSeconds ? formatSeconds(bungie.fastestDungeonSeconds) : 'â€”',
+      value: bungie?.fastestDungeonSeconds ? formatSeconds(bungie.fastestDungeonSeconds) : '—',
       detail: bungie?.fastestDungeonName,
     },
     bungie_raid_clears: {
       id: 'bungie_raid_clears',
       label: STAT_CARD_LABELS.bungie_raid_clears,
-      value: bungie?.raidClears != null ? String(bungie.raidClears) : 'â€”',
+      value: bungie?.raidClears != null ? String(bungie.raidClears) : '—',
       detail: 'Recent activity history',
     },
     bungie_dungeon_clears: {
       id: 'bungie_dungeon_clears',
       label: STAT_CARD_LABELS.bungie_dungeon_clears,
-      value: bungie?.dungeonClears != null ? String(bungie.dungeonClears) : 'â€”',
+      value: bungie?.dungeonClears != null ? String(bungie.dungeonClears) : '—',
       detail: 'Recent activity history',
     },
     bungie_kills: {
       id: 'bungie_kills',
       label: STAT_CARD_LABELS.bungie_kills,
-      value: bungie?.totalKills != null ? bungie.totalKills.toLocaleString() : 'â€”',
+      value: bungie?.totalKills != null ? bungie.totalKills.toLocaleString() : '—',
       detail: bungie?.totalDeaths != null ? `${bungie.totalDeaths.toLocaleString()} deaths` : undefined,
     },
     bungie_time_played: {
       id: 'bungie_time_played',
       label: STAT_CARD_LABELS.bungie_time_played,
-      value: bungie?.timePlayedMinutes ? formatHours(bungie.timePlayedMinutes) : 'â€”',
+      value: bungie?.timePlayedMinutes ? formatHours(bungie.timePlayedMinutes) : '—',
     },
     raid_points: {
       id: 'raid_points',
@@ -165,20 +165,20 @@ export function buildProfileFlexStats(
     fastest_clear: {
       id: 'fastest_clear',
       label: STAT_CARD_LABELS.fastest_clear,
-      value: fastest ? formatSeconds(fastest.durationSeconds) : 'â€”',
+      value: fastest ? formatSeconds(fastest.durationSeconds) : '—',
       detail: fastest?.activityName,
     },
     reputation: {
       id: 'reputation',
       label: STAT_CARD_LABELS.reputation,
-      value: profile.reputationScore > 0 ? profile.reputationScore.toFixed(1) : 'â€”',
+      value: profile.reputationScore > 0 ? profile.reputationScore.toFixed(1) : '—',
     },
     season_rank: {
       id: 'season_rank',
       label: STAT_CARD_LABELS.season_rank,
-      value: seasonRank ? `#${seasonRank.rank}` : 'â€”',
+      value: seasonRank ? `#${seasonRank.rank}` : '—',
       detail: seasonRank
-        ? `${seasonRank.category.replace(/_/g, ' ')} Â· ${seasonRank.points} pts`
+        ? `${seasonRank.category.replace(/_/g, ' ')} · ${seasonRank.points} pts`
         : undefined,
     },
   }

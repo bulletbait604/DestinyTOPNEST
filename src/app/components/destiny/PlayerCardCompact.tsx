@@ -34,13 +34,13 @@ function formatClanLine(profile: PlayerProfile): string | null {
   return profile.clanName ?? null
 }
 
-/** Short wide banner â€” Tracker header + DIM character tiles + stats. */
+/** Short wide banner — Tracker header + DIM character tiles + stats. */
 export default function PlayerCardCompact({ profile, darkMode, linked = true, loading }: Props) {
   const t = getDestinyTheme(darkMode)
 
   if (loading) {
     return (
-      <div className={cn('d2-panel animate-pulse w-full max-w-4xl overflow-hidden', t.glassInset)}>
+      <div className={cn('d2-panel animate-pulse w-full overflow-hidden', t.glassInset)}>
         <div className="h-24 bg-white/5" />
         <div className="h-12 bg-black/20 mx-3 my-2 rounded" />
       </div>
@@ -49,7 +49,7 @@ export default function PlayerCardCompact({ profile, darkMode, linked = true, lo
 
   if (!profile) {
     return (
-      <GameCard className="w-full max-w-4xl px-4 py-3">
+      <GameCard className="w-full px-4 py-3">
         <p className={cn('text-xs text-center', t.muted)}>Link Bungie to load your Guardian</p>
       </GameCard>
     )
@@ -61,7 +61,7 @@ export default function PlayerCardCompact({ profile, darkMode, linked = true, lo
     typeof profile.guardianRank === 'number' ? profile.guardianRank : undefined
 
   return (
-    <GameCard className="w-full max-w-4xl overflow-hidden p-0">
+    <GameCard className="w-full overflow-hidden p-0">
       <GuardianProfileBanner
         profile={profile}
         compact

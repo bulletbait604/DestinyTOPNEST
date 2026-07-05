@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
 
     if (!reviewedUserId) {
       return NextResponse.json(
-        { error: 'reviewedUserId required â€” rando must be linked on Top Nest' },
+        { error: 'reviewedUserId required — rando must be linked on Top Nest' },
         { status: 400 }
       )
     }

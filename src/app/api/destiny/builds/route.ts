@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     const aiSummary =
       filteredVerified.length > 0
         ? `Showing ${filteredVerified.length} verified build(s) from Top Nest PGCR data.`
-        : 'No verified PGCR builds yet â€” sync runs from Home after linking Bungie.'
+        : 'No verified PGCR builds yet — sync runs from Home after linking Bungie.'
 
     const researchSummary = metaResearchSummary(filteredExternal)
 

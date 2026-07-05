@@ -65,7 +65,7 @@ export function aggregateBuildIntelligence(
 
       const exoticLabel = first.exoticArmor !== 'Unknown exotic' ? first.exoticArmor : first.exoticWeapon
       const buildName = exoticLabel
-        ? `${first.subclass} ${first.characterClass} Â· ${exoticLabel}`
+        ? `${first.subclass} ${first.characterClass} · ${exoticLabel}`
         : `${first.subclass} ${first.characterClass} build`
 
       return {

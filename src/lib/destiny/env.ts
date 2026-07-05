@@ -150,7 +150,7 @@ export function bungieOAuthConfigured(): boolean {
 }
 
 export const BUNGIE_API_BASE = 'https://www.bungie.net/Platform' // https://bungie-net.github.io/
-/** Live Destiny 2 manifest index â€” lists current definition tables and versions. */
+/** Live Destiny 2 manifest index — lists current definition tables and versions. */
 export const DESTINY_MANIFEST_PATH = '/Destiny2/Manifest/'
 export const DESTINY_MANIFEST_URL = `${BUNGIE_API_BASE}${DESTINY_MANIFEST_PATH}`
 export const BUNGIE_OAUTH_AUTHORIZE_URL = 'https://www.bungie.net/en/oauth/authorize'

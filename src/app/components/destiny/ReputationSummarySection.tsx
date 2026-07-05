@@ -50,11 +50,11 @@ export default function ReputationSummarySection({ darkMode }: Props) {
             received.slice(0, 5).map((review) => (
               <p key={review.id} className={cn('text-xs py-1 border-b border-white/5', t.muted)}>
                 From {review.reviewerId}
-                {review.wouldPlayAgain ? ' Â· would play again' : ''}
+                {review.wouldPlayAgain ? ' · would play again' : ''}
               </p>
             ))
           ) : (
-            <p className={cn('text-xs', t.muted)}>None yet â€” clear with Top Nest players to get rated.</p>
+            <p className={cn('text-xs', t.muted)}>None yet — clear with Top Nest players to get rated.</p>
           )}
         </div>
         <div>
@@ -63,7 +63,7 @@ export default function ReputationSummarySection({ darkMode }: Props) {
             written.slice(0, 5).map((review) => (
               <p key={review.id} className={cn('text-xs py-1 border-b border-white/5', t.muted)}>
                 {review.reviewedUserId}
-                {review.runId ? ` Â· run ${review.runId.slice(0, 8)}â€¦` : ''}
+                {review.runId ? ` · run ${review.runId.slice(0, 8)}…` : ''}
               </p>
             ))
           ) : (

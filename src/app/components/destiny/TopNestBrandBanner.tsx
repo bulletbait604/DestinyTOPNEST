@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, BRAND_SHORT } from '@/lib/destiny/branding'
+import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH } from '@/lib/destiny/branding'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -8,16 +8,27 @@ interface Props {
   tagline?: string
   /** Compact height for nested panels */
   compact?: boolean
+  /** Logged-in app shell — crest logo, title, and mission copy. */
+  app?: boolean
   className?: string
 }
 
 /**
- * Horizontal banner â€” logo crest left, title + tagline right.
- * Background echoes the logo's arc / solar split and bronze frame.
+ * Brand banner — crest logo plus optional title and mission copy.
  */
-export default function TopNestBrandBanner({ title, tagline, compact, className }: Props) {
+export default function TopNestBrandBanner({ title, tagline, compact, app, className }: Props) {
+  const showWordmark = !app
+  const heroTitle = title ?? BRAND_FULL
+
   return (
-    <header className={cn('tn-brand-banner', compact && 'tn-brand-banner-compact', className)}>
+    <header
+      className={cn(
+        'tn-brand-banner',
+        compact && 'tn-brand-banner-compact',
+        app && 'tn-brand-banner-app',
+        className
+      )}
+    >
       <div className="tn-brand-banner-glow tn-brand-banner-glow-arc" aria-hidden />
       <div className="tn-brand-banner-glow tn-brand-banner-glow-solar" aria-hidden />
       <div className="tn-brand-banner-glow tn-brand-banner-glow-void" aria-hidden />
@@ -29,17 +40,33 @@ export default function TopNestBrandBanner({ title, tagline, compact, className 
             src={BRAND_LOGO_PATH}
             alt={BRAND_LOGO_ALT}
             className="tn-brand-logo"
-            width={compact ? 96 : 128}
-            height={compact ? 96 : 128}
+            width={app ? 120 : compact ? 96 : 128}
+            height={app ? 120 : compact ? 96 : 128}
             decoding="async"
           />
         </div>
 
-        <div className="tn-brand-copy min-w-0 flex-1">
-          <p className="tn-brand-eyebrow">{BRAND_FULL}</p>
-          <h1 className="tn-brand-title truncate">{title ?? BRAND_SHORT}</h1>
-          {tagline ? <p className="tn-brand-tagline line-clamp-2">{tagline}</p> : null}
-        </div>
+        {(showWordmark || app || tagline) && (
+          <div className={cn('tn-brand-copy min-w-0', app ? 'flex-1' : 'flex-1')}>
+            {showWordmark ? (
+              <>
+                <p className="tn-brand-eyebrow">{BRAND_FULL}</p>
+                <h1 className="tn-brand-title truncate">{heroTitle}</h1>
+              </>
+            ) : null}
+            {app ? <h1 className="tn-brand-app-title">{heroTitle}</h1> : null}
+            {tagline ? (
+              <p
+                className={cn(
+                  app ? 'tn-brand-app-mission' : 'tn-brand-tagline line-clamp-2',
+                  !app && 'line-clamp-2'
+                )}
+              >
+                {tagline}
+              </p>
+            ) : null}
+          </div>
+        )}
       </div>
     </header>
   )

@@ -11,7 +11,7 @@ export interface LegitimacyInput {
   teamAvgKills: number
 }
 
-/** Heuristic legitimacy review â€” Phase 3 rules engine (no external LLM yet). */
+/** Heuristic legitimacy review — Phase 3 rules engine (no external LLM yet). */
 export function evaluateRunLegitimacy(input: LegitimacyInput): AiReview {
   const reasons: string[] = []
   let score = 0
@@ -22,7 +22,7 @@ export function evaluateRunLegitimacy(input: LegitimacyInput): AiReview {
       suspiciousScore: 95,
       reasons: ['Activity not marked completed'],
       recommendation: 'reject',
-      summary: 'Incomplete activity â€” not eligible for scoring.',
+      summary: 'Incomplete activity — not eligible for scoring.',
     }
   }
 

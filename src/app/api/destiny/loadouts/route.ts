@@ -1,16 +1,19 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth/verifyAuth'
+import { resolveActiveCharacterId } from '@/lib/destiny/activeCharacter'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
-import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
+import { getDestinyUserBySiteUserId, getValidAccessToken } from '@/lib/destiny/destinyUserStore'
 import { enrichLoadoutsResponse } from '@/lib/destiny/enrich'
-import { fetchLiveLoadout } from '@/lib/destiny/liveBungieData'
+import { fetchAllCharactersPresentation } from '@/lib/destiny/guardianPresentation'
+import { fetchLiveLoadout, refreshGuardianFromBungie } from '@/lib/destiny/liveBungieData'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   return destinyAuthHandler(req, async () => {
     const authUser = await verifyAuth(req)
-    const stored = await getDestinyUserBySiteUserId(authUser.username.toLowerCase())
+    const siteUserId = authUser.username.toLowerCase()
+    let stored = await getDestinyUserBySiteUserId(siteUserId)
 
     if (!stored?.oauth) {
       return NextResponse.json({
@@ -23,7 +26,24 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    const current = await fetchLiveLoadout(stored)
+    stored = await refreshGuardianFromBungie(stored)
+    stored = (await getDestinyUserBySiteUserId(siteUserId)) ?? stored
+
+    const accessToken = await getValidAccessToken(stored)
+    const membershipType = stored.destinyMembershipType
+    const membershipId = stored.bungieMembershipId
+
+    let activeCharacterId = stored.activeCharacterId
+    if (accessToken && membershipType && membershipId) {
+      try {
+        const characters = await fetchAllCharactersPresentation(membershipType, membershipId, accessToken)
+        activeCharacterId = resolveActiveCharacterId(stored.activeCharacterId, characters)
+      } catch {
+        /* use stored active character */
+      }
+    }
+
+    const current = await fetchLiveLoadout(stored, activeCharacterId)
     if (!current) {
       return NextResponse.json({
         current: null,

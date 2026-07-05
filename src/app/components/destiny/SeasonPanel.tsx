@@ -72,7 +72,7 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
           <div>
             <h3 className="text-2xl font-bold text-white">{season.name} Season</h3>
             <p className={cn('text-sm', t.muted)}>
-              {new Date(season.startDate).toLocaleDateString()} â€”{' '}
+              {new Date(season.startDate).toLocaleDateString()} —{' '}
               {new Date(season.endDate).toLocaleDateString()}
             </p>
           </div>
@@ -100,7 +100,7 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
                   {CATEGORY_LABELS[track.category] ?? track.category}
                 </p>
                 <p className={cn('text-2xl font-semibold tabular-nums mt-1', t.gold)}>#{track.rank}</p>
-                <p className={cn('text-xs mt-1', t.muted)}>{track.points} pts Â· {track.verifiedClears} clears</p>
+                <p className={cn('text-xs mt-1', t.muted)}>{track.points} pts · {track.verifiedClears} clears</p>
                 {track.fastestClearSeconds ? (
                   <p className={cn('text-[10px] mt-1', t.caption)}>
                     Best {track.fastestActivityName}: {formatDuration(track.fastestClearSeconds)}
@@ -136,7 +136,7 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
           {myStandings.map((entry) => (
             <div key={entry.category} className="py-2 border-b border-white/5 flex justify-between text-sm">
               <span className={t.body}>{CATEGORY_LABELS[entry.category] ?? entry.category}</span>
-              <span className={t.gold}>#{entry.rank} Â· {entry.points} pts</span>
+              <span className={t.gold}>#{entry.rank} · {entry.points} pts</span>
             </div>
           ))}
         </GlassCard>
@@ -146,7 +146,7 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
         <GlassCard darkMode={darkMode}>
           <SectionTitle
             title="This Week's Featured Activities"
-            subtitle={`${weeklyReset.weekLabel} Â· ${weeklyReset.resetTimeLabel}`}
+            subtitle={`${weeklyReset.weekLabel} · ${weeklyReset.resetTimeLabel}`}
             darkMode={darkMode}
           />
           <p className={cn('text-xs mb-3', t.blue)}>Reset in {weeklyReset.resetsInLabel}</p>
@@ -174,7 +174,7 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
           <ul className={cn('text-xs space-y-1', t.muted)}>
             <li>1st: {rules.raid.first}</li>
             <li>2nd: {rules.raid.second}</li>
-            <li>3rdâ€“5th: {rules.raid.thirdToFifth}</li>
+            <li>3rd–5th: {rules.raid.thirdToFifth}</li>
             <li>All: {rules.raid.participation}</li>
           </ul>
         </GlassCard>
@@ -183,7 +183,7 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
           <ul className={cn('text-xs space-y-1', t.muted)}>
             <li>1st: {rules.dungeon.first}</li>
             <li>2nd: {rules.dungeon.second}</li>
-            <li>3rdâ€“5th: {rules.dungeon.thirdToFifth}</li>
+            <li>3rd–5th: {rules.dungeon.thirdToFifth}</li>
             <li>All: {rules.dungeon.participation}</li>
           </ul>
         </GlassCard>
@@ -202,7 +202,7 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
         <p className={cn('text-sm', t.muted)}>{eligibility}</p>
         <ul className={cn('text-xs mt-3 space-y-1 list-disc list-inside', t.muted)}>
           <li>Points only for verified full completions</li>
-          <li>2 pts per clan member Â· 5 pts per rando (raid max 2 randos, dungeon max 1)</li>
+          <li>2 pts per clan member · 5 pts per rando (raid max 2 randos, dungeon max 1)</li>
           <li>Checkpoint runs tracked but not scored unless admin approved</li>
           <li>Suspicious runs blocked until review (score 70+)</li>
         </ul>
@@ -213,7 +213,7 @@ export default function SeasonPanel({ darkMode }: { darkMode: boolean }) {
           <Trophy className="w-4 h-4 text-amber-400" />
           <SectionTitle
             title="Hall of Fame"
-            subtitle="Current season leaders â€” final prizes lock at season end"
+            subtitle="Current season leaders — final prizes lock at season end"
             darkMode={darkMode}
           />
         </div>

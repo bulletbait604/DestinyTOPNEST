@@ -65,7 +65,7 @@ export default function LoadoutCard({
             type="button"
             disabled
             className={cn(destinySecondaryBtn(darkMode), 'opacity-40 cursor-not-allowed')}
-            title="Equip via Bungie â€” coming soon"
+            title="Equip via Bungie — coming soon"
           >
             Equip
           </button>

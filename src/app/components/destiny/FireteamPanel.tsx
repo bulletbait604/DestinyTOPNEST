@@ -87,7 +87,7 @@ export default function FireteamPanel({ darkMode }: { darkMode: boolean }) {
                       size={36}
                     />
                     <p className={cn('text-xs mt-1', t.muted)}>
-                      {lobby.activityType.replace(/_/g, ' ')} Â· {lobby.goal.replace(/_/g, ' ')}
+                      {lobby.activityType.replace(/_/g, ' ')} · {lobby.goal.replace(/_/g, ' ')}
                     </p>
                   </div>
                   <StatusPill label={lobby.status} tone="blue" />
@@ -102,7 +102,7 @@ export default function FireteamPanel({ darkMode }: { darkMode: boolean }) {
                   <div>
                     <p className="text-sm text-white">{lobby.hostDisplayName}</p>
                     <p className={cn('text-xs', t.muted)}>
-                      PL {lobby.hostPowerLevel} Â· GR {lobby.hostGuardianRank} Â·{' '}
+                      PL {lobby.hostPowerLevel} · GR {lobby.hostGuardianRank} ·{' '}
                       {lobby.goal.replace(/_/g, ' ')}
                     </p>
                   </div>

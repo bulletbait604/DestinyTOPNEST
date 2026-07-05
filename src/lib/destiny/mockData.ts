@@ -61,7 +61,7 @@ function lbEntry(
 
 export const MOCK_SEASON: Season = {
   id: SEASON_ID,
-  name: 'Nest Season 1 â€” Monument Era',
+  name: 'Nest Season 1 — Monument Era',
   startDate: '2026-06-09T17:00:00Z',
   endDate: '2026-06-30T17:00:00Z',
   status: 'active',

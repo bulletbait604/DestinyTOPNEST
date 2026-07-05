@@ -4,7 +4,7 @@ import type { DestinyIconRef } from '@/lib/destiny/types'
 import { D2_STAT_COLORS, getDestinyTheme, tierGlowClass } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
-/** Large glowing Bungie icon â€” abilities, weapons, aspects. */
+/** Large glowing Bungie icon — abilities, weapons, aspects. */
 export function GlowIcon({
   item,
   name,
@@ -51,7 +51,7 @@ export function GlowIcon({
   )
 }
 
-/** Destiny-style stat diamond â€” big number, minimal label. */
+/** Destiny-style stat diamond — big number, minimal label. */
 export function StatOrb({
   value,
   label,
@@ -76,7 +76,7 @@ export function StatOrb({
   )
 }
 
-/** Ability / grenade / super slot â€” icon with hover tooltip. */
+/** Ability / grenade / super slot — icon with hover tooltip. */
 export function AbilityChip({
   item,
   fallback,
@@ -104,7 +104,7 @@ export function AbilityChip({
   )
 }
 
-/** Hover tooltip for icons â€” slot + name + tier. */
+/** Hover tooltip for icons — slot + name + tier. */
 export function IconTooltip({
   slotLabel,
   name,
@@ -131,7 +131,7 @@ export function IconTooltip({
   )
 }
 
-/** In-game style character emblem â€” background banner + centered icon for active character. */
+/** In-game style character emblem — background banner + centered icon for active character. */
 export function CharacterEmblem({
   backgroundUrl,
   iconUrl,
@@ -210,7 +210,7 @@ export function BuildSection({
   )
 }
 
-/** Game card shell â€” depth, skew accent, optional banner. */
+/** Game card shell — depth, skew accent, optional banner. */
 export function GameCard({
   children,
   className,
@@ -248,7 +248,7 @@ export function TrustBadge({
 }
 
 const TRUST_RANK_TOOLTIP =
-  'Trust Rank (T.R.) â€” Top Nest commend from fireteam mates after a run. Scores your activity knowledge and vibes to help others find reliable players.'
+  'Trust Rank (T.R.) — Top Nest commend from fireteam members after a run. Scores your activity knowledge and vibes to help others find reliable players.'
 
 export function TrustRankBadge({
   trust,
@@ -269,7 +269,7 @@ export function TrustRankBadge({
   const rankTitle = title ?? trust?.topNestTitle ?? 'Unrated Guardian'
   const detail =
     trust && trust.reviewCount
-      ? `${rankTitle} Â· ${trust.reviewCount} review${trust.reviewCount === 1 ? '' : 's'}`
+      ? `${rankTitle} · ${trust.reviewCount} review${trust.reviewCount === 1 ? '' : 's'}`
       : rankTitle
 
   return (
@@ -296,23 +296,23 @@ export function PowerBadge({
 }: {
   power?: number
   rank?: number
-  /** Show Guardian Rank even when 0 or unset (displays â€”). */
+  /** Show Guardian Rank even when 0 or unset (displays —). */
   showRankAlways?: boolean
 }) {
   const showRank = showRankAlways || (rank != null && rank > 0)
-  const rankDisplay = rank != null ? rank : 'â€”'
+  const rankDisplay = rank != null ? rank : '—'
 
   return (
     <div className="flex items-center gap-2">
       {showRank ? (
-        <div className="d2-power-pill d2-power-pill-rank" title="Guardian Rank â€” Bungie account progression rank">
+        <div className="d2-power-pill d2-power-pill-rank" title="Guardian Rank — Bungie account progression rank">
           <span className="d2-power-pill-label">GR</span>
           <span className="d2-power-pill-value">{rankDisplay}</span>
         </div>
       ) : null}
       <div className="d2-power-pill d2-power-pill-gold" title="Power Level">
         <span className="d2-power-pill-label">PL</span>
-        <span className="d2-power-pill-value d2-power-pill-value-gold">{power ?? 'â€”'}</span>
+        <span className="d2-power-pill-value d2-power-pill-value-gold">{power ?? '—'}</span>
       </div>
     </div>
   )

@@ -1,8 +1,8 @@
-﻿/** DestinyTopNest visual theme â€” game-inspired, icon-forward. */
+﻿/** DestinyTopNest visual theme — game-inspired, icon-forward. */
 
 import { cn } from '@/lib/utils'
 
-/** Destiny Item Manager palette â€” character tiles, power, accents. */
+/** Destiny Item Manager palette — character tiles, power, accents. */
 export const DIM_COLORS = {
   power: '#f5dc56',
   accent: '#e8a534',
@@ -21,7 +21,7 @@ export const D2_RARITY = {
   exotic: '#c3a019',
 } as const
 
-/** Element damage colors â€” blueberries / light.gg / in-game. */
+/** Element damage colors — blueberries / light.gg / in-game. */
 export const D2_ELEMENTS = {
   kinetic: '#e8e8e8',
   arc: '#79bbe8',
@@ -133,7 +133,7 @@ export function getDestinyTheme(darkMode: boolean) {
 
 export function destinyNavPrimary(active: boolean, darkMode: boolean) {
   return cn(
-    'd2-tab flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold transition-all duration-200',
+    'd2-tab w-full flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 text-[10px] sm:text-xs font-semibold transition-all duration-200 min-h-[52px]',
     active && 'd2-tab-active',
     !active && (darkMode ? 'text-white/50 hover:text-white/90' : 'text-slate-500 hover:text-slate-900')
   )
@@ -141,7 +141,7 @@ export function destinyNavPrimary(active: boolean, darkMode: boolean) {
 
 export function destinyNavSecondary(active: boolean, darkMode: boolean) {
   return cn(
-    'd2-tab d2-tab-secondary flex flex-col items-center justify-center gap-1.5 w-full px-2 py-3.5 sm:py-4 text-[11px] sm:text-xs font-bold uppercase tracking-[0.14em] transition-all duration-200 min-h-[56px]',
+    'd2-tab d2-tab-secondary w-full flex flex-col items-center justify-center gap-1 px-1.5 sm:px-2 py-2.5 sm:py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.14em] transition-all duration-200 min-h-[52px]',
     active && 'd2-tab-active',
     !active && (darkMode ? 'text-white/45 hover:text-white/85 hover:bg-white/[0.04]' : 'text-slate-500 hover:text-slate-800 hover:bg-black/[0.04]')
   )

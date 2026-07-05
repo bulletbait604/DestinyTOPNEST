@@ -64,7 +64,7 @@ export function ItemIcon({
       )}
       style={{ width: size, height: size }}
     >
-      Â·
+      ·
     </div>
   )
 }
@@ -113,7 +113,7 @@ export function SubclassBadge({
       <ItemIcon item={subclassRef} name={subclass} size={32} />
       <span className={cn('text-sm font-semibold', t.body)}>
         <span className={cn('uppercase tracking-wide text-[11px]', t.gold)}>{subclass}</span>
-        <span className={cn('mx-1.5 text-white/25')}>Â·</span>
+        <span className={cn('mx-1.5 text-white/25')}>·</span>
         <span className="capitalize">{characterClass}</span>
       </span>
     </div>
@@ -316,7 +316,7 @@ export function SegmentedControl<T extends string>({
   )
 }
 
-export function LoadingBlock({ darkMode, label = 'Loadingâ€¦' }: { darkMode: boolean; label?: string }) {
+export function LoadingBlock({ darkMode, label = 'Loading…' }: { darkMode: boolean; label?: string }) {
   const t = getDestinyTheme(darkMode)
   return (
     <div className={cn('p-10 text-center', t.glass)}>
@@ -379,9 +379,9 @@ function LeaderboardRow({
         <p className={cn('font-semibold text-sm truncate', t.heading)}>{entry.bungieDisplayName}</p>
         {!compact && (
           <p className={cn('text-[11px] mt-0.5 truncate', t.muted)}>
-            {entry.clanTag ? `${entry.clanTag} Â· ` : ''}
+            {entry.clanTag ? `${entry.clanTag} · ` : ''}
             {platformIcon(entry.platform)}
-            {entry.powerLevel ? ` Â· ${entry.powerLevel} PL` : ''}
+            {entry.powerLevel ? ` · ${entry.powerLevel} PL` : ''}
           </p>
         )}
       </div>

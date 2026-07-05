@@ -64,7 +64,7 @@ export function useBungieLink(options?: { returnPath?: string }) {
 
   useEffect(() => {
     if (status?.needsReconnect && !linkMessage) {
-      setLinkMessage('Bungie session expired â€” reconnect once to restore live data.')
+      setLinkMessage('Bungie session expired — reconnect once to restore live data.')
     }
   }, [status?.needsReconnect, linkMessage])
 
@@ -105,7 +105,7 @@ export function useBungieLink(options?: { returnPath?: string }) {
         setLinkMessage(text)
         return { error: text }
       }
-      const text = `Synced ${json.synced ?? 0} run(s)${json.builds ? ` Â· ${json.builds} build(s)` : ''}${json.flagged ? ` Â· ${json.flagged} flagged for review` : ''}.`
+      const text = `Synced ${json.synced ?? 0} run(s)${json.builds ? ` · ${json.builds} build(s)` : ''}${json.flagged ? ` · ${json.flagged} flagged for review` : ''}.`
       setLinkMessage(text)
       return { synced: json.synced, flagged: json.flagged }
     } finally {

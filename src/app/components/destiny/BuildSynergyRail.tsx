@@ -45,7 +45,7 @@ export default function BuildSynergyRail({ build }: { build: BuildSnapshot }) {
         ) : null}
         <div>
           <p className="d2-synergy-label">{label}</p>
-          <p className="d2-synergy-sub">{build.subclass} Â· {build.characterClass}</p>
+          <p className="d2-synergy-sub">{build.subclass} · {build.characterClass}</p>
         </div>
       </div>
       <div className="d2-synergy-weapons">

@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         flagged: result.flagged,
         skipped: result.skipped,
         builds: result.builds,
-        message: `Synced ${result.synced} run(s) Â· ${result.builds} build(s) captured.`,
+        message: `Synced ${result.synced} run(s) · ${result.builds} build(s) captured.`,
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Sync failed'

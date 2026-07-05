@@ -1,6 +1,6 @@
 ﻿/**
  * Curated meta builds researched from community build sites.
- * Refreshed on a rolling 4-week window â€” sources cited with links.
+ * Refreshed on a rolling 4-week window — sources cited with links.
  *
  * Primary references:
  * - https://www.blueberries.gg/armor/best-destiny-2-builds/
@@ -53,7 +53,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     activityFocus: 'Raids & dungeons',
     excelsIn: 'Tank DPS & survivability',
     summary:
-      'Cross-class Praxic Blade meta paired with Stronghold for infinite block â€” recommended for raid teams that need a frontline.',
+      'Cross-class Praxic Blade meta paired with Stronghold for infinite block — recommended for raid teams that need a frontline.',
     publishedAt: '2026-06-10T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
@@ -72,7 +72,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     activityFocus: 'Endgame PvE',
     excelsIn: 'Melee loop & AoE',
     summary:
-      'Tempest Strike + Gambler\'s Dodge Combination Blow loop with Ascension for AoE â€” top Hunter recommendation alongside Lucky Pants variant.',
+      'Tempest Strike + Gambler\'s Dodge Combination Blow loop with Ascension for AoE — top Hunter recommendation alongside Lucky Pants variant.',
     publishedAt: '2026-06-10T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
@@ -80,7 +80,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
   {
     id: 'meta-bb-prismatic-artist-warlock',
     title: 'Prismatic Artist',
-    source: 'Blueberries.gg â€” Best Builds',
+    source: 'Blueberries.gg — Best Builds',
     sourceSite: 'blueberries.gg',
     sourceUrl: 'https://www.blueberries.gg/armor/best-destiny-2-builds/',
     class: 'warlock',
@@ -90,7 +90,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     activityFocus: 'Raids & dungeons',
     excelsIn: 'Endgame PvE',
     summary:
-      '#1 Warlock PvE build on Blueberries Renegades list â€” flexible Prismatic kit for expert raids and dungeons.',
+      '#1 Warlock PvE build on Blueberries Renegades list — flexible Prismatic kit for expert raids and dungeons.',
     publishedAt: '2026-06-01T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
@@ -98,7 +98,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
   {
     id: 'meta-bb-starfire-warlock',
     title: 'Starfire Protocol Boss Melt',
-    source: 'Blueberries.gg â€” Warlock builds',
+    source: 'Blueberries.gg — Warlock builds',
     sourceSite: 'blueberries.gg',
     sourceUrl: 'https://www.blueberries.gg/armor/best-destiny-2-builds/',
     class: 'warlock',
@@ -109,7 +109,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     activityFocus: 'Raid bosses',
     excelsIn: 'Damage phases',
     summary:
-      'Solar fusion grenade spam for raid boss melts â€” still a top-tier pick for Garden of Salvation and King\'s Fall DPS checks.',
+      'Solar fusion grenade spam for raid boss melts — still a top-tier pick for Garden of Salvation and King\'s Fall DPS checks.',
     publishedAt: '2026-06-01T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
@@ -117,7 +117,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
   {
     id: 'meta-bb-come-on-and-slam-titan',
     title: 'Come on and Slam (Wormgod)',
-    source: 'Blueberries.gg â€” Titan builds',
+    source: 'Blueberries.gg — Titan builds',
     sourceSite: 'blueberries.gg',
     sourceUrl: 'https://www.blueberries.gg/armor/destiny-2-titan-builds/',
     class: 'titan',
@@ -127,7 +127,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     activityFocus: 'Raids & dungeons',
     excelsIn: 'Melee DPS',
     summary:
-      '#1 Titan PvE build on Blueberries â€” bonk / slam loop for high burst in expert content.',
+      '#1 Titan PvE build on Blueberries — bonk / slam loop for high burst in expert content.',
     publishedAt: '2026-06-01T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
@@ -135,7 +135,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
   {
     id: 'meta-bb-gift-of-tempest-hunter',
     title: 'Gift of the Tempest',
-    source: 'Blueberries.gg â€” Hunter builds',
+    source: 'Blueberries.gg — Hunter builds',
     sourceSite: 'blueberries.gg',
     sourceUrl: 'https://www.blueberries.gg/armor/destiny-2-hunter-builds/',
     class: 'hunter',
@@ -144,7 +144,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     activityFocus: 'Raids',
     excelsIn: 'Arc DPS & add-clear',
     summary:
-      '#1 Hunter PvE build â€” Arc super and ability spam for raid add-clear and boss damage.',
+      '#1 Hunter PvE build — Arc super and ability spam for raid add-clear and boss damage.',
     publishedAt: '2026-06-01T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
@@ -152,7 +152,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
   {
     id: 'meta-bb-transcendent-tank-hunter',
     title: 'The Transcendent Tank',
-    source: 'Blueberries.gg â€” Hunter builds',
+    source: 'Blueberries.gg — Hunter builds',
     sourceSite: 'blueberries.gg',
     sourceUrl: 'https://www.blueberries.gg/armor/destiny-2-hunter-builds/',
     class: 'hunter',
@@ -162,7 +162,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     activityFocus: 'Grandmaster Nightfalls',
     excelsIn: 'Survivability',
     summary:
-      'Top GM Hunter pick â€” Prismatic sustain with void debuff support for Master content.',
+      'Top GM Hunter pick — Prismatic sustain with void debuff support for Master content.',
     publishedAt: '2026-06-01T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
@@ -181,7 +181,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     activityFocus: 'Raids',
     excelsIn: 'Boss damage phases',
     summary:
-      'Popular raid loadout pattern from light.gg high-skill database â€” Cuirass Thundercrash for burst boss DPS.',
+      'Popular raid loadout pattern from light.gg high-skill database — Cuirass Thundercrash for burst boss DPS.',
     publishedAt: '2026-06-12T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
@@ -199,7 +199,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     activityFocus: 'Contest raids',
     excelsIn: 'Day-one / contest',
     summary:
-      'Thundercrash + Cuirass raid build shared via DIM/builders.gg â€” amplified loop for contest mode clears.',
+      'Thundercrash + Cuirass raid build shared via DIM/builders.gg — amplified loop for contest mode clears.',
     publishedAt: '2026-06-08T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
@@ -236,7 +236,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     activityFocus: "King's Fall",
     excelsIn: 'Featured raid week',
     summary:
-      'Solar Hunter burst for King\'s Fall damage checks â€” Star-Eater rocket spam for Warpriest and Oryx phases.',
+      'Solar Hunter burst for King\'s Fall damage checks — Star-Eater rocket spam for Warpriest and Oryx phases.',
     publishedAt: '2026-06-16T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
@@ -262,7 +262,7 @@ export function metaResearchSummary(builds: ExternalBuildSource[]): string {
     return 'No external meta builds in the 4-week research window. Check back after the next research pass.'
   }
   const sites = Array.from(new Set(builds.map((b) => b.sourceSite ?? b.source))).slice(0, 4)
-  return `${builds.length} meta build(s) from the last 4 weeks â€” researched from ${sites.join(', ')}. Verified PGCR builds are shown separately.`
+  return `${builds.length} meta build(s) from the last 4 weeks — researched from ${sites.join(', ')}. Verified PGCR builds are shown separately.`
 }
 
 export const META_RESEARCH_SOURCES = [

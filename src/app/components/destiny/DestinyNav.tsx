@@ -41,10 +41,10 @@ export default function DestinyNav({ activeTab, onTabChange, darkMode, showAdmin
   const navActiveTab = LEGACY_PROFILE_TABS.includes(activeTab) ? 'profile' : activeTab
 
   return (
-    <div className="space-y-0 mb-4">
+    <div className="w-full min-w-0 space-y-0">
       <nav
         className={cn(
-          'd2-tab-bar grid grid-cols-3 gap-0',
+          'd2-tab-bar grid grid-cols-3 gap-0 w-full',
           darkMode ? 'bg-black/20' : 'bg-black/[0.03]'
         )}
         aria-label="Main sections"
@@ -68,8 +68,8 @@ export default function DestinyNav({ activeTab, onTabChange, darkMode, showAdmin
 
       <nav
         className={cn(
-          'd2-tab-bar d2-tab-bar-secondary grid gap-0 mt-0',
-          exploreTabs.length === 4 ? 'grid-cols-4' : 'grid-cols-3',
+          'd2-tab-bar d2-tab-bar-secondary grid gap-0 mt-0 w-full',
+          exploreTabs.length === 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3',
           darkMode ? 'bg-black/20' : 'bg-black/[0.03]'
         )}
         aria-label="More sections"

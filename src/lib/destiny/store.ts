@@ -1,6 +1,6 @@
 ﻿/**
  * MongoDB persistence helpers for DestinyTopNest.
- * All user-facing data comes from Mongo + Bungie API â€” no mock fallbacks.
+ * All user-facing data comes from Mongo + Bungie API — no mock fallbacks.
  */
 
 import clientPromise from '@/lib/mongodb'

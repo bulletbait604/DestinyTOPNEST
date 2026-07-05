@@ -50,7 +50,7 @@ export default function BuildIntelPanel({ darkMode }: { darkMode: boolean }) {
           <Brain className="w-5 h-5 text-purple-400" />
           <SectionTitle
             title="Build Intelligence"
-            subtitle="Top builds from verified Top Nest runs â€” not random scrapes"
+            subtitle="Top builds from verified Top Nest runs — not random scrapes"
             darkMode={darkMode}
           />
         </div>
@@ -114,7 +114,7 @@ export default function BuildIntelPanel({ darkMode }: { darkMode: boolean }) {
       <GlassCard darkMode={darkMode}>
         <SectionTitle
           title="Current Online Builds (curated)"
-          subtitle="Admin-approved external sources Â· cached with last-checked date"
+          subtitle="Admin-approved external sources · cached with last-checked date"
           darkMode={darkMode}
         />
         <div className="space-y-2">
@@ -129,7 +129,7 @@ export default function BuildIntelPanel({ darkMode }: { darkMode: boolean }) {
                 <div>
                   <p className="text-white text-sm">{ext.title}</p>
                   <p className={cn('text-xs', t.muted)}>
-                    {ext.source} Â· {ext.class} {ext.subclass} Â· checked{' '}
+                    {ext.source} · {ext.class} {ext.subclass} · checked{' '}
                     {new Date(ext.lastChecked).toLocaleDateString()}
                   </p>
                 </div>

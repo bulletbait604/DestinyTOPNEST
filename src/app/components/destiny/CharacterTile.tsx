@@ -21,7 +21,7 @@ export interface CharacterTileProps {
   disabled?: boolean
 }
 
-/** DIM-style horizontal character tile â€” emblem banner, class, power. */
+/** DIM-style horizontal character tile — emblem banner, class, power. */
 export default function CharacterTile({
   character,
   isCurrent = false,
@@ -34,7 +34,7 @@ export default function CharacterTile({
 }: CharacterTileProps) {
   const bgUrl = character.emblemBackgroundUrl ?? character.emblemUrl
   const classFallback = DIM_CLASS_COLORS[character.characterClass]
-  const label = `${classLabel(character.characterClass)} Â· ${character.powerLevel} power`
+  const label = `${classLabel(character.characterClass)} · ${character.powerLevel} power`
 
   const body = (
     <>

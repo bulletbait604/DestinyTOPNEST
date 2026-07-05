@@ -87,7 +87,7 @@ export default function PlayerCardDetail({
               {switchingCharacter ? (
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-white/50">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Syncing from Bungieâ€¦
+                  Syncing from Bungie…
                 </span>
               ) : null}
             </div>
@@ -110,7 +110,7 @@ export default function PlayerCardDetail({
         <div className="ml-auto flex items-center gap-2">
           <span className={cn('text-sm font-semibold capitalize', t.body)}>
             {classLabel(viewProfile.characterClass)}
-            {loadout?.subclass ? ` Â· ${loadout.subclass}` : ''}
+            {loadout?.subclass ? ` · ${loadout.subclass}` : ''}
           </span>
           <PowerBadge
             power={viewProfile.powerLevel}
@@ -122,7 +122,7 @@ export default function PlayerCardDetail({
 
       {!loadout ? (
         <p className={cn('px-4 py-6 text-sm text-center', t.muted)}>
-          {switchingCharacter ? 'Loading equipped gearâ€¦' : 'Sync Bungie to load live build data.'}
+          {switchingCharacter ? 'Loading equipped gear…' : 'Sync Bungie to load live build data.'}
         </p>
       ) : (
         <div className="d2-profile-build-body">

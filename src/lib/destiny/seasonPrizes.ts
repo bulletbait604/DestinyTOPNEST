@@ -39,7 +39,7 @@ export function computeSeasonStandings(
   const storedWinners = season.winners ?? []
   const eligibility =
     raidTop.length || dungeonTop.length
-      ? `Season ends ${new Date(season.endDate).toLocaleDateString()}. Current leaders are shown below â€” final prizes lock at season end.`
+      ? `Season ends ${new Date(season.endDate).toLocaleDateString()}. Current leaders are shown below — final prizes lock at season end.`
       : 'Sync verified raid and dungeon clears to appear on season leaderboards and prize tracks.'
 
   return {
@@ -78,7 +78,7 @@ export function prizeEligibilityForUser(
     return 'Eligible for verified run scoring this season. Climb a leaderboard to track prize status.'
   }
 
-  return `Season rank #${best.rank} in ${best.category.replace(/_/g, ' ')} â€” ${best.points} pts. Top 5 at season end win prizes.`
+  return `Season rank #${best.rank} in ${best.category.replace(/_/g, ' ')} — ${best.points} pts. Top 5 at season end win prizes.`
 }
 
 export interface UserPrizeTrackEntry {

@@ -1,9 +1,9 @@
 ﻿import type { Season } from '@/lib/destiny/types'
 
-/** Operational season config â€” update dates when Bungie rotates seasons. */
+/** Operational season config — update dates when Bungie rotates seasons. */
 export const ACTIVE_SEASON: Season = {
   id: 'dtn-nest-s1',
-  name: 'Nest Season 1 â€” Monument Era',
+  name: 'Nest Season 1 — Monument Era',
   startDate: '2026-06-09T17:00:00Z',
   endDate: '2026-07-31T17:00:00Z',
   status: 'active',

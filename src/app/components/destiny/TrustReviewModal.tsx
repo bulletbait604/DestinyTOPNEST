@@ -76,9 +76,9 @@ export default function TrustReviewModal({
       >
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <h3 className={cn('text-lg font-semibold', t.heading)}>Trust Rank â€” {displayName}</h3>
+            <h3 className={cn('text-lg font-semibold', t.heading)}>Trust Rank — {displayName}</h3>
             <p className={cn('text-xs mt-1', t.muted)}>
-              {activityName} Â· Commend this rando with Knowledge + Vibes
+              {activityName} · Commend this rando with Knowledge + Vibes
             </p>
           </div>
           <button type="button" onClick={onClose} className={cn('p-1 rounded-lg', t.muted)}>

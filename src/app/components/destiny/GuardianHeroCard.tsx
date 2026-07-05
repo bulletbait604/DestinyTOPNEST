@@ -75,7 +75,7 @@ export default function GuardianHeroCard({ profile, darkMode, linked = true }: P
                   {profile.clanTag} {profile.clanName}
                 </span>
               ) : null}
-              {profile.clanName && profile.clanTag ? <span>Â·</span> : null}
+              {profile.clanName && profile.clanTag ? <span>·</span> : null}
               <span>{platformIcon(profile.platform)}</span>
               {linked ? (
                 <span className="text-emerald-300/80">Live Bungie data</span>
@@ -114,7 +114,7 @@ export default function GuardianHeroCard({ profile, darkMode, linked = true }: P
             <p className="text-xs text-white/45">Reputation</p>
             <p className="text-2xl font-semibold flex items-center gap-1 sm:justify-end text-amber-200/95">
               <Star className="w-5 h-5" />
-              {profile.reputationScore > 0 ? profile.reputationScore.toFixed(1) : 'â€”'}
+              {profile.reputationScore > 0 ? profile.reputationScore.toFixed(1) : '—'}
             </p>
             {profile.reputationScore <= 0 && (
               <p className="text-[10px] text-white/40 mt-0.5">No fireteam reviews yet</p>

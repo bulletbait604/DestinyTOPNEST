@@ -19,7 +19,7 @@ export async function destinyAuthHandler(
   }
 }
 
-/** Requires admin or owner â€” admin review, diagnostics. */
+/** Requires admin or owner — admin review, diagnostics. */
 export async function destinyStaffHandler(
   req: NextRequest,
   handler: () => Promise<NextResponse>

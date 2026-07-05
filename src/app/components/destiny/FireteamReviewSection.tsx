@@ -55,7 +55,7 @@ export default function FireteamReviewSection({ darkMode, linked = true }: Props
           <Users className="w-4 h-4 text-sky-400/80" />
           <SectionTitle
             title="Trust Rank commends"
-            subtitle="Vote Knowledge + Vibes for randos in your fireteam â€” like D2 commendations"
+            subtitle="Vote Knowledge + Vibes for randos in your fireteam — like D2 commendations"
             darkMode={darkMode}
           />
         </div>
@@ -63,7 +63,7 @@ export default function FireteamReviewSection({ darkMode, linked = true }: Props
         {loading ? (
           <p className={cn('text-sm flex items-center gap-2', t.muted)}>
             <Loader2 className="w-4 h-4 animate-spin" />
-            Loading reviewable runsâ€¦
+            Loading reviewable runs…
           </p>
         ) : runs.length === 0 ? (
           <p className={cn('text-sm', t.muted)}>

@@ -92,7 +92,7 @@ export default function FireteamReviewModal({
           <div>
             <h3 className={cn('text-lg font-semibold', t.heading)}>Rate {displayName}</h3>
             <p className={cn('text-xs mt-1', t.muted)}>
-              {activityName} Â· 1 = poor Â· 5 = excellent
+              {activityName} · 1 = poor · 5 = excellent
             </p>
           </div>
           <button type="button" onClick={onClose} className={cn('p-1 rounded-lg', t.muted)}>

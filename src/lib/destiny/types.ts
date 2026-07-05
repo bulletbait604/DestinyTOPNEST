@@ -1,4 +1,4 @@
-﻿/** DestinyTopNest domain types â€” Mongo + API shapes. */
+﻿/** DestinyTopNest domain types — Mongo + API shapes. */
 
 export type DestinyPlatform = 'steam' | 'xbox' | 'playstation' | 'epic' | 'stadia'
 export type DestinyCharacterClass = 'titan' | 'hunter' | 'warlock'
@@ -243,7 +243,7 @@ export interface ReputationReview {
   createdAt: string
 }
 
-/** Trust Rank commend â€” Knowledge + Vibes (1â€“3 each) for fireteam randos. */
+/** Trust Rank commend — Knowledge + Vibes (1–3 each) for fireteam randos. */
 export interface TrustReview {
   id: string
   reviewerId: string
@@ -361,7 +361,7 @@ export interface AdminReviewRecord {
   run?: RunRecord
 }
 
-/** One guardian slot â€” DIM-style horizontal character tile data. */
+/** One guardian slot — DIM-style horizontal character tile data. */
 export interface CharacterSummary {
   characterId: string
   characterClass: DestinyCharacterClass

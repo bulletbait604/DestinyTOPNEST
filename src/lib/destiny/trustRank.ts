@@ -7,7 +7,7 @@ export type KnowledgeTier = 'New Light' | 'Guardian' | 'Top Nest'
 export type VibesTier = 'Chill' | 'Excited' | 'Composed'
 
 export const KNOWLEDGE_VOTE_LABELS: Record<KnowledgeScore, string> = {
-  1: 'Knows almost 0 about mechanics',
+  1: 'Knows almost nothing about mechanics',
   2: 'Can manage the basics',
   3: 'Activity professional',
 }

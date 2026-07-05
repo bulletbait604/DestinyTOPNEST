@@ -72,7 +72,7 @@ export default function SeasonPrizeClaimSection({
           title="Prize claim"
           subtitle={
             seasonEnded
-              ? 'Season ended â€” submit how to receive your prize'
+              ? 'Season ended — submit how to receive your prize'
               : 'Pre-register your prize while holding a winning rank'
           }
           darkMode={darkMode}
@@ -118,7 +118,7 @@ export default function SeasonPrizeClaimSection({
               >
                 {prizeEligible.map((track) => (
                   <option key={track.category} value={track.category}>
-                    {CATEGORY_LABELS[track.category]} #{track.rank} â€” {track.prizeIfHeld}
+                    {CATEGORY_LABELS[track.category]} #{track.rank} — {track.prizeIfHeld}
                   </option>
                 ))}
               </select>

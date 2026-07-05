@@ -26,13 +26,13 @@ export function calculateRunPoints(input: ScoringInput): ScoringResult {
     return { points: 0, eligible: false, reasons: ['Run not completed'] }
   }
   if (input.checkpointLikely) {
-    return { points: 0, eligible: false, reasons: ['Checkpoint run â€” requires manual approval for scoring'] }
+    return { points: 0, eligible: false, reasons: ['Checkpoint run — requires manual approval for scoring'] }
   }
   if (input.verificationStatus !== 'verified') {
     return { points: 0, eligible: false, reasons: [`Verification status: ${input.verificationStatus}`] }
   }
   if (input.suspiciousScore >= 70) {
-    return { points: 0, eligible: false, reasons: ['Suspicious score 70+ â€” blocked until admin approval'] }
+    return { points: 0, eligible: false, reasons: ['Suspicious score 70+ — blocked until admin approval'] }
   }
 
   const maxRandos =

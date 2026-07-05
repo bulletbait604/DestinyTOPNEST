@@ -12,7 +12,7 @@ const STAT_ORDER = [
   { key: 'Strength' as const, label: 'Str', short: 'ME' },
 ] as const
 
-/** light.gg / DIM-style horizontal stat bars (0â€“100). */
+/** light.gg / DIM-style horizontal stat bars (0–100). */
 export default function ArmorStatMatrix({
   stats,
   tier = 100,

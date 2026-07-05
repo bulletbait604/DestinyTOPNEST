@@ -52,7 +52,7 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
       <PageIntro
         darkMode={darkMode}
         title="Leaderboards"
-        description="Verified full clears only. Earn points with clanmates and randos â€” caps apply per activity type."
+        description="Verified full clears only. Earn points with clanmates and randos — caps apply per activity type."
       />
 
       <GlassCard darkMode={darkMode}>
@@ -74,7 +74,7 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
         </div>
 
         {loading ? (
-          <LoadingBlock darkMode={darkMode} label="Loading rankingsâ€¦" />
+          <LoadingBlock darkMode={darkMode} label="Loading rankings…" />
         ) : (
           <LeaderboardTable entries={entries} darkMode={darkMode} />
         )}

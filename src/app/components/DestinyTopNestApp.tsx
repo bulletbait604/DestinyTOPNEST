@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
-import { BRAND_SHORT, BRAND_TAGLINE } from '@/lib/destiny/branding'
+import { BRAND_MISSION } from '@/lib/destiny/branding'
 import {
   isDestinyTopNestTab,
   parseTabFromSearch,
@@ -107,17 +107,12 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
 
   return (
     <div className={cn('rounded-xl overflow-hidden ring-1 ring-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.45)]', theme.shell)}>
-      <TopNestBrandBanner title={BRAND_SHORT} tagline={BRAND_TAGLINE} />
+      <TopNestBrandBanner app tagline={BRAND_MISSION} />
 
-      <div className="px-4 sm:px-6 py-4 sm:py-5">
-        <div className="flex flex-col xl:flex-row xl:items-start xl:gap-5 gap-3 mb-4">
-          <PlayerCardShell darkMode={darkMode} />
-          <div className="flex-1 min-w-0">
-            <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
-          </div>
-        </div>
-
-        <div className="animate-in fade-in duration-300">{renderPanel()}</div>
+      <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4 space-y-4">
+        <PlayerCardShell darkMode={darkMode} />
+        <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
+        <div className="animate-in fade-in duration-300 min-w-0">{renderPanel()}</div>
       </div>
     </div>
   )

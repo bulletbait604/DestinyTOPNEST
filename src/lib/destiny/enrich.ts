@@ -45,22 +45,22 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     build.classRef ?? resolveClassIcon(build.characterClass),
     build.subclassRef ?? resolveSubclass(build.subclass),
     build.exoticArmorRef ??
-      (build.exoticArmor !== 'â€”' ? resolveByName(build.exoticArmor) : Promise.resolve(undefined)),
+      (build.exoticArmor !== '—' ? resolveByName(build.exoticArmor) : Promise.resolve(undefined)),
     build.exoticWeaponRef ??
       (build.exoticWeapon ? resolveByName(build.exoticWeapon) : Promise.resolve(undefined)),
     build.kineticWeaponRef ??
-      (build.kineticWeapon !== 'â€”' ? resolveByName(build.kineticWeapon) : Promise.resolve(undefined)),
+      (build.kineticWeapon !== '—' ? resolveByName(build.kineticWeapon) : Promise.resolve(undefined)),
     build.energyWeaponRef ??
-      (build.energyWeapon !== 'â€”' ? resolveByName(build.energyWeapon) : Promise.resolve(undefined)),
+      (build.energyWeapon !== '—' ? resolveByName(build.energyWeapon) : Promise.resolve(undefined)),
     build.powerWeaponRef ??
-      (build.powerWeapon !== 'â€”' ? resolveByName(build.powerWeapon) : Promise.resolve(undefined)),
+      (build.powerWeapon !== '—' ? resolveByName(build.powerWeapon) : Promise.resolve(undefined)),
     build.aspectRefs?.length
       ? Promise.resolve(build.aspectRefs)
       : Promise.all(build.aspects.map((a) => resolveByName(a, 'DestinySandboxPerkDefinition'))),
     build.fragmentRefs?.length
       ? Promise.resolve(build.fragmentRefs)
       : Promise.all(build.fragments.map((f) => resolveByName(f, 'DestinySandboxPerkDefinition'))),
-    build.superRef ?? (build.super !== 'â€”' ? resolveByName(build.super) : Promise.resolve(undefined)),
+    build.superRef ?? (build.super !== '—' ? resolveByName(build.super) : Promise.resolve(undefined)),
     build.classAbilityRef ??
       (build.abilities[1] ? resolveByName(build.abilities[1]) : Promise.resolve(undefined)),
     build.jumpRef ??

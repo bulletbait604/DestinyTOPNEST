@@ -74,8 +74,7 @@ export default function HomePage() {
   return (
     <SiteBackdrop variant="hub">
       <header className="d2-app-header flex items-center justify-end gap-2 px-4 py-2.5">
-        <TopNestLogoMark size={28} className="mr-auto" />
-        <span className="text-xs text-white/55 truncate max-w-[40vw] sm:max-w-none">
+        <span className="text-xs text-white/55 truncate mr-auto max-w-[55vw] sm:max-w-none">
           {user.displayName}
         </span>
         <button
@@ -87,7 +86,7 @@ export default function HomePage() {
           Log out
         </button>
       </header>
-      <main className="container mx-auto max-w-6xl px-2 sm:px-4 py-4 flex-1">
+      <main className="container mx-auto w-full max-w-7xl px-2 sm:px-4 py-2 sm:py-3 flex-1">
         <DestinyTopNestApp darkMode isAdmin={isAdmin} />
       </main>
       <footer className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.18em] text-white/30 border-t border-white/[0.06] bg-black/20">

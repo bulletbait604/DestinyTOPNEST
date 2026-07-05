@@ -10,12 +10,14 @@ import {
   SectionTitle,
   SegmentedControl,
 } from '@/app/components/destiny/DestinyUi'
+import BungieConnectBanner from '@/app/components/destiny/BungieConnectBanner'
 import LoadoutCard from '@/app/components/destiny/LoadoutCard'
 import CommunityBuildCard from '@/app/components/destiny/CommunityBuildCard'
 import ExternalMetaBuildCard from '@/app/components/destiny/ExternalMetaBuildCard'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 import { destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import { useBungieLink } from '@/hooks/useBungieLink'
 import { cn } from '@/lib/utils'
 
 interface LoadoutsResponse {
@@ -40,6 +42,7 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
   const [externalBuilds, setExternalBuilds] = useState<ExternalBuildSource[]>([])
   const [metaResearchSummary, setMetaResearchSummary] = useState('')
   const [loading, setLoading] = useState(true)
+  const bungie = useBungieLink()
   const t = getDestinyTheme(darkMode)
 
   const load = useCallback(async () => {
@@ -66,13 +69,23 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
   }, [initialSection])
 
   useEffect(() => {
-    load()
+    void load()
+  }, [load, bungie.linked])
+
+  useEffect(() => {
+    const onRefresh = () => void load()
+    window.addEventListener('topnest-profile-refresh', onRefresh)
+    return () => window.removeEventListener('topnest-profile-refresh', onRefresh)
   }, [load])
 
   const topByClass = rankTopLoadoutsByClass(verifiedBuilds, 5)
 
   return (
     <div className="space-y-6">
+      {(bungie.status?.needsReconnect || !bungie.linked) && (
+        <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="compact" showSync={false} />
+      )}
+
       <PageIntro
         darkMode={darkMode}
         title="Loadouts"
@@ -93,7 +106,7 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
 
       {loading ? (
         <GlassCard darkMode={darkMode}>
-          <p className={cn('text-sm text-center py-8', t.muted)}>Loading loadoutsâ€¦</p>
+          <p className={cn('text-sm text-center py-8', t.muted)}>Loading loadouts…</p>
         </GlassCard>
       ) : section === 'mine' ? (
         <>
@@ -133,7 +146,7 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
               type="button"
               disabled
               className={cn(destinySecondaryBtn(darkMode), 'mt-4 opacity-50 cursor-not-allowed')}
-              title="Save from current gear â€” coming soon"
+              title="Save from current gear — coming soon"
             >
               Save current loadout
             </button>
@@ -186,7 +199,7 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
           <GlassCard darkMode={darkMode}>
             <SectionTitle
               title="Verified PGCR builds"
-              subtitle="From synced Top Nest run data â€” separate from external meta research"
+              subtitle="From synced Top Nest run data — separate from external meta research"
               darkMode={darkMode}
             />
             {verifiedBuilds.length ? (

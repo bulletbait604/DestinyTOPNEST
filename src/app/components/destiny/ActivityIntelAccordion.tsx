@@ -86,8 +86,8 @@ function IntelBox({
           <div className="min-w-0 flex-1">
             <p className="d2-wiki-box-title truncate">{activity.name}</p>
             <p className="d2-wiki-box-meta">
-              {kind === 'raid' ? 'Raid' : 'Dungeon'} Â· {intel.difficulty}
-              {intel.resetsIn ? ` Â· ${intel.resetsIn}` : ''}
+              {kind === 'raid' ? 'Raid' : 'Dungeon'} · {intel.difficulty}
+              {intel.resetsIn ? ` · ${intel.resetsIn}` : ''}
             </p>
           </div>
         </div>

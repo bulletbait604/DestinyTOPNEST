@@ -123,7 +123,7 @@ export async function fetchCharacterBuild(
 
   const items = profile.characterEquipment?.data?.[characterId]?.items ?? []
   const weapons: Record<string, string> = {}
-  let exoticArmor = 'â€”'
+  let exoticArmor = '—'
   let exoticArmorRef: DestinyIconRef | undefined
   let exoticWeapon: string | undefined
   let exoticWeaponRef: DestinyIconRef | undefined
@@ -199,11 +199,11 @@ export async function fetchCharacterBuild(
   const meleeRef = plugsByCategory.melee
   const grenadeRef = plugsByCategory.grenade
 
-  const superAbility = superRef?.name ?? 'â€”'
-  const classAbility = classAbilityRef?.name ?? 'â€”'
-  const jump = jumpRef?.name ?? 'â€”'
-  const melee = meleeRef?.name ?? 'â€”'
-  const grenade = grenadeRef?.name ?? 'â€”'
+  const superAbility = superRef?.name ?? '—'
+  const classAbility = classAbilityRef?.name ?? '—'
+  const jump = jumpRef?.name ?? '—'
+  const melee = meleeRef?.name ?? '—'
+  const grenade = grenadeRef?.name ?? '—'
 
   return {
     id: `live-${characterId}`,
@@ -214,12 +214,12 @@ export async function fetchCharacterBuild(
     super: superAbility,
     aspects: aspects.slice(0, 2),
     fragments: fragments.slice(0, 5),
-    abilities: [superAbility, classAbility, jump, melee, grenade].filter((a) => a !== 'â€”'),
+    abilities: [superAbility, classAbility, jump, melee, grenade].filter((a) => a !== '—'),
     exoticArmor,
     exoticWeapon,
-    kineticWeapon: weapons.kinetic ?? 'â€”',
-    energyWeapon: weapons.energy ?? 'â€”',
-    powerWeapon: weapons.power ?? 'â€”',
+    kineticWeapon: weapons.kinetic ?? '—',
+    energyWeapon: weapons.energy ?? '—',
+    powerWeapon: weapons.power ?? '—',
     exoticArmorRef,
     exoticWeaponRef,
     kineticWeaponRef,

@@ -4,7 +4,11 @@ export const BRAND_FULL = "Destiny's Top Nest"
 export const BRAND_SHORT = 'Top Nest'
 
 export const BRAND_TAGLINE =
-  'Verified raid and dungeon leaderboards, fireteams, loadouts, and season prizes — built for the community.'
+  'A community hub built to bring Guardians together — forge new friendships, compete with honor, and live the Guardian Oath through verified raids, fireteams, and season rewards.'
+
+/** Hero mission copy on the logged-in home shell. */
+export const BRAND_MISSION =
+  'Top Nest exists to unite Guardians across Destiny — sparking healthy competition, rewarding the friendships forged in fireteams, and calling every player to embrace the Guardian Oath. Find your people, prove your skill, and rise together.'
 
 /** Logo assets (public/) */
 export const BRAND_LOGO_PATH = '/brand/topnest-logo.png'

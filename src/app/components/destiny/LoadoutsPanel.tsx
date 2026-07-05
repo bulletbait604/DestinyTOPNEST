@@ -124,7 +124,7 @@ export default function LoadoutsPanel({ darkMode }: { darkMode: boolean }) {
       <PageIntro
         darkMode={darkMode}
         title="Loadouts"
-        description="Your live gear from Bungie. Copy builds to share â€” equip support coming soon."
+        description="Your live gear from Bungie. Copy builds to share — equip support coming soon."
       />
 
       <GlassCard darkMode={darkMode}>

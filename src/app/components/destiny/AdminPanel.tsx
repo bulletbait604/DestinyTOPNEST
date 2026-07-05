@@ -120,14 +120,14 @@ export default function AdminPanel({ darkMode }: { darkMode: boolean }) {
             Finalize season & lock winners
           </button>
         ) : (
-          <p className={t.muted}>Season already archived â€” winners are locked.</p>
+          <p className={t.muted}>Season already archived — winners are locked.</p>
         )}
         {hallPreview.length > 0 && (
           <div className="mt-4 space-y-1">
             <p className={cn('text-xs font-medium', t.caption)}>Current leaders preview</p>
             {hallPreview.slice(0, 6).map((w, i) => (
               <p key={i} className={cn('text-xs', t.muted)}>
-                #{w.rank} {w.displayName} Â· {w.category.replace(/_/g, ' ')}
+                #{w.rank} {w.displayName} · {w.category.replace(/_/g, ' ')}
               </p>
             ))}
           </div>
@@ -146,11 +146,11 @@ export default function AdminPanel({ darkMode }: { darkMode: boolean }) {
             {pendingClaims.map((claim) => (
               <div key={claim.id} className="rounded-xl p-4 bg-black/30 border border-purple-500/20">
                 <p className="text-white font-semibold">
-                  {claim.userId} Â· {claim.category.replace(/_/g, ' ')} #{claim.rank}
+                  {claim.userId} · {claim.category.replace(/_/g, ' ')} #{claim.rank}
                 </p>
                 <p className={cn('text-xs mt-1', t.muted)}>{claim.prize}</p>
                 <p className={cn('text-xs mt-1', t.body)}>
-                  {claim.platform} Â· {claim.contact}
+                  {claim.platform} · {claim.contact}
                 </p>
                 <div className="flex flex-wrap gap-2 mt-3">
                   <button
@@ -181,7 +181,7 @@ export default function AdminPanel({ darkMode }: { darkMode: boolean }) {
           <ShieldAlert className="w-5 h-5 text-red-400" />
           <SectionTitle
             title="Admin Review"
-            subtitle="Flagged runs Â· AI risk scores Â· manual approve/reject"
+            subtitle="Flagged runs · AI risk scores · manual approve/reject"
             darkMode={darkMode}
           />
         </div>
@@ -201,7 +201,7 @@ export default function AdminPanel({ darkMode }: { darkMode: boolean }) {
                     <div>
                       <p className="text-white font-semibold">{run?.activityName ?? 'Unknown activity'}</p>
                       <p className={cn('text-xs', t.muted)}>
-                        PGCR {run?.pgcrId} Â· {run?.durationSeconds ? formatDuration(run.durationSeconds) : 'â€”'}
+                        PGCR {run?.pgcrId} · {run?.durationSeconds ? formatDuration(run.durationSeconds) : '—'}
                       </p>
                     </div>
                     <StatusPill
@@ -212,7 +212,7 @@ export default function AdminPanel({ darkMode }: { darkMode: boolean }) {
                   <p className={cn('text-sm mt-2', t.muted)}>{review.aiSummary}</p>
                   {run?.aiReview && (
                     <p className={cn('text-xs mt-1', t.purple)}>
-                      AI: {run.aiReview.recommendation} â€” {run.aiReview.reasons.join('; ')}
+                      AI: {run.aiReview.recommendation} — {run.aiReview.reasons.join('; ')}
                     </p>
                   )}
                   <div className="flex flex-wrap gap-2 mt-4">

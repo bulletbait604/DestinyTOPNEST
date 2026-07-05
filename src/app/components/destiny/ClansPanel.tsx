@@ -51,7 +51,7 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
             <h3 className="text-2xl font-bold text-white">
               {clan.tag} {clan.name}
             </h3>
-            <p className={cn('text-sm mt-1', t.muted)}>{clan.memberCount} members Â· {clan.points} pts</p>
+            <p className={cn('text-sm mt-1', t.muted)}>{clan.memberCount} members · {clan.points} pts</p>
             {clan.recruitmentOpen && <StatusPill label="Recruiting" tone="green" />}
             </div>
           </div>

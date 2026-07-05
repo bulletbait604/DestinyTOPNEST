@@ -117,7 +117,7 @@ export async function searchDestinyEntities(
     }))
 }
 
-/** Public â€” no OAuth required. Health check + manifest version probe. */
+/** Public — no OAuth required. Health check + manifest version probe. */
 export async function getDestinyManifestHealth(): Promise<DestinyManifestInfo> {
   return getDestinyManifest()
 }
@@ -134,7 +134,7 @@ export async function searchPlayer(displayName: string, displayNameCode: number)
   >(`/User/Search/GlobalName/${encoded}/${displayNameCode}/`)
 }
 
-/** Profile + characters â€” requires membershipType + membershipId. */
+/** Profile + characters — requires membershipType + membershipId. */
 export async function getPlayerProfile(
   membershipType: number,
   membershipId: string,
@@ -174,7 +174,7 @@ export async function getActivityHistory(
   )
 }
 
-/** Post-game carnage report â€” core for run verification. */
+/** Post-game carnage report — core for run verification. */
 export async function getPostGameCarnageReport(activityId: string) {
   return bungieFetch(`/Destiny2/Stats/PostGameCarnageReport/${activityId}/`)
 }
@@ -214,7 +214,7 @@ export async function getActivityHistoryInstance(
 }
 
 /**
- * Equip loadout â€” only where Bungie API supports it (requires OAuth + appropriate scopes).
+ * Equip loadout — only where Bungie API supports it (requires OAuth + appropriate scopes).
  * Returns null with reason when not supported in current phase.
  */
 export async function equipLoadoutItem(
