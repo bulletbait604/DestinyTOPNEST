@@ -48,6 +48,19 @@ npm run dev
 
 See `docs/DESTINYTOPNEST_API_SETUP.md` for full API and collection documentation.
 
+## MongoDB migration from SDHQCC
+
+Top Nest data was migrated from the `sdhq` database into `destinytopnest` (users, runs, builds, seasons, manifest cache, etc.). The standalone app uses `MONGODB_DB_NAME=destinytopnest` by default.
+
+To re-run or migrate on another cluster:
+
+```bash
+# Pull MONGODB_URI from your environment, then:
+npm run migrate:from-sdhq
+```
+
+Optional: `SOURCE_DB_NAME=sdhq`, `DRY_RUN=1` (count only). The script also copies Kick `users` rows referenced by `destiny_users`.
+
 ## Deploy
 
 Deploy to Vercel (or similar), set env vars, and update Bungie OAuth redirect to your production URL.

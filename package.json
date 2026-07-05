@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migrate:from-sdhq": "node scripts/migrate-from-sdhq.mjs"
   },
   "dependencies": {
     "@types/node": "^20.14.10",
