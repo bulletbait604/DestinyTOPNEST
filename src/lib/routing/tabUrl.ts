@@ -19,6 +19,7 @@ export function isDestinyTopNestTab(value: string): value is DestinyTopNestTab {
 export function parseTabFromSearch(search: string): DestinyTopNestTab {
   const params = new URLSearchParams(search)
   const tab = params.get('tab') ?? params.get('destiny')
+  if (tab === 'season') return 'leaderboards'
   if (tab && isDestinyTopNestTab(tab)) return tab
   if (params.get('bungie')) return 'overview'
   return 'overview'

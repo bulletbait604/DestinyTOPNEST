@@ -126,16 +126,8 @@ export default function ProfilePanel({
         <ProfileLoadoutsSection darkMode={darkMode} initialSection={initialLoadoutSection} />
       ) : (
         <>
-          {(bungie.status?.needsReconnect || !linked) && (
-            <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="compact" showSync={false} />
-          )}
-
           {linked && (
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.08] bg-black/25 px-3 py-2.5">
-              <StatusPill
-                label={`Bungie · ${bungie.status?.bungieDisplayName ?? profile.bungieDisplayName}`}
-                tone="green"
-              />
+            <div className="flex flex-wrap items-center justify-end gap-2 rounded-xl border border-white/[0.08] bg-black/25 px-3 py-2.5">
               <button
                 type="button"
                 disabled={bungie.disconnecting}

@@ -8,7 +8,6 @@ import {
   User,
   Building2,
   Hammer,
-  Gift,
   ShieldAlert,
 } from 'lucide-react'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
@@ -26,12 +25,12 @@ const MAIN_NAV: { id: DestinyTopNestTab; label: string; icon: LucideIcon }[] = [
 ]
 
 const EXTRA_NAV: { id: DestinyTopNestTab; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
-  { id: 'season', label: 'Season', icon: Gift },
   { id: 'admin', label: 'Admin', icon: ShieldAlert, adminOnly: true },
 ]
 
 function navActiveTab(activeTab: DestinyTopNestTab): DestinyTopNestTab {
   if (activeTab === 'builds' || activeTab === 'loadouts') return 'loadouts'
+  if (activeTab === 'season') return 'leaderboards'
   return activeTab
 }
 
@@ -79,8 +78,7 @@ export default function DestinyNav({ activeTab, onTabChange, darkMode, showAdmin
       {extraTabs.length > 0 ? (
         <nav
           className={cn(
-            'd2-tab-bar d2-tab-bar-secondary grid gap-0 mt-0 w-full',
-            extraTabs.length === 2 ? 'grid-cols-2' : 'grid-cols-1',
+            'd2-tab-bar d2-tab-bar-secondary grid gap-0 mt-0 w-full grid-cols-1',
             darkMode ? 'bg-black/20' : 'bg-black/[0.03]'
           )}
           aria-label="More sections"

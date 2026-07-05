@@ -6,11 +6,9 @@ import type { BuildIntelligenceCard, BuildSnapshot, ExternalBuildSource } from '
 import {
   EmptyBlock,
   GlassCard,
-  PageIntro,
   SectionTitle,
   SegmentedControl,
 } from '@/app/components/destiny/DestinyUi'
-import BungieConnectBanner from '@/app/components/destiny/BungieConnectBanner'
 import LoadoutCard from '@/app/components/destiny/LoadoutCard'
 import CommunityBuildCard from '@/app/components/destiny/CommunityBuildCard'
 import ExternalMetaBuildCard from '@/app/components/destiny/ExternalMetaBuildCard'
@@ -82,16 +80,6 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
 
   return (
     <div className="space-y-6">
-      {(bungie.status?.needsReconnect || !bungie.linked) && (
-        <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="compact" showSync={false} />
-      )}
-
-      <PageIntro
-        darkMode={darkMode}
-        title="Loadouts"
-        description="Your live gear, saved builds, community favorites, and the loadout builder."
-      />
-
       <SegmentedControl
         label="Section"
         darkMode={darkMode}

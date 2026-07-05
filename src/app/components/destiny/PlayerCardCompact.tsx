@@ -12,6 +12,7 @@ interface Props {
   darkMode: boolean
   linked?: boolean
   loading?: boolean
+  size?: 'compact' | 'featured'
 }
 
 function fallbackCharacters(profile: PlayerProfile): PlayerProfile['characters'] {
@@ -34,23 +35,38 @@ function formatClanLine(profile: PlayerProfile): string | null {
   return profile.clanName ?? null
 }
 
-/** Short wide banner — Tracker header + DIM character tiles + stats. */
-export default function PlayerCardCompact({ profile, darkMode, linked = true, loading }: Props) {
+/** Wide player banner — emblem backdrop, identity, character tiles, and stats. */
+export default function PlayerCardCompact({
+  profile,
+  darkMode,
+  linked = true,
+  loading,
+  size = 'featured',
+}: Props) {
   const t = getDestinyTheme(darkMode)
+  const featured = size === 'featured'
 
   if (loading) {
     return (
-      <div className={cn('d2-panel animate-pulse w-full overflow-hidden', t.glassInset)}>
-        <div className="h-24 bg-white/5" />
-        <div className="h-12 bg-black/20 mx-3 my-2 rounded" />
+      <div
+        className={cn(
+          'd2-panel animate-pulse w-full overflow-hidden',
+          t.glassInset,
+          featured && 'd2-player-card-featured'
+        )}
+      >
+        <div className={featured ? 'h-36 bg-white/5' : 'h-24 bg-white/5'} />
+        <div className={cn('bg-black/20 mx-3 my-2 rounded', featured ? 'h-16' : 'h-12')} />
       </div>
     )
   }
 
   if (!profile) {
     return (
-      <GameCard className="w-full px-4 py-3">
-        <p className={cn('text-xs text-center', t.muted)}>Link Bungie to load your Guardian</p>
+      <GameCard className={cn('w-full px-4 py-3', featured && 'd2-player-card-featured py-5')}>
+        <p className={cn('text-xs text-center', featured && 'text-sm', t.muted)}>
+          Link Bungie to load your Guardian
+        </p>
       </GameCard>
     )
   }
@@ -61,25 +77,30 @@ export default function PlayerCardCompact({ profile, darkMode, linked = true, lo
     typeof profile.guardianRank === 'number' ? profile.guardianRank : undefined
 
   return (
-    <GameCard className="w-full overflow-hidden p-0">
+    <GameCard className={cn('w-full overflow-hidden p-0', featured && 'd2-player-card-featured')}>
       <GuardianProfileBanner
         profile={profile}
-        compact
-        hideIdentity
+        compact={!featured}
+        hideIdentity={!featured}
         clanLine={clanLine}
         stats={
-          <div className="flex items-end gap-1.5 shrink-0 flex-wrap justify-end">
+          <div className="flex items-end gap-2 shrink-0 flex-wrap justify-end">
             <PowerBadge power={profile.powerLevel} rank={guardianRank} showRankAlways />
             <TrustRankBadge trust={profile.trustRank} darkMode={darkMode} pill />
           </div>
         }
       >
         {characters?.length ? (
-          <div className="dim-player-header -mx-1 mt-3 px-1 pt-2 pb-1 rounded-md">
+          <div
+            className={cn(
+              'dim-player-header -mx-1 mt-3 px-1 pt-2 pb-1 rounded-md',
+              featured && 'dim-player-header-featured mt-4 px-2 pt-3 pb-2'
+            )}
+          >
             <CharacterTileRow
               characters={characters}
               activeCharacterId={profile.activeCharacterId}
-              compact
+              compact={!featured}
             />
           </div>
         ) : null}

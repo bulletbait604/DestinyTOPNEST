@@ -2,11 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import type { FeaturedActivity, OverviewPayload } from '@/lib/destiny/types'
-import BungieConnectBanner from '@/app/components/destiny/BungieConnectBanner'
 import ActivityIntelAccordion from '@/app/components/destiny/ActivityIntelAccordion'
-import HomeHero from '@/app/components/destiny/HomeHero'
 import HomeLeaderboardCard from '@/app/components/destiny/HomeLeaderboardCard'
-import PlayerCardShell from '@/app/components/destiny/PlayerCardShell'
 import {
   GlassCard,
   ItemIcon,
@@ -20,7 +17,6 @@ import { cn } from '@/lib/utils'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import { homeSectionArtUrl } from '@/lib/destiny/navArt'
-import { useBungieLink } from '@/hooks/useBungieLink'
 
 function countdownParts(ms: number) {
   const totalSec = Math.max(0, Math.floor(ms / 1000))
@@ -63,7 +59,6 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const t = getDestinyTheme(darkMode)
-  const bungie = useBungieLink()
 
   const load = useCallback(async () => {
     setError(null)
@@ -97,14 +92,6 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="overview" showSync={false} />
-
-      <HomeHero darkMode={darkMode} soloPreview={soloEntries} />
-
-      <div className="tn-home-player-card">
-        <PlayerCardShell darkMode={darkMode} />
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <HomeLeaderboardCard
           title="Raid Leaderboard"
@@ -156,7 +143,7 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
                 <p className={cn('text-xs mb-1 italic', t.purple)}>Pantheon: {data.weeklyReset.pantheon}</p>
               )}
               <p className={cn('text-[11px]', t.muted)}>
-                Season prizes on the Season tab ·{' '}
+                Season prizes on the Leaderboards tab ·{' '}
                 {data.prizeSummary.length > 72 ? 'Top 5 earn rewards at season end' : data.prizeSummary}
               </p>
             </div>
@@ -178,7 +165,7 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
         <GlassCard darkMode={darkMode}>
           <SectionTitle
             title="Season Hall of Fame preview"
-            subtitle="Current leaders — see Season tab for prizes and your track"
+            subtitle="Current leaders — see Leaderboards for prizes and your track"
             darkMode={darkMode}
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">

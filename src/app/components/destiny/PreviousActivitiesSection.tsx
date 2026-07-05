@@ -3,11 +3,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ChevronDown, Crown, Loader2, Star } from 'lucide-react'
 import type { ActivityRunForVote } from '@/lib/destiny/types'
-import BungieConnectBanner from '@/app/components/destiny/BungieConnectBanner'
 import {
   EmptyBlock,
   GlassCard,
-  PageIntro,
   StatusPill,
 } from '@/app/components/destiny/DestinyUi'
 import { destinyPrimaryBtn, formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -68,16 +66,6 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
 
   return (
     <div className="space-y-4">
-      {(bungie.status?.needsReconnect || !bungie.linked) && (
-        <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="compact" showSync={false} />
-      )}
-
-      <PageIntro
-        darkMode={darkMode}
-        title="Previous Activities"
-        description="Review your verified raids and dungeons. Vote one fireteam Guardian as MVP — you earn 1 point, they earn 3 toward the monthly Top Guardians board. Top 3 become next month's Commanders."
-      />
-
       {message ? (
         <p className={cn('text-sm rounded-lg px-3 py-2 ring-1 ring-amber-400/25 bg-amber-400/10 text-amber-100')}>
           {message}

@@ -7,11 +7,12 @@ import { useBungieLink } from '@/hooks/useBungieLink'
 
 interface Props {
   darkMode: boolean
+  size?: 'compact' | 'featured'
   onProfileLoaded?: (profile: PlayerProfile | null) => void
 }
 
 /** Compact player banner — summary only (no loadout fetch). */
-export default function PlayerCardShell({ darkMode, onProfileLoaded }: Props) {
+export default function PlayerCardShell({ darkMode, size = 'featured', onProfileLoaded }: Props) {
   const [profile, setProfile] = useState<PlayerProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const bungie = useBungieLink()
@@ -51,6 +52,7 @@ export default function PlayerCardShell({ darkMode, onProfileLoaded }: Props) {
         darkMode={darkMode}
         linked={bungie.linked}
         loading={loading}
+        size={size}
       />
     </div>
   )

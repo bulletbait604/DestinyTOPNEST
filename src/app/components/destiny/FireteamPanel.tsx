@@ -11,7 +11,6 @@ import {
   GlassCard,
   ItemIcon,
   LoadingBlock,
-  PageIntro,
   StatusPill,
 } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme, destinySecondaryBtn, platformIcon } from '@/app/components/destiny/destinyTheme'
@@ -42,12 +41,6 @@ export default function FireteamPanel({ darkMode }: { darkMode: boolean }) {
 
   return (
     <div className="space-y-6">
-      <PageIntro
-        darkMode={darkMode}
-        title="Find a fireteam"
-        description="Browse open raid and dungeon lobbies. Reconnect Bungie if live data is unavailable."
-      />
-
       <FireteamReviewSection darkMode={darkMode} linked={bungie.linked} />
 
       <GlassCard darkMode={darkMode}>

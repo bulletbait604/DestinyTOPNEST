@@ -6,10 +6,10 @@ import {
   GlassCard,
   LeaderboardTable,
   LoadingBlock,
-  PageIntro,
   SegmentedControl,
 } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import SeasonSection from '@/app/components/destiny/SeasonSection'
 import { cn } from '@/lib/utils'
 
 const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
@@ -56,15 +56,8 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
     }
   }, [category, period])
 
-  const description =
-    category === 'top_guardians'
-      ? 'Monthly MVP scores — vote in Previous Activities (+1 pt for you, +3 pts for your pick). Top 3 Guardians become next month\'s Commanders.'
-      : 'Verified full clears only. Earn points with clanmates and randos — caps apply per activity type.'
-
   return (
     <div className="space-y-6">
-      <PageIntro darkMode={darkMode} title="Leaderboards" description={description} />
-
       {category === 'top_guardians' && period === 'monthly' && entries.length > 0 ? (
         <GlassCard darkMode={darkMode} padding="compact">
           <p className={cn('text-xs uppercase tracking-wide mb-2', t.gold)}>Monthly Commanders (top 3)</p>
@@ -104,6 +97,8 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
           <LeaderboardTable entries={entries} darkMode={darkMode} />
         )}
       </GlassCard>
+
+      <SeasonSection darkMode={darkMode} />
     </div>
   )
 }
