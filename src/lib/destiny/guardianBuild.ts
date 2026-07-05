@@ -4,7 +4,7 @@
 
 import { getCharacterLoadout } from '@/lib/destiny/bungieClient'
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
-import { resolveInventoryItem, type ManifestDefinitionInfo } from '@/lib/destiny/manifest'
+import { resolveInventoryItem, resolveDefinition, type ManifestDefinitionInfo } from '@/lib/destiny/manifest'
 import type { BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
 import { ARMOR_STAT_HASH_LABEL } from '@/lib/destiny/armorStats'
 
@@ -31,7 +31,7 @@ function iconRefFromInfo(info: ManifestDefinitionInfo): DestinyIconRef {
     hash: info.hash,
     iconUrl: info.iconUrl,
     tierLabel: info.tierLabel,
-    entityType: 'DestinyInventoryItemDefinition',
+    entityType: info.entityType,
   }
 }
 
@@ -100,7 +100,15 @@ function categorizePlug(info: ManifestDefinitionInfo): PlugCategory {
 }
 
 async function resolvePlug(plugHash: number): Promise<{ ref: DestinyIconRef; category: PlugCategory }> {
-  const info = await resolveInventoryItem(plugHash, 'Ability')
+  let info = await resolveInventoryItem(plugHash, 'Ability')
+  if (!info.iconUrl) {
+    try {
+      const perkInfo = await resolveDefinition('DestinySandboxPerkDefinition', plugHash, info.name)
+      if (perkInfo.iconUrl) info = perkInfo
+    } catch {
+      /* keep inventory resolution */
+    }
+  }
   return { ref: iconRefFromInfo(info), category: categorizePlug(info) }
 }
 

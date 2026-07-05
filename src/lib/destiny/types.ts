@@ -1,5 +1,7 @@
 ﻿/** DestinyTopNest domain types — Mongo + API shapes. */
 
+import type { ManifestEntityType } from '@/lib/destiny/itemsCatalog'
+
 export type DestinyPlatform = 'steam' | 'xbox' | 'playstation' | 'epic' | 'stadia'
 export type DestinyCharacterClass = 'titan' | 'hunter' | 'warlock'
 export type ActivityType = 'raid' | 'dungeon'
@@ -60,7 +62,7 @@ export interface DestinyIconRef {
   hash?: number
   iconUrl?: string
   tierLabel?: string
-  entityType?: string
+  entityType?: ManifestEntityType
 }
 
 export interface FeaturedActivity {

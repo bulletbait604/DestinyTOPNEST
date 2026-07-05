@@ -14,7 +14,9 @@ import type {
   RunRecord,
   WeeklyResetInfo,
 } from '@/lib/destiny/types'
+import type { ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 import {
+  enrichIconRef,
   resolveActivity,
   resolveActivityRef,
   resolveByName,
@@ -33,6 +35,25 @@ function activityIconUrl(name: string, resolved?: { iconUrl?: string }): string 
   return undefined
 }
 
+async function enrichPerkList(perks?: DestinyIconRef[]): Promise<DestinyIconRef[] | undefined> {
+  if (!perks?.length) return perks
+  return Promise.all(
+    perks.map((perk) =>
+      enrichIconRef(perk, perk.name, 'DestinySandboxPerkDefinition').then((r) => r ?? perk)
+    )
+  )
+}
+
+async function enrichOrResolve(
+  ref: DestinyIconRef | undefined,
+  name: string | undefined,
+  preferredEntity?: ManifestEntityType
+): Promise<DestinyIconRef | undefined> {
+  const enriched = await enrichIconRef(ref, name, preferredEntity)
+  if (enriched?.iconUrl || !name) return enriched
+  return resolveByName(name, preferredEntity)
+}
+
 async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot> {
   const [
     classRef,
@@ -42,6 +63,9 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     kineticRef,
     energyRef,
     powerRef,
+    kineticWeaponPerks,
+    energyWeaponPerks,
+    powerWeaponPerks,
     aspectRefs,
     fragmentRefs,
     superRef,
@@ -50,33 +74,50 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     meleeRef,
     grenadeRef,
   ] = await Promise.all([
-    build.classRef ?? resolveClassIcon(build.characterClass),
-    build.subclassRef ?? resolveSubclass(build.subclass),
-    build.exoticArmorRef ??
-      (build.exoticArmor !== '—' ? resolveByName(build.exoticArmor) : Promise.resolve(undefined)),
-    build.exoticWeaponRef ??
-      (build.exoticWeapon ? resolveByName(build.exoticWeapon) : Promise.resolve(undefined)),
-    build.kineticWeaponRef ??
-      (build.kineticWeapon !== '—' ? resolveByName(build.kineticWeapon) : Promise.resolve(undefined)),
-    build.energyWeaponRef ??
-      (build.energyWeapon !== '—' ? resolveByName(build.energyWeapon) : Promise.resolve(undefined)),
-    build.powerWeaponRef ??
-      (build.powerWeapon !== '—' ? resolveByName(build.powerWeapon) : Promise.resolve(undefined)),
+    enrichOrResolve(build.classRef, build.characterClass).then(
+      (ref) => ref ?? resolveClassIcon(build.characterClass)
+    ),
+    enrichOrResolve(build.subclassRef, build.subclass).then(
+      (ref) => ref ?? resolveSubclass(build.subclass)
+    ),
+    enrichOrResolve(build.exoticArmorRef, build.exoticArmor !== '—' ? build.exoticArmor : undefined),
+    enrichOrResolve(build.exoticWeaponRef, build.exoticWeapon),
+    enrichOrResolve(
+      build.kineticWeaponRef,
+      build.kineticWeapon !== '—' ? build.kineticWeapon : undefined
+    ),
+    enrichOrResolve(build.energyWeaponRef, build.energyWeapon !== '—' ? build.energyWeapon : undefined),
+    enrichOrResolve(build.powerWeaponRef, build.powerWeapon !== '—' ? build.powerWeapon : undefined),
+    enrichPerkList(build.kineticWeaponPerks),
+    enrichPerkList(build.energyWeaponPerks),
+    enrichPerkList(build.powerWeaponPerks),
     build.aspectRefs?.length
-      ? Promise.resolve(build.aspectRefs)
+      ? Promise.all(
+          build.aspectRefs.map((aspect, index) =>
+            enrichOrResolve(
+              aspect,
+              build.aspects[index] ?? aspect.name,
+              'DestinySandboxPerkDefinition'
+            ).then((r) => r ?? aspect)
+          )
+        )
       : Promise.all(build.aspects.map((a) => resolveByName(a, 'DestinySandboxPerkDefinition'))),
     build.fragmentRefs?.length
-      ? Promise.resolve(build.fragmentRefs)
+      ? Promise.all(
+          build.fragmentRefs.map((fragment, index) =>
+            enrichOrResolve(
+              fragment,
+              build.fragments[index] ?? fragment.name,
+              'DestinySandboxPerkDefinition'
+            ).then((r) => r ?? fragment)
+          )
+        )
       : Promise.all(build.fragments.map((f) => resolveByName(f, 'DestinySandboxPerkDefinition'))),
-    build.superRef ?? (build.super !== '—' ? resolveByName(build.super) : Promise.resolve(undefined)),
-    build.classAbilityRef ??
-      (build.abilities[1] ? resolveByName(build.abilities[1]) : Promise.resolve(undefined)),
-    build.jumpRef ??
-      (build.abilities[2] ? resolveByName(build.abilities[2]) : Promise.resolve(undefined)),
-    build.meleeRef ??
-      (build.abilities[3] ? resolveByName(build.abilities[3]) : Promise.resolve(undefined)),
-    build.grenadeRef ??
-      (build.abilities[4] ? resolveByName(build.abilities[4]) : Promise.resolve(undefined)),
+    enrichOrResolve(build.superRef, build.super !== '—' ? build.super : undefined, 'DestinySandboxPerkDefinition'),
+    enrichOrResolve(build.classAbilityRef, build.abilities[1]),
+    enrichOrResolve(build.jumpRef, build.abilities[2]),
+    enrichOrResolve(build.meleeRef, build.abilities[3], 'DestinySandboxPerkDefinition'),
+    enrichOrResolve(build.grenadeRef, build.abilities[4]),
   ])
 
   return {
@@ -88,6 +129,9 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     kineticWeaponRef: kineticRef,
     energyWeaponRef: energyRef,
     powerWeaponRef: powerRef,
+    kineticWeaponPerks,
+    energyWeaponPerks,
+    powerWeaponPerks,
     aspectRefs,
     fragmentRefs,
     superRef,

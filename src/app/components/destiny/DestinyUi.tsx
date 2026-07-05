@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { DestinyIconRef, LeaderboardEntry } from '@/lib/destiny/types'
 import { TopNestLogoMark } from '@/app/components/destiny/TopNestBrandBanner'
@@ -12,6 +12,19 @@ import {
   platformIcon,
   tierBorderClass,
 } from '@/app/components/destiny/destinyTheme'
+
+async function fetchManifestIcon(item?: DestinyIconRef, name?: string): Promise<string | undefined> {
+  const params = new URLSearchParams()
+  if (item?.hash) params.set('hash', String(item.hash))
+  if (item?.entityType) params.set('entity', item.entityType)
+  if (item?.name || name) params.set('name', item?.name ?? name ?? '')
+  if (!params.get('name') && !params.get('hash')) return undefined
+
+  const res = await fetch(`/api/destiny/manifest/resolve?${params.toString()}`, { cache: 'no-store' })
+  if (!res.ok) return undefined
+  const json = (await res.json()) as { iconUrl?: string }
+  return json.iconUrl
+}
 
 export function ItemIcon({
   item,
@@ -37,14 +50,30 @@ export function ItemIcon({
   const rarityClass = tierBorderClass(tier)
   const elementClass = elementBorderClass(label)
   const [failed, setFailed] = useState(false)
+  const [resolvedUrl, setResolvedUrl] = useState<string | undefined>()
+  const displayUrl = resolvedUrl ?? url
 
-  if (url && !failed) {
+  const handleImageError = useCallback(() => {
+    if (resolvedUrl || failed) {
+      setFailed(true)
+      return
+    }
+    void fetchManifestIcon(item, name).then((manifestUrl) => {
+      if (manifestUrl) {
+        setResolvedUrl(manifestUrl)
+      } else {
+        setFailed(true)
+      }
+    })
+  }, [failed, item, name, resolvedUrl])
+
+  if (displayUrl && !failed) {
     return (
       <img
-        src={url}
+        src={displayUrl}
         alt=""
         title={title ?? (tier ? `${label} (${tier})` : label)}
-        onError={() => setFailed(true)}
+        onError={handleImageError}
         className={cn(
           'd2-item-thumb object-cover',
           square ? 'rounded-sm' : 'rounded-full',

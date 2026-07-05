@@ -17,17 +17,32 @@ import { activityIconPathFallback } from '@/lib/destiny/activityIconPaths'
 import { itemIconPathFallback } from '@/lib/destiny/itemIconPaths'
 import { catalogLookup, type ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 import { DESTINY_MANIFEST_URL, destinyApiConfigured } from '@/lib/destiny/env'
+import type { DestinyIconRef } from '@/lib/destiny/types'
+
+export type { DestinyIconRef }
+
+const NAME_SEARCH_ENTITIES: ManifestEntityType[] = [
+  'DestinyInventoryItemDefinition',
+  'DestinySandboxPerkDefinition',
+  'DestinyActivityDefinition',
+  'DestinyPresentationNodeDefinition',
+  'DestinyDamageTypeDefinition',
+  'DestinyClassDefinition',
+  'DestinyPlugSetDefinition',
+]
+
+const HASH_RESOLVE_ENTITIES: ManifestEntityType[] = [
+  'DestinyInventoryItemDefinition',
+  'DestinySandboxPerkDefinition',
+  'DestinyActivityDefinition',
+  'DestinyPresentationNodeDefinition',
+  'DestinyDamageTypeDefinition',
+  'DestinyClassDefinition',
+  'DestinyPlugSetDefinition',
+]
 
 const CACHE_COLLECTION = 'destiny_manifest_cache'
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000
-
-export interface DestinyIconRef {
-  name: string
-  hash?: number
-  iconUrl?: string
-  tierLabel?: string
-  entityType?: ManifestEntityType
-}
 
 /** Full definition metadata resolved from the live manifest. */
 export interface ManifestDefinitionInfo {
@@ -213,6 +228,67 @@ export async function resolveManifestHash(
   return withCatalogIcon(iconRefFromInfo(info), fallbackName)
 }
 
+/** Fill missing iconUrl via Bungie manifest hash lookup or name search. */
+export async function enrichIconRef(
+  ref: DestinyIconRef | undefined,
+  fallbackName?: string,
+  preferredEntity?: ManifestEntityType
+): Promise<DestinyIconRef | undefined> {
+  const name = ref?.name ?? fallbackName
+  if (!ref && !name) return undefined
+
+  if (ref?.iconUrl) {
+    return withCatalogIcon(ref, name ?? ref.name)
+  }
+
+  if (ref?.hash) {
+    const entities = ref.entityType
+      ? [ref.entityType, ...HASH_RESOLVE_ENTITIES.filter((e) => e !== ref.entityType)]
+      : HASH_RESOLVE_ENTITIES
+
+    for (const entity of entities) {
+      try {
+        const resolved = await resolveManifestHash(entity, ref.hash, name ?? `Hash ${ref.hash}`)
+        if (resolved.iconUrl) return resolved
+      } catch {
+        /* try next entity table */
+      }
+    }
+  }
+
+  if (name) {
+    return resolveByName(name, preferredEntity)
+  }
+
+  return ref ? withCatalogIcon(ref, ref.name) : undefined
+}
+
+async function resolveFromArmorySearch(
+  name: string,
+  entities: ManifestEntityType[]
+): Promise<DestinyIconRef | undefined> {
+  for (const entity of entities) {
+    try {
+      const results = await searchDestinyEntities(entity, name)
+      for (const hit of results.slice(0, 5)) {
+        if (!hit.hash) continue
+        const resolved = await resolveManifestHash(entity, hit.hash, hit.name || name)
+        if (resolved.iconUrl) return resolved
+        const searchIcon = buildBungieIconUrl(hit.icon)
+        if (searchIcon) {
+          return withCatalogIcon(
+            { name: hit.name || name, hash: hit.hash, iconUrl: searchIcon, entityType: entity },
+            name
+          )
+        }
+      }
+    } catch {
+      /* try next entity */
+    }
+  }
+  return undefined
+}
+
 export async function resolveByName(
   name: string,
   preferredEntity: ManifestEntityType = 'DestinyInventoryItemDefinition'
@@ -222,21 +298,17 @@ export async function resolveByName(
     return resolveManifestHash(catalog.entity, catalog.hash, name)
   }
 
-  if (!destinyApiConfigured()) {
-    return { name, entityType: preferredEntity }
+  const entities = [
+    preferredEntity,
+    ...NAME_SEARCH_ENTITIES.filter((entity) => entity !== preferredEntity),
+  ]
+
+  if (destinyApiConfigured()) {
+    const fromSearch = await resolveFromArmorySearch(name, entities)
+    if (fromSearch?.iconUrl) return fromSearch
   }
 
-  try {
-    const results = await searchDestinyEntities(preferredEntity, name)
-    const first = results[0]
-    if (first?.hash) {
-      return resolveManifestHash(preferredEntity, first.hash, first.name || name)
-    }
-  } catch {
-    /* fall through */
-  }
-
-  return { name, entityType: preferredEntity }
+  return withCatalogIcon({ name, entityType: preferredEntity }, name)
 }
 
 export async function resolveActivity(name: string): Promise<DestinyIconRef> {

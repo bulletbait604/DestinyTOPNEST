@@ -1,10 +1,23 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { DestinyIconRef } from '@/lib/destiny/types'
 import { D2_ARMOR_STAT_COLORS, type ArmorStatKey } from '@/lib/destiny/armorStats'
 import { getDestinyTheme, tierGlowClass } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
+
+async function fetchManifestIcon(item?: DestinyIconRef, name?: string): Promise<string | undefined> {
+  const params = new URLSearchParams()
+  if (item?.hash) params.set('hash', String(item.hash))
+  if (item?.entityType) params.set('entity', item.entityType)
+  if (item?.name || name) params.set('name', item?.name ?? name ?? '')
+  if (!params.get('name') && !params.get('hash')) return undefined
+
+  const res = await fetch(`/api/destiny/manifest/resolve?${params.toString()}`, { cache: 'no-store' })
+  if (!res.ok) return undefined
+  const json = (await res.json()) as { iconUrl?: string }
+  return json.iconUrl
+}
 
 /** Large glowing Bungie icon — abilities, weapons, aspects. */
 export function GlowIcon({
@@ -28,6 +41,22 @@ export function GlowIcon({
   const label = item?.name ?? name ?? ''
   const resolvedGlow = glow === 'auto' ? tierGlowClass(item?.tierLabel) : glow
   const [failed, setFailed] = useState(false)
+  const [resolvedUrl, setResolvedUrl] = useState<string | undefined>()
+  const displayUrl = resolvedUrl ?? url
+
+  const handleImageError = useCallback(() => {
+    if (resolvedUrl || failed) {
+      setFailed(true)
+      return
+    }
+    void fetchManifestIcon(item, name).then((manifestUrl) => {
+      if (manifestUrl) {
+        setResolvedUrl(manifestUrl)
+      } else {
+        setFailed(true)
+      }
+    })
+  }, [failed, item, name, resolvedUrl])
 
   const glowMap = {
     gold: 'd2-glow-gold',
@@ -45,11 +74,11 @@ export function GlowIcon({
       style={className?.includes('w-full') ? undefined : { width: size, height: size }}
       title={title ?? label}
     >
-      {url && !failed ? (
+      {displayUrl && !failed ? (
         <img
-          src={url}
+          src={displayUrl}
           alt=""
-          onError={() => setFailed(true)}
+          onError={handleImageError}
           className="h-full w-full object-cover"
         />
       ) : (
