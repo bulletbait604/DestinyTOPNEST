@@ -250,10 +250,20 @@ export function TrustBadge({
 const TRUST_RANK_TOOLTIP =
   'Trust Rank (T.R.) — Top Nest commend from fireteam members after a run. Scores your activity knowledge and vibes to help others find reliable players.'
 
+function trustRankValue(trust?: { reviewCount?: number; topNestTitle?: string }): string {
+  if (trust?.reviewCount && trust.reviewCount > 0) return String(trust.reviewCount)
+  if (trust?.topNestTitle && trust.topNestTitle !== 'Unrated Guardian') {
+    const word = trust.topNestTitle.split(/\s+/)[0]
+    return word.length > 6 ? `${word.slice(0, 5)}…` : word
+  }
+  return '—'
+}
+
 export function TrustRankBadge({
   trust,
   darkMode,
   compact,
+  pill,
   title,
   className,
   markClassName,
@@ -261,6 +271,8 @@ export function TrustRankBadge({
   trust?: { topNestTitle?: string; reviewCount?: number; knowledgeTier?: string; vibesTier?: string }
   darkMode: boolean
   compact?: boolean
+  /** Match GR/PL pill row on profile banner. */
+  pill?: boolean
   title?: string
   className?: string
   markClassName?: string
@@ -271,6 +283,22 @@ export function TrustRankBadge({
     trust && trust.reviewCount
       ? `${rankTitle} · ${trust.reviewCount} review${trust.reviewCount === 1 ? '' : 's'}`
       : rankTitle
+
+  if (pill) {
+    return (
+      <div className={cn('d2-tooltip-wrap', className)}>
+        <div className="d2-power-pill d2-power-pill-trust" title={detail}>
+          <span className="d2-power-pill-label">T.R.</span>
+          <span className="d2-power-pill-value d2-power-pill-value-trust">{trustRankValue(trust)}</span>
+        </div>
+        <div className="d2-tooltip d2-trust-tooltip" role="tooltip">
+          <p className="d2-tooltip-slot">Trust Rank</p>
+          <p className="d2-tooltip-name">{detail}</p>
+          <p className="d2-tooltip-tier">{TRUST_RANK_TOOLTIP}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={cn('d2-tooltip-wrap', compact ? 'd2-trust-badge-compact' : 'd2-trust-badge', className)}>

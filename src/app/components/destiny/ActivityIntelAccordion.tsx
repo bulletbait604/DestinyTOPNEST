@@ -78,11 +78,7 @@ function IntelBox({
     <details className="d2-wiki-box group" open>
       <summary className="d2-wiki-box-summary list-none cursor-pointer">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          {activity.iconUrl ? (
-            <ItemIcon iconUrl={activity.iconUrl} name={activity.name} size={44} />
-          ) : (
-            <div className="d2-item-thumb d2-rarity-legendary w-11 h-11 rounded-sm shrink-0" />
-          )}
+          <ItemIcon iconUrl={activity.iconUrl} name={activity.name} size={44} />
           <div className="min-w-0 flex-1">
             <p className="d2-wiki-box-title truncate">{activity.name}</p>
             <p className="d2-wiki-box-meta">
@@ -110,20 +106,23 @@ function IntelBox({
 export default function ActivityIntelAccordion({
   raids,
   dungeons,
+  embedded,
 }: {
   raids: FeaturedActivity[]
   dungeons: FeaturedActivity[]
+  /** When true, omit outer column headers (parent panel already titled). */
+  embedded?: boolean
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <div className="space-y-2">
-        <p className="d2-panel-header-title text-[10px] mb-2">Featured raids</p>
+        {!embedded ? <p className="d2-panel-header-title text-[10px] mb-2">Featured raids</p> : null}
         {raids.map((r) => (
           <IntelBox key={r.name} activity={r} kind="raid" />
         ))}
       </div>
       <div className="space-y-2">
-        <p className="d2-panel-header-title text-[10px] mb-2">Featured dungeons</p>
+        {!embedded ? <p className="d2-panel-header-title text-[10px] mb-2">Featured dungeons</p> : null}
         {dungeons.map((d) => (
           <IntelBox key={d.name} activity={d} kind="dungeon" />
         ))}

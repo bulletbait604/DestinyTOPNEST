@@ -13,6 +13,7 @@ import {
   type ManifestDisplayProperties,
 } from '@/lib/destiny/bungieClient'
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
+import { activityIconPathFallback } from '@/lib/destiny/activityIconPaths'
 import { catalogLookup, type ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 import { DESTINY_MANIFEST_URL, destinyApiConfigured } from '@/lib/destiny/env'
 
@@ -122,6 +123,19 @@ function iconRefFromInfo(info: ManifestDefinitionInfo): DestinyIconRef {
   }
 }
 
+function catalogIconUrl(name: string): string | undefined {
+  const catalog = activityCatalogLookup(name)
+  if (catalog?.iconPath) return buildBungieIconUrl(catalog.iconPath)
+  const fallback = activityIconPathFallback(name)
+  return fallback ? buildBungieIconUrl(fallback) : undefined
+}
+
+function withCatalogIcon(ref: DestinyIconRef, name: string): DestinyIconRef {
+  if (ref.iconUrl) return ref
+  const iconUrl = catalogIconUrl(name)
+  return iconUrl ? { ...ref, iconUrl } : ref
+}
+
 /** Current manifest version string from Bungie (updates each content patch). */
 export async function getLiveManifestVersion(): Promise<string | undefined> {
   if (!destinyApiConfigured()) return undefined
@@ -143,13 +157,15 @@ export async function resolveDefinition(
   if (cached?.name) return cacheToInfo(cached)
 
   if (!destinyApiConfigured()) {
-    return { hash, entityType, name: fallbackName }
+    const iconUrl = catalogIconUrl(fallbackName)
+    return { hash, entityType, name: fallbackName, iconUrl }
   }
 
   try {
     const def = await getDestinyEntityDefinition(entityType, hash)
     const props = propsFromDefinition(def)
-    const iconUrl = buildBungieIconUrl(props?.icon)
+    let iconUrl = buildBungieIconUrl(props?.icon)
+    if (!iconUrl) iconUrl = catalogIconUrl(fallbackName)
     const name = props?.name || fallbackName
     const tierLabel = tierFromDefinition(def)
     const description = props?.description
@@ -170,7 +186,8 @@ export async function resolveDefinition(
 
     return { hash, entityType, name, iconUrl, tierLabel, description, itemTypeDisplayName }
   } catch {
-    return { hash, entityType, name: fallbackName }
+    const iconUrl = catalogIconUrl(fallbackName)
+    return { hash, entityType, name: fallbackName, iconUrl }
   }
 }
 
@@ -188,7 +205,7 @@ export async function resolveManifestHash(
   fallbackName: string
 ): Promise<DestinyIconRef> {
   const info = await resolveDefinition(entityType, hash, fallbackName)
-  return iconRefFromInfo(info)
+  return withCatalogIcon(iconRefFromInfo(info), fallbackName)
 }
 
 export async function resolveByName(
@@ -220,16 +237,15 @@ export async function resolveByName(
 export async function resolveActivity(name: string): Promise<DestinyIconRef> {
   const catalog = activityCatalogLookup(name) ?? catalogLookup(name)
   if (catalog?.entity === 'DestinyActivityDefinition') {
-    return resolveManifestHash(catalog.entity, catalog.hash, name)
+    return withCatalogIcon(await resolveManifestHash(catalog.entity, catalog.hash, name), name)
   }
-  return resolveByName(name, 'DestinyActivityDefinition')
+  return withCatalogIcon(await resolveByName(name, 'DestinyActivityDefinition'), name)
 }
 
 /** Prefer activity hash when available (PGCR / run records), fall back to name lookup. */
 export async function resolveActivityRef(name: string, hash?: number): Promise<DestinyIconRef> {
   if (hash && hash > 0) {
-    const info = await resolveActivityByHash(hash, name)
-    return iconRefFromInfo(info)
+    return withCatalogIcon(iconRefFromInfo(await resolveActivityByHash(hash, name)), name)
   }
   return resolveActivity(name)
 }

@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import type { OverviewPayload } from '@/lib/destiny/types'
+import type { FeaturedActivity, OverviewPayload } from '@/lib/destiny/types'
 import BungieConnectBanner from '@/app/components/destiny/BungieConnectBanner'
 import ActivityIntelAccordion from '@/app/components/destiny/ActivityIntelAccordion'
 import {
@@ -26,6 +26,33 @@ function countdownParts(ms: number) {
     hours: Math.floor((totalSec % 86400) / 3600),
     minutes: Math.floor((totalSec % 3600) / 60),
   }
+}
+
+function rotationStatCards(
+  raids: FeaturedActivity[],
+  dungeons: FeaturedActivity[],
+  resetsIn: string,
+  darkMode: boolean
+) {
+  const cards: { label: string; activity: FeaturedActivity; kind: 'raid' | 'dungeon' }[] = [
+    { label: 'Weekly raid', activity: raids[0], kind: 'raid' },
+    { label: 'Weekly raid', activity: raids[1], kind: 'raid' },
+    { label: 'Weekly dungeon', activity: dungeons[0], kind: 'dungeon' },
+    { label: 'Weekly dungeon', activity: dungeons[1], kind: 'dungeon' },
+  ]
+
+  return cards
+    .filter((c) => c.activity?.name)
+    .map((c, i) => (
+      <StatCard
+        key={`${c.kind}-${c.activity.name}-${i}`}
+        darkMode={darkMode}
+        label={c.label}
+        value={c.activity.name}
+        iconUrl={c.activity.iconUrl}
+        sub={`${c.kind === 'raid' ? 'Raid' : 'Dungeon'} · Resets ${resetsIn}`}
+      />
+    ))
 }
 
 export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
@@ -61,12 +88,14 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
     )
   }
 
+  const { featuredRaids, featuredDungeons, resetsInLabel } = data.weeklyReset
+
   return (
     <div className="space-y-6">
-      <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="overview" />
+      <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="overview" showSync={false} />
 
       <GlassCard darkMode={darkMode} padding="compact" className="d2-today-panel">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start mb-4">
           <div>
             <SectionTitle title="Today in Destiny" subtitle={data.weeklyReset.weekLabel} darkMode={darkMode} compact />
             <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -75,52 +104,38 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
                 tone={data.bungieApiConfigured ? 'green' : 'neutral'}
               />
               <StatusPill label={data.weeklyReset.resetTimeLabel} tone="neutral" />
+              <StatusPill
+                label={`${data.season.name} · ${data.seasonCountdown.days}d left`}
+                tone="gold"
+              />
             </div>
             {data.weeklyReset.pantheon && (
               <p className={cn('text-xs mb-1 italic', t.purple)}>Pantheon: {data.weeklyReset.pantheon}</p>
             )}
+            <p className={cn('text-[11px]', t.muted)}>
+              Season prizes on the Season tab · {data.prizeSummary.length > 72 ? 'Top 5 earn rewards at season end' : data.prizeSummary}
+            </p>
           </div>
           <ResetCountdown
             {...countdownParts(data.weeklyReset.resetsInMs)}
             label="Weekly reset in"
           />
         </div>
-      </GlassCard>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-        <StatCard
-          darkMode={darkMode}
-          label="Featured raid"
-          value={data.featuredRaid.name}
-          sub={`Resets ${data.featuredRaid.resetsIn}`}
-        />
-        <StatCard
-          darkMode={darkMode}
-          label="Featured dungeon"
-          value={data.featuredDungeon.name}
-          sub={`Resets ${data.featuredDungeon.resetsIn}`}
-        />
-        <StatCard
-          darkMode={darkMode}
-          label="Season"
-          value={`${data.seasonCountdown.days}d ${data.seasonCountdown.hours}h`}
-          sub={data.season.name}
-        />
-        <StatCard
-          darkMode={darkMode}
-          label="Season prizes"
-          value={`${data.seasonCountdown.days}d left`}
-          sub={data.prizeSummary.length > 48 ? 'See Season tab for details' : data.prizeSummary}
-        />
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+          {rotationStatCards(featuredRaids, featuredDungeons, resetsInLabel, darkMode)}
+        </div>
+
+        <ActivityIntelAccordion raids={featuredRaids} dungeons={featuredDungeons} embedded />
+      </GlassCard>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Raids" iconUrl={data.featuredRaid.iconUrl} darkMode={darkMode} />
+          <SectionTitle title="Raids" iconUrl={featuredRaids[0]?.iconUrl ?? data.featuredRaid.iconUrl} darkMode={darkMode} />
           <LeaderboardTable entries={data.raidTop10} darkMode={darkMode} compact />
         </GlassCard>
         <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Dungeons" iconUrl={data.featuredDungeon.iconUrl} darkMode={darkMode} />
+          <SectionTitle title="Dungeons" iconUrl={featuredDungeons[0]?.iconUrl ?? data.featuredDungeon.iconUrl} darkMode={darkMode} />
           <LeaderboardTable entries={data.dungeonTop10} darkMode={darkMode} compact />
         </GlassCard>
         <GlassCard darkMode={darkMode}>
@@ -128,14 +143,6 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
           <LeaderboardTable entries={data.guardiansTop3 ?? data.clanTop5 ?? []} darkMode={darkMode} compact />
         </GlassCard>
       </div>
-
-      <GlassCard darkMode={darkMode}>
-        <SectionTitle title="Weekly rotation" subtitle={data.weeklyReset.weekLabel} darkMode={darkMode} />
-        <ActivityIntelAccordion
-          raids={data.weeklyReset.featuredRaids}
-          dungeons={data.weeklyReset.featuredDungeons}
-        />
-      </GlassCard>
 
       {data.hallOfFamePreview.length > 0 && (
         <GlassCard darkMode={darkMode}>

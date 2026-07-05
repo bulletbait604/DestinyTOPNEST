@@ -67,9 +67,9 @@ export default function PlayerCardCompact({ profile, darkMode, linked = true, lo
         compact
         clanLine={clanLine}
         stats={
-          <div className="flex flex-col items-end gap-2 shrink-0">
+          <div className="flex items-end gap-1.5 shrink-0 flex-wrap justify-end">
             <PowerBadge power={profile.powerLevel} rank={guardianRank} showRankAlways />
-            <TrustRankBadge trust={profile.trustRank} darkMode={darkMode} compact />
+            <TrustRankBadge trust={profile.trustRank} darkMode={darkMode} pill />
           </div>
         }
       >

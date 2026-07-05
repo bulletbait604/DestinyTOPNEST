@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { DestinyIconRef, LeaderboardEntry } from '@/lib/destiny/types'
 import { TopNestLogoMark } from '@/app/components/destiny/TopNestBrandBanner'
@@ -35,15 +36,17 @@ export function ItemIcon({
   const tier = item?.tierLabel
   const rarityClass = tierBorderClass(tier)
   const elementClass = elementBorderClass(label)
+  const [failed, setFailed] = useState(false)
 
-  if (url) {
+  if (url && !failed) {
     return (
       <img
         src={url}
         alt=""
         title={title ?? (tier ? `${label} (${tier})` : label)}
+        onError={() => setFailed(true)}
         className={cn(
-          'd2-item-thumb',
+          'd2-item-thumb object-cover',
           square ? 'rounded-sm' : 'rounded-full',
           rarityClass,
           elementClass,
@@ -134,19 +137,7 @@ export function ActivityBadge({
   const t = getDestinyTheme(darkMode)
   return (
     <div className="flex items-center gap-3 d2-panel-inset px-3 py-2 rounded-lg">
-      {activityRef?.iconUrl ? (
-        <img
-          src={activityRef.iconUrl}
-          alt=""
-          className="d2-item-thumb d2-rarity-legendary rounded-sm shrink-0 object-cover"
-          style={{ width: size, height: size }}
-        />
-      ) : (
-        <div
-          className="d2-item-thumb d2-rarity-legendary rounded-sm shrink-0 bg-black/40"
-          style={{ width: size, height: size }}
-        />
-      )}
+      <ItemIcon item={activityRef} name={name} size={size} />
       <span className={cn('font-black text-xs tracking-[0.08em] uppercase', t.heading)}>{name}</span>
     </div>
   )
@@ -192,13 +183,7 @@ export function SectionTitle({
 }) {
   return (
     <div className={cn('d2-panel-header', compact && 'd2-panel-header-compact')}>
-      {iconUrl ? (
-        <img
-          src={iconUrl}
-          alt=""
-          className="d2-item-thumb d2-rarity-legendary rounded-sm shrink-0 w-11 h-11 object-cover"
-        />
-      ) : null}
+      {iconUrl ? <ItemIcon iconUrl={iconUrl} name={title} size={44} /> : null}
       <div>
         <h4 className="d2-panel-header-title">{title}</h4>
         {subtitle && <p className="d2-panel-header-sub">{subtitle}</p>}
@@ -212,18 +197,25 @@ export function StatCard({
   label,
   value,
   sub,
+  iconUrl,
   darkMode,
 }: {
   label: string
   value: React.ReactNode
   sub?: string
+  iconUrl?: string
   darkMode: boolean
 }) {
   const t = getDestinyTheme(darkMode)
   return (
     <div className="d2-stat-card">
+      {iconUrl ? (
+        <div className="mb-2">
+          <ItemIcon iconUrl={iconUrl} name={typeof value === 'string' ? value : label} size={44} />
+        </div>
+      ) : null}
       <p className="d2-stat-card-label">{label}</p>
-      <p className="d2-stat-card-value">{value}</p>
+      <p className="d2-stat-card-value text-lg sm:text-xl leading-tight">{value}</p>
       {sub ? <p className={cn('text-[11px] mt-1.5', t.muted)}>{sub}</p> : null}
     </div>
   )

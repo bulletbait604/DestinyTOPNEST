@@ -1,10 +1,11 @@
 ﻿'use client'
 
-import { LogOut, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { BRAND_FULL } from '@/lib/destiny/branding'
 import { bungieOAuthErrorMessage } from '@/lib/destiny/bungieOAuthMessages'
 import { TopNestLogoMark } from '@/app/components/destiny/TopNestBrandBanner'
+import AppUserHeader from '@/app/components/AppUserHeader'
 import LoginTitleScreen from '@/app/components/LoginTitleScreen'
 import DestinyTopNestApp from '@/app/components/DestinyTopNestApp'
 import SiteBackdrop from '@/app/components/SiteBackdrop'
@@ -73,19 +74,7 @@ export default function HomePage() {
 
   return (
     <SiteBackdrop variant="hub">
-      <header className="d2-app-header flex items-center justify-end gap-2 px-4 py-2.5">
-        <span className="text-xs text-white/55 truncate mr-auto max-w-[55vw] sm:max-w-none">
-          {user.displayName}
-        </span>
-        <button
-          type="button"
-          onClick={() => void logout()}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white/75 ring-1 ring-d2-arc/25 hover:bg-d2-arc/10 transition-colors"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          Log out
-        </button>
-      </header>
+      <AppUserHeader displayName={user.displayName} onLogout={() => void logout()} />
       <main className="container mx-auto w-full max-w-7xl px-2 sm:px-4 py-2 sm:py-3 flex-1">
         <DestinyTopNestApp darkMode isAdmin={isAdmin} />
       </main>

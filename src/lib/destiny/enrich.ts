@@ -23,7 +23,15 @@ import {
   type DestinyIconRef,
 } from '@/lib/destiny/manifest'
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
+import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
+
+function activityIconUrl(name: string, resolved?: { iconUrl?: string }): string | undefined {
+  if (resolved?.iconUrl) return resolved.iconUrl
+  const catalog = activityCatalogLookup(name)
+  if (catalog?.iconPath) return buildBungieIconUrl(catalog.iconPath)
+  return undefined
+}
 
 async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot> {
   const [
@@ -143,12 +151,12 @@ export async function buildWeeklyResetInfo(): Promise<WeeklyResetInfo> {
     featuredRaids: state.featuredRaids.map((r, i) => ({
       ...r,
       hash: raidIcons[i]?.hash ?? activityCatalogLookup(r.name)?.hash,
-      iconUrl: raidIcons[i]?.iconUrl,
+      iconUrl: activityIconUrl(r.name, raidIcons[i]),
     })),
     featuredDungeons: state.featuredDungeons.map((d, i) => ({
       ...d,
       hash: dungeonIcons[i]?.hash ?? activityCatalogLookup(d.name)?.hash,
-      iconUrl: dungeonIcons[i]?.iconUrl,
+      iconUrl: activityIconUrl(d.name, dungeonIcons[i]),
     })),
   }
 }
@@ -186,14 +194,14 @@ export async function enrichOverview(payload: OverviewPayload): Promise<Overview
       difficulty: primaryRaid?.difficulty ?? payload.featuredRaid.difficulty,
       resetsIn: weeklyReset.resetsInLabel,
       hash: primaryRaid?.hash,
-      iconUrl: primaryRaid?.iconUrl,
+      iconUrl: primaryRaid?.iconUrl ?? activityIconUrl(primaryRaid?.name ?? payload.featuredRaid.name),
     },
     featuredDungeon: {
       name: primaryDungeon?.name ?? payload.featuredDungeon.name,
       difficulty: primaryDungeon?.difficulty ?? payload.featuredDungeon.difficulty,
       resetsIn: weeklyReset.resetsInLabel,
       hash: primaryDungeon?.hash,
-      iconUrl: primaryDungeon?.iconUrl,
+      iconUrl: primaryDungeon?.iconUrl ?? activityIconUrl(primaryDungeon?.name ?? payload.featuredDungeon.name),
     },
     raidTop10,
     dungeonTop10,

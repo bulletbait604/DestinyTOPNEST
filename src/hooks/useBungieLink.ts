@@ -4,6 +4,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { defaultBungieReturnPath, stripUrlParams } from '@/lib/routing/tabUrl'
 import { bungieOAuthErrorMessage } from '@/lib/destiny/bungieOAuthMessages'
 
+export const SYNC_AT_STORAGE_KEY = 'topnestLastSyncAt'
+export const SYNC_UPDATED_EVENT = 'topnest-sync-updated'
+export const SYNC_RECENT_MS = 5 * 60 * 1000
+
 export interface BungieLinkStatus {
   configured: boolean
   linked: boolean
@@ -16,12 +20,27 @@ export interface BungieLinkStatus {
   powerLevel?: number
 }
 
+function readLastSyncedAt(): number | null {
+  if (typeof window === 'undefined') return null
+  const raw = sessionStorage.getItem(SYNC_AT_STORAGE_KEY)
+  if (!raw) return null
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : null
+}
+
+function writeLastSyncedAt(at: number) {
+  sessionStorage.setItem(SYNC_AT_STORAGE_KEY, String(at))
+  window.dispatchEvent(new Event(SYNC_UPDATED_EVENT))
+  window.dispatchEvent(new Event('topnest-profile-refresh'))
+}
+
 export function useBungieLink(options?: { returnPath?: string }) {
   const [status, setStatus] = useState<BungieLinkStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [disconnecting, setDisconnecting] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [linkMessage, setLinkMessage] = useState<string | null>(null)
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(() => readLastSyncedAt())
   const [connectHref, setConnectHref] = useState(
     `/api/destiny/auth/bungie/start?return=${encodeURIComponent(options?.returnPath ?? defaultBungieReturnPath())}`
   )
@@ -63,57 +82,72 @@ export function useBungieLink(options?: { returnPath?: string }) {
   }, [load])
 
   useEffect(() => {
+    const onSyncUpdated = () => setLastSyncedAt(readLastSyncedAt())
+    window.addEventListener(SYNC_UPDATED_EVENT, onSyncUpdated)
+    return () => window.removeEventListener(SYNC_UPDATED_EVENT, onSyncUpdated)
+  }, [])
+
+  useEffect(() => {
     if (status?.needsReconnect && !linkMessage) {
       setLinkMessage('Bungie session expired — reconnect once to restore live data.')
     }
   }, [status?.needsReconnect, linkMessage])
 
-  function connect() {
+  const connect = useCallback(() => {
     window.location.href = connectHref
-  }
+  }, [connectHref])
 
-  async function disconnect() {
+  const disconnect = useCallback(async () => {
     setDisconnecting(true)
     try {
       await fetch('/api/destiny/auth/bungie/disconnect', {
         method: 'POST',
         credentials: 'include',
       })
+      sessionStorage.removeItem(SYNC_AT_STORAGE_KEY)
+      setLastSyncedAt(null)
       await load()
       window.location.replace('/')
     } finally {
       setDisconnecting(false)
     }
-  }
+  }, [load])
 
-  async function syncRuns(): Promise<{ synced?: number; flagged?: number; error?: string }> {
-    setSyncing(true)
-    try {
-      const res = await fetch('/api/destiny/runs/sync', {
-        method: 'POST',
-        credentials: 'include',
-      })
-      const json = (await res.json().catch(() => ({}))) as {
-        synced?: number
-        flagged?: number
-        builds?: number
-        error?: string
-        message?: string
+  const syncRuns = useCallback(
+    async (opts?: { silent?: boolean }): Promise<{ synced?: number; flagged?: number; error?: string }> => {
+      setSyncing(true)
+      try {
+        const res = await fetch('/api/destiny/runs/sync', {
+          method: 'POST',
+          credentials: 'include',
+        })
+        const json = (await res.json().catch(() => ({}))) as {
+          synced?: number
+          flagged?: number
+          builds?: number
+          error?: string
+          message?: string
+        }
+        if (!res.ok) {
+          const text = json.error || json.message || 'Sync failed'
+          if (!opts?.silent) setLinkMessage(text)
+          return { error: text }
+        }
+        writeLastSyncedAt(Date.now())
+        setLastSyncedAt(Date.now())
+        if (!opts?.silent) {
+          const text = `Synced ${json.synced ?? 0} run(s)${json.builds ? ` · ${json.builds} build(s)` : ''}${json.flagged ? ` · ${json.flagged} flagged for review` : ''}.`
+          setLinkMessage(text)
+        }
+        return { synced: json.synced, flagged: json.flagged }
+      } finally {
+        setSyncing(false)
       }
-      if (!res.ok) {
-        const text = json.error || json.message || 'Sync failed'
-        setLinkMessage(text)
-        return { error: text }
-      }
-      const text = `Synced ${json.synced ?? 0} run(s)${json.builds ? ` · ${json.builds} build(s)` : ''}${json.flagged ? ` · ${json.flagged} flagged for review` : ''}.`
-      setLinkMessage(text)
-      return { synced: json.synced, flagged: json.flagged }
-    } finally {
-      setSyncing(false)
-    }
-  }
+    },
+    []
+  )
 
-  async function copyRedirectUri() {
+  const copyRedirectUri = useCallback(async () => {
     if (!status?.redirectUri) return
     try {
       await navigator.clipboard.writeText(status.redirectUri)
@@ -121,7 +155,10 @@ export function useBungieLink(options?: { returnPath?: string }) {
     } catch {
       setLinkMessage(`Copy this into Bungie: ${status.redirectUri}`)
     }
-  }
+  }, [status?.redirectUri])
+
+  const isRecentlySynced =
+    lastSyncedAt != null && Date.now() - lastSyncedAt < SYNC_RECENT_MS
 
   return {
     status,
@@ -134,6 +171,8 @@ export function useBungieLink(options?: { returnPath?: string }) {
     disconnecting,
     syncRuns,
     syncing,
+    lastSyncedAt,
+    isRecentlySynced,
     linkMessage,
     setLinkMessage,
     copyRedirectUri,
