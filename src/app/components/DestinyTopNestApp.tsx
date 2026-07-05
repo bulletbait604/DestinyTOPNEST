@@ -106,7 +106,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
   }
 
   return (
-    <div className={cn('rounded-xl overflow-hidden', theme.shell)}>
+    <div className={cn('rounded-xl overflow-hidden ring-1 ring-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.45)]', theme.shell)}>
       <TopNestBrandBanner title={BRAND_SHORT} tagline={BRAND_TAGLINE} />
 
       <div className="px-4 sm:px-6 py-4 sm:py-5">

@@ -20,6 +20,7 @@ export default function TopNestBrandBanner({ title, tagline, compact, className 
     <header className={cn('tn-brand-banner', compact && 'tn-brand-banner-compact', className)}>
       <div className="tn-brand-banner-glow tn-brand-banner-glow-arc" aria-hidden />
       <div className="tn-brand-banner-glow tn-brand-banner-glow-solar" aria-hidden />
+      <div className="tn-brand-banner-glow tn-brand-banner-glow-void" aria-hidden />
       <div className="tn-brand-banner-frame" aria-hidden />
 
       <div className="tn-brand-banner-inner">
