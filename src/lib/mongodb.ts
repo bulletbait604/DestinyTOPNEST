@@ -1,31 +1,56 @@
-﻿import { MongoClient } from 'mongodb';
+﻿import { MongoClient } from 'mongodb'
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please set MONGODB_URI in your environment');
+const globalForMongo = globalThis as typeof globalThis & {
+  _mongoClientPromise?: Promise<MongoClient>
 }
 
-const uri = process.env.MONGODB_URI;
-const options = {};
-
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
-
-if (process.env.NODE_ENV === 'development') {
-  // In development mode, use a global variable so that the value
-  // is preserved across module reloads caused by HMR (Hot Module Replacement).
-  let globalWithMongo = global as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>;
-  };
-
-  if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    globalWithMongo._mongoClientPromise = client.connect();
+/** Trim whitespace and strip accidental wrapping quotes from Vercel/console paste. */
+export function normalizeMongoUri(raw: string | undefined): string {
+  if (!raw?.trim()) {
+    throw new Error('Please set MONGODB_URI in your environment')
   }
-  clientPromise = globalWithMongo._mongoClientPromise;
-} else {
-  // In production mode, it's best to not use a global variable.
-  client = new MongoClient(uri, options);
-  clientPromise = client.connect();
+
+  let uri = raw.trim()
+  if (
+    (uri.startsWith('"') && uri.endsWith('"')) ||
+    (uri.startsWith("'") && uri.endsWith("'"))
+  ) {
+    uri = uri.slice(1, -1).trim()
+  }
+
+  if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+    throw new Error(
+      'MONGODB_URI must start with mongodb:// or mongodb+srv:// — copy the full Atlas connection string, not just the database name'
+    )
+  }
+
+  return uri
 }
 
-export default clientPromise;
+function connect(): Promise<MongoClient> {
+  const uri = normalizeMongoUri(process.env.MONGODB_URI)
+  const client = new MongoClient(uri)
+  return client.connect()
+}
+
+function getClientPromise(): Promise<MongoClient> {
+  if (!globalForMongo._mongoClientPromise) {
+    globalForMongo._mongoClientPromise = connect()
+  }
+  return globalForMongo._mongoClientPromise
+}
+
+/** Lazy thenable — avoids MongoClient construction during `next build` import. */
+const clientPromise: Promise<MongoClient> = {
+  then(onFulfilled, onRejected) {
+    return getClientPromise().then(onFulfilled, onRejected)
+  },
+  catch(onRejected) {
+    return getClientPromise().catch(onRejected)
+  },
+  finally(onFinally) {
+    return getClientPromise().finally(onFinally)
+  },
+} as Promise<MongoClient>
+
+export default clientPromise
