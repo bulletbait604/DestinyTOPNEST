@@ -52,17 +52,25 @@ export async function upsertDestinyUser(
     updatedAt: now,
   }
 
+  // MongoDB rejects the same field path in both $set and $setOnInsert.
+  const setOnInsert: Record<string, unknown> = { userId }
+  const insertDefaults: Record<string, unknown> = {
+    bungieMembershipId: '',
+    bungieDisplayName: '',
+    platform: 'steam' satisfies DestinyPlatform,
+    connectedAt: now,
+  }
+  for (const [key, value] of Object.entries(insertDefaults)) {
+    if (!(key in setFields)) {
+      setOnInsert[key] = value
+    }
+  }
+
   await database.collection(DESTINY_COLLECTIONS.users).updateOne(
     { userId },
     {
       $set: setFields,
-      $setOnInsert: {
-        userId,
-        bungieMembershipId: data.bungieMembershipId ?? '',
-        bungieDisplayName: data.bungieDisplayName ?? '',
-        platform: data.platform ?? 'steam',
-        connectedAt: data.connectedAt ?? now,
-      },
+      $setOnInsert: setOnInsert,
     },
     { upsert: true }
   )
