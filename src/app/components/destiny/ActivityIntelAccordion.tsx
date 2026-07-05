@@ -2,8 +2,10 @@
 
 import { ChevronDown, Sparkles, Shield } from 'lucide-react'
 import type { FeaturedActivity } from '@/lib/destiny/types'
-import type { ActivityLootDrop } from '@/lib/destiny/activityLoot'
+import type { ActivityLootDrop, ActivityLootIntel } from '@/lib/destiny/activityLoot'
 import { activityIntel } from '@/lib/destiny/activityIntel'
+import { lootArmorSetIconRef, lootDropIconRef } from '@/lib/destiny/activityLoot'
+import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
 import { cn } from '@/lib/utils'
 
@@ -13,16 +15,40 @@ function lootChipClass(kind: ActivityLootDrop['kind']) {
   return 'd2-loot-chip-legendary'
 }
 
-function LootSection({ loot }: { loot: NonNullable<ReturnType<typeof activityIntel>['loot']> }) {
+function LootDropChip({ drop }: { drop: ActivityLootDrop }) {
+  const iconRef = lootDropIconRef(drop)
+
+  return (
+    <div className={cn('d2-loot-chip', lootChipClass(drop.kind))}>
+      <ItemExternalLink item={iconRef} className="d2-loot-chip-icon shrink-0">
+        <ItemIcon item={iconRef} name={drop.name} size={44} className="d2-loot-item-thumb" />
+      </ItemExternalLink>
+      <div className="d2-loot-chip-body min-w-0">
+        <span className="d2-loot-chip-kind">{drop.kind === 'catalyst' ? 'Catalyst' : drop.kind === 'exotic' ? 'Exotic' : 'Legendary'}</span>
+        <ItemLink item={iconRef} className="d2-loot-chip-name block truncate" />
+        {drop.note ? <span className="d2-loot-chip-note">{drop.note}</span> : null}
+      </div>
+    </div>
+  )
+}
+
+function LootSection({ loot }: { loot: ActivityLootIntel }) {
   const exotics = loot.drops.filter((d) => d.kind === 'exotic' || d.kind === 'catalyst')
   const legendaries = loot.drops.filter((d) => d.kind === 'legendary')
+  const setIcon = lootArmorSetIconRef(loot)
 
   return (
     <div className="d2-loot-panel mt-3 space-y-3">
       {loot.tagline ? <p className="d2-loot-tagline">{loot.tagline}</p> : null}
 
       <div className="d2-loot-armor-banner">
-        <Shield className="w-4 h-4 shrink-0 text-[var(--tn-arc)]" aria-hidden />
+        {setIcon ? (
+          <ItemExternalLink item={setIcon} className="shrink-0">
+            <ItemIcon item={setIcon} name={setIcon.name} size={44} className="d2-loot-item-thumb" />
+          </ItemExternalLink>
+        ) : (
+          <Shield className="w-9 h-9 shrink-0 text-[var(--tn-arc)]" aria-hidden />
+        )}
         <div className="min-w-0">
           <p className="d2-loot-armor-label">Armor set</p>
           <p className="d2-loot-armor-name">{loot.armorSet.name}</p>
@@ -38,11 +64,7 @@ function LootSection({ loot }: { loot: NonNullable<ReturnType<typeof activityInt
           </p>
           <div className="d2-loot-grid">
             {exotics.map((drop) => (
-              <div key={drop.name} className={cn('d2-loot-chip', lootChipClass(drop.kind))}>
-                <span className="d2-loot-chip-kind">{drop.kind === 'catalyst' ? 'Catalyst' : 'Exotic'}</span>
-                <span className="d2-loot-chip-name">{drop.name}</span>
-                {drop.note ? <span className="d2-loot-chip-note">{drop.note}</span> : null}
-              </div>
+              <LootDropChip key={drop.name} drop={drop} />
             ))}
           </div>
         </div>
@@ -53,10 +75,7 @@ function LootSection({ loot }: { loot: NonNullable<ReturnType<typeof activityInt
           <p className="d2-loot-section-label d2-loot-section-label-muted">Featured weapons</p>
           <div className="d2-loot-grid d2-loot-grid-compact">
             {legendaries.map((drop) => (
-              <div key={drop.name} className={cn('d2-loot-chip', lootChipClass(drop.kind))}>
-                <span className="d2-loot-chip-name">{drop.name}</span>
-                {drop.note ? <span className="d2-loot-chip-note">{drop.note}</span> : null}
-              </div>
+              <LootDropChip key={drop.name} drop={drop} />
             ))}
           </div>
         </div>

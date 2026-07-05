@@ -2,6 +2,8 @@
 
 import { useCallback, useState } from 'react'
 import type { DestinyIconRef } from '@/lib/destiny/types'
+import { itemExternalUrl } from '@/lib/destiny/itemExternalLinks'
+import { ItemExternalLink } from '@/app/components/destiny/ItemLink'
 import { D2_ARMOR_STAT_COLORS, type ArmorStatKey } from '@/lib/destiny/armorStats'
 import { getDestinyTheme, tierGlowClass } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
@@ -129,14 +131,16 @@ export function AbilityChip({
 }) {
   const name = item?.name ?? fallback
   return (
-    <IconTooltip slotLabel={slotLabel} name={name} tier={item?.tierLabel}>
-      <GlowIcon
-        item={item}
-        name={fallback}
-        size={size}
-        glow={glow}
-        className="rounded-xl hover:scale-105 transition-transform duration-200 w-full max-w-[52px] aspect-square mx-auto"
-      />
+    <IconTooltip slotLabel={slotLabel} name={name} tier={item?.tierLabel} item={item} fallback={fallback}>
+      <ItemExternalLink item={item} name={fallback}>
+        <GlowIcon
+          item={item}
+          name={fallback}
+          size={size}
+          glow={glow}
+          className="rounded-xl hover:scale-105 transition-transform duration-200 w-full max-w-[52px] aspect-square mx-auto"
+        />
+      </ItemExternalLink>
     </IconTooltip>
   )
 }
@@ -146,14 +150,19 @@ export function IconTooltip({
   slotLabel,
   name,
   tier,
+  item,
+  fallback,
   children,
 }: {
   slotLabel?: string
   name?: string
   tier?: string
+  item?: DestinyIconRef
+  fallback?: string
   children: React.ReactNode
 }) {
   const displayName = name?.trim()
+  const externalUrl = itemExternalUrl(item, fallback ?? name)
   if (!displayName && !slotLabel) return <>{children}</>
 
   return (
@@ -163,6 +172,9 @@ export function IconTooltip({
         {slotLabel ? <p className="d2-tooltip-slot">{slotLabel}</p> : null}
         {displayName ? <p className="d2-tooltip-name">{displayName}</p> : null}
         {tier ? <p className="d2-tooltip-tier">{tier}</p> : null}
+        {externalUrl ? (
+          <p className="d2-tooltip-link">Opens on light.gg</p>
+        ) : null}
       </div>
     </div>
   )

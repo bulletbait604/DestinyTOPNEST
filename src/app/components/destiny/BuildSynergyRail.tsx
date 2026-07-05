@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import type { BuildSnapshot } from '@/lib/destiny/types'
+import { ItemLink } from '@/app/components/destiny/ItemLink'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
 import { elementFromLabel, subclassGlow } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
@@ -49,13 +50,13 @@ export default function BuildSynergyRail({ build }: { build: BuildSnapshot }) {
         <div>
           <p className="d2-synergy-label">{label}</p>
           <p className="d2-synergy-sub">
-            {build.subclass} · {build.characterClass}
+            <ItemLink item={build.subclassRef} name={build.subclass} /> · {build.characterClass}
           </p>
         </div>
       </div>
       {build.exoticArmor ? (
-        <p className="d2-synergy-exotic truncate" title={build.exoticArmor}>
-          {build.exoticArmor}
+        <p className="d2-synergy-exotic truncate">
+          <ItemLink item={build.exoticArmorRef} name={build.exoticArmor} className="truncate inline-block max-w-full" />
         </p>
       ) : null}
     </div>

@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import type { DestinyIconRef } from '@/lib/destiny/types'
+import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
 import {
   D2_ELEMENTS,
@@ -44,8 +45,10 @@ function WeaponPerkRow({ perks }: { perks: DestinyIconRef[] }) {
     <div className="d2-armory-perks">
       {perks.map((perk) => (
         <span key={`${perk.hash ?? perk.name}`} className="d2-armory-perk">
-          <ItemIcon item={perk} name={perk.name} size={18} className="shrink-0 rounded-sm" />
-          <span className="truncate">{perk.name}</span>
+          <ItemExternalLink item={perk}>
+            <ItemIcon item={perk} name={perk.name} size={18} className="shrink-0 rounded-sm" />
+          </ItemExternalLink>
+          <ItemLink item={perk} className="truncate" />
         </span>
       ))}
     </div>
@@ -63,9 +66,11 @@ function ArmoryRowView({ row }: { row: ArmoryRow }) {
     <div className="d2-armory-row group">
       <span className="d2-armory-slot">{row.slot}</span>
       <ElementStripe label={name} />
-      <ItemIcon item={row.item} name={row.fallback} size={40} className="d2-armory-icon" />
+      <ItemExternalLink item={row.item} name={row.fallback}>
+        <ItemIcon item={row.item} name={row.fallback} size={40} className="d2-armory-icon" />
+      </ItemExternalLink>
       <div className="d2-armory-name-wrap min-w-0">
-        <p className="d2-armory-name truncate">{name}</p>
+        <ItemLink item={row.item} name={row.fallback} className="d2-armory-name truncate block" />
         <WeaponPerkRow perks={row.perks ?? []} />
       </div>
       <span className={cn('d2-armory-tier', `d2-armory-tier-${rarityClass}`)}>{tierShort(tier)}</span>

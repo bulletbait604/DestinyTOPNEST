@@ -1,10 +1,11 @@
 ﻿'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
 import { cn } from '@/lib/utils'
 import type { DestinyIconRef, LeaderboardEntry } from '@/lib/destiny/types'
 import { TopNestLogoMark } from '@/app/components/destiny/TopNestBrandBanner'
+import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import {
   destinyChip,
   elementBorderClass,
@@ -126,10 +127,10 @@ export function GearStrip({
     <div className="flex flex-wrap gap-2 items-start">
       {items.filter(Boolean).map((item, i) => (
         <div key={i} className="flex flex-col items-center gap-1 max-w-[76px]">
-          <ItemIcon item={item} size={size} />
-          <span className={cn('text-[9px] text-center line-clamp-2 leading-snug', t.caption)}>
-            {item?.name}
-          </span>
+          <ItemExternalLink item={item}>
+            <ItemIcon item={item} size={size} />
+          </ItemExternalLink>
+          <ItemLink item={item} className={cn('text-[9px] text-center line-clamp-2 leading-snug', t.caption)} />
         </div>
       ))}
     </div>
@@ -175,10 +176,16 @@ export function ActivityBadge({
   size?: number
 }) {
   const t = getDestinyTheme(darkMode)
+  const activityItem = activityRef
+    ? { ...activityRef, entityType: 'DestinyActivityDefinition' as const }
+    : undefined
+
   return (
     <div className="flex items-center gap-3 d2-panel-inset px-3 py-2 rounded-lg">
-      <ItemIcon item={activityRef} name={name} size={size} />
-      <span className={cn('font-black text-xs tracking-[0.08em] uppercase', t.heading)}>{name}</span>
+      <ItemExternalLink item={activityItem} name={name}>
+        <ItemIcon item={activityRef} name={name} size={size} />
+      </ItemExternalLink>
+      <ItemLink item={activityItem} name={name} className={cn('font-black text-xs tracking-[0.08em] uppercase', t.heading)} />
     </div>
   )
 }
@@ -214,22 +221,25 @@ export function SectionTitle({
   title,
   subtitle,
   iconUrl,
+  trail,
   darkMode,
   compact,
 }: {
   title: string
   subtitle?: string
   iconUrl?: string
+  trail?: ReactNode
   darkMode: boolean
   compact?: boolean
 }) {
   return (
-    <div className={cn('d2-panel-header', compact && 'd2-panel-header-compact')}>
+    <div className={cn('d2-panel-header', compact && 'd2-panel-header-compact', trail && 'd2-panel-header-with-trail')}>
       {iconUrl ? <ItemIcon iconUrl={iconUrl} name={title} size={44} /> : null}
-      <div>
+      <div className="min-w-0 flex-1">
         <h4 className="d2-panel-header-title">{title}</h4>
         {subtitle && <p className="d2-panel-header-sub">{subtitle}</p>}
       </div>
+      {trail ? <div className="d2-panel-header-trail">{trail}</div> : null}
     </div>
   )
 }

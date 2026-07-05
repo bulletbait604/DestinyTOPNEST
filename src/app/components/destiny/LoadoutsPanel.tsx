@@ -11,6 +11,7 @@ import {
   PageIntro,
   SubclassBadge,
 } from '@/app/components/destiny/DestinyUi'
+import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
@@ -54,8 +55,10 @@ function LoadoutCard({
       <div className="mt-3">
         <p className={cn('text-xs mb-2', t.muted)}>Exotic armor</p>
         <div className="flex items-center gap-2">
-          <ItemIcon item={build.exoticArmorRef} name={build.exoticArmor} size={44} />
-          <span className="text-sm text-white">{build.exoticArmorRef?.name ?? build.exoticArmor}</span>
+          <ItemExternalLink item={build.exoticArmorRef} name={build.exoticArmor}>
+            <ItemIcon item={build.exoticArmorRef} name={build.exoticArmor} size={44} />
+          </ItemExternalLink>
+          <ItemLink item={build.exoticArmorRef} name={build.exoticArmor} className="text-sm text-white" />
         </div>
       </div>
       <div className="mt-3">
@@ -73,7 +76,9 @@ function LoadoutCard({
       {build.aspectRefs && build.aspectRefs.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {build.aspectRefs.map((aspect, i) => (
-            <ItemIcon key={i} item={aspect} size={28} title={aspect.name} />
+            <ItemExternalLink key={i} item={aspect}>
+              <ItemIcon item={aspect} size={28} title={aspect.name} />
+            </ItemExternalLink>
           ))}
         </div>
       )}

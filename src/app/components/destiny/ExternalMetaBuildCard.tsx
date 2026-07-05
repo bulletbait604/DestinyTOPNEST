@@ -8,6 +8,7 @@ import {
   SubclassBadge,
   StatusPill,
 } from '@/app/components/destiny/DestinyUi'
+import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
@@ -57,8 +58,14 @@ export default function ExternalMetaBuildCard({
 
       {build.exoticArmorRef && (
         <div className="mt-3 flex items-center gap-2">
-          <ItemIcon item={build.exoticArmorRef} name={build.exoticArmor} size={36} />
-          <span className={cn('text-sm', t.body)}>{build.exoticArmorRef.name ?? build.exoticArmor}</span>
+          <ItemExternalLink item={build.exoticArmorRef} name={build.exoticArmor}>
+            <ItemIcon item={build.exoticArmorRef} name={build.exoticArmor} size={36} />
+          </ItemExternalLink>
+          <ItemLink
+            item={build.exoticArmorRef}
+            name={build.exoticArmor}
+            className={cn('text-sm', t.body)}
+          />
         </div>
       )}
 

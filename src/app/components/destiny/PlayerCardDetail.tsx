@@ -16,6 +16,7 @@ import BuildSynergyRail from '@/app/components/destiny/BuildSynergyRail'
 import { CharacterTileRow } from '@/app/components/destiny/CharacterTile'
 import GuardianProfileBanner from '@/app/components/destiny/GuardianProfileBanner'
 import WeaponArmoryTable, { buildWeaponRows } from '@/app/components/destiny/WeaponArmoryTable'
+import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { getDestinyTheme, subclassGlow } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
@@ -65,10 +66,10 @@ function ModSlotCell({
   return (
     <div className="d2-mod-cell">
       <span className="d2-mod-kind">{kind}</span>
-      <GlowIcon item={item} size={36} glow={glow} className="rounded-lg mx-auto" />
-      <p className="d2-mod-name line-clamp-2" title={item.name}>
-        {item.name}
-      </p>
+      <ItemExternalLink item={item}>
+        <GlowIcon item={item} size={36} glow={glow} className="rounded-lg mx-auto" />
+      </ItemExternalLink>
+      <ItemLink item={item} className="d2-mod-name line-clamp-2 block" />
     </div>
   )
 }

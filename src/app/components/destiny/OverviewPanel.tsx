@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { FeaturedActivity, OverviewPayload } from '@/lib/destiny/types'
 import ActivityIntelAccordion from '@/app/components/destiny/ActivityIntelAccordion'
 import HomeLeaderboardCard from '@/app/components/destiny/HomeLeaderboardCard'
+import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import {
   GlassCard,
   ItemIcon,
@@ -127,17 +128,23 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
         <div className="tn-home-today-inner">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start mb-4">
             <div>
-              <SectionTitle title="Today in Destiny" subtitle={data.weeklyReset.weekLabel} darkMode={darkMode} compact />
+              <SectionTitle
+                title="Today in Destiny"
+                subtitle={data.weeklyReset.weekLabel}
+                trail={
+                  <span className="d2-panel-prizes-tag">
+                    Prizes for top teams and individuals
+                  </span>
+                }
+                darkMode={darkMode}
+                compact
+              />
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <StatusPill
                   label={data.bungieApiConfigured ? 'Live data' : 'API key needed'}
                   tone={data.bungieApiConfigured ? 'green' : 'neutral'}
                 />
                 <StatusPill label={data.weeklyReset.resetTimeLabel} tone="neutral" />
-                <StatusPill
-                  label={`${data.season.name} · ${data.seasonCountdown.days}d left`}
-                  tone="gold"
-                />
               </div>
               {data.weeklyReset.pantheon && (
                 <p className={cn('text-xs mb-1 italic', t.purple)}>Pantheon: {data.weeklyReset.pantheon}</p>
@@ -196,9 +203,26 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
                 className="flex flex-wrap items-center justify-between gap-2 py-2 border-b border-white/5 last:border-0"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <ItemIcon item={run.activityRef} name={run.activityName} size={32} />
+                  <ItemExternalLink
+                    item={
+                      run.activityRef
+                        ? { ...run.activityRef, entityType: 'DestinyActivityDefinition' as const }
+                        : undefined
+                    }
+                    name={run.activityName}
+                  >
+                    <ItemIcon item={run.activityRef} name={run.activityName} size={32} />
+                  </ItemExternalLink>
                   <div>
-                    <p className="text-white text-sm font-medium">{run.activityName}</p>
+                    <ItemLink
+                      item={
+                        run.activityRef
+                          ? { ...run.activityRef, entityType: 'DestinyActivityDefinition' as const }
+                          : undefined
+                      }
+                      name={run.activityName}
+                      className="text-white text-sm font-medium block"
+                    />
                     <p className={cn('text-xs', t.muted)}>
                       {run.type} · {formatDuration(run.durationSeconds)} · +{run.pointsAwarded} pts
                     </p>

@@ -1,5 +1,10 @@
 ﻿/** Curated drop tables for featured raid/dungeon rotation UI. */
 
+import { catalogLookup } from '@/lib/destiny/itemsCatalog'
+import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
+import { itemIconPathFallback } from '@/lib/destiny/itemIconPaths'
+import type { DestinyIconRef } from '@/lib/destiny/types'
+
 export type LootRarity = 'exotic' | 'catalyst' | 'legendary'
 
 export interface ActivityLootDrop {
@@ -209,4 +214,50 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
 
 export function activityLootIntel(activityName: string): ActivityLootIntel | null {
   return ACTIVITY_LOOT[activityName] ?? null
+}
+
+/** Map loot table labels to catalog keys when names differ in-game. */
+const LOOT_ICON_ALIASES: Record<string, string> = {
+  "ikelos_smg_v1.0.1.": 'ikeleos smg v1.0.1',
+  "ikelos_sg_v1.0.1.": 'ikeleos shotgun v1.0.1',
+  "ikelos_sr_v1.0.1.": 'ikeleos sniper v1.0.1',
+  'the tyranny of heaven': 'tyranny of heaven',
+  'the militia\'s birthright': 'militia\'s birthright',
+  'the long goodbye': 'long goodbye',
+  'the comedian': 'comedian',
+  'the navigator': 'navigator',
+  'the clever rat': 'clever rat',
+  kingslayer: 'touch of malice',
+}
+
+function tierForKind(kind: LootRarity): string {
+  if (kind === 'exotic') return 'Exotic'
+  if (kind === 'catalyst') return 'Catalyst'
+  return 'Legendary'
+}
+
+function resolveLootCatalogName(name: string): string {
+  const key = name.trim().toLowerCase()
+  return LOOT_ICON_ALIASES[key] ?? key
+}
+
+/** Build an icon ref for a weekly loot drop (catalog + manifest fallback in UI). */
+export function lootDropIconRef(drop: ActivityLootDrop): DestinyIconRef {
+  const catalogKey = resolveLootCatalogName(drop.name)
+  const catalog = catalogLookup(catalogKey) ?? catalogLookup(drop.name)
+  const iconPath = catalog?.iconPath ?? itemIconPathFallback(catalogKey) ?? itemIconPathFallback(drop.name)
+
+  return {
+    name: drop.name,
+    hash: catalog?.hash,
+    iconUrl: iconPath ? buildBungieIconUrl(iconPath) : undefined,
+    tierLabel: tierForKind(drop.kind),
+    entityType: 'DestinyInventoryItemDefinition',
+  }
+}
+
+/** Prefer the first exotic drop as a visual for the armor set row. */
+export function lootArmorSetIconRef(intel: ActivityLootIntel): DestinyIconRef | undefined {
+  const exotic = intel.drops.find((d) => d.kind === 'exotic')
+  return exotic ? lootDropIconRef(exotic) : undefined
 }
