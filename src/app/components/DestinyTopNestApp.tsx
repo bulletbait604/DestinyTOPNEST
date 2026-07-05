@@ -22,7 +22,7 @@ import TabShellAlerts from '@/app/components/destiny/TabShellAlerts'
 import HomeSoloPreview from '@/app/components/destiny/HomeSoloPreview'
 import { cn } from '@/lib/utils'
 
-type ProfileView = 'guardian' | 'loadouts'
+type ProfileView = 'guardian' | 'activities' | 'loadouts'
 type LoadoutSection = 'mine' | 'community' | 'builder'
 
 interface Props {
@@ -60,6 +60,12 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
     setActiveTab(tab)
   }, [])
 
+  const navigateToProfileActivities = useCallback(() => {
+    setProfileView('activities')
+    setLoadoutSection(undefined)
+    setActiveTab('profile')
+  }, [])
+
   useEffect(() => {
     if (restored.current) return
     restored.current = true
@@ -86,7 +92,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
   function renderPanel() {
     switch (activeTab) {
       case 'overview':
-        return <OverviewPanel darkMode={darkMode} />
+        return <OverviewPanel darkMode={darkMode} onGoToActivities={navigateToProfileActivities} />
       case 'leaderboards':
         return <LeaderboardsPanel darkMode={darkMode} />
       case 'fireteam':

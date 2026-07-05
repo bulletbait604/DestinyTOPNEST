@@ -40,20 +40,7 @@ export async function GET(req: NextRequest) {
         stored?.bungieMembershipId,
         runs,
         usersByMembershipMap(Array.from(usersById.values())),
-        trustByReviewer.map((t) => ({
-          id: t.id,
-          reviewerId: t.reviewerId,
-          reviewedUserId: t.reviewedUserId,
-          runId: t.runId,
-          communication: 0,
-          reliability: 0,
-          mechanics: 0,
-          friendly: 0,
-          teaching: 0,
-          punctual: 0,
-          wouldPlayAgain: true,
-          createdAt: t.createdAt,
-        }))
+        trustByReviewer
       )
       return NextResponse.json({ reviewableRuns })
     }

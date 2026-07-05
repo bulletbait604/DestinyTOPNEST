@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
+import PendingVotePrompt from '@/app/components/destiny/PendingVotePrompt'
 import { homeSectionArtUrl } from '@/lib/destiny/navArt'
 import { HOME_MONTHLY_PRIZES, HOME_SEASON_PRIZE_POOL } from '@/lib/destiny/seasonConfig'
 
@@ -56,10 +57,18 @@ function rotationStatCards(
     ))
 }
 
-export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
+const PENDING_VOTE_DISMISS_KEY = 'dtn-pending-vote-dismiss'
+
+interface OverviewPanelProps {
+  darkMode: boolean
+  onGoToActivities?: () => void
+}
+
+export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPanelProps) {
   const [data, setData] = useState<OverviewPayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showVotePrompt, setShowVotePrompt] = useState(false)
   const t = getDestinyTheme(darkMode)
 
   const load = useCallback(async () => {
@@ -79,6 +88,34 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
     load()
   }, [load])
 
+  useEffect(() => {
+    const pending = data?.pendingRunActions
+    if (!pending || pending.pendingCount <= 0) {
+      setShowVotePrompt(false)
+      return
+    }
+
+    const dismissHash = `${pending.mvpRunCount}-${pending.trustReviewCount}`
+    const dismissed = sessionStorage.getItem(PENDING_VOTE_DISMISS_KEY)
+    setShowVotePrompt(dismissed !== dismissHash)
+  }, [data?.pendingRunActions])
+
+  const dismissVotePrompt = useCallback(() => {
+    const pending = data?.pendingRunActions
+    if (pending) {
+      sessionStorage.setItem(
+        PENDING_VOTE_DISMISS_KEY,
+        `${pending.mvpRunCount}-${pending.trustReviewCount}`
+      )
+    }
+    setShowVotePrompt(false)
+  }, [data?.pendingRunActions])
+
+  const goToActivities = useCallback(() => {
+    dismissVotePrompt()
+    onGoToActivities?.()
+  }, [dismissVotePrompt, onGoToActivities])
+
   if (loading) return <LoadingBlock darkMode={darkMode} />
   if (error || !data) {
     return (
@@ -93,7 +130,17 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
   const todayArt = homeSectionArtUrl('todayPanel')
 
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <>
+      {showVotePrompt && data.pendingRunActions ? (
+        <PendingVotePrompt
+          darkMode={darkMode}
+          pending={data.pendingRunActions}
+          onGoToActivities={goToActivities}
+          onDismiss={dismissVotePrompt}
+        />
+      ) : null}
+
+      <div className="space-y-5 sm:space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <HomeLeaderboardCard
           title="Raid Leaderboard"
@@ -199,9 +246,14 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Recent Verified Runs" darkMode={darkMode} />
+          <SectionTitle title="Recent Verified Runs" subtitle="Today only" darkMode={darkMode} compact />
           <div className="space-y-2">
-            {data.recentRuns.map((run) => (
+            {data.recentRuns.length === 0 ? (
+              <p className={cn('text-sm py-2', t.muted)}>
+                No verified clears logged today yet. Sync from Bungie after your next raid or dungeon.
+              </p>
+            ) : (
+              data.recentRuns.map((run) => (
               <div
                 key={run.id}
                 className="flex flex-wrap items-center justify-between gap-2 py-2 border-b border-white/5 last:border-0"
@@ -243,7 +295,8 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
                   }
                 />
               </div>
-            ))}
+            ))
+            )}
           </div>
         </GlassCard>
 
@@ -280,5 +333,6 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
         subtitle="Two most-used builds per class from verified clears"
       />
     </div>
+    </>
   )
 }

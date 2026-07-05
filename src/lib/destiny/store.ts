@@ -18,7 +18,9 @@ import {
 import { aggregateBuildIntelligence, verifiedRunIdSet } from '@/lib/destiny/buildIntelligence'
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 import { ACTIVE_SEASON } from '@/lib/destiny/seasonConfig'
-import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
+import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
+import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
+import { filterRunsFromTodayPacific } from '@/lib/destiny/runDates'
 import type {
   AdminReviewRecord,
   BuildIntelligenceCard,
@@ -28,6 +30,7 @@ import type {
   LeaderboardEntry,
   MvpVote,
   OverviewPayload,
+  PendingRunActions,
   PrizeClaim,
   ReputationReview,
   RunRecord,
@@ -177,7 +180,7 @@ export async function getOverviewData(): Promise<OverviewPayload> {
       loadAllMvpVotes(),
     ])
 
-    const recentRuns = runs.slice(0, 10)
+    const recentRuns = filterRunsFromTodayPacific(runs).slice(0, 10)
     const raidTop10 = await attachReputationScores(
       aggregateLeaderboard(runs, usersById, 'raid', 'season', season)
     )
@@ -211,6 +214,32 @@ export async function getOverviewData(): Promise<OverviewPayload> {
       topLoadoutsByClass: emptyLoadouts,
       hallOfFamePreview: [],
     })
+  }
+}
+
+export async function getPendingRunActionsForUser(userId: string): Promise<PendingRunActions | null> {
+  try {
+    await ensureDestinyIndexes()
+    const stored = await getDestinyUserBySiteUserId(userId)
+    if (!stored?.bungieMembershipId) return null
+
+    const [runs, usersById, mvpVotes, trustReviews] = await Promise.all([
+      getRunsForParticipant(userId, stored.bungieMembershipId, 50),
+      loadUsersMap(),
+      getMvpVotesByReviewer(userId),
+      getTrustReviewsByReviewer(userId),
+    ])
+
+    return computePendingRunActions(
+      userId,
+      stored.bungieMembershipId,
+      runs,
+      Array.from(usersById.values()),
+      mvpVotes,
+      trustReviews
+    )
+  } catch {
+    return null
   }
 }
 

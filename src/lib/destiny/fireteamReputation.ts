@@ -32,7 +32,7 @@ export function buildReviewableRuns(
   reviewerMembershipId: string | undefined,
   runs: RunRecord[],
   usersByMembershipId: Map<string, StoredDestinyUser>,
-  reviewsByReviewer: ReputationReview[]
+  reviewsByReviewer: Array<{ runId?: string; reviewedUserId: string }>
 ): ReviewableRun[] {
   const reviewedKeys = new Set(
     reviewsByReviewer.map((r) => `${r.runId ?? ''}:${r.reviewedUserId}`)

@@ -121,7 +121,10 @@ export default function ProfilePanel({
       />
 
       {view === 'activities' ? (
-        <PreviousActivitiesSection darkMode={darkMode} />
+        <div className="space-y-4">
+          <PreviousActivitiesSection darkMode={darkMode} />
+          <FireteamReviewSection darkMode={darkMode} linked={linked} />
+        </div>
       ) : view === 'loadouts' ? (
         <ProfileLoadoutsSection darkMode={darkMode} initialSection={initialLoadoutSection} />
       ) : (

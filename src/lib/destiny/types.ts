@@ -525,6 +525,13 @@ export interface OverviewPayload {
   topLoadoutsByClass: Record<'titan' | 'hunter' | 'warlock', BuildIntelligenceCard[]>
   bungieApiConfigured: boolean
   hallOfFamePreview: SeasonWinner[]
+  pendingRunActions?: PendingRunActions | null
+}
+
+export interface PendingRunActions {
+  mvpRunCount: number
+  trustReviewCount: number
+  pendingCount: number
 }
 
 export interface LeaderboardFilters {

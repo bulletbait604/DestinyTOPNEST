@@ -1,7 +1,7 @@
 ﻿import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { destinyApiConfigured } from '@/lib/destiny/env'
 import { ACTIVE_SEASON, getSeasonCountdown, PRIZE_SUMMARY } from '@/lib/destiny/seasonConfig'
-import type { OverviewPayload, Season, SeasonWinner } from '@/lib/destiny/types'
+import type { OverviewPayload, PendingRunActions, Season, SeasonWinner } from '@/lib/destiny/types'
 import type { TopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 
 export function buildOverviewPayload(input: {
@@ -14,6 +14,7 @@ export function buildOverviewPayload(input: {
   topLoadoutsByClass: TopLoadoutsByClass
   hallOfFamePreview?: SeasonWinner[]
   season?: Season
+  pendingRunActions?: PendingRunActions | null
 }): OverviewPayload {
   const season = input.season ?? ACTIVE_SEASON
   const weekly = getWeeklyResetState()
@@ -55,5 +56,6 @@ export function buildOverviewPayload(input: {
     topLoadoutsByClass: input.topLoadoutsByClass,
     bungieApiConfigured: destinyApiConfigured(),
     hallOfFamePreview: input.hallOfFamePreview ?? [],
+    pendingRunActions: input.pendingRunActions ?? null,
   }
 }
