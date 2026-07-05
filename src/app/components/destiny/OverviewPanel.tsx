@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import { homeSectionArtUrl } from '@/lib/destiny/navArt'
+import { HOME_MONTHLY_PRIZES, HOME_SEASON_PRIZE_POOL } from '@/lib/destiny/seasonConfig'
 
 function countdownParts(ms: number) {
   const totalSec = Math.max(0, Math.floor(ms / 1000))
@@ -97,6 +98,7 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
         <HomeLeaderboardCard
           title="Raid Leaderboard"
           subtitle="Top raiders this season"
+          prizeLabel={HOME_SEASON_PRIZE_POOL}
           artUrl={homeSectionArtUrl('raidBoard')}
           iconUrl={featuredRaids[0]?.iconUrl ?? data.featuredRaid.iconUrl}
           entries={data.raidTop10}
@@ -105,6 +107,7 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
         <HomeLeaderboardCard
           title="Solo Leaderboard"
           subtitle="Monthly Commanders"
+          prizeLabel={HOME_MONTHLY_PRIZES}
           artUrl={homeSectionArtUrl('soloBoard')}
           entries={soloEntries}
           darkMode={darkMode}
@@ -112,6 +115,7 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
         <HomeLeaderboardCard
           title="Dungeon Leaderboard"
           subtitle="Top delvers this season"
+          prizeLabel={HOME_SEASON_PRIZE_POOL}
           artUrl={homeSectionArtUrl('dungeonBoard')}
           iconUrl={featuredDungeons[0]?.iconUrl ?? data.featuredDungeon.iconUrl}
           entries={data.dungeonTop10}

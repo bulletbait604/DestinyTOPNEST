@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 interface Props {
   title: string
   subtitle?: string
+  prizeLabel?: string
   artUrl: string
   iconUrl?: string
   entries: LeaderboardEntry[]
@@ -17,6 +18,7 @@ interface Props {
 export default function HomeLeaderboardCard({
   title,
   subtitle,
+  prizeLabel,
   artUrl,
   iconUrl,
   entries,
@@ -30,8 +32,11 @@ export default function HomeLeaderboardCard({
       >
         <div className="tn-home-lb-header-inner">
           {iconUrl ? <ItemIcon iconUrl={iconUrl} name={title} size={40} /> : null}
-          <div className="min-w-0">
-            <h3 className="tn-home-lb-title">{title}</h3>
+          <div className="min-w-0 flex-1">
+            <div className="tn-home-lb-title-row">
+              <h3 className="tn-home-lb-title">{title}</h3>
+              {prizeLabel ? <span className="tn-home-lb-prize">{prizeLabel}</span> : null}
+            </div>
             {subtitle ? <p className={cn('tn-home-lb-sub')}>{subtitle}</p> : null}
           </div>
         </div>
