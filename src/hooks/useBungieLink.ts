@@ -44,15 +44,15 @@ export function useBungieLink(options?: { returnPath?: string }) {
     const params = new URLSearchParams(window.location.search)
     const bungie = params.get('bungie')
     if (bungie === 'linked') {
-      const text = 'Bungie account linked successfully.'
+      const text = 'Signed in with Bungie.'
       setLinkMessage(text)
       sessionStorage.removeItem('bungieLinkMessage')
       void load()
     } else if (bungie === 'error') {
       const msg = params.get('message') || ''
       const text = msg
-        ? `Bungie linking failed: ${bungieOAuthErrorMessage(msg)}`
-        : 'Bungie linking failed. Try again.'
+        ? `Bungie sign-in failed: ${bungieOAuthErrorMessage(msg)}`
+        : 'Bungie sign-in failed. Try again.'
       setLinkMessage(text)
       sessionStorage.setItem('bungieLinkMessage', text)
     } else {
@@ -80,7 +80,7 @@ export function useBungieLink(options?: { returnPath?: string }) {
         credentials: 'include',
       })
       await load()
-      setLinkMessage('Bungie account disconnected.')
+      window.location.replace('/')
     } finally {
       setDisconnecting(false)
     }

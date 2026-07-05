@@ -4,7 +4,7 @@ import { verifyStaffUser } from '@/lib/auth/staffAccess'
 
 export const dynamic = 'force-dynamic'
 
-/** Requires any logged-in Kick user â€” default for Top Nest player features. */
+/** Requires any logged-in Bungie user — default for Top Nest player features. */
 export async function destinyAuthHandler(
   req: NextRequest,
   handler: () => Promise<NextResponse>

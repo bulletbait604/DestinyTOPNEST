@@ -6,7 +6,7 @@ export function bungieOAuthErrorMessage(code: string): string {
     return 'Redirect URI mismatch. Copy the redirect URL shown below into your Bungie app settings exactly.'
   }
   if (lower.includes('invalid_grant') || lower.includes('authorization code')) {
-    return 'Authorization code expired or already used. Click Connect and complete Bungie login in one try.'
+    return 'Authorization code expired or already used. Click Sign in and complete Bungie login in one try.'
   }
   if (lower.includes('client_id') || lower.includes('client secret') || lower.includes('unauthorized')) {
     return 'Bungie client ID, secret, or API key is wrong. All three must come from the same Bungie application.'
@@ -14,7 +14,7 @@ export function bungieOAuthErrorMessage(code: string): string {
 
   switch (code) {
     case 'invalid_state':
-      return 'OAuth session expired or was interrupted. Click Connect again without refreshing during Bungie login.'
+      return 'OAuth session expired or was interrupted. Click Sign in again without refreshing during Bungie login.'
     case 'missing_code':
       return 'Bungie did not return an authorization code.'
     case 'no_destiny_account':
@@ -23,8 +23,8 @@ export function bungieOAuthErrorMessage(code: string): string {
       return 'Token exchange failed. Confirm your Bungie app redirect URI matches this site exactly.'
     case 'redirect_uri_mismatch':
       return 'Redirect URI mismatch. Copy the redirect URL from Profile (below) into Bungie OAuth settings exactly.'
-    case 'auth_required':
-      return 'Your SDHQCC session expired during Bungie login. Log in with Kick and try again.'
+    case 'account_mismatch':
+      return 'This Bungie account does not match your current session. Sign out and try again.'
     default:
       return code
   }

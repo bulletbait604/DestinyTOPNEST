@@ -139,7 +139,7 @@ export default function LoadoutsPanel({ darkMode }: { darkMode: boolean }) {
             ))}
           </div>
         ) : (
-          <p className={t.muted}>{data?.equipMessage ?? 'Connect Bungie on Overview to view your loadout.'}</p>
+          <p className={t.muted}>{data?.equipMessage ?? 'Reconnect Bungie to view your loadout.'}</p>
         )}
       </GlassCard>
     </div>

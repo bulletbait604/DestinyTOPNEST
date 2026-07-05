@@ -109,7 +109,7 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
               <EmptyBlock
                 darkMode={darkMode}
                 message="No live loadout"
-                hint="Connect Bungie on Home to pull your current gear."
+                hint="Reconnect Bungie to pull your current gear."
               />
             )}
           </GlassCard>

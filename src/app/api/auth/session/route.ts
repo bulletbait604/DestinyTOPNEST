@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
       authenticated: true,
       id: user.id,
       username: user.username,
+      displayName: user.displayName,
       role: user.role,
     })
   } catch (error) {

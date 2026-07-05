@@ -45,7 +45,7 @@ export default function FireteamPanel({ darkMode }: { darkMode: boolean }) {
       <PageIntro
         darkMode={darkMode}
         title="Find a fireteam"
-        description="Browse open raid and dungeon lobbies. Connect Bungie on Home to create your own."
+        description="Browse open raid and dungeon lobbies. Reconnect Bungie if live data is unavailable."
       />
 
       <FireteamReviewSection darkMode={darkMode} linked={bungie.linked} />
@@ -56,7 +56,7 @@ export default function FireteamPanel({ darkMode }: { darkMode: boolean }) {
             type="button"
             disabled
             className={cn(destinySecondaryBtn(darkMode), 'opacity-50 cursor-not-allowed')}
-            title="Connect Bungie first"
+            title="Reconnect Bungie first"
           >
             <Plus className="w-4 h-4" />
             Create lobby
@@ -133,7 +133,7 @@ export default function FireteamPanel({ darkMode }: { darkMode: boolean }) {
                   type="button"
                   disabled
                   className={cn(destinySecondaryBtn(darkMode), 'mt-4 w-full opacity-50 cursor-not-allowed')}
-                  title="Connect Bungie first"
+                  title="Reconnect Bungie first"
                 >
                   Request invite
                 </button>

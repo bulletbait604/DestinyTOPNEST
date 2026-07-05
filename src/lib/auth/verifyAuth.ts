@@ -17,10 +17,13 @@ export type UserRole =
 
 export interface VerifiedUser {
   id: string
+  /** Stable site user id used for Mongo lookups (legacy Kick slug or Bungie membership id). */
   username: string
+  /** Bungie display name or legacy Kick handle for UI. */
+  displayName: string
   role: UserRole
   email?: string
-  provider: 'kick' | 'credentials'
+  provider: 'bungie' | 'kick' | 'credentials'
 }
 
 const UNLIMITED_ROLES: UserRole[] = ['subscriber', 'subscriber_lifetime', 'admin', 'owner', 'tester']
@@ -30,21 +33,20 @@ const UNLIMITED_ROLES: UserRole[] = ['subscriber', 'subscriber_lifetime', 'admin
  * Priority: 1) HTTP-Only cookie, 2) Authorization header
  */
 export function extractSessionToken(req: NextRequest): string | null {
-  // Check for session cookie first (most secure)
-  const sessionCookie = req.cookies.get('next-auth.session-token')?.value ||
-                       req.cookies.get('session')?.value ||
-                       req.cookies.get('__Secure-next-auth.session-token')?.value
-  
+  const sessionCookie =
+    req.cookies.get('next-auth.session-token')?.value ||
+    req.cookies.get('session')?.value ||
+    req.cookies.get('__Secure-next-auth.session-token')?.value
+
   if (sessionCookie) {
     return sessionCookie
   }
-  
-  // Fallback to Authorization header
+
   const authHeader = req.headers.get('authorization')
   if (authHeader?.startsWith('Bearer ')) {
     return authHeader.substring(7)
   }
-  
+
   return null
 }
 
@@ -60,16 +62,30 @@ async function verifyToken(token: string): Promise<VerifiedUser | null> {
     }
 
     const payload = verifySessionJwt(token, secret)
-    if (!payload || typeof payload.sub !== 'string' || typeof payload.name !== 'string') {
+    if (!payload || typeof payload.sub !== 'string') {
       return null
     }
 
+    const siteUserId = payload.sub.toLowerCase()
+    const provider = (payload.provider as VerifiedUser['provider']) || 'kick'
+    const displayName =
+      typeof payload.name === 'string' && payload.name.trim()
+        ? payload.name
+        : siteUserId
+
+    // Legacy Kick tokens used sub=kickId and name=kick username as the site user id.
+    const username =
+      provider === 'kick' && typeof payload.name === 'string'
+        ? payload.name.toLowerCase()
+        : siteUserId
+
     return {
       id: payload.sub,
-      username: payload.name.toLowerCase(),
+      username,
+      displayName,
       role: ((payload.role as UserRole) || 'free') as UserRole,
       email: typeof payload.email === 'string' ? payload.email : undefined,
-      provider: (payload.provider as VerifiedUser['provider']) || 'kick',
+      provider,
     }
   } catch (error) {
     console.error('[Auth] Token verification failed:', error)
@@ -83,23 +99,21 @@ async function verifyToken(token: string): Promise<VerifiedUser | null> {
  */
 export async function verifyAuth(req: NextRequest): Promise<VerifiedUser> {
   const token = extractSessionToken(req)
-  
+
   if (!token) {
     throw new AuthError('No authentication token provided', 401)
   }
-  
+
   const user = await verifyToken(token)
-  
+
   if (!user) {
     throw new AuthError('Invalid or expired token', 401)
   }
-  
-  // Verify user still exists in database (prevents using deleted account tokens)
+
   const client = await clientPromise
   const db = client.db(getMongoDbName())
   let dbUser = await db.collection('users').findOne({ username: user.username })
 
-  // Valid session but no Mongo row (deleted doc, replica lag, legacy token) â€” recreate minimal user
   if (!dbUser) {
     const now = new Date().toISOString()
     await db.collection('users').updateOne(
@@ -107,7 +121,7 @@ export async function verifyAuth(req: NextRequest): Promise<VerifiedUser> {
       {
         $set: {
           username: user.username,
-          kickId: user.id,
+          bungieDisplayName: user.displayName,
           updatedAt: now,
         },
         $setOnInsert: {
@@ -123,11 +137,14 @@ export async function verifyAuth(req: NextRequest): Promise<VerifiedUser> {
     }
   }
 
-  // Update role from database (in case role changed since token issued)
   if (dbUser.role) {
     user.role = capOwnerRole(user.username, dbUser.role as UserRole)
   } else if (user.role === 'owner' && !isAllowlistedOwner(user.username)) {
     user.role = 'admin'
+  }
+
+  if (typeof dbUser.bungieDisplayName === 'string' && dbUser.bungieDisplayName.trim()) {
+    user.displayName = dbUser.bungieDisplayName
   }
 
   if (await isUserBanned(user.username)) {
@@ -141,15 +158,9 @@ export async function verifyAuth(req: NextRequest): Promise<VerifiedUser> {
  * Role-based authorization guard
  * Throws 403 if user lacks required role
  */
-export function requireRole(
-  user: VerifiedUser,
-  allowedRoles: UserRole[]
-): void {
+export function requireRole(user: VerifiedUser, allowedRoles: UserRole[]): void {
   if (!allowedRoles.includes(user.role)) {
-    throw new AuthError(
-      `Access denied. Required roles: ${allowedRoles.join(', ')}`,
-      403
-    )
+    throw new AuthError(`Access denied. Required roles: ${allowedRoles.join(', ')}`, 403)
   }
 }
 
@@ -176,11 +187,11 @@ export async function authenticateAndAuthorize(
   allowedRoles?: UserRole[]
 ): Promise<VerifiedUser> {
   const user = await verifyAuth(req)
-  
+
   if (allowedRoles && allowedRoles.length > 0) {
     requireRole(user, allowedRoles)
   }
-  
+
   return user
 }
 
@@ -197,7 +208,7 @@ export class AuthError extends Error {
   }
 }
 
-/** Site access revoked for this Kick username. */
+/** Site access revoked for this account. */
 export class BannedUserError extends AuthError {
   constructor(message: string = BANNED_USER_MESSAGE) {
     super(message, 403)
@@ -213,8 +224,5 @@ export function createAuthErrorResponse(error: AuthError | Error): NextResponse 
   const message = error.message || 'Authentication failed'
   const banned = error instanceof BannedUserError
 
-  return NextResponse.json(
-    { error: message, ...(banned ? { banned: true } : {}) },
-    { status }
-  )
+  return NextResponse.json({ error: message, ...(banned ? { banned: true } : {}) }, { status })
 }

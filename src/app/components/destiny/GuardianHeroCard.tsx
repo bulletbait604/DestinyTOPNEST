@@ -80,7 +80,7 @@ export default function GuardianHeroCard({ profile, darkMode, linked = true }: P
               {linked ? (
                 <span className="text-emerald-300/80">Live Bungie data</span>
               ) : (
-                <span>Connect Bungie on Home to sync</span>
+                <span>Reconnect Bungie to sync</span>
               )}
             </p>
 

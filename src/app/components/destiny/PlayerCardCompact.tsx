@@ -86,7 +86,7 @@ export default function PlayerCardCompact({ profile, darkMode, linked = true, lo
 
       {!linked && (
         <p className="text-[10px] text-center text-amber-200/60 py-2 border-t border-white/[0.06]">
-          Connect Bungie on Home
+          Reconnect Bungie
         </p>
       )}
     </GameCard>

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
         saved: [],
         favorites: [],
         equipSupported: false,
-        equipMessage: 'Connect Bungie on Overview to view your live loadout.',
+        equipMessage: 'Reconnect Bungie to view your live loadout.',
         linked: false,
       })
     }

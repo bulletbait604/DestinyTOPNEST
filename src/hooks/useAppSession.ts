@@ -1,11 +1,12 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { startKickLogin } from '@/lib/kick/startKickLogin'
+import { startBungieLogin } from '@/lib/bungie/startBungieLogin'
 
 export interface AppUser {
   id: string
   username: string
+  displayName: string
   role: string
 }
 
@@ -22,6 +23,7 @@ export function useAppSession() {
         setUser({
           id: data.id,
           username: data.username,
+          displayName: data.displayName ?? data.username,
           role: data.role,
         })
       } else {
@@ -40,7 +42,7 @@ export function useAppSession() {
   }, [refresh])
 
   const login = useCallback(() => {
-    void startKickLogin()
+    startBungieLogin('/')
   }, [])
 
   const logout = useCallback(async () => {
@@ -49,5 +51,13 @@ export function useAppSession() {
     window.location.replace('/')
   }, [])
 
-  return { mounted, user, loading, login, logout, refresh, isAdmin: user?.role === 'admin' || user?.role === 'owner' }
+  return {
+    mounted,
+    user,
+    loading,
+    login,
+    logout,
+    refresh,
+    isAdmin: user?.role === 'admin' || user?.role === 'owner',
+  }
 }

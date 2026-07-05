@@ -142,7 +142,7 @@ export default function SeasonPrizeClaimSection({
             </label>
           </div>
           <label className="block">
-            <span className={cn('text-xs', t.caption)}>Contact (Kick username, email, or Discord)</span>
+            <span className={cn('text-xs', t.caption)}>Contact (Bungie name, email, or Discord)</span>
             <input
               value={contact}
               onChange={(e) => setContact(e.target.value)}

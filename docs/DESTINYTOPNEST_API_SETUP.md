@@ -58,9 +58,9 @@ Results are cached in Mongo `destiny_manifest_cache` for 7 days to limit API cal
 
 Alias also supported: `BUNGIE_API_KEY`
 
-## Bungie account linking (OAuth)
+## Bungie sign-in (OAuth)
 
-Users must be logged into Destiny Top Nest (Kick) first, then connect Bungie from **Profile**.
+Users sign in with their Bungie.net account from the home page. OAuth completes at `/api/destiny/auth/bungie/callback`.
 
 All logged-in users can access Top Nest data APIs. Admin review remains staff-only.
 

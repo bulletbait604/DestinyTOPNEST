@@ -39,6 +39,7 @@ export default function BungieConnectBanner({
 
   if (loading) return null
 
+  const needsReconnect = status?.needsReconnect
   const messageTone =
     linkMessage &&
     (linkMessage.includes('failed') ||
@@ -73,13 +74,32 @@ export default function BungieConnectBanner({
         ) : linked ? (
           <div className="d2-hero-strip px-5 py-4 flex flex-wrap items-center gap-4">
             {status?.emblemUrl ? (
-              <GlowIcon item={{ name: status.bungieDisplayName ?? 'Guardian', iconUrl: status.emblemUrl }} size={56} glow="gold" className="rounded-2xl" />
+              <GlowIcon
+                item={{ name: status.bungieDisplayName ?? 'Guardian', iconUrl: status.emblemUrl }}
+                size={56}
+                glow="gold"
+                className="rounded-2xl"
+              />
             ) : null}
-            <div className="flex flex-wrap gap-2 flex-1">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-white truncate">
+                {status?.bungieDisplayName ?? 'Guardian'}
+              </p>
+              {needsReconnect ? (
+                <p className="text-xs text-amber-200/80 mt-0.5">Session expired — reconnect to restore live data.</p>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {needsReconnect && (
+                <button type="button" onClick={connect} className={destinyPrimaryBtn(darkMode)}>
+                  <Link2 className="w-4 h-4" />
+                  Reconnect
+                </button>
+              )}
               {showSync && (
                 <button
                   type="button"
-                  disabled={syncing}
+                  disabled={syncing || needsReconnect}
                   onClick={() => void syncRuns()}
                   className={destinySecondaryBtn(darkMode)}
                 >
@@ -95,11 +115,12 @@ export default function BungieConnectBanner({
                   className={cn(destinySecondaryBtn(darkMode), 'text-red-200/90')}
                 >
                   {disconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Unlink className="w-4 h-4" />}
+                  Sign out
                 </button>
               )}
             </div>
           </div>
-        ) : variant === 'overview' ? (
+        ) : (
           <div className="d2-hero-strip px-5 sm:px-6 py-6 flex flex-col sm:flex-row gap-5 sm:items-center">
             <GlowIcon size={64} glow="gold" className="rounded-sm shrink-0 mx-auto sm:mx-0" />
             <button
@@ -108,14 +129,7 @@ export default function BungieConnectBanner({
               className={cn(destinyPrimaryBtn(darkMode), 'flex-1 w-full sm:w-auto text-base py-4')}
             >
               <Link2 className="w-5 h-5" />
-              Sign in with Bungie
-            </button>
-          </div>
-        ) : (
-          <div className="p-5">
-            <button type="button" onClick={connect} className={destinyPrimaryBtn(darkMode)}>
-              <Link2 className="w-4 h-4" />
-              Connect Bungie
+              Reconnect Bungie
             </button>
           </div>
         )}

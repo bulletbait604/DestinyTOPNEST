@@ -8,8 +8,7 @@ Forked from [SDHQCC](https://github.com/bulletbait604/SDHQCC) — the Top Nest f
 
 - Next.js 14 (App Router)
 - MongoDB
-- Bungie.net API + OAuth
-- Kick OAuth (site login)
+- Bungie.net API + OAuth (site login)
 
 ## Setup
 
@@ -39,12 +38,11 @@ npm run dev
 |----------|---------|
 | `MONGODB_URI` | MongoDB connection string |
 | `MONGODB_DB_NAME` | Database name (default: `destinytopnest`) |
-| `SESSION_SECRET` or `JWT_SECRET` | Kick session JWT signing |
+| `SESSION_SECRET` or `JWT_SECRET` | Session JWT signing |
 | `DESTINY_API` | Bungie API key |
 | `BUNGIE_OAUTH_CLIENT_ID` | Bungie OAuth client ID |
 | `BUNGIE_OAUTH_CLIENT_SECRET` | Bungie OAuth secret |
 | `BUNGIE_OAUTH_REDIRECT_URI` | Full Bungie callback URL |
-| `KICK_CLIENT_ID` / `KICK_CLIENT_SECRET` | Kick OAuth (login) |
 
 See `docs/DESTINYTOPNEST_API_SETUP.md` for full API and collection documentation.
 
@@ -59,7 +57,7 @@ To re-run or migrate on another cluster:
 npm run migrate:from-sdhq
 ```
 
-Optional: `SOURCE_DB_NAME=sdhq`, `DRY_RUN=1` (count only). The script also copies Kick `users` rows referenced by `destiny_users`.
+Optional: `SOURCE_DB_NAME=sdhq`, `DRY_RUN=1` (count only). The script also copies site `users` rows referenced by `destiny_users`.
 
 ## Deploy
 

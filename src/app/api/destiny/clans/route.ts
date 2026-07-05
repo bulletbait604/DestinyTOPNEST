@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     if (!stored?.oauth) {
       return NextResponse.json({
         clan: null,
-        message: 'Connect Bungie on Overview to view your clan.',
+        message: 'Reconnect Bungie to view your clan.',
       })
     }
 

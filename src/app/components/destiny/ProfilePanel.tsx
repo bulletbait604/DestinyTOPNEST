@@ -115,14 +115,14 @@ export default function ProfilePanel({
         <ProfileLoadoutsSection darkMode={darkMode} initialSection={initialLoadoutSection} />
       ) : (
         <>
-          {!linked && (
+          {(bungie.status?.needsReconnect || !linked) && (
             <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="compact" showSync={false} />
           )}
 
           {linked && (
             <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.08] bg-black/25 px-3 py-2.5">
               <StatusPill
-                label={`Bungie Â· ${bungie.status?.bungieDisplayName ?? profile.bungieDisplayName}`}
+                label={`Bungie · ${bungie.status?.bungieDisplayName ?? profile.bungieDisplayName}`}
                 tone="green"
               />
               <button
@@ -139,23 +139,20 @@ export default function ProfilePanel({
                 ) : (
                   <Unlink className="w-3 h-3" />
                 )}
-                Disconnect
+                Sign out
               </button>
             </div>
           )}
 
-          {linked && (
-            <PlayerCardDetail
+          <PlayerCardDetail
               profile={profile}
               darkMode={darkMode}
               switchingCharacter={switchingCharacter}
               onCharacterSelect={(id) => void handleCharacterSelect(id)}
-            />
-          )}
+          />
 
-          {linked && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              <EmblemPicker
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <EmblemPicker
                 darkMode={darkMode}
                 selectedSource={profile.displayEmblemSource}
                 selectedHash={profile.displayEmblemHash}
@@ -164,10 +161,9 @@ export default function ProfilePanel({
               <StatCardEditor
                 darkMode={darkMode}
                 initialSelection={profile.profileFlexStats ?? DEFAULT_PROFILE_FLEX_STATS}
-                onSaved={() => void load()}
-              />
-            </div>
-          )}
+              onSaved={() => void load()}
+            />
+          </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
             {[

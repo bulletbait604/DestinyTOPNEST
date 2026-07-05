@@ -25,7 +25,7 @@ export function emptyPlayerProfile(userId: string): PlayerProfile {
     favoriteTeammates: [],
     recentRuns: [],
     topCompletions: [],
-    prizeEligibility: 'Connect Bungie on Home to sync your Guardian and verified runs.',
+    prizeEligibility: 'Sign in with Bungie to sync your Guardian and verified runs.',
   }
 }
 

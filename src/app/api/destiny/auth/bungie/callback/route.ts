@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth, AuthError } from '@/lib/auth/verifyAuth'
-import { attachSessionCookieForUsername } from '@/lib/auth/issueSession'
+import { ensureSiteUserRecord, signSessionCookieForUser } from '@/lib/auth/issueSession'
 import {
   exchangeBungieAuthorizationCode,
   fetchLinkedGuardianSummary,
@@ -10,12 +10,18 @@ import {
   platformFromMembershipType,
 } from '@/lib/destiny/bungieOAuth'
 import { consumeBungieOAuthState } from '@/lib/destiny/bungieOAuthStateStore'
-import { upsertDestinyUser } from '@/lib/destiny/destinyUserStore'
+import {
+  getDestinyUserByBungieMembershipId,
+  getDestinyUserBySiteUserId,
+  upsertDestinyUser,
+} from '@/lib/destiny/destinyUserStore'
 import { bungieOAuthRedirectUriFromRequest } from '@/lib/destiny/env'
 import { defaultBungieReturnPath } from '@/lib/routing/tabUrl'
 import { sessionCookieSecure } from '@/lib/sessionCookie'
 
 export const dynamic = 'force-dynamic'
+
+const LOGIN_FLOW_USER = 'login'
 
 function redirectAfterOAuth(
   params: Record<string, string>,
@@ -34,7 +40,13 @@ function redirectAfterOAuth(
 
   const res = NextResponse.redirect(target)
   const secure = sessionCookieSecure(req)
-  res.cookies.set('bungieOAuthState', '', { httpOnly: true, secure, sameSite: secure ? 'none' : 'lax', path: '/', maxAge: 0 })
+  res.cookies.set('bungieOAuthState', '', {
+    httpOnly: true,
+    secure,
+    sameSite: secure ? 'none' : 'lax',
+    path: '/',
+    maxAge: 0,
+  })
   return res
 }
 
@@ -66,20 +78,6 @@ export async function GET(req: NextRequest) {
       return redirectAfterOAuth({ bungie: 'error', message: 'invalid_state' }, req, returnPath)
     }
 
-    const siteUserId = stateRecord.userId
-    let sessionMatches = false
-
-    try {
-      const sessionUser = await verifyAuth(req)
-      sessionMatches = sessionUser.username.toLowerCase() === siteUserId
-      if (!sessionMatches) {
-        return redirectAfterOAuth({ bungie: 'error', message: 'invalid_state' }, req, returnPath)
-      }
-    } catch (authError) {
-      if (!(authError instanceof AuthError)) throw authError
-      // Session cookie often drops during the Bungie redirect â€” use stored OAuth state userId.
-    }
-
     const redirectUri =
       stateRecord.redirectUri ||
       req.cookies.get('bungieOAuthRedirect')?.value ||
@@ -96,6 +94,35 @@ export async function GET(req: NextRequest) {
       return redirectAfterOAuth({ bungie: 'error', message: 'no_destiny_account' }, req, returnPath)
     }
 
+    const displayName = formatBungieDisplayName(primary)
+    const existingByBungie = await getDestinyUserByBungieMembershipId(primary.membershipId)
+    let siteUserId = (existingByBungie?.userId ?? primary.membershipId).toLowerCase()
+
+    const stateUserId = stateRecord.userId?.toLowerCase()
+    const isLoginFlow = !stateUserId || stateUserId === LOGIN_FLOW_USER
+
+    if (!isLoginFlow) {
+      if (stateUserId !== siteUserId) {
+        const stored = await getDestinyUserBySiteUserId(stateUserId)
+        if (
+          stored?.bungieMembershipId &&
+          stored.bungieMembershipId !== primary.membershipId
+        ) {
+          return redirectAfterOAuth({ bungie: 'error', message: 'account_mismatch' }, req, returnPath)
+        }
+        siteUserId = stateUserId
+      }
+
+      try {
+        const sessionUser = await verifyAuth(req)
+        if (sessionUser.username.toLowerCase() !== siteUserId) {
+          return redirectAfterOAuth({ bungie: 'error', message: 'account_mismatch' }, req, returnPath)
+        }
+      } catch (authError) {
+        if (!(authError instanceof AuthError)) throw authError
+      }
+    }
+
     let summary: Awaited<ReturnType<typeof fetchLinkedGuardianSummary>> | undefined
     try {
       summary = await fetchLinkedGuardianSummary(
@@ -107,14 +134,16 @@ export async function GET(req: NextRequest) {
       console.warn('[destiny/auth/bungie/callback] Guardian summary fetch failed:', summaryError)
     }
 
-    const displayName = formatBungieDisplayName(primary)
-
     await upsertDestinyUser(siteUserId, {
       bungieMembershipId: primary.membershipId,
       bungieNetMembershipId: tokens.membershipId,
       destinyMembershipType: primary.membershipType,
       bungieDisplayName: displayName,
-      platform: platformFromMembershipType(primary.membershipType) as 'steam' | 'xbox' | 'playstation' | 'epic',
+      platform: platformFromMembershipType(primary.membershipType) as
+        | 'steam'
+        | 'xbox'
+        | 'playstation'
+        | 'epic',
       emblemUrl: summary?.emblemUrl,
       powerLevel: summary?.powerLevel,
       characterClass: summary?.characterClass,
@@ -123,11 +152,9 @@ export async function GET(req: NextRequest) {
       oauth: tokens,
     })
 
+    const role = await ensureSiteUserRecord(siteUserId, primary.membershipId, displayName)
     const res = redirectAfterOAuth({ bungie: 'linked' }, req, returnPath)
-
-    if (!sessionMatches) {
-      await attachSessionCookieForUsername(siteUserId, req, res)
-    }
+    await signSessionCookieForUser(siteUserId, displayName, role, req, res)
 
     return res
   } catch (error) {

@@ -34,7 +34,7 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
   if (!clan) {
     return (
       <GlassCard darkMode={darkMode}>
-        <p className={t.muted}>{message ?? 'No clan data. Connect Bungie on Overview.'}</p>
+        <p className={t.muted}>{message ?? 'No clan data. Reconnect Bungie if your session expired.'}</p>
       </GlassCard>
     )
   }
