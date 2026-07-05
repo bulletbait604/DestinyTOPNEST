@@ -1628,20 +1628,21 @@ a { color: inherit; text-decoration: none; }
   .d2-login-screen-crest {
     position: relative;
     z-index: 2;
-    padding: 0.75rem 0.5rem 0.25rem;
+    padding: 0.35rem 0.25rem 0;
     text-align: center;
+    background: #000;
   }
 
   .d2-login-screen-logo-halo {
     position: absolute;
     left: 50%;
-    top: 46%;
-    width: min(88%, 36rem);
+    top: 42%;
+    width: min(72%, 28rem);
     aspect-ratio: 1;
     transform: translate(-50%, -50%);
     border-radius: 9999px;
-    background: radial-gradient(circle, color-mix(in srgb, var(--d2-arc) 22%, transparent) 0%, transparent 68%);
-    filter: blur(18px);
+    background: radial-gradient(circle, color-mix(in srgb, var(--d2-arc) 18%, transparent) 0%, transparent 70%);
+    filter: blur(22px);
     pointer-events: none;
   }
 
@@ -1649,15 +1650,15 @@ a { color: inherit; text-decoration: none; }
     position: relative;
     z-index: 1;
     display: block;
-    width: min(100%, 40rem);
-    max-height: min(68vh, 40rem);
+    width: min(100%, 36rem);
+    max-height: min(72vh, 36rem);
     height: auto;
     margin: 0 auto;
     object-fit: contain;
     filter:
       drop-shadow(0 16px 40px rgba(0, 0, 0, 0.65))
-      drop-shadow(0 0 56px rgba(115, 210, 255, 0.22))
-      drop-shadow(0 0 28px rgba(255, 213, 128, 0.12));
+      drop-shadow(0 0 48px rgba(115, 210, 255, 0.2))
+      drop-shadow(0 0 24px rgba(255, 213, 128, 0.1));
   }
 
   .d2-login-screen-dock {
