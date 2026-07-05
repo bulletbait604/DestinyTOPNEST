@@ -124,19 +124,21 @@ export function getDestinyTheme(darkMode: boolean) {
   }
 }
 
-export function destinyNavPrimary(active: boolean, darkMode: boolean) {
+export function destinyNavPrimary(active: boolean, darkMode: boolean, artUrl?: string) {
   return cn(
-    'd2-tab w-full flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 text-[10px] sm:text-xs font-semibold transition-all duration-200 min-h-[52px]',
+    'd2-tab w-full flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 py-2.5 sm:py-3 text-[10px] sm:text-xs font-semibold transition-all duration-200 min-h-[56px]',
+    artUrl && 'd2-tab-art',
     active && 'd2-tab-active',
-    !active && (darkMode ? 'text-white/50 hover:text-white/90' : 'text-slate-500 hover:text-slate-900')
+    !active && (darkMode ? 'text-white/70 hover:text-white/95' : 'text-slate-600 hover:text-slate-900')
   )
 }
 
-export function destinyNavSecondary(active: boolean, darkMode: boolean) {
+export function destinyNavSecondary(active: boolean, darkMode: boolean, artUrl?: string) {
   return cn(
-    'd2-tab d2-tab-secondary w-full flex flex-col items-center justify-center gap-1 px-1.5 sm:px-2 py-2.5 sm:py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.14em] transition-all duration-200 min-h-[52px]',
+    'd2-tab d2-tab-secondary w-full flex flex-col items-center justify-center gap-1 px-1.5 sm:px-2 py-2.5 sm:py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.14em] transition-all duration-200 min-h-[48px]',
+    artUrl && 'd2-tab-art',
     active && 'd2-tab-active',
-    !active && (darkMode ? 'text-white/45 hover:text-white/85 hover:bg-white/[0.04]' : 'text-slate-500 hover:text-slate-800 hover:bg-black/[0.04]')
+    !active && (darkMode ? 'text-white/55 hover:text-white/90 hover:bg-white/[0.04]' : 'text-slate-500 hover:text-slate-800 hover:bg-black/[0.04]')
   )
 }
 

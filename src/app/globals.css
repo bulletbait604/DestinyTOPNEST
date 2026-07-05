@@ -427,6 +427,227 @@ a { color: inherit; text-decoration: none; }
     border-top: 1px solid rgba(255, 255, 255, 0.04);
   }
 
+  /* Nav tabs with Bungie PGCR art */
+  .d2-tab-art {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background-image:
+      linear-gradient(180deg, rgba(8, 10, 16, 0.55) 0%, rgba(8, 10, 16, 0.82) 100%),
+      var(--d2-tab-art);
+    background-size: cover;
+    background-position: center 35%;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+  }
+
+  .d2-tab-art::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.55) 100%);
+    transition: opacity 0.2s ease;
+    z-index: 0;
+  }
+
+  .d2-tab-art:hover::before {
+    opacity: 0.65;
+  }
+
+  .d2-tab-art.d2-tab-active::before {
+    opacity: 0.35;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--tn-arc) 18%, transparent) 0%, rgba(0, 0, 0, 0.45) 100%);
+  }
+
+  .d2-tab-art > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Home page wireframe layout */
+  .tn-home-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--tn-bronze) 35%, transparent);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+    background:
+      linear-gradient(135deg, rgba(10, 12, 18, 0.88) 0%, rgba(14, 18, 28, 0.78) 55%, rgba(8, 10, 14, 0.92) 100%),
+      var(--tn-home-hero-art);
+    background-size: cover;
+    background-position: center 40%;
+  }
+
+  .tn-home-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 90% at 15% 50%, var(--tn-arc-glow) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 80% at 85% 40%, var(--tn-solar-glow) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.55) 100%);
+    pointer-events: none;
+  }
+
+  .tn-home-hero-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.25rem 1rem 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .tn-home-hero-grid {
+      grid-template-columns: minmax(180px, 220px) 1fr;
+      align-items: center;
+      padding: 1.5rem 1.75rem 1.75rem;
+      gap: 1.5rem;
+    }
+  }
+
+  .tn-home-solo-preview {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    padding: 0.75rem;
+  }
+
+  .tn-home-solo-label {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--tn-solar);
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+
+  .tn-home-hero-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 0;
+  }
+
+  .tn-home-logo-wrap {
+    padding: 6px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, color-mix(in srgb, var(--tn-bronze) 35%, transparent), transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--tn-bronze) 45%, transparent),
+      0 0 28px color-mix(in srgb, var(--tn-arc) 22%, transparent),
+      0 10px 28px rgba(0, 0, 0, 0.55);
+    margin-bottom: 0.75rem;
+  }
+
+  .tn-home-logo {
+    display: block;
+    width: auto;
+    height: clamp(88px, 18vw, 132px);
+    object-fit: contain;
+    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55));
+  }
+
+  .tn-home-title {
+    font-size: clamp(1.35rem, 4vw, 2rem);
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--tn-silver-bright, #e8ecf0);
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7);
+    margin: 0;
+    line-height: 1.1;
+  }
+
+  .tn-home-mission {
+    margin: 0.65rem auto 0;
+    max-width: 42rem;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: color-mix(in srgb, var(--tn-silver) 90%, white);
+    text-wrap: pretty;
+  }
+
+  @media (min-width: 640px) {
+    .tn-home-mission {
+      font-size: 0.95rem;
+    }
+  }
+
+  .tn-home-player-card {
+    border-radius: 9999px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  .tn-home-lb-card {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tn-home-lb-header {
+    position: relative;
+    min-height: 88px;
+    background:
+      linear-gradient(180deg, rgba(6, 8, 12, 0.35) 0%, rgba(6, 8, 12, 0.82) 100%),
+      var(--tn-home-lb-art);
+    background-size: cover;
+    background-position: center 35%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tn-home-lb-header-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1rem 0.85rem;
+    min-height: 88px;
+  }
+
+  .tn-home-lb-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+    margin: 0;
+  }
+
+  .tn-home-lb-sub {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.65);
+    margin: 0.15rem 0 0;
+  }
+
+  .tn-home-today {
+    position: relative;
+    border: 1px solid color-mix(in srgb, var(--tn-bronze) 30%, transparent);
+  }
+
+  .tn-home-today::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(120deg, rgba(8, 10, 16, 0.92) 0%, rgba(8, 10, 16, 0.78) 45%, rgba(8, 10, 16, 0.9) 100%),
+      var(--tn-home-today-art);
+    background-size: cover;
+    background-position: center 40%;
+    z-index: 0;
+  }
+
+  .tn-home-today-inner {
+    position: relative;
+    z-index: 1;
+  }
+
   /* light.gg filter chips */
   .d2-filter-chip {
     @apply rounded-md ring-1 ring-white/10 bg-black/30;

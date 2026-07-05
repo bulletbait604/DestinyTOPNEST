@@ -13,7 +13,7 @@ import {
   type ManifestDisplayProperties,
 } from '@/lib/destiny/bungieClient'
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
-import { activityIconPathFallback } from '@/lib/destiny/activityIconPaths'
+import { activityIconPathFallback, activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
 import { itemIconPathFallback } from '@/lib/destiny/itemIconPaths'
 import { catalogLookup, type ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 import { DESTINY_MANIFEST_URL, destinyApiConfigured } from '@/lib/destiny/env'
@@ -40,6 +40,47 @@ const HASH_RESOLVE_ENTITIES: ManifestEntityType[] = [
   'DestinyClassDefinition',
   'DestinyPlugSetDefinition',
 ]
+
+const GENERIC_ICON_MARKERS = [
+  'bd7a1fc995f87be96698263bc16698e7',
+  '8b1bfd1c1ce1cab51d23c78235a6e067',
+  'missing_icon',
+  'placeholder.jpg',
+]
+
+function isGenericIconPath(path?: string | null): boolean {
+  if (!path) return true
+  return GENERIC_ICON_MARKERS.some((marker) => path.includes(marker))
+}
+
+function isGenericIconUrl(url?: string | null): boolean {
+  if (!url) return true
+  return GENERIC_ICON_MARKERS.some((marker) => url.includes(marker))
+}
+
+function activityIconFromDefinition(def: unknown): string | undefined {
+  if (!def || typeof def !== 'object') return undefined
+  const activity = def as {
+    pgcrImage?: string
+    selectionScreenDisplayProperties?: ManifestDisplayProperties
+    displayProperties?: ManifestDisplayProperties
+    releaseIcon?: string
+  }
+
+  for (const icon of [
+    activity.pgcrImage,
+    activity.selectionScreenDisplayProperties?.icon,
+    activity.displayProperties?.icon,
+    activity.releaseIcon,
+  ]) {
+    if (icon && !isGenericIconPath(icon)) {
+      const url = buildBungieIconUrl(icon)
+      if (url) return url
+    }
+  }
+
+  return undefined
+}
 
 const CACHE_COLLECTION = 'destiny_manifest_cache'
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000
@@ -151,10 +192,16 @@ function catalogIconUrl(name: string): string | undefined {
 }
 
 function withCatalogIcon(ref: DestinyIconRef, name: string): DestinyIconRef {
+  const catalogUrl = catalogIconUrl(name)
+  if (catalogUrl && (!ref.iconUrl || isGenericIconUrl(ref.iconUrl))) {
+    return { ...ref, iconUrl: catalogUrl }
+  }
   if (ref.iconUrl) return ref
-  const iconUrl = catalogIconUrl(name)
-  return iconUrl ? { ...ref, iconUrl } : ref
+  return catalogUrl ? { ...ref, iconUrl: catalogUrl } : ref
 }
+
+/** Client-safe activity icon URL from static Bungie manifest paths. */
+export { activityIconUrlForName }
 
 /** Current manifest version string from Bungie (updates each content patch). */
 export async function getLiveManifestVersion(): Promise<string | undefined> {
@@ -184,8 +231,11 @@ export async function resolveDefinition(
   try {
     const def = await getDestinyEntityDefinition(entityType, hash)
     const props = propsFromDefinition(def)
-    let iconUrl = buildBungieIconUrl(props?.icon)
-    if (!iconUrl) iconUrl = catalogIconUrl(fallbackName)
+    let iconUrl =
+      entityType === 'DestinyActivityDefinition'
+        ? activityIconFromDefinition(def)
+        : buildBungieIconUrl(props?.icon)
+    if (!iconUrl || isGenericIconUrl(iconUrl)) iconUrl = catalogIconUrl(fallbackName)
     const name = props?.name || fallbackName
     const tierLabel = tierFromDefinition(def)
     const description = props?.description

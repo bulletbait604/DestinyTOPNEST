@@ -78,7 +78,16 @@ function IntelBox({
     <details className="d2-wiki-box group" open>
       <summary className="d2-wiki-box-summary list-none cursor-pointer">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <ItemIcon iconUrl={activity.iconUrl} name={activity.name} size={44} />
+          <ItemIcon
+            item={{
+              name: activity.name,
+              hash: activity.hash,
+              iconUrl: activity.iconUrl,
+              entityType: 'DestinyActivityDefinition',
+            }}
+            name={activity.name}
+            size={44}
+          />
           <div className="min-w-0 flex-1">
             <p className="d2-wiki-box-title truncate">{activity.name}</p>
             <p className="d2-wiki-box-meta">

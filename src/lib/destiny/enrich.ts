@@ -25,14 +25,11 @@ import {
   type DestinyIconRef,
 } from '@/lib/destiny/manifest'
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
-import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
+import { activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
 function activityIconUrl(name: string, resolved?: { iconUrl?: string }): string | undefined {
-  if (resolved?.iconUrl) return resolved.iconUrl
-  const catalog = activityCatalogLookup(name)
-  if (catalog?.iconPath) return buildBungieIconUrl(catalog.iconPath)
-  return undefined
+  return activityIconUrlForName(name) ?? resolved?.iconUrl
 }
 
 async function enrichPerkList(perks?: DestinyIconRef[]): Promise<DestinyIconRef[] | undefined> {
@@ -168,7 +165,17 @@ async function enrichLeaderboardEntry(entry: LeaderboardEntry): Promise<Leaderbo
   const fastestActivityRef = entry.fastestActivityName
     ? await resolveActivity(entry.fastestActivityName)
     : undefined
-  return { ...entry, emblemUrl: entry.emblemUrl, fastestActivityRef }
+  return {
+    ...entry,
+    emblemUrl: entry.emblemUrl,
+    fastestActivityRef: fastestActivityRef
+      ? {
+          ...fastestActivityRef,
+          iconUrl:
+            activityIconUrlForName(entry.fastestActivityName ?? '') ?? fastestActivityRef.iconUrl,
+        }
+      : undefined,
+  }
 }
 
 async function enrichLobby(lobby: FireteamLobby): Promise<FireteamLobby> {

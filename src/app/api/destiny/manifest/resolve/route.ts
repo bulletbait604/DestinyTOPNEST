@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
 import type { ManifestEntityType } from '@/lib/destiny/itemsCatalog'
-import { enrichIconRef, resolveByName, resolveManifestHash } from '@/lib/destiny/manifest'
+import { enrichIconRef, resolveActivity, resolveByName, resolveManifestHash } from '@/lib/destiny/manifest'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +23,9 @@ export async function GET(req: NextRequest) {
     }
 
     if (name) {
+      if (activityCatalogLookup(name)) {
+        return NextResponse.json(await resolveActivity(name))
+      }
       const ref = await resolveByName(name, entity ?? 'DestinyInventoryItemDefinition')
       return NextResponse.json(ref)
     }

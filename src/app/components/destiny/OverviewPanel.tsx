@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from 'react'
 import type { FeaturedActivity, OverviewPayload } from '@/lib/destiny/types'
 import BungieConnectBanner from '@/app/components/destiny/BungieConnectBanner'
 import ActivityIntelAccordion from '@/app/components/destiny/ActivityIntelAccordion'
+import HomeHero from '@/app/components/destiny/HomeHero'
+import HomeLeaderboardCard from '@/app/components/destiny/HomeLeaderboardCard'
+import PlayerCardShell from '@/app/components/destiny/PlayerCardShell'
 import {
   GlassCard,
   ItemIcon,
-  LeaderboardTable,
   LoadingBlock,
   ResetCountdown,
   SectionTitle,
@@ -17,6 +19,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
+import { homeSectionArtUrl } from '@/lib/destiny/navArt'
 import { useBungieLink } from '@/hooks/useBungieLink'
 
 function countdownParts(ms: number) {
@@ -89,60 +92,87 @@ export default function OverviewPanel({ darkMode }: { darkMode: boolean }) {
   }
 
   const { featuredRaids, featuredDungeons, resetsInLabel } = data.weeklyReset
+  const soloEntries = data.guardiansTop3 ?? data.clanTop5 ?? []
+  const todayArt = homeSectionArtUrl('todayPanel')
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="overview" showSync={false} />
 
-      <GlassCard darkMode={darkMode} padding="compact" className="d2-today-panel">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start mb-4">
-          <div>
-            <SectionTitle title="Today in Destiny" subtitle={data.weeklyReset.weekLabel} darkMode={darkMode} compact />
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <StatusPill
-                label={data.bungieApiConfigured ? 'Live data' : 'API key needed'}
-                tone={data.bungieApiConfigured ? 'green' : 'neutral'}
-              />
-              <StatusPill label={data.weeklyReset.resetTimeLabel} tone="neutral" />
-              <StatusPill
-                label={`${data.season.name} · ${data.seasonCountdown.days}d left`}
-                tone="gold"
-              />
-            </div>
-            {data.weeklyReset.pantheon && (
-              <p className={cn('text-xs mb-1 italic', t.purple)}>Pantheon: {data.weeklyReset.pantheon}</p>
-            )}
-            <p className={cn('text-[11px]', t.muted)}>
-              Season prizes on the Season tab · {data.prizeSummary.length > 72 ? 'Top 5 earn rewards at season end' : data.prizeSummary}
-            </p>
-          </div>
-          <ResetCountdown
-            {...countdownParts(data.weeklyReset.resetsInMs)}
-            label="Weekly reset in"
-          />
-        </div>
+      <HomeHero darkMode={darkMode} soloPreview={soloEntries} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
-          {rotationStatCards(featuredRaids, featuredDungeons, resetsInLabel, darkMode)}
-        </div>
-
-        <ActivityIntelAccordion raids={featuredRaids} dungeons={featuredDungeons} embedded />
-      </GlassCard>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Raids" iconUrl={featuredRaids[0]?.iconUrl ?? data.featuredRaid.iconUrl} darkMode={darkMode} />
-          <LeaderboardTable entries={data.raidTop10} darkMode={darkMode} compact />
-        </GlassCard>
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Dungeons" iconUrl={featuredDungeons[0]?.iconUrl ?? data.featuredDungeon.iconUrl} darkMode={darkMode} />
-          <LeaderboardTable entries={data.dungeonTop10} darkMode={darkMode} compact />
-        </GlassCard>
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Top Guardians" subtitle="Monthly Commanders" darkMode={darkMode} />
-          <LeaderboardTable entries={data.guardiansTop3 ?? data.clanTop5 ?? []} darkMode={darkMode} compact />
-        </GlassCard>
+      <div className="tn-home-player-card">
+        <PlayerCardShell darkMode={darkMode} />
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <HomeLeaderboardCard
+          title="Raid Leaderboard"
+          subtitle="Top raiders this season"
+          artUrl={homeSectionArtUrl('raidBoard')}
+          iconUrl={featuredRaids[0]?.iconUrl ?? data.featuredRaid.iconUrl}
+          entries={data.raidTop10}
+          darkMode={darkMode}
+        />
+        <HomeLeaderboardCard
+          title="Solo Leaderboard"
+          subtitle="Monthly Commanders"
+          artUrl={homeSectionArtUrl('soloBoard')}
+          entries={soloEntries}
+          darkMode={darkMode}
+        />
+        <HomeLeaderboardCard
+          title="Dungeon Leaderboard"
+          subtitle="Top delvers this season"
+          artUrl={homeSectionArtUrl('dungeonBoard')}
+          iconUrl={featuredDungeons[0]?.iconUrl ?? data.featuredDungeon.iconUrl}
+          entries={data.dungeonTop10}
+          darkMode={darkMode}
+        />
+      </div>
+
+      <GlassCard
+        darkMode={darkMode}
+        padding="compact"
+        className="d2-today-panel tn-home-today overflow-hidden"
+        style={{ ['--tn-home-today-art' as string]: `url('${todayArt}')` }}
+      >
+        <div className="tn-home-today-inner">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start mb-4">
+            <div>
+              <SectionTitle title="Today in Destiny" subtitle={data.weeklyReset.weekLabel} darkMode={darkMode} compact />
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <StatusPill
+                  label={data.bungieApiConfigured ? 'Live data' : 'API key needed'}
+                  tone={data.bungieApiConfigured ? 'green' : 'neutral'}
+                />
+                <StatusPill label={data.weeklyReset.resetTimeLabel} tone="neutral" />
+                <StatusPill
+                  label={`${data.season.name} · ${data.seasonCountdown.days}d left`}
+                  tone="gold"
+                />
+              </div>
+              {data.weeklyReset.pantheon && (
+                <p className={cn('text-xs mb-1 italic', t.purple)}>Pantheon: {data.weeklyReset.pantheon}</p>
+              )}
+              <p className={cn('text-[11px]', t.muted)}>
+                Season prizes on the Season tab ·{' '}
+                {data.prizeSummary.length > 72 ? 'Top 5 earn rewards at season end' : data.prizeSummary}
+              </p>
+            </div>
+            <ResetCountdown
+              {...countdownParts(data.weeklyReset.resetsInMs)}
+              label="Weekly reset in"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+            {rotationStatCards(featuredRaids, featuredDungeons, resetsInLabel, darkMode)}
+          </div>
+
+          <ActivityIntelAccordion raids={featuredRaids} dungeons={featuredDungeons} embedded />
+        </div>
+      </GlassCard>
 
       {data.hallOfFamePreview.length > 0 && (
         <GlassCard darkMode={darkMode}>

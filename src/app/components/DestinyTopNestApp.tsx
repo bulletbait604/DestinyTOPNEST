@@ -47,11 +47,16 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
   const theme = getDestinyTheme(darkMode)
   const restored = useRef(false)
   const skipUrlSync = useRef(true)
+  const isHome = activeTab === 'overview'
 
   const handleTabChange = useCallback((tab: DestinyTopNestTab) => {
     if (tab === 'profile') {
       setProfileView('guardian')
       setLoadoutSection(undefined)
+    }
+    if (tab === 'loadouts') {
+      setProfileView('loadouts')
+      setLoadoutSection('mine')
     }
     setActiveTab(tab)
   }, [])
@@ -107,11 +112,11 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
 
   return (
     <div className={cn('rounded-xl overflow-hidden ring-1 ring-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.45)]', theme.shell)}>
-      <TopNestBrandBanner app tagline={BRAND_MISSION} />
+      {!isHome ? <TopNestBrandBanner app tagline={BRAND_MISSION} /> : null}
 
       <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4 space-y-4">
-        <PlayerCardShell darkMode={darkMode} />
         <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
+        {!isHome ? <PlayerCardShell darkMode={darkMode} /> : null}
         <div className="animate-in fade-in duration-300 min-w-0">{renderPanel()}</div>
       </div>
     </div>

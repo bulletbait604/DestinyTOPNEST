@@ -1,6 +1,7 @@
 ﻿'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
 import { cn } from '@/lib/utils'
 import type { DestinyIconRef, LeaderboardEntry } from '@/lib/destiny/types'
 import { TopNestLogoMark } from '@/app/components/destiny/TopNestBrandBanner'
@@ -14,16 +15,20 @@ import {
 } from '@/app/components/destiny/destinyTheme'
 
 async function fetchManifestIcon(item?: DestinyIconRef, name?: string): Promise<string | undefined> {
+  const label = item?.name ?? name
+  const staticActivityUrl = label ? activityIconUrlForName(label) : undefined
+  if (staticActivityUrl) return staticActivityUrl
+
   const params = new URLSearchParams()
   if (item?.hash) params.set('hash', String(item.hash))
   if (item?.entityType) params.set('entity', item.entityType)
-  if (item?.name || name) params.set('name', item?.name ?? name ?? '')
+  if (label) params.set('name', label)
   if (!params.get('name') && !params.get('hash')) return undefined
 
   const res = await fetch(`/api/destiny/manifest/resolve?${params.toString()}`, { cache: 'no-store' })
-  if (!res.ok) return undefined
+  if (!res.ok) return label ? activityIconUrlForName(label) : undefined
   const json = (await res.json()) as { iconUrl?: string }
-  return json.iconUrl
+  return json.iconUrl ?? (label ? activityIconUrlForName(label) : undefined)
 }
 
 export function ItemIcon({
@@ -52,6 +57,12 @@ export function ItemIcon({
   const [failed, setFailed] = useState(false)
   const [resolvedUrl, setResolvedUrl] = useState<string | undefined>()
   const displayUrl = resolvedUrl ?? url
+
+  useEffect(() => {
+    if (displayUrl || failed || !(item?.name ?? name)) return
+    const staticUrl = activityIconUrlForName(item?.name ?? name ?? '')
+    if (staticUrl) setResolvedUrl(staticUrl)
+  }, [displayUrl, failed, item?.name, name])
 
   const handleImageError = useCallback(() => {
     if (resolvedUrl || failed) {
@@ -177,11 +188,13 @@ export function GlassCard({
   className,
   darkMode,
   padding = 'default',
+  style,
 }: {
   children: React.ReactNode
   className?: string
   darkMode: boolean
   padding?: 'default' | 'lg' | 'compact' | 'none'
+  style?: React.CSSProperties
 }) {
   const t = getDestinyTheme(darkMode)
   const pad =
@@ -193,7 +206,7 @@ export function GlassCard({
           ? ''
           : 'p-5 sm:p-6'
   return (
-    <div className={cn(pad, t.glass, className)}>{children}</div>
+    <div className={cn(pad, t.glass, className)} style={style}>{children}</div>
   )
 }
 

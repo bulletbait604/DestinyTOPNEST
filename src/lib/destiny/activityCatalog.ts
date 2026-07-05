@@ -4,7 +4,7 @@
  */
 
 import type { CatalogEntry } from '@/lib/destiny/itemsCatalog'
-import { ACTIVITY_ICON_PATHS, ACTIVITY_NAME_ALIASES } from '@/lib/destiny/activityIconPaths'
+import { ACTIVITY_ICON_PATHS, normalizeActivityKey } from '@/lib/destiny/activityIconPaths'
 
 /** Activity name → manifest hash (DestinyActivityDefinition). */
 export const ACTIVITY_CATALOG: Record<string, CatalogEntry & { iconPath?: string }> = {
@@ -27,11 +27,11 @@ export const ACTIVITY_CATALOG: Record<string, CatalogEntry & { iconPath?: string
   'grasp of avarice': { hash: 1112917203, entity: 'DestinyActivityDefinition', iconPath: '/common/destiny2_content/icons/b5c87175a97d1333da0ff4300fb87f57.png' },
   'prophecy': { hash: 1077850348, entity: 'DestinyActivityDefinition', iconPath: '/common/destiny2_content/icons/1406f929d0c25506a5ab5ea73956fcb3.png' },
   'vesper\'s host': { hash: 1915770060, entity: 'DestinyActivityDefinition', iconPath: '/img/destiny_content/pgcr/vespers_host.jpg' },
+  'sundered doctrine': { hash: 247869137, entity: 'DestinyActivityDefinition', iconPath: '/img/destiny_content/pgcr/dungeon_delver.jpg' },
 }
 
 export function activityCatalogLookup(name: string): (CatalogEntry & { iconPath?: string }) | undefined {
-  const raw = name.trim().toLowerCase()
-  const key = ACTIVITY_NAME_ALIASES[raw] ?? raw.replace(/^the\s+/, '')
+  const key = normalizeActivityKey(name)
   const entry = ACTIVITY_CATALOG[key]
   if (!entry) return undefined
   const iconPath = entry.iconPath ?? ACTIVITY_ICON_PATHS[key]

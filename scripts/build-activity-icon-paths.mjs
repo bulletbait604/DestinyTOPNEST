@@ -25,6 +25,7 @@ const ACTIVITY_NAMES = [
   'Grasp of Avarice',
   'Prophecy',
   "Vesper's Host",
+  'Sundered Doctrine',
 ]
 
 /** Curated from triumph records / emblems (light.gg, blueberries-style) when vaulted activities lack art. */
@@ -238,9 +239,27 @@ export const ACTIVITY_ICON_PATHS: Record<string, string> = ${JSON.stringify(icon
 
 export const ACTIVITY_NAME_ALIASES: Record<string, string> = ${JSON.stringify(ACTIVITY_ALIASES, null, 2)}
 
+/** Normalize PGCR activity names (e.g. "Spire of the Watcher: Master") to catalog keys. */
+export function normalizeActivityKey(name: string): string {
+  let key = name.trim().toLowerCase()
+  key = ACTIVITY_NAME_ALIASES[key] ?? key
+  key = key.replace(/^the\\s+/, '')
+  key = key.replace(/^(raid|dungeon):\\s*/i, '')
+  if (key.includes(':')) key = key.split(':')[0]?.trim() ?? key
+  if (ACTIVITY_ICON_PATHS[key]) return key
+  for (const catalogKey of Object.keys(ACTIVITY_ICON_PATHS)) {
+    if (key.startsWith(catalogKey) || catalogKey.startsWith(key)) return catalogKey
+  }
+  return key
+}
+
 export function activityIconPathFallback(name: string): string | undefined {
-  const key = name.trim().toLowerCase()
-  return ACTIVITY_ICON_PATHS[ACTIVITY_NAME_ALIASES[key] ?? key]
+  return ACTIVITY_ICON_PATHS[normalizeActivityKey(name)]
+}
+
+export function activityIconUrlForName(name: string): string | undefined {
+  const path = activityIconPathFallback(name)
+  return path ? \`https://www.bungie.net\${path}\` : undefined
 }
 `
 
@@ -250,7 +269,7 @@ const catalogOut = `/**
  */
 
 import type { CatalogEntry } from '@/lib/destiny/itemsCatalog'
-import { ACTIVITY_ICON_PATHS, ACTIVITY_NAME_ALIASES } from '@/lib/destiny/activityIconPaths'
+import { ACTIVITY_ICON_PATHS, normalizeActivityKey } from '@/lib/destiny/activityIconPaths'
 
 /** Activity name → manifest hash (DestinyActivityDefinition). */
 export const ACTIVITY_CATALOG: Record<string, CatalogEntry & { iconPath?: string }> = {
@@ -263,8 +282,7 @@ ${Object.entries(catalog)
 }
 
 export function activityCatalogLookup(name: string): (CatalogEntry & { iconPath?: string }) | undefined {
-  const raw = name.trim().toLowerCase()
-  const key = ACTIVITY_NAME_ALIASES[raw] ?? raw.replace(/^the\\s+/, '')
+  const key = normalizeActivityKey(name)
   const entry = ACTIVITY_CATALOG[key]
   if (!entry) return undefined
   const iconPath = entry.iconPath ?? ACTIVITY_ICON_PATHS[key]

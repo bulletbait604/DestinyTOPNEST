@@ -18,14 +18,33 @@ export const ACTIVITY_ICON_PATHS: Record<string, string> = {
   "warlord's ruin": "/img/destiny_content/pgcr/dungeon_ridgeline.jpg",
   "grasp of avarice": "/common/destiny2_content/icons/b5c87175a97d1333da0ff4300fb87f57.png",
   "prophecy": "/common/destiny2_content/icons/1406f929d0c25506a5ab5ea73956fcb3.png",
-  "vesper's host": "/img/destiny_content/pgcr/vespers_host.jpg"
+  "vesper's host": "/img/destiny_content/pgcr/vespers_host.jpg",
+  "sundered doctrine": "/img/destiny_content/pgcr/dungeon_delver.jpg"
 }
 
 export const ACTIVITY_NAME_ALIASES: Record<string, string> = {
   "the shattered throne": "shattered throne"
 }
 
+/** Normalize PGCR activity names (e.g. "Spire of the Watcher: Master") to catalog keys. */
+export function normalizeActivityKey(name: string): string {
+  let key = name.trim().toLowerCase()
+  key = ACTIVITY_NAME_ALIASES[key] ?? key
+  key = key.replace(/^the\s+/, '')
+  key = key.replace(/^(raid|dungeon):\s*/i, '')
+  if (key.includes(':')) key = key.split(':')[0]?.trim() ?? key
+  if (ACTIVITY_ICON_PATHS[key]) return key
+  for (const catalogKey of Object.keys(ACTIVITY_ICON_PATHS)) {
+    if (key.startsWith(catalogKey) || catalogKey.startsWith(key)) return catalogKey
+  }
+  return key
+}
+
 export function activityIconPathFallback(name: string): string | undefined {
-  const key = name.trim().toLowerCase()
-  return ACTIVITY_ICON_PATHS[ACTIVITY_NAME_ALIASES[key] ?? key]
+  return ACTIVITY_ICON_PATHS[normalizeActivityKey(name)]
+}
+
+export function activityIconUrlForName(name: string): string | undefined {
+  const path = activityIconPathFallback(name)
+  return path ? `https://www.bungie.net${path}` : undefined
 }
