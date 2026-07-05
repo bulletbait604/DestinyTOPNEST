@@ -31,6 +31,9 @@ function originFromBaseUrl(raw: string): string | undefined {
   }
 }
 
+/** Known production host for Destiny Top Nest on Vercel. */
+export const TOPNEST_PRODUCTION_ORIGIN = 'https://destiny-topnest.vercel.app'
+
 function canonicalOriginFromEnv(): string | undefined {
   const explicit = process.env.BUNGIE_OAUTH_REDIRECT_URI || process.env.NEXT_PUBLIC_BUNGIE_REDIRECT_URI
   if (explicit?.trim()) {
@@ -52,7 +55,11 @@ function canonicalOriginFromEnv(): string | undefined {
 
   if (process.env.VERCEL_ENV === 'production') {
     const vercel = (process.env.VERCEL_URL || '').trim()
+    if (vercel.includes('destiny-topnest')) {
+      return TOPNEST_PRODUCTION_ORIGIN
+    }
     if (vercel) return `https://${vercel.replace(/\/$/, '')}`
+    return TOPNEST_PRODUCTION_ORIGIN
   }
 
   return undefined

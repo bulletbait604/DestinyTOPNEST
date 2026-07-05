@@ -25,6 +25,10 @@ export function bungieOAuthErrorMessage(code: string): string {
       return 'Redirect URI mismatch. Copy the redirect URL from Profile (below) into Bungie OAuth settings exactly.'
     case 'account_mismatch':
       return 'This Bungie account does not match your current session. Sign out and try again.'
+    case 'session_not_configured':
+      return 'Server session secret is missing. Set SESSION_SECRET on Vercel and redeploy.'
+    case 'database_unavailable':
+      return 'Database connection failed. Check MONGODB_URI on Vercel and redeploy.'
     default:
       return code
   }

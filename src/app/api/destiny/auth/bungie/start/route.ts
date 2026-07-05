@@ -1,24 +1,36 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth, AuthError } from '@/lib/auth/verifyAuth'
 import { buildBungieAuthorizeUrl } from '@/lib/destiny/bungieOAuth'
-import { createBungieOAuthState } from '@/lib/destiny/bungieOAuthStateStore'
+import { createBungieOAuthState } from '@/lib/destiny/bungieOAuthState'
 import { bungieOAuthConfigured, bungieOAuthRedirectUriFromRequest } from '@/lib/destiny/env'
 import { defaultBungieReturnPath } from '@/lib/routing/tabUrl'
+import { getSessionSecret } from '@/lib/auth/sessionJwt'
 import { sessionCookieSecure } from '@/lib/sessionCookie'
 
 export const dynamic = 'force-dynamic'
 
 const LOGIN_FLOW_USER = 'login'
 
+function startError(req: NextRequest, message: string, status = 503): NextResponse {
+  return NextResponse.json(
+    {
+      error: message,
+      redirectUri: bungieOAuthRedirectUriFromRequest(req),
+    },
+    { status }
+  )
+}
+
 export async function GET(req: NextRequest) {
   if (!bungieOAuthConfigured()) {
-    return NextResponse.json(
-      {
-        error:
-          'Bungie OAuth is not configured. Set DESTINY_API, BUNGIE_OAUTH_CLIENT_ID, and BUNGIE_OAUTH_CLIENT_SECRET.',
-      },
-      { status: 503 }
+    return startError(
+      req,
+      'Bungie OAuth is not configured. Set DESTINY_API, BUNGIE_OAUTH_CLIENT_ID, and BUNGIE_OAUTH_CLIENT_SECRET on Vercel.'
     )
+  }
+
+  if (!getSessionSecret()) {
+    return startError(req, 'SESSION_SECRET (or JWT_SECRET) is not configured on the server.')
   }
 
   const redirectUri = bungieOAuthRedirectUriFromRequest(req)
@@ -35,7 +47,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     if (!(error instanceof AuthError)) {
       console.error('[destiny/auth/bungie/start]', error)
-      return NextResponse.json({ error: 'Failed to start Bungie authorization' }, { status: 500 })
+      return startError(req, 'Failed to start Bungie authorization', 500)
     }
   }
 
@@ -60,7 +72,11 @@ export async function GET(req: NextRequest) {
     return res
   } catch (error) {
     console.error('[destiny/auth/bungie/start]', error)
-    return NextResponse.json({ error: 'Failed to start Bungie authorization' }, { status: 500 })
+    const detail = error instanceof Error ? error.message : 'unknown'
+    if (detail.includes('SESSION_SECRET')) {
+      return startError(req, detail)
+    }
+    return startError(req, 'Failed to start Bungie authorization', 500)
   }
 }
 

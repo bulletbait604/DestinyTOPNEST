@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth, AuthError } from '@/lib/auth/verifyAuth'
 import { ensureSiteUserRecord, signSessionCookieForUser } from '@/lib/auth/issueSession'
+import { getSessionSecret } from '@/lib/auth/sessionJwt'
 import {
   exchangeBungieAuthorizationCode,
   fetchLinkedGuardianSummary,
@@ -9,19 +10,31 @@ import {
   pickPrimaryDestinyMembership,
   platformFromMembershipType,
 } from '@/lib/destiny/bungieOAuth'
-import { consumeBungieOAuthState } from '@/lib/destiny/bungieOAuthStateStore'
+import { consumeBungieOAuthState } from '@/lib/destiny/bungieOAuthState'
+import { verifySignedBungieOAuthState } from '@/lib/destiny/bungieOAuthStateCookie'
 import {
   getDestinyUserByBungieMembershipId,
   getDestinyUserBySiteUserId,
   upsertDestinyUser,
 } from '@/lib/destiny/destinyUserStore'
-import { bungieOAuthRedirectUriFromRequest } from '@/lib/destiny/env'
+import { bungieOAuthRedirectUriFromRequest, TOPNEST_PRODUCTION_ORIGIN } from '@/lib/destiny/env'
 import { defaultBungieReturnPath } from '@/lib/routing/tabUrl'
 import { sessionCookieSecure } from '@/lib/sessionCookie'
 
 export const dynamic = 'force-dynamic'
 
 const LOGIN_FLOW_USER = 'login'
+
+function redirectBase(req: NextRequest): string {
+  const base = process.env.NEXT_PUBLIC_BASE_URL?.trim()
+  if (base) return base.replace(/\/$/, '')
+  if (process.env.VERCEL_ENV === 'production') return TOPNEST_PRODUCTION_ORIGIN
+  try {
+    return new URL(req.url).origin
+  } catch {
+    return TOPNEST_PRODUCTION_ORIGIN
+  }
+}
 
 function redirectAfterOAuth(
   params: Record<string, string>,
@@ -33,7 +46,7 @@ function redirectAfterOAuth(
       ? returnPath
       : defaultBungieReturnPath()
 
-  const target = new URL(safeReturn, req.url)
+  const target = new URL(safeReturn, redirectBase(req))
   for (const [k, v] of Object.entries(params)) {
     target.searchParams.set(k, v)
   }
@@ -50,6 +63,47 @@ function redirectAfterOAuth(
   return res
 }
 
+async function resolveOAuthState(
+  state: string,
+  req: NextRequest
+): Promise<{
+  userId: string
+  redirectUri: string
+  returnPath: string
+} | null> {
+  const signed = verifySignedBungieOAuthState(state)
+  if (signed) {
+    return {
+      userId: signed.userId,
+      redirectUri: signed.redirectUri,
+      returnPath: signed.returnPath,
+    }
+  }
+
+  const mongoRecord = await consumeBungieOAuthState(state)
+  if (mongoRecord) {
+    return {
+      userId: mongoRecord.userId,
+      redirectUri: mongoRecord.redirectUri,
+      returnPath: mongoRecord.returnPath,
+    }
+  }
+
+  const cookieState = req.cookies.get('bungieOAuthState')?.value
+  if (cookieState === state) {
+    const cookieSigned = verifySignedBungieOAuthState(cookieState)
+    if (cookieSigned) {
+      return {
+        userId: cookieSigned.userId,
+        redirectUri: cookieSigned.redirectUri,
+        returnPath: cookieSigned.returnPath,
+      }
+    }
+  }
+
+  return null
+}
+
 export async function GET(req: NextRequest) {
   let returnPath: string | undefined
 
@@ -59,9 +113,6 @@ export async function GET(req: NextRequest) {
     const state = searchParams.get('state')
     const error = searchParams.get('error')
 
-    const stateRecord = state ? await consumeBungieOAuthState(state) : null
-    returnPath = stateRecord?.returnPath
-
     if (error) {
       return redirectAfterOAuth({ bungie: 'error', message: error }, req, returnPath)
     }
@@ -70,13 +121,12 @@ export async function GET(req: NextRequest) {
       return redirectAfterOAuth({ bungie: 'error', message: 'missing_code' }, req, returnPath)
     }
 
+    const stateRecord = await resolveOAuthState(state, req)
     if (!stateRecord) {
-      const cookieState = req.cookies.get('bungieOAuthState')?.value
-      if (!cookieState || cookieState !== state) {
-        return redirectAfterOAuth({ bungie: 'error', message: 'invalid_state' }, req, returnPath)
-      }
       return redirectAfterOAuth({ bungie: 'error', message: 'invalid_state' }, req, returnPath)
     }
+
+    returnPath = stateRecord.returnPath
 
     const redirectUri =
       stateRecord.redirectUri ||
@@ -152,9 +202,17 @@ export async function GET(req: NextRequest) {
       oauth: tokens,
     })
 
+    if (!getSessionSecret()) {
+      return redirectAfterOAuth({ bungie: 'error', message: 'session_not_configured' }, req, returnPath)
+    }
+
     const role = await ensureSiteUserRecord(siteUserId, primary.membershipId, displayName)
     const res = redirectAfterOAuth({ bungie: 'linked' }, req, returnPath)
-    await signSessionCookieForUser(siteUserId, displayName, role, req, res)
+    const cookieSet = await signSessionCookieForUser(siteUserId, displayName, role, req, res)
+
+    if (!cookieSet) {
+      return redirectAfterOAuth({ bungie: 'error', message: 'session_not_configured' }, req, returnPath)
+    }
 
     return res
   } catch (error) {
@@ -164,7 +222,9 @@ export async function GET(req: NextRequest) {
     const message =
       lower.includes('redirect_uri') || lower.includes('redirect uri')
         ? 'redirect_uri_mismatch'
-        : detail.slice(0, 180)
+        : lower.includes('mongodb') || lower.includes('mongo')
+          ? 'database_unavailable'
+          : detail.slice(0, 180)
     return redirectAfterOAuth({ bungie: 'error', message }, req, returnPath)
   }
 }

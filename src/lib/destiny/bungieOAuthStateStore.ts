@@ -21,8 +21,9 @@ export async function createBungieOAuthState(input: {
   userId: string
   redirectUri: string
   returnPath: string
+  stateOverride?: string
 }): Promise<string> {
-  const state = randomBytes(24).toString('hex')
+  const state = input.stateOverride ?? randomBytes(24).toString('hex')
   const now = new Date()
   const expiresAt = new Date(now.getTime() + 10 * 60 * 1000)
 
