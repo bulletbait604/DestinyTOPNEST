@@ -19,8 +19,7 @@ export const TAB_PAGE_COPY: Record<
   },
   leaderboards: {
     title: 'Leaderboards',
-    description:
-      'Verified full clears, seasonal rankings, monthly commanders, and the hall of fame — all in one place.',
+    description: '',
   },
   profile: {
     title: 'Profile',

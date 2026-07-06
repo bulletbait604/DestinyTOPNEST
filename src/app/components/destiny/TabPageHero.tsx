@@ -71,7 +71,9 @@ export default function TabPageHero({ tab, aside }: Props) {
         </div>
         <div className="tn-home-hero-center tn-home-hero-center-brand">
           <h2 className="tn-home-title">{copy.title}</h2>
-          <p className="tn-home-mission tn-home-mission-brand">{copy.description}</p>
+          {copy.description ? (
+            <p className="tn-home-mission tn-home-mission-brand">{copy.description}</p>
+          ) : null}
         </div>
       </div>
     </section>
