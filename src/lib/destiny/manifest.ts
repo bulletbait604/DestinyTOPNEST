@@ -14,6 +14,7 @@ import {
 } from '@/lib/destiny/bungieClient'
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
 import { activityIconPathFallback, activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
+import { classIconPathForClass, classIconRefForClass, classIconUrlForClass } from '@/lib/destiny/classIconPaths'
 import { itemIconPathFallback } from '@/lib/destiny/itemIconPaths'
 import { catalogLookup, type ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 import { DESTINY_MANIFEST_URL, destinyApiConfigured } from '@/lib/destiny/env'
@@ -181,6 +182,8 @@ function iconRefFromInfo(info: ManifestDefinitionInfo): DestinyIconRef {
 }
 
 function catalogIconUrl(name: string): string | undefined {
+  const classPath = classIconPathForClass(name)
+  if (classPath) return buildBungieIconUrl(classPath)
   const activity = activityCatalogLookup(name)
   if (activity?.iconPath) return buildBungieIconUrl(activity.iconPath)
   const activityFallback = activityIconPathFallback(name)
@@ -393,9 +396,14 @@ export async function resolveSubclass(name: string): Promise<DestinyIconRef> {
 }
 
 export async function resolveClassIcon(characterClass: string): Promise<DestinyIconRef> {
+  const staticRef = classIconRefForClass(characterClass)
+  if (staticRef) return staticRef
+
   const catalog = catalogLookup(characterClass)
   if (catalog) return resolveManifestHash(catalog.entity, catalog.hash, characterClass)
-  return { name: characterClass }
+
+  const iconUrl = classIconUrlForClass(characterClass)
+  return iconUrl ? { name: characterClass, iconUrl } : { name: characterClass }
 }
 
 export async function resolveMany(names: string[], entity?: ManifestEntityType): Promise<DestinyIconRef[]> {

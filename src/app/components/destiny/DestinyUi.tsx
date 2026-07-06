@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
+import { classIconUrlForClass } from '@/lib/destiny/classIconPaths'
 import { cn } from '@/lib/utils'
 import type { DestinyIconRef, LeaderboardEntry } from '@/lib/destiny/types'
 import { TopNestLogoMark } from '@/app/components/destiny/TopNestBrandBanner'
@@ -17,6 +18,9 @@ import {
 
 async function fetchManifestIcon(item?: DestinyIconRef, name?: string): Promise<string | undefined> {
   const label = item?.name ?? name
+  const classUrl = label ? classIconUrlForClass(label) : undefined
+  if (classUrl) return classUrl
+
   const staticActivityUrl = label ? activityIconUrlForName(label) : undefined
   if (staticActivityUrl) return staticActivityUrl
 
@@ -61,7 +65,13 @@ export function ItemIcon({
 
   useEffect(() => {
     if (displayUrl || failed || !(item?.name ?? name)) return
-    const staticUrl = activityIconUrlForName(item?.name ?? name ?? '')
+    const label = item?.name ?? name ?? ''
+    const classUrl = classIconUrlForClass(label)
+    if (classUrl) {
+      setResolvedUrl(classUrl)
+      return
+    }
+    const staticUrl = activityIconUrlForName(label)
     if (staticUrl) setResolvedUrl(staticUrl)
   }, [displayUrl, failed, item?.name, name])
 
