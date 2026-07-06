@@ -66,7 +66,7 @@ export default function PlayerCardDetail({ profile, darkMode, switchingCharacter
           {switchingCharacter ? 'Loading equipped gear…' : 'Sync Bungie to load live build data.'}
         </p>
       ) : (
-        <ProfileBuildInspectorBody build={loadout} layout="guardian" />
+        <ProfileBuildInspectorBody build={loadout} />
       )}
     </GameCard>
   )

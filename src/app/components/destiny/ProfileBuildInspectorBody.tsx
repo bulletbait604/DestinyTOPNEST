@@ -22,8 +22,6 @@ const ABILITY_SLOTS = [
   { slot: 'Grenade', getRef: (l: BuildSnapshot) => l.grenadeRef, getFallback: (l: BuildSnapshot) => l.abilities?.[4] },
 ] as const
 
-type Layout = 'guardian' | 'loadout'
-
 function AbilitySlotCell({
   slot,
   item,
@@ -104,7 +102,7 @@ function StatsPanel({ build }: { build: BuildSnapshot }) {
   if (!Object.keys(build.stats).length) return null
   return (
     <BuildSection label="Stats" className="d2-profile-build-panel d2-profile-stats-panel">
-      <ArmorStatMatrix stats={build.stats} ingame />
+      <ArmorStatMatrix stats={build.stats} loadout />
     </BuildSection>
   )
 }
@@ -127,14 +125,12 @@ function ArmorPanel({ rows }: { rows: ReturnType<typeof buildArmorRows> }) {
   )
 }
 
-/** Shared guardian / loadout build grid — guardian tab vs compact loadouts tab. */
+/** Shared guardian / loadout build grid. */
 export default function ProfileBuildInspectorBody({
   build,
-  layout,
   showSynergy = true,
 }: {
   build: BuildSnapshot
-  layout: Layout
   showSynergy?: boolean
 }) {
   const elementGlow = subclassGlow(build.subclass)
@@ -142,39 +138,21 @@ export default function ProfileBuildInspectorBody({
   const armorRows = buildArmorRows(build)
   const statsPanel = <StatsPanel build={build} />
   const abilitiesPanel = <AbilitiesPanel build={build} elementGlow={elementGlow} />
-
-  if (layout === 'loadout') {
-    const hasStats = Object.keys(build.stats).length > 0
-    return (
-      <div className="d2-profile-build-body">
-        {showSynergy ? <BuildSynergyRail build={build} /> : null}
-
-        <div className={cn('d2-loadout-build-grid', !hasStats && 'd2-loadout-build-grid--no-stats')}>
-          <div className="d2-loadout-build-weapons">
-            <WeaponsPanel rows={weaponRows} />
-          </div>
-          {hasStats ? <div className="d2-loadout-build-stats">{statsPanel}</div> : null}
-          <div className="d2-loadout-build-armor">
-            <ArmorPanel rows={armorRows} />
-          </div>
-          <div className="d2-loadout-build-abilities">{abilitiesPanel}</div>
-        </div>
-      </div>
-    )
-  }
+  const hasStats = Object.keys(build.stats).length > 0
 
   return (
     <div className="d2-profile-build-body">
       {showSynergy ? <BuildSynergyRail build={build} /> : null}
 
-      <WeaponsPanel rows={weaponRows} />
-
-      <div className="d2-profile-loadout-split">
-        <ArmorPanel rows={armorRows} />
-        <div className="d2-profile-loadout-right">
-          {statsPanel}
-          {abilitiesPanel}
+      <div className={cn('d2-loadout-build-grid', !hasStats && 'd2-loadout-build-grid--no-stats')}>
+        <div className="d2-loadout-build-weapons">
+          <WeaponsPanel rows={weaponRows} />
         </div>
+        {hasStats ? <div className="d2-loadout-build-stats">{statsPanel}</div> : null}
+        <div className="d2-loadout-build-armor">
+          <ArmorPanel rows={armorRows} />
+        </div>
+        <div className="d2-loadout-build-abilities">{abilitiesPanel}</div>
       </div>
     </div>
   )

@@ -53,7 +53,7 @@ export default function LoadoutCard({
         />
       </div>
 
-      <ProfileBuildInspectorBody build={build} layout="loadout" />
+      <ProfileBuildInspectorBody build={build} />
 
       {build.armorSetBonuses?.length ? (
         <div className="px-4 pb-2">

@@ -2330,11 +2330,40 @@ a { color: inherit; text-decoration: none; }
     .d2-loadout-build-weapons {
       grid-column: 1;
       grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
 
     .d2-loadout-build-stats {
       grid-column: 2;
       grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .d2-loadout-build-weapons .d2-build-section,
+    .d2-loadout-build-stats .d2-build-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .d2-loadout-build-stats .d2-profile-stats-panel {
+      flex: 1;
+    }
+
+    .d2-loadout-build-weapons .d2-armory-table {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .d2-loadout-build-weapons .d2-armory-body {
+      flex: 1;
     }
 
     .d2-loadout-build-armor {
@@ -3252,6 +3281,68 @@ a { color: inherit; text-decoration: none; }
   .d2-stat-matrix-ingame .d2-stat-matrix-value {
     font-size: 10px;
     font-weight: 900;
+  }
+
+  /* Loadouts tab — tall stats panel aligned to weapons column */
+  .d2-stat-matrix-loadout {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    gap: 0.55rem;
+    min-height: 0;
+    padding: 0.9rem 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.38) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .d2-stat-matrix-loadout .d2-stat-matrix-row {
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: 4.75rem 1fr 2.5rem;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .d2-stat-matrix-loadout .d2-stat-matrix-label {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.68);
+  }
+
+  .d2-stat-matrix-loadout .d2-stat-matrix-track {
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .d2-stat-matrix-loadout .d2-stat-matrix-fill {
+    border-radius: 3px;
+    box-shadow: 0 0 14px color-mix(in srgb, var(--stat-color) 65%, transparent);
+  }
+
+  .d2-stat-matrix-loadout .d2-stat-matrix-value {
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+  }
+
+  .d2-loadout-build-stats .d2-build-section-label {
+    margin-bottom: 0.65rem;
+  }
+
+  .d2-loadout-build-stats .d2-build-section {
+    padding: 0.85rem 1rem 1rem;
+  }
+
+  .d2-loadout-build-stats .d2-stat-matrix-loadout {
+    flex: 1;
+    min-height: 0;
   }
 
   /* â”€â”€ Step 3: Build synergy rail â”€â”€ */
