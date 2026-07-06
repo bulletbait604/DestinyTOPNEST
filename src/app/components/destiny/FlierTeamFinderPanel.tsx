@@ -360,6 +360,29 @@ export default function FlierTeamFinderPanel({ darkMode }: { darkMode: boolean }
 
   const myLobby = myRoom ? lobbies.find((l) => l.id === myRoom.id) : undefined
   const browseLobbies = lobbies.filter((l) => l.id !== myRoom?.id)
+  const [forceClearBusy, setForceClearBusy] = useState(false)
+  const [forceClearMessage, setForceClearMessage] = useState<string | null>(null)
+
+  const forceClearRoom = useCallback(async () => {
+    setForceClearBusy(true)
+    setForceClearMessage(null)
+    try {
+      const res = await fetch('/api/destiny/fireteam', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'force-clear' }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error ?? 'Could not clear room')
+      setForceClearMessage(json.message ?? 'Room cleared.')
+      await load()
+    } catch (err) {
+      setForceClearMessage(err instanceof Error ? err.message : 'Could not clear room')
+    } finally {
+      setForceClearBusy(false)
+    }
+  }, [load])
 
   return (
     <div className="space-y-6">
@@ -374,20 +397,53 @@ export default function FlierTeamFinderPanel({ darkMode }: { darkMode: boolean }
               fill your squad in-app before launching in-game invites.
             </p>
           </div>
-          <button
-            type="button"
-            disabled={!bungie.linked || Boolean(myRoom)}
-            onClick={() => setShowCreate(true)}
-            className={cn(
-              destinyPrimaryBtn(darkMode),
-              (!bungie.linked || myRoom) && 'opacity-50 cursor-not-allowed'
-            )}
-            title={myRoom ? 'Leave your current room first' : 'Reconnect Bungie to create a room'}
-          >
-            <Plus className="w-4 h-4" />
-            Create room
-          </button>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            {bungie.linked ? (
+              <button
+                type="button"
+                disabled={forceClearBusy}
+                onClick={() => void forceClearRoom()}
+                className={cn(
+                  destinySecondaryBtn(darkMode),
+                  'text-xs py-2 text-red-200/90 border-red-500/30 hover:border-red-400/50'
+                )}
+                title="Remove your FlierTeam host or membership if Create room stays blocked"
+              >
+                <Trash2 className="w-4 h-4" />
+                {forceClearBusy ? 'Clearing…' : 'Clear my room'}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              disabled={!bungie.linked || Boolean(myRoom)}
+              onClick={() => setShowCreate(true)}
+              className={cn(
+                destinyPrimaryBtn(darkMode),
+                (!bungie.linked || myRoom) && 'opacity-50 cursor-not-allowed'
+              )}
+              title={myRoom ? 'Leave your current room first' : 'Reconnect Bungie to create a room'}
+            >
+              <Plus className="w-4 h-4" />
+              Create room
+            </button>
+          </div>
         </div>
+
+        {forceClearMessage ? (
+          <p className={cn('text-sm mb-4 rounded-lg px-3 py-2 ring-1 ring-amber-400/25 bg-amber-400/10 text-amber-100')}>
+            {forceClearMessage}
+          </p>
+        ) : null}
+
+        {myRoom && !myLobby ? (
+          <div className="mb-6 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3">
+            <p className={cn('text-sm', t.body)}>
+              Your account still has a FlierTeam slot, but the room is not visible. Use{' '}
+              <strong className="text-amber-100">Clear my room</strong> above, or ask a moderator to force-clear your
+              username.
+            </p>
+          </div>
+        ) : null}
 
         {myLobby ? (
           <div className="mb-8">

@@ -8,7 +8,7 @@ import {
 import { prizeEligibilityForUser } from '@/lib/destiny/seasonPrizes'
 import { computeReputationScore, reputationBadges } from '@/lib/destiny/reputation'
 import { computeTrustRank } from '@/lib/destiny/trustRank'
-import { filterRunsFromTodayPacific } from '@/lib/destiny/runDates'
+import { recentRunsFrom } from '@/lib/destiny/runDates'
 
 export function emptyPlayerProfile(userId: string): PlayerProfile {
   return {
@@ -130,7 +130,7 @@ export function buildPlayerProfileFromStored(
     badges,
     favoriteActivities: Array.from(new Set(verified.map((r) => r.activityName))).slice(0, 5),
     favoriteTeammates,
-    recentRuns: filterRunsFromTodayPacific(userRuns).slice(0, 10),
+    recentRuns: recentRunsFrom(userRuns, 10),
     topCompletions,
     prizeEligibility: prizeEligibilityForUser(seasonEntries, verified.length),
     currentLoadout: options?.loadout,

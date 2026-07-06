@@ -10,7 +10,7 @@ import {
   type PgcrPayload,
 } from '@/lib/destiny/pgcrBuildExtractor'
 import { calculateRunPoints } from '@/lib/destiny/scoring'
-import { isRunOnOrAfterTodayPacific } from '@/lib/destiny/runDates'
+import { isRunInActiveSeasonPacific } from '@/lib/destiny/runDates'
 import { isPantheonActivityName, squadKeyFromMembers } from '@/lib/destiny/pantheonActivities'
 import { ensureDestinyIndexes, queueAdminReview, runRecordExists, saveBuildSnapshot, saveRunRecord } from '@/lib/destiny/store'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
@@ -292,7 +292,7 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
       for (const row of activities) {
         const instanceId = row.activityDetails?.instanceId
         if (!instanceId || seen.has(instanceId)) continue
-        if (row.period && !isRunOnOrAfterTodayPacific(row.period)) continue
+        if (row.period && !isRunInActiveSeasonPacific(row.period)) continue
         seen.add(instanceId)
 
         try {
@@ -310,7 +310,7 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
           }
 
           const { record, pgcr } = result
-          if (!isRunOnOrAfterTodayPacific(record.completedAt)) {
+          if (!isRunInActiveSeasonPacific(record.completedAt)) {
             skipped++
             continue
           }

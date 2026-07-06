@@ -15,6 +15,7 @@ import { profileViewForCharacter } from '@/lib/destiny/activeCharacter'
 import {
   clearProfileCacheStorage,
   isCacheFresh,
+  migrateProfileCacheFromSessionStorage,
   readCachedBuilds,
   readCachedFullProfile,
   readCachedLoadouts,
@@ -114,6 +115,10 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
     characterSwitchInflight.current = false
     setSwitchingCharacter(false)
     clearProfileCacheStorage()
+  }, [])
+
+  useEffect(() => {
+    migrateProfileCacheFromSessionStorage()
   }, [])
 
   useEffect(() => {
@@ -260,7 +265,7 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
           if (!res.ok) return cached ?? null
           const data = (await res.json()) as LoadoutsCacheData
           setLoadoutsByCharacter((prev) => ({ ...prev, [id]: data }))
-          writeCachedLoadouts(id, data)
+          writeCachedLoadouts(id, data, fullProfileRef.current?.userId)
           loadoutsSavedAt.current[id] = Date.now()
           return data
         } finally {
@@ -347,7 +352,7 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
             metaResearchSummary: json.metaResearchSummary ?? '',
           }
           setBuilds(data)
-          writeCachedBuilds(data)
+          writeCachedBuilds(data, fullProfileRef.current?.userId)
           buildsSavedAt.current = Date.now()
           return data
         } finally {

@@ -28,6 +28,12 @@ export async function getCachedEnrichedOverview(): Promise<OverviewPayload> {
       const enriched = await enrichOverview({ ...data, pendingRunActions: null })
       cache = { payload: enriched, at: Date.now() }
       return enriched
+    } catch (error) {
+      if (cache) {
+        console.warn('[overviewCache] refresh failed — serving last good payload', error)
+        return cache.payload
+      }
+      throw error
     } finally {
       inflight = null
     }

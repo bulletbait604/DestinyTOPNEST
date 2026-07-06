@@ -346,16 +346,15 @@ export async function leaveFlierTeamRoom(
   lobbyId: string,
   userId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const lobby = await getLobbyById(lobbyId)
+  const database = await db()
+  const lobby = (await database
+    .collection(DESTINY_COLLECTIONS.fireteamLobbies)
+    .findOne({ id: lobbyId })) as FireteamLobby | null
+
   if (!lobby) return { ok: false, error: 'Room not found.' }
 
-  const database = await db()
-
   if (isSameSiteUser(lobby.hostUserId, userId)) {
-    await database.collection(DESTINY_COLLECTIONS.fireteamLobbies).updateOne(
-      { id: lobbyId },
-      { $set: { status: 'closed', updatedAt: new Date().toISOString() } }
-    )
+    await database.collection(DESTINY_COLLECTIONS.fireteamLobbies).deleteOne({ id: lobbyId })
     return { ok: true }
   }
 
@@ -447,6 +446,62 @@ export async function clearAllFlierTeamRooms(): Promise<{ ok: true; deletedCount
     return { ok: true, deletedCount: result.deletedCount ?? 0 }
   } catch {
     return { ok: false, error: 'Could not clear FlierTeam rooms.' }
+  }
+}
+
+/** Remove the signed-in user from any FlierTeam room, deleting rooms they host. */
+export async function forceClearFlierTeamForUser(
+  userId: string
+): Promise<{ ok: true; cleared: number } | { ok: false; error: string }> {
+  try {
+    const normalizedId = normalizeSiteUserId(userId)
+    const database = await db()
+    const collection = database.collection(DESTINY_COLLECTIONS.fireteamLobbies)
+    const rows = (await collection
+      .find({})
+      .limit(200)
+      .toArray()) as unknown as FireteamLobby[]
+
+    let cleared = 0
+
+    for (const lobby of rows) {
+      const isHost = isSameSiteUser(lobby.hostUserId, normalizedId)
+      const isMember =
+        lobby.memberUserIds?.some((id) => isSameSiteUser(id, normalizedId)) ||
+        lobby.memberRoster?.some((member) => isSameSiteUser(member.userId, normalizedId))
+
+      if (!isHost && !isMember) continue
+
+      if (isHost) {
+        await collection.deleteOne({ id: lobby.id })
+        cleared++
+        continue
+      }
+
+      const updated = syncLobbyCounts({
+        ...lobby,
+        memberRoster: (lobby.memberRoster ?? []).filter((m) => !isSameSiteUser(m.userId, normalizedId)),
+        updatedAt: new Date().toISOString(),
+      })
+
+      await collection.updateOne(
+        { id: lobby.id },
+        {
+          $set: {
+            memberRoster: updated.memberRoster,
+            memberUserIds: updated.memberUserIds,
+            currentPlayers: updated.currentPlayers,
+            status: updated.status,
+            updatedAt: updated.updatedAt,
+          },
+        }
+      )
+      cleared++
+    }
+
+    return { ok: true, cleared }
+  } catch {
+    return { ok: false, error: 'Could not clear your FlierTeam room.' }
   }
 }
 

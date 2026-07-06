@@ -199,7 +199,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner =
       case 'leaderboards':
         return <LeaderboardsPanel darkMode={darkMode} />
       case 'fireteam':
-        return <FireteamPanel darkMode={darkMode} />
+        return <FireteamPanel darkMode={darkMode} isAdmin={isAdmin} />
       case 'profile':
       case 'loadouts':
       case 'builds':

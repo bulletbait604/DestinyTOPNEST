@@ -6,6 +6,7 @@ import { enrichLobbies } from '@/lib/destiny/enrich'
 import {
   clearAllFlierTeamRooms,
   deleteFlierTeamRoomAsAdmin,
+  forceClearFlierTeamForUser,
   listAllFlierTeamRooms,
 } from '@/lib/destiny/fireteamLobbyService'
 
@@ -19,8 +20,9 @@ export async function GET(req: NextRequest) {
 }
 
 interface ActionBody {
-  action?: 'delete' | 'clear_all'
+  action?: 'delete' | 'clear_all' | 'force_clear_user'
   lobbyId?: string
+  userId?: string
 }
 
 export async function POST(req: NextRequest) {
@@ -47,6 +49,36 @@ export async function POST(req: NextRequest) {
         ok: true,
         deletedCount: result.deletedCount,
         message: `Removed ${result.deletedCount} FlierTeam room${result.deletedCount === 1 ? '' : 's'}.`,
+      })
+    }
+
+    if (body.action === 'force_clear_user') {
+      const targetUserId = body.userId?.trim().toLowerCase()
+      if (!targetUserId) {
+        return NextResponse.json({ error: 'userId required' }, { status: 400 })
+      }
+
+      const result = await forceClearFlierTeamForUser(targetUserId)
+      if (!result.ok) {
+        return NextResponse.json({ error: result.error }, { status: 400 })
+      }
+
+      await logAdminActivity({
+        kind: 'fireteam_room_delete',
+        actorId,
+        actorLabel: authUser.displayName,
+        targetUserId,
+        summary: `Force-cleared FlierTeam membership for ${targetUserId}`,
+        metadata: { cleared: result.cleared },
+      })
+
+      return NextResponse.json({
+        ok: true,
+        cleared: result.cleared,
+        message:
+          result.cleared > 0
+            ? `Cleared ${result.cleared} FlierTeam link(s) for ${targetUserId}.`
+            : `No FlierTeam rooms found for ${targetUserId}.`,
       })
     }
 

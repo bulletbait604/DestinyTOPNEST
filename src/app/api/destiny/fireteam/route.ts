@@ -5,6 +5,7 @@ import { enrichLobbies } from '@/lib/destiny/enrich'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
 import {
   createFlierTeamRoom,
+  forceClearFlierTeamForUser,
   getUserActiveLobby,
   listOpenLobbies,
 } from '@/lib/destiny/fireteamLobbyService'
@@ -25,6 +26,7 @@ export async function GET(req: NextRequest) {
 }
 
 interface CreateBody {
+  action?: 'force-clear'
   activityKind?: FlierTeamActivityKind
   activityId?: string
   encounterId?: string
@@ -48,6 +50,22 @@ export async function POST(req: NextRequest) {
     }
 
     const body = (await req.json().catch(() => ({}))) as CreateBody
+
+    if (body.action === 'force-clear') {
+      const result = await forceClearFlierTeamForUser(userId)
+      if (!result.ok) {
+        return NextResponse.json({ error: result.error }, { status: 400 })
+      }
+      return NextResponse.json({
+        ok: true,
+        cleared: result.cleared,
+        message:
+          result.cleared > 0
+            ? 'Cleared your FlierTeam room membership.'
+            : 'No active FlierTeam room was found for your account.',
+      })
+    }
+
     const activityKind = body.activityKind
     if (!activityKind || !['raid', 'dungeon', 'pantheon'].includes(activityKind)) {
       return NextResponse.json({ error: 'Select Raid, Dungeon, or Pantheon.' }, { status: 400 })

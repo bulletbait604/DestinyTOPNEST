@@ -1355,17 +1355,17 @@ a { color: inherit; text-decoration: none; }
     object-fit: cover;
   }
 
-  .tn-welcome-step-body {
-    min-width: 0;
+  .tn-welcome-step-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.35);
   }
 
-  .tn-welcome-step-num {
-    margin: 0 0 0.25rem;
-    font-size: 0.68rem;
-    font-weight: 900;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: rgba(251, 191, 36, 0.75);
+  .tn-welcome-step-body {
+    min-width: 0;
   }
 
   .tn-welcome-step-text {
@@ -1381,26 +1381,18 @@ a { color: inherit; text-decoration: none; }
   }
 
   .tn-welcome-sublist {
-    list-style: none;
+    list-style: disc;
     margin: 0;
-    padding: 0;
+    padding-left: 1.15rem;
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
   }
 
   .tn-welcome-sublist li {
-    display: flex;
-    gap: 0.45rem;
     font-size: 0.9rem;
     line-height: 1.45;
     color: rgba(255, 255, 255, 0.78);
-  }
-
-  .tn-welcome-sublist-label {
-    font-weight: 900;
-    color: #fcd34d;
-    min-width: 1.1rem;
   }
 
   .tn-welcome-prize {

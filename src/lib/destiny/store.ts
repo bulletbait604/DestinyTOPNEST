@@ -31,7 +31,7 @@ import {
 } from '@/lib/destiny/seasonCatalog'
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
-import { filterRunsFromTodayPacific } from '@/lib/destiny/runDates'
+import { recentRunsFrom } from '@/lib/destiny/runDates'
 import type { AdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
 import { logAdminActivity } from '@/lib/destiny/adminActivityLog'
 import type {
@@ -214,64 +214,47 @@ async function attachReputationScores(entries: LeaderboardEntry[]): Promise<Lead
 }
 
 export async function getOverviewData(): Promise<OverviewPayload> {
-  try {
-    await ensureDestinyIndexes()
-    const season = await getSeasonData()
-    const [runs, usersById, lobbies, externalBuilds, votes, verifiedBuilds] = await Promise.all([
-      loadAllRuns(),
-      loadUsersMap(),
-      getFireteamLobbies(),
-      getExternalBuildSources(),
-      loadAllMvpVotes(),
-      getBuildIntelligenceCards(),
-    ])
+  await ensureDestinyIndexes()
+  const season = await getSeasonData()
+  const [runs, usersById, lobbies, externalBuilds, votes, verifiedBuilds] = await Promise.all([
+    loadAllRuns(),
+    loadUsersMap(),
+    getFireteamLobbies(),
+    getExternalBuildSources(),
+    loadAllMvpVotes(),
+    getBuildIntelligenceCards(),
+  ])
 
-    const recentRuns = filterRunsFromTodayPacific(runs).slice(0, 10)
-    const raidTop10 = await attachReputationScores(
-      await buildLeaderboardWithAdjustments('raid', 'season', season, runs, usersById, votes)
-    )
-    const dungeonTop10 = await attachReputationScores(
-      await buildLeaderboardWithAdjustments('dungeon', 'season', season, runs, usersById, votes)
-    )
-    const pantheonTop10 = await attachReputationScores(
-      await buildLeaderboardWithAdjustments('pantheon', 'season', season, runs, usersById, votes)
-    )
-    const guardiansTop3 = (
-      await buildLeaderboardWithAdjustments('top_guardians', 'monthly', season, runs, usersById, votes)
-    ).slice(0, 3)
-    const topLoadoutsByClass = rankTopMetaLoadoutsByClass(externalBuilds, 2)
-    const topVerifiedLoadoutsByClass = rankTopLoadoutsByClass(verifiedBuilds, 2)
-    const { hallOfFame } = await computeSeasonStandings(runs, usersById, season, votes)
+  const recentRuns = recentRunsFrom(runs, 10)
+  const raidTop10 = await attachReputationScores(
+    await buildLeaderboardWithAdjustments('raid', 'season', season, runs, usersById, votes)
+  )
+  const dungeonTop10 = await attachReputationScores(
+    await buildLeaderboardWithAdjustments('dungeon', 'season', season, runs, usersById, votes)
+  )
+  const pantheonTop10 = await attachReputationScores(
+    await buildLeaderboardWithAdjustments('pantheon', 'season', season, runs, usersById, votes)
+  )
+  const guardiansTop3 = (
+    await buildLeaderboardWithAdjustments('top_guardians', 'monthly', season, runs, usersById, votes)
+  ).slice(0, 3)
+  const topLoadoutsByClass = rankTopMetaLoadoutsByClass(externalBuilds, 2)
+  const topVerifiedLoadoutsByClass = rankTopLoadoutsByClass(verifiedBuilds, 2)
+  const { hallOfFame } = await computeSeasonStandings(runs, usersById, season, votes)
 
-    return buildOverviewPayload({
-      raidTop10,
-      dungeonTop10,
-      pantheonTop10,
-      guardiansTop3,
-      recentRuns,
-      lookingForGroup: lobbies,
-      trendingBuilds: rankTrendingMetaBuilds(externalBuilds, 3),
-      topLoadoutsByClass,
-      topVerifiedLoadoutsByClass,
-      hallOfFamePreview: hallOfFame.slice(0, 9),
-      season,
-    })
-  } catch {
-    const emptyMeta = rankTopMetaLoadoutsByClass([], 2)
-    const emptyVerified = rankTopLoadoutsByClass([], 2)
-    return buildOverviewPayload({
-      raidTop10: [],
-      dungeonTop10: [],
-      pantheonTop10: [],
-      guardiansTop3: [],
-      recentRuns: [],
-      lookingForGroup: [],
-      trendingBuilds: [],
-      topLoadoutsByClass: emptyMeta,
-      topVerifiedLoadoutsByClass: emptyVerified,
-      hallOfFamePreview: [],
-    })
-  }
+  return buildOverviewPayload({
+    raidTop10,
+    dungeonTop10,
+    pantheonTop10,
+    guardiansTop3,
+    recentRuns,
+    lookingForGroup: lobbies,
+    trendingBuilds: rankTrendingMetaBuilds(externalBuilds, 3),
+    topLoadoutsByClass,
+    topVerifiedLoadoutsByClass,
+    hallOfFamePreview: hallOfFame.slice(0, 9),
+    season,
+  })
 }
 
 export async function getPendingRunActionsForUser(userId: string): Promise<PendingRunActions | null> {
