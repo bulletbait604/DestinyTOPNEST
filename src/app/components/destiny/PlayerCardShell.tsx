@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { CharacterSummary, PlayerProfile } from '@/lib/destiny/types'
 import PlayerCardCompact from '@/app/components/destiny/PlayerCardCompact'
 import { useBungieLink } from '@/hooks/useBungieLink'
@@ -28,14 +28,16 @@ export default function PlayerCardShell({
 }: Props) {
   const { summaryProfile, summaryLoading, ensureSummaryProfile } = useProfileData()
   const bungie = useBungieLink()
+  const ensureSummaryProfileRef = useRef(ensureSummaryProfile)
+  ensureSummaryProfileRef.current = ensureSummaryProfile
 
   useEffect(() => {
     if (bungie.linked) {
-      void ensureSummaryProfile().then((profile) => onProfileLoaded?.(profile))
+      void ensureSummaryProfileRef.current().then((profile) => onProfileLoaded?.(profile))
     } else {
       onProfileLoaded?.(null)
     }
-  }, [bungie.linked, ensureSummaryProfile, onProfileLoaded])
+  }, [bungie.linked, onProfileLoaded])
 
   useEffect(() => {
     onProfileLoaded?.(summaryProfile)

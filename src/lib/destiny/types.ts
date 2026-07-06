@@ -297,24 +297,49 @@ export interface ReputationReview {
   createdAt: string
 }
 
-/** Trust Rank commend — Knowledge + Vibes (1–3 each) for fireteam randos. */
+/** Trust Rank commend — private Knowledge + Vibes vote for fireteam randos. */
+export type VibesLabel = 'quiet' | 'loud' | 'good' | 'ego' | 'sherpa'
+
 export interface TrustReview {
   id: string
   reviewerId: string
   reviewedUserId: string
   runId: string
-  knowledge: 1 | 2 | 3
-  vibes: 1 | 2 | 3
+  /** 1 = knew nothing · 5 = knew the entire run */
+  knowledge: 1 | 2 | 3 | 4 | 5
+  /** Categorical vibes label (legacy rows may store 1–3 numbers). */
+  vibes: VibesLabel | 1 | 2 | 3
+  /** Derived 1–5 score from knowledge + vibes combo */
+  compositeScore?: number
   createdAt: string
 }
 
+/** Public aggregate — reviewers' individual votes are never shown to the reviewed player. */
 export interface TrustRankSummary {
-  knowledgeAvg: number
-  vibesAvg: number
-  knowledgeTier: 'New Light' | 'Guardian' | 'Top Nest'
-  vibesTier: 'Chill' | 'Excited' | 'Composed'
+  compositeAvg: number
   topNestTitle: string
   reviewCount: number
+}
+
+export interface UnrankedRunTeammate {
+  membershipId: string
+  displayName: string
+  characterClass?: DestinyCharacterClass
+  siteUserId?: string
+  isSelf: boolean
+  canReview: boolean
+  alreadyReviewed: boolean
+}
+
+export interface UnrankedRun {
+  runId: string
+  activityName: string
+  activityRef?: DestinyIconRef
+  type: ActivityType
+  completedAt: string
+  durationSeconds: number
+  teammates: UnrankedRunTeammate[]
+  pendingReviewCount: number
 }
 
 export interface BuildSnapshot {

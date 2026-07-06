@@ -570,6 +570,81 @@ a { color: inherit; text-decoration: none; }
   }
 
   @media (min-width: 768px) {
+    .tn-home-hero-has-mvp-callout .tn-home-hero-grid-brand {
+      grid-template-columns: minmax(153px, 187px) minmax(118px, 158px) minmax(0, 1fr);
+      align-items: center;
+    }
+  }
+
+  .tn-home-hero-mvp-callout {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-self: center;
+    width: 100%;
+    margin: 0;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    background: linear-gradient(145deg, rgba(26, 31, 46, 0.92), rgba(12, 15, 22, 0.88));
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .tn-home-hero-mvp-callout:hover {
+    border-color: rgba(251, 191, 36, 0.55);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  }
+
+  .tn-home-hero-mvp-callout:focus-visible {
+    outline: 2px solid rgba(251, 191, 36, 0.65);
+    outline-offset: 2px;
+  }
+
+  .tn-home-hero-mvp-callout-kicker {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(251, 191, 36, 0.95);
+    line-height: 1.2;
+  }
+
+  .tn-home-hero-mvp-callout-text {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: rgba(226, 232, 240, 0.92);
+  }
+
+  .tn-home-hero-mvp-callout-compact .tn-home-hero-mvp-callout-kicker {
+    font-size: 8px;
+  }
+
+  .tn-home-hero-mvp-callout-compact .tn-home-hero-mvp-callout-text {
+    font-size: 10px;
+  }
+
+  @media (max-width: 767px) {
+    .tn-home-hero-mvp-callout {
+      order: 0;
+    }
+
+    .tn-home-hero-has-mvp-callout .tn-home-hero-logo-panel {
+      order: 1;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .tn-home-hero-has-right-stack.tn-home-hero-has-mvp-callout .tn-home-hero-grid-brand {
+      padding-right: calc(210px + 0.75rem);
+    }
+  }
+
+  @media (min-width: 768px) {
     .tn-home-hero-has-right-stack .tn-home-hero-grid-brand {
       padding-right: calc(210px + 0.75rem);
     }

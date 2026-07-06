@@ -6,6 +6,7 @@ import { BRAND_LOGO_ALT, BRAND_LOGO_PATH } from '@/lib/destiny/branding'
 import { navTabArtUrl, homeSectionArtUrl } from '@/lib/destiny/navArt'
 import { HERO_PRIZE_POOL_STICKER } from '@/lib/destiny/seasonConfig'
 import { tabHeroArtKey, tabPageCopy } from '@/lib/destiny/tabPageCopy'
+import { navigateProfileSection } from '@/lib/routing/tabUrl'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -62,6 +63,21 @@ function PrizeSticker({ className }: { className?: string }) {
   )
 }
 
+function HeroMvpCallout({ compact }: { compact?: boolean }) {
+  return (
+    <button
+      type="button"
+      className={cn('tn-home-hero-mvp-callout', compact && 'tn-home-hero-mvp-callout-compact')}
+      onClick={() => navigateProfileSection('activities')}
+    >
+      <span className="tn-home-hero-mvp-callout-kicker">Profile · Previous Activities</span>
+      <span className="tn-home-hero-mvp-callout-text">
+        Vote run MVPs and rank Fireteam Finder randos in Unranked Runs (private Knowledge + Vibes).
+      </span>
+    </button>
+  )
+}
+
 /** PGCR-backed tab hero — logo left, title center (same layout on every tab). */
 export default function TabPageHero({ tab, aside }: Props) {
   const copy = tabPageCopy(tab)
@@ -74,6 +90,7 @@ export default function TabPageHero({ tab, aside }: Props) {
   const prizeUnderTitle = showPrizeSticker && PRIZE_UNDER_TITLE_TABS.includes(tab)
   const prizeInRightStack = showPrizeSticker && !prizeUnderTitle
   const hasRightStack = prizeInRightStack || Boolean(aside)
+  const showMvpCallout = tab !== 'admin'
 
   return (
     <section
@@ -82,7 +99,8 @@ export default function TabPageHero({ tab, aside }: Props) {
         isHomeHero && 'tn-home-hero-tower',
         compact && 'tn-home-hero-compact',
         enlargedTabHero && 'tn-home-hero-tab',
-        hasRightStack && 'tn-home-hero-has-right-stack'
+        hasRightStack && 'tn-home-hero-has-right-stack',
+        showMvpCallout && 'tn-home-hero-has-mvp-callout'
       )}
       style={{ ['--tn-home-hero-art' as string]: `url('${heroArt}')` }}
     >
@@ -99,6 +117,7 @@ export default function TabPageHero({ tab, aside }: Props) {
         <div className="tn-home-hero-side-panel tn-home-hero-logo-panel">
           <HeroLogo compact={compact} />
         </div>
+        {showMvpCallout ? <HeroMvpCallout compact={compact} /> : null}
         <div className="tn-home-hero-center tn-home-hero-center-brand">
           <h2 className="tn-home-title">{copy.title}</h2>
           {prizeUnderTitle ? <PrizeSticker className="tn-hero-prize-sticker-below-title" /> : null}

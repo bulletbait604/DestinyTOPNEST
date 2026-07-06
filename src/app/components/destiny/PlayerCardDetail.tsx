@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useMemo } from 'react'
 import type { BuildSnapshot, DestinyIconRef, PlayerProfile } from '@/lib/destiny/types'
 import { profileViewForCharacter } from '@/lib/destiny/activeCharacter'
 import { buildArmorRows } from '@/lib/destiny/loadoutDisplay'
@@ -91,8 +92,14 @@ export default function PlayerCardDetail({ profile, darkMode, switchingCharacter
     viewProfile.displayEmblem?.backgroundUrl ??
     viewProfile.emblemBackgroundUrl ??
     undefined
-  const weaponRows = loadout ? buildWeaponRows(loadout) : []
-  const armorRows = loadout ? buildArmorRows(loadout) : []
+  const weaponRows = useMemo(
+    () => (loadout ? buildWeaponRows(loadout) : []),
+    [loadout]
+  )
+  const armorRows = useMemo(
+    () => (loadout ? buildArmorRows(loadout) : []),
+    [loadout]
+  )
 
   return (
     <GameCard className="w-full overflow-hidden p-0 d2-profile-build-card">

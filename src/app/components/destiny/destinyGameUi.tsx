@@ -297,7 +297,7 @@ export function TrustBadge({
 }
 
 const TRUST_RANK_TOOLTIP =
-  'Trust Rank (T.R.) — Top Nest commend from fireteam members after a run. Scores your activity knowledge and vibes to help others find reliable players.'
+  'Trust Rank (T.R.) — aggregate score from private fireteam votes after verified runs. Individual Knowledge and Vibes votes are never shown.'
 
 function trustRankValue(trust?: { reviewCount?: number; topNestTitle?: string }): string {
   if (trust?.reviewCount && trust.reviewCount > 0) return String(trust.reviewCount)
@@ -317,7 +317,7 @@ export function TrustRankBadge({
   className,
   markClassName,
 }: {
-  trust?: { topNestTitle?: string; reviewCount?: number; knowledgeTier?: string; vibesTier?: string }
+  trust?: { topNestTitle?: string; reviewCount?: number; compositeAvg?: number }
   darkMode: boolean
   compact?: boolean
   /** Match GR/PL pill row on profile banner. */

@@ -1,4 +1,13 @@
-﻿import type { LeaderboardCategory, LeaderboardEntry, PrizeClaim, ReputationReview, RunRecord, Season } from '@/lib/destiny/types'
+﻿import type {
+  LeaderboardCategory,
+  LeaderboardEntry,
+  PrizeClaim,
+  ReputationReview,
+  RunRecord,
+  Season,
+  UnrankedRun,
+  UnrankedRunTeammate,
+} from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import type { UserPrizeTrackEntry } from '@/lib/destiny/seasonPrizes'
 
@@ -72,6 +81,66 @@ export function buildReviewableRuns(
   }
 
   return results.slice(0, 10)
+}
+
+/** All verified runs with fireteam roster and pending trust reviews. */
+export function buildUnrankedRuns(
+  reviewerId: string,
+  reviewerMembershipId: string | undefined,
+  runs: RunRecord[],
+  usersByMembershipId: Map<string, StoredDestinyUser>,
+  reviewsByReviewer: Array<{ runId?: string; reviewedUserId: string }>
+): UnrankedRun[] {
+  const reviewedKeys = new Set(
+    reviewsByReviewer.map((r) => `${r.runId ?? ''}:${r.reviewedUserId}`)
+  )
+
+  const results: UnrankedRun[] = []
+
+  for (const run of runs) {
+    if (run.verificationStatus !== 'verified') continue
+    if (!userParticipatedInRun(reviewerId, reviewerMembershipId, run)) continue
+
+    const teammates: UnrankedRunTeammate[] = run.teamMembers.map((member) => {
+      const isSelf = member.membershipId === reviewerMembershipId
+      const linked = usersByMembershipId.get(member.membershipId)
+      const siteUserId = linked?.userId
+      const canReview = Boolean(!isSelf && siteUserId && siteUserId !== reviewerId)
+      const alreadyReviewed = canReview
+        ? reviewedKeys.has(`${run.id}:${siteUserId}`)
+        : false
+
+      return {
+        membershipId: member.membershipId,
+        displayName: linked?.bungieDisplayName || member.displayName,
+        characterClass: member.characterClass,
+        siteUserId,
+        isSelf,
+        canReview,
+        alreadyReviewed,
+      }
+    })
+
+    const pendingReviewCount = teammates.filter((t) => t.canReview && !t.alreadyReviewed).length
+
+    results.push({
+      runId: run.id,
+      activityName: run.activityName,
+      activityRef: run.activityRef,
+      type: run.type,
+      completedAt: run.completedAt,
+      durationSeconds: run.durationSeconds,
+      teammates,
+      pendingReviewCount,
+    })
+  }
+
+  return results.sort((a, b) => {
+    if (b.pendingReviewCount !== a.pendingReviewCount) {
+      return b.pendingReviewCount - a.pendingReviewCount
+    }
+    return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+  })
 }
 
 export function validateReviewSubmission(

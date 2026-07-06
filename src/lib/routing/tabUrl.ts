@@ -44,6 +44,18 @@ export function syncTabToUrl(tab: DestinyTopNestTab) {
 
 export const DESTINY_TAB_NAV_EVENT = 'destiny-topnest:tab'
 
+export type ProfileNavView = 'guardian' | 'activities' | 'loadouts'
+
+export const DESTINY_PROFILE_NAV_EVENT = 'destiny-topnest:profile-nav'
+
+/** Switch to Profile and a specific sub-section (Guardian, Previous Activities, Loadouts). */
+export function navigateProfileSection(view: ProfileNavView) {
+  syncTabToUrl('profile')
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(DESTINY_PROFILE_NAV_EVENT, { detail: view }))
+  }
+}
+
 /** Update URL and notify the shell to switch tabs (e.g. header Settings → Admin). */
 export function navigateDestinyTab(tab: DestinyTopNestTab) {
   syncTabToUrl(tab)

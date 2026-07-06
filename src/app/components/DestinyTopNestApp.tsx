@@ -8,6 +8,8 @@ import {
   stripOAuthParams,
   syncTabToUrl,
   DESTINY_TAB_NAV_EVENT,
+  DESTINY_PROFILE_NAV_EVENT,
+  navigateProfileSection,
 } from '@/lib/routing/tabUrl'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import DestinyNav from '@/app/components/destiny/DestinyNav'
@@ -100,9 +102,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner =
   }, [isAdmin])
 
   const navigateToProfileActivities = useCallback(() => {
-    setProfileView('activities')
-    setLoadoutSection(undefined)
-    setActiveTab('profile')
+    navigateProfileSection('activities')
   }, [])
 
   useEffect(() => {
@@ -125,6 +125,21 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner =
     }
     stripOAuthParams()
   }, [isAdmin])
+
+  useEffect(() => {
+    const onProfileNav = (event: Event) => {
+      const view = (event as CustomEvent<ProfileView>).detail
+      if (view !== 'guardian' && view !== 'activities' && view !== 'loadouts') return
+      setProfileView(view)
+      setLoadoutSection(undefined)
+      setActiveTab('profile')
+      setProfilePanelMounted(true)
+      syncTabToUrl('profile')
+    }
+
+    window.addEventListener(DESTINY_PROFILE_NAV_EVENT, onProfileNav)
+    return () => window.removeEventListener(DESTINY_PROFILE_NAV_EVENT, onProfileNav)
+  }, [])
 
   useEffect(() => {
     const onTabNav = (event: Event) => {

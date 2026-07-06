@@ -1,16 +1,16 @@
 ﻿'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Trophy } from 'lucide-react'
 import BungieConnectBanner from '@/app/components/destiny/BungieConnectBanner'
 import EmblemPicker from '@/app/components/destiny/EmblemPicker'
 import PlayerCardDetail from '@/app/components/destiny/PlayerCardDetail'
 import StatCardEditor from '@/app/components/destiny/StatCardEditor'
 import StatCardPreview from '@/app/components/destiny/StatCardPreview'
-import FireteamReviewSection from '@/app/components/destiny/FireteamReviewSection'
+import UnrankedRunsSection from '@/app/components/destiny/UnrankedRunsSection'
+import PreviousActivitiesSection from '@/app/components/destiny/PreviousActivitiesSection'
 import ReputationSummarySection from '@/app/components/destiny/ReputationSummarySection'
 import ProfileLoadoutsSection from '@/app/components/destiny/ProfileLoadoutsSection'
-import PreviousActivitiesSection from '@/app/components/destiny/PreviousActivitiesSection'
 import {
   GlassCard,
   LoadingBlock,
@@ -44,16 +44,17 @@ export default function ProfilePanel({
   const [view, setView] = useState<ProfileView>(initialView)
   const bungie = useBungieLink()
   const t = getDestinyTheme(darkMode)
+  const ensureFullProfileRef = useRef(ensureFullProfile)
+  ensureFullProfileRef.current = ensureFullProfile
 
   useEffect(() => {
     setView(initialView)
   }, [initialView])
 
   useEffect(() => {
-    if (bungie.linked) {
-      void ensureFullProfile()
-    }
-  }, [bungie.linked, ensureFullProfile])
+    if (!bungie.linked) return
+    void ensureFullProfileRef.current()
+  }, [bungie.linked])
 
   const handleCharacterSelect = useCallback(
     (characterId: string) => {
@@ -110,8 +111,8 @@ export default function ProfilePanel({
 
       {view === 'activities' ? (
         <div className="space-y-4">
+          <UnrankedRunsSection darkMode={darkMode} />
           <PreviousActivitiesSection darkMode={darkMode} />
-          <FireteamReviewSection darkMode={darkMode} linked={linked} />
         </div>
       ) : view === 'loadouts' ? (
         <ProfileLoadoutsSection
@@ -178,7 +179,6 @@ export default function ProfilePanel({
             </GlassCard>
           </div>
 
-          <FireteamReviewSection darkMode={darkMode} linked={linked} />
           <ReputationSummarySection darkMode={darkMode} />
 
           <GlassCard darkMode={darkMode} padding="compact">

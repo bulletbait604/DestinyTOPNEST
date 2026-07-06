@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { PlayerProfile } from '@/lib/destiny/types'
+import { profileViewForCharacter } from '@/lib/destiny/activeCharacter'
 import {
   clearProfileCacheStorage,
   isCacheFresh,
@@ -47,6 +48,8 @@ interface ProfileDataContextValue {
   ensureBuilds: (opts?: FetchOptions) => Promise<BuildsCacheData | null>
   setFullProfile: (profile: PlayerProfile | null) => void
   invalidateAll: () => void
+  switchingCharacter: boolean
+  selectActiveCharacter: (characterId: string) => Promise<void>
 }
 
 const ProfileDataContext = createContext<ProfileDataContextValue | null>(null)
@@ -65,6 +68,12 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [loadoutsLoading, setLoadoutsLoading] = useState(false)
   const [buildsLoading, setBuildsLoading] = useState(false)
+  const [switchingCharacter, setSwitchingCharacter] = useState(false)
+
+  const fullProfileRef = useRef(fullProfile)
+  const summaryProfileRef = useRef(summaryProfile)
+  fullProfileRef.current = fullProfile
+  summaryProfileRef.current = summaryProfile
 
   const fullSavedAt = useRef<number>(readCachedFullProfile()?.savedAt ?? 0)
   const summarySavedAt = useRef<number>(readCachedSummaryProfile()?.savedAt ?? 0)
@@ -74,6 +83,8 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
   const summaryInflight = useRef<Promise<PlayerProfile | null> | null>(null)
   const loadoutsInflight = useRef<Map<string, Promise<LoadoutsCacheData | null>>>(new Map())
   const buildsInflight = useRef<Promise<BuildsCacheData | null> | null>(null)
+  const characterSwitchSeq = useRef(0)
+  const characterSwitchInflight = useRef(false)
 
   const setFullProfile = useCallback((profile: PlayerProfile | null) => {
     setFullProfileState(profile)
@@ -99,6 +110,9 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
     summaryInflight.current = null
     loadoutsInflight.current.clear()
     buildsInflight.current = null
+    characterSwitchSeq.current += 1
+    characterSwitchInflight.current = false
+    setSwitchingCharacter(false)
     clearProfileCacheStorage()
   }, [])
 
@@ -112,21 +126,27 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
     async (characterId?: string, opts?: FetchOptions): Promise<PlayerProfile | null> => {
       if (!bungie.linked) return null
 
+      const profile = fullProfileRef.current
+
+      if (characterSwitchInflight.current && !opts?.force) {
+        return profile
+      }
+
       const cacheMatches =
-        fullProfile &&
+        profile &&
         (!characterId ||
-          fullProfile.activeCharacterId === characterId ||
-          fullProfile.characters?.some((c) => c.characterId === characterId))
+          profile.activeCharacterId === characterId ||
+          profile.characters?.some((c) => c.characterId === characterId))
 
       if (!opts?.force && cacheMatches && isCacheFresh(fullSavedAt.current)) {
-        return fullProfile
+        return profile
       }
 
       if (fullInflight.current && !opts?.force) {
         return fullInflight.current
       }
 
-      const showSpinner = !fullProfile
+      const showSpinner = !profile
       if (showSpinner) setFullLoading(true)
 
       const request = (async () => {
@@ -134,11 +154,11 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
           const qs = new URLSearchParams({ scope: 'full' })
           if (characterId) qs.set('characterId', characterId)
           const res = await fetch(`/api/destiny/profile?${qs.toString()}`, { credentials: 'include' })
-          if (!res.ok) return fullProfile
+          if (!res.ok) return fullProfileRef.current
           const json = await res.json()
-          const profile = (json?.profile ?? null) as PlayerProfile | null
-          if (profile) setFullProfile(profile)
-          return profile
+          const next = (json?.profile ?? null) as PlayerProfile | null
+          if (next) setFullProfile(next)
+          return next
         } finally {
           if (showSpinner) setFullLoading(false)
           fullInflight.current = null
@@ -148,42 +168,51 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
       fullInflight.current = request
       return request
     },
-    [bungie.linked, fullProfile, setFullProfile]
+    [bungie.linked, setFullProfile]
   )
 
   const ensureSummaryProfile = useCallback(
     async (opts?: FetchOptions): Promise<PlayerProfile | null> => {
       if (!bungie.linked) return null
 
-      if (!opts?.force && summaryProfile && isCacheFresh(summarySavedAt.current)) {
-        return summaryProfile
+      const summary = summaryProfileRef.current
+      const full = fullProfileRef.current
+
+      if (characterSwitchInflight.current && !opts?.force) {
+        return summary ?? full
       }
 
-      if (fullProfile && isCacheFresh(fullSavedAt.current)) {
-        setSummaryProfileState(fullProfile)
+      if (!opts?.force && summary && isCacheFresh(summarySavedAt.current)) {
+        return summary
+      }
+
+      if (full && isCacheFresh(fullSavedAt.current)) {
+        if (summary !== full) {
+          setSummaryProfileState(full)
+        }
         summarySavedAt.current = fullSavedAt.current
-        return fullProfile
+        return full
       }
 
       if (summaryInflight.current && !opts?.force) {
         return summaryInflight.current
       }
 
-      const showSpinner = !summaryProfile && !fullProfile
+      const showSpinner = !summary && !full
       if (showSpinner) setSummaryLoading(true)
 
       const request = (async () => {
         try {
           const res = await fetch('/api/destiny/profile?scope=summary', { credentials: 'include' })
-          if (!res.ok) return summaryProfile ?? fullProfile
+          if (!res.ok) return summaryProfileRef.current ?? fullProfileRef.current
           const json = await res.json()
-          const profile = (json?.profile ?? null) as PlayerProfile | null
-          if (profile) {
-            setSummaryProfileState(profile)
-            writeCachedSummaryProfile(profile)
+          const next = (json?.profile ?? null) as PlayerProfile | null
+          if (next) {
+            setSummaryProfileState(next)
+            writeCachedSummaryProfile(next)
             summarySavedAt.current = Date.now()
           }
-          return profile
+          return next
         } finally {
           if (showSpinner) setSummaryLoading(false)
           summaryInflight.current = null
@@ -193,14 +222,14 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
       summaryInflight.current = request
       return request
     },
-    [bungie.linked, fullProfile, summaryProfile]
+    [bungie.linked]
   )
 
   const ensureLoadouts = useCallback(
     async (characterId?: string, opts?: FetchOptions): Promise<LoadoutsCacheData | null> => {
       if (!bungie.linked) return null
 
-      const id = characterId ?? fullProfile?.activeCharacterId ?? 'default'
+      const id = characterId ?? fullProfileRef.current?.activeCharacterId ?? 'default'
       let cached = loadoutsByCharacter[id]
       let savedAt = loadoutsSavedAt.current[id] ?? 0
 
@@ -243,7 +272,54 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
       loadoutsInflight.current.set(id, request)
       return request
     },
-    [bungie.linked, fullProfile?.activeCharacterId, loadoutsByCharacter]
+    [bungie.linked, loadoutsByCharacter]
+  )
+
+  const ensureFullProfileRef = useRef(ensureFullProfile)
+  ensureFullProfileRef.current = ensureFullProfile
+
+  const selectActiveCharacter = useCallback(
+    async (characterId: string) => {
+      const current = fullProfileRef.current
+      if (!current || characterId === current.activeCharacterId || characterSwitchInflight.current) {
+        return
+      }
+
+      const seq = ++characterSwitchSeq.current
+      characterSwitchInflight.current = true
+      setSwitchingCharacter(true)
+
+      const optimistic = {
+        ...profileViewForCharacter(current, characterId),
+        currentLoadout: undefined,
+      }
+      setFullProfileState(optimistic)
+      setSummaryProfileState(optimistic)
+
+      try {
+        const res = await fetch('/api/destiny/profile', {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ activeCharacterId: characterId }),
+        })
+
+        if (seq !== characterSwitchSeq.current) return
+
+        if (res.ok) {
+          const json = await res.json()
+          setFullProfile((json?.profile ?? null) as PlayerProfile | null)
+        } else {
+          await ensureFullProfileRef.current(characterId, { force: true })
+        }
+      } finally {
+        if (seq === characterSwitchSeq.current) {
+          characterSwitchInflight.current = false
+          setSwitchingCharacter(false)
+        }
+      }
+    },
+    [setFullProfile]
   )
 
   const ensureBuilds = useCallback(
@@ -285,18 +361,26 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
     [builds]
   )
 
+  const ensureBuildsRef = useRef(ensureBuilds)
+  const ensureLoadoutsRef = useRef(ensureLoadouts)
+  const ensureSummaryProfileRef = useRef(ensureSummaryProfile)
+  ensureBuildsRef.current = ensureBuilds
+  ensureLoadoutsRef.current = ensureLoadouts
+  ensureSummaryProfileRef.current = ensureSummaryProfile
+
   useEffect(() => {
     const onRefresh = () => {
-      void ensureFullProfile(undefined, { force: true })
-      void ensureSummaryProfile({ force: true })
-      if (fullProfile?.activeCharacterId) {
-        void ensureLoadouts(fullProfile.activeCharacterId, { force: true })
+      void ensureFullProfileRef.current(undefined, { force: true })
+      void ensureSummaryProfileRef.current({ force: true })
+      const activeId = fullProfileRef.current?.activeCharacterId
+      if (activeId) {
+        void ensureLoadoutsRef.current(activeId, { force: true })
       }
-      void ensureBuilds({ force: true })
+      void ensureBuildsRef.current({ force: true })
     }
     window.addEventListener(PROFILE_REFRESH_EVENT, onRefresh)
     return () => window.removeEventListener(PROFILE_REFRESH_EVENT, onRefresh)
-  }, [ensureBuilds, ensureFullProfile, ensureLoadouts, ensureSummaryProfile, fullProfile?.activeCharacterId])
+  }, [])
 
   const value = useMemo<ProfileDataContextValue>(
     () => ({
@@ -314,6 +398,8 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
       ensureBuilds,
       setFullProfile,
       invalidateAll,
+      switchingCharacter,
+      selectActiveCharacter,
     }),
     [
       fullProfile,
@@ -330,6 +416,8 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
       ensureBuilds,
       setFullProfile,
       invalidateAll,
+      switchingCharacter,
+      selectActiveCharacter,
     ]
   )
 
