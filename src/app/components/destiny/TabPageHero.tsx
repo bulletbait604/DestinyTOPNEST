@@ -15,13 +15,13 @@ interface Props {
 
 const PRIZE_STICKER_TABS: DestinyTopNestTab[] = ['overview', 'leaderboards', 'season']
 
-function HeroLogo({ panel, tabLogo }: { panel?: boolean; tabLogo?: boolean }) {
+function HeroLogo() {
   return (
-    <div className={cn('tn-home-logo-wrap', panel && 'tn-home-logo-wrap-panel')}>
+    <div className="tn-home-logo-wrap tn-home-logo-wrap-panel">
       <img
         src={BRAND_LOGO_PATH}
         alt={BRAND_LOGO_ALT}
-        className={cn('tn-home-logo', panel && 'tn-home-logo-panel', tabLogo && 'tn-tab-hero-logo')}
+        className="tn-home-logo tn-home-logo-panel"
         width={148}
         height={148}
         decoding="async"
@@ -30,68 +30,50 @@ function HeroLogo({ panel, tabLogo }: { panel?: boolean; tabLogo?: boolean }) {
   )
 }
 
-function PrizeSticker({ inline }: { inline?: boolean }) {
+function PrizeSticker() {
   return (
-    <div
-      className={cn('tn-hero-prize-sticker', inline && 'tn-hero-prize-sticker-inline')}
-      aria-label={HERO_PRIZE_POOL_STICKER}
-    >
+    <div className="tn-hero-prize-sticker tn-hero-prize-sticker-inline" aria-label={HERO_PRIZE_POOL_STICKER}>
       {HERO_PRIZE_POOL_STICKER}
     </div>
   )
 }
 
-/** PGCR-backed tab hero — logo, title, and mission copy (shared across all tabs). */
+/** PGCR-backed tab hero — logo left, title center (same layout on every tab). */
 export default function TabPageHero({ tab, aside }: Props) {
   const copy = tabPageCopy(tab)
   const artKey = tabHeroArtKey(tab)
   const heroArt = navTabArtUrl(artKey) ?? homeSectionArtUrl('hero')
-  const isBrand = copy.brand === true
   const showPrizeSticker = PRIZE_STICKER_TABS.includes(tab)
   const isHomeHero = artKey === 'overview'
-  const isBrandHome = isBrand && Boolean(aside)
+  const hasRightStack = showPrizeSticker || Boolean(aside)
 
   return (
     <section
       className={cn(
-        'tn-home-hero',
+        'tn-home-hero tn-home-hero-brand',
         isHomeHero && 'tn-home-hero-tower',
-        isBrandHome && 'tn-home-hero-brand',
-        !aside && 'tn-tab-hero-single'
+        hasRightStack && 'tn-home-hero-has-right-stack'
       )}
       style={{ ['--tn-home-hero-art' as string]: `url('${heroArt}')` }}
     >
       <div className="tn-home-hero-overlay" aria-hidden />
 
-      {isBrandHome ? (
-        <>
-          <div className="tn-home-hero-right-stack">
-            {showPrizeSticker ? <PrizeSticker inline /> : null}
-            {aside}
-          </div>
-          <div className="tn-home-hero-grid tn-home-hero-grid-brand">
-            <div className="tn-home-hero-side-panel tn-home-hero-logo-panel">
-              <HeroLogo panel />
-            </div>
-            <div className="tn-home-hero-center tn-home-hero-center-brand">
-              <h2 className="tn-home-title">{copy.title}</h2>
-              <p className="tn-home-mission tn-home-mission-brand">{copy.description}</p>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
+      {hasRightStack ? (
+        <div className="tn-home-hero-right-stack">
           {showPrizeSticker ? <PrizeSticker /> : null}
-          <div className={cn('tn-home-hero-grid', !aside && 'tn-home-hero-grid-single')}>
-            {aside}
-            <div className="tn-home-hero-center">
-              <HeroLogo tabLogo={!isBrand} />
-              <h2 className={cn('tn-home-title', !isBrand && 'tn-tab-hero-title')}>{copy.title}</h2>
-              <p className="tn-home-mission">{copy.description}</p>
-            </div>
-          </div>
-        </>
-      )}
+          {aside}
+        </div>
+      ) : null}
+
+      <div className="tn-home-hero-grid tn-home-hero-grid-brand">
+        <div className="tn-home-hero-side-panel tn-home-hero-logo-panel">
+          <HeroLogo />
+        </div>
+        <div className="tn-home-hero-center tn-home-hero-center-brand">
+          <h2 className="tn-home-title">{copy.title}</h2>
+          <p className="tn-home-mission tn-home-mission-brand">{copy.description}</p>
+        </div>
+      </div>
     </section>
   )
 }

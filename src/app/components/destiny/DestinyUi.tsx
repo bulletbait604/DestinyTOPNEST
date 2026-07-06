@@ -431,7 +431,7 @@ function LeaderboardRow({
   darkMode: boolean
 }) {
   const t = getDestinyTheme(darkMode)
-  const emblemSize = heroCompact ? 26 : 40
+  const emblemSize = heroCompact ? 22 : 40
 
   return (
     <div className={cn('d2-leaderboard-row', heroCompact && 'd2-leaderboard-row-hero')}>
@@ -450,12 +450,12 @@ function LeaderboardRow({
         <div
           className={cn(
             'rounded-sm bg-black/40 shrink-0 ring-1 ring-white/10',
-            heroCompact ? 'w-[26px] h-[26px]' : 'w-10 h-10'
+            heroCompact ? 'w-[22px] h-[22px]' : 'w-10 h-10'
           )}
         />
       )}
       <div className="flex-1 min-w-0">
-        <p className={cn('font-semibold truncate', heroCompact ? 'text-xs' : 'text-sm', t.heading)}>
+        <p className={cn('font-semibold truncate', heroCompact ? 'text-[11px] leading-tight' : 'text-sm', t.heading)}>
           {entry.bungieDisplayName}
         </p>
         {!compact && (
@@ -476,8 +476,15 @@ function LeaderboardRow({
         )}
       </div>
       <div className={cn('text-right shrink-0', heroCompact && 'leading-none')}>
-        <p className={cn('d2-stat-card-value', heroCompact ? 'text-sm' : 'text-base')}>{entry.points}</p>
-        <p className={cn('uppercase tracking-wide', heroCompact ? 'text-[10px]' : 'text-[9px]', t.caption)}>pts</p>
+        <p className={cn('d2-stat-card-value tabular-nums', heroCompact ? 'text-xs' : 'text-base')}>
+          {entry.points}
+          {heroCompact ? (
+            <span className={cn('ml-0.5 text-[9px] font-semibold uppercase', t.caption)}>pts</span>
+          ) : null}
+        </p>
+        {!heroCompact ? (
+          <p className={cn('uppercase tracking-wide', 'text-[9px]', t.caption)}>pts</p>
+        ) : null}
         {!compact && entry.fastestActivityRef?.iconUrl && entry.fastestActivityName ? (
           <div className="flex items-center justify-end gap-1 mt-1">
             <ItemIcon item={entry.fastestActivityRef} name={entry.fastestActivityName} size={18} />

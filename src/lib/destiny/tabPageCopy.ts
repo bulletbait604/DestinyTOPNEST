@@ -28,7 +28,7 @@ export const TAB_PAGE_COPY: Record<
       'Your Guardian build, verified run history, reputation, and emblem — synced from Bungie.',
   },
   fireteam: {
-    title: 'My Teams',
+    title: 'FIRETEAMS',
     description:
       'Browse open raid and dungeon lobbies, find Guardians to play with, and leave fireteam reviews.',
   },
