@@ -14,7 +14,7 @@ import { useAppSession } from '@/hooks/useAppSession'
 import { stripUrlParams, navigateDestinyTab } from '@/lib/routing/tabUrl'
 
 export default function HomePage() {
-  const { mounted, user, loading, login, logout, refresh, isAdmin } = useAppSession()
+  const { mounted, user, loading, login, logout, refresh, isAdmin, isOwner } = useAppSession()
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginPending, setLoginPending] = useState(false)
 
@@ -94,7 +94,7 @@ export default function HomePage() {
           onOpenAdmin={() => navigateDestinyTab('admin')}
         />
         <main className="container mx-auto w-full max-w-7xl px-2 sm:px-4 py-2 sm:py-3 flex-1">
-          <DestinyTopNestApp darkMode isAdmin={isAdmin} />
+          <DestinyTopNestApp darkMode isAdmin={isAdmin} isOwner={isOwner} />
         </main>
         <footer className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.18em] text-white/30 border-t border-white/[0.06] bg-black/20">
           Fan community hub · Not affiliated with Bungie

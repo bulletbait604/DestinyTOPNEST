@@ -26,7 +26,9 @@ export async function verifyStaffUser(req: NextRequest): Promise<VerifiedUser> {
     return user
   }
   const dbRole = await staffRoleFromDb(user.username)
-  const effectiveDbRole = dbRole ? capOwnerRole(user.username, dbRole as VerifiedUser['role']) : undefined
+  const effectiveDbRole = dbRole
+    ? capOwnerRole(user.username, dbRole as VerifiedUser['role'], user.displayName)
+    : undefined
   if (isStaffRole(effectiveDbRole)) {
     user.role = effectiveDbRole as VerifiedUser['role']
     return user
@@ -41,7 +43,9 @@ export async function verifyOwnerUser(req: NextRequest): Promise<VerifiedUser> {
     return user
   }
   const dbRole = await staffRoleFromDb(user.username)
-  const effectiveDbRole = dbRole ? capOwnerRole(user.username, dbRole as VerifiedUser['role']) : undefined
+  const effectiveDbRole = dbRole
+    ? capOwnerRole(user.username, dbRole as VerifiedUser['role'], user.displayName)
+    : undefined
   if (isOwnerActor(effectiveDbRole, user.username, user.displayName)) {
     user.role = effectiveDbRole as VerifiedUser['role']
     return user

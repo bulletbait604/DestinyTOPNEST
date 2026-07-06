@@ -471,6 +471,8 @@ export type AdminActivityKind =
   | 'user_ban'
   | 'user_unban'
   | 'user_note'
+  | 'staff_grant'
+  | 'staff_revoke'
   | 'prize_claim'
   | 'season_finalize'
   | 'leaderboard_adjust'
@@ -498,6 +500,14 @@ export interface AdminUserSummary {
   siteRole?: string
   verifiedRunCount: number
   flaggedRunCount: number
+}
+
+export interface AdminStaffMember {
+  userId: string
+  bungieDisplayName: string
+  role: 'owner' | 'admin'
+  isPrimaryOwner: boolean
+  updatedAt?: string
 }
 
 export interface AdminUserDetail extends AdminUserSummary {

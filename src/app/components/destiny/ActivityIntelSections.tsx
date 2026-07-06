@@ -3,7 +3,9 @@
 import { Sparkles } from 'lucide-react'
 import type { FeaturedActivity } from '@/lib/destiny/types'
 import type { ActivityLootDrop, ActivityLootIntel } from '@/lib/destiny/activityLoot'
+import type { ActivityArmorSet } from '@/lib/destiny/activityArmorSets'
 import { activityIntel } from '@/lib/destiny/activityIntel'
+import ActivityArmorSetPanel from '@/app/components/destiny/ActivityArmorSetPanel'
 import { lootDropIconRef } from '@/lib/destiny/activityLoot'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
@@ -70,18 +72,27 @@ export function ActivityLootSection({ loot }: { loot: ActivityLootIntel }) {
   )
 }
 
-/** Lore, exotic loot, and tips — nested under weekly activity cards. */
+/** Lore, armor set, exotic loot, and tips — nested under weekly activity cards. */
 export function ActivityIntelSections({
   activity,
   resetsIn,
+  armorSet,
+  darkMode = true,
 }: {
   activity: FeaturedActivity
   resetsIn?: string
+  armorSet?: ActivityArmorSet | null
+  darkMode?: boolean
 }) {
   const intel = activityIntel({ ...activity, resetsIn: activity.resetsIn ?? resetsIn })
 
   return (
     <div className="tn-weekly-activity-intel-body">
+      {armorSet ? (
+        <div className="tn-weekly-activity-intel-armor">
+          <ActivityArmorSetPanel set={armorSet} darkMode={darkMode} compact />
+        </div>
+      ) : null}
       <p className="d2-wiki-box-summary-text">{intel.summary}</p>
       {intel.loot ? <ActivityLootSection loot={intel.loot} /> : null}
       <ul className="d2-wiki-box-tips">

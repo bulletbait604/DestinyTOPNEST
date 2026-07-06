@@ -4,8 +4,8 @@ import { ChevronDown } from 'lucide-react'
 import type { FeaturedActivity } from '@/lib/destiny/types'
 import { activityArmorSet } from '@/lib/destiny/activityArmorSets'
 import { activityIntel } from '@/lib/destiny/activityIntel'
-import ActivityArmorSetPanel from '@/app/components/destiny/ActivityArmorSetPanel'
 import { ActivityIntelSections } from '@/app/components/destiny/ActivityIntelSections'
+import ActivityArmorSetPanel from '@/app/components/destiny/ActivityArmorSetPanel'
 import { activityWalkthroughLinkTitle, activityWalkthroughUrl } from '@/lib/destiny/activityWalkthroughLinks'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -27,6 +27,8 @@ export default function WeeklyActivitySetCard({ label, activity, kind, resetsIn,
   const kindLabel = kind === 'raid' ? 'Raid' : kind === 'dungeon' ? 'Dungeon' : 'Pantheon'
   const showIntel = kind === 'raid' || kind === 'dungeon'
   const intel = showIntel ? activityIntel({ ...activity, resetsIn: activity.resetsIn ?? resetsIn }) : null
+
+  const showIntelDetails = showIntel || Boolean(armorSet)
 
   return (
     <article className="tn-weekly-activity-card">
@@ -60,19 +62,28 @@ export default function WeeklyActivitySetCard({ label, activity, kind, resetsIn,
         </div>
       </div>
 
-      {armorSet ? (
-        <ActivityArmorSetPanel set={armorSet} darkMode={darkMode} compact />
-      ) : (
-        <p className={cn('text-[11px] px-1 py-2', t.muted)}>Armor set data coming soon.</p>
-      )}
-
-      {showIntel ? (
+      {showIntelDetails ? (
         <details className="tn-weekly-activity-intel group">
           <summary className="tn-weekly-activity-intel-summary list-none cursor-pointer">
-            <span>Chase loot & tips</span>
+            <span>Chase Loot & Tips</span>
             <ChevronDown className="tn-weekly-activity-intel-chevron w-4 h-4 shrink-0" aria-hidden />
           </summary>
-          <ActivityIntelSections activity={activity} resetsIn={resetsIn} />
+          {showIntel ? (
+            <ActivityIntelSections
+              activity={activity}
+              resetsIn={resetsIn}
+              armorSet={armorSet}
+              darkMode={darkMode}
+            />
+          ) : armorSet ? (
+            <div className="tn-weekly-activity-intel-body">
+              <ActivityArmorSetPanel set={armorSet} darkMode={darkMode} compact />
+            </div>
+          ) : (
+            <div className="tn-weekly-activity-intel-body">
+              <p className={cn('text-[11px] px-1 py-2', t.muted)}>Armor set data coming soon.</p>
+            </div>
+          )}
         </details>
       ) : null}
     </article>

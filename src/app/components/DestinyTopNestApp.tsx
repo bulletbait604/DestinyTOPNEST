@@ -34,6 +34,7 @@ type LoadoutSection = 'mine' | 'community' | 'builder'
 interface Props {
   darkMode: boolean
   isAdmin?: boolean
+  isOwner?: boolean
 }
 
 function resolveProfileView(tab: DestinyTopNestTab): ProfileView {
@@ -48,7 +49,7 @@ function resolveLoadoutSection(tab: DestinyTopNestTab): LoadoutSection | undefin
 
 const PROFILE_TABS = new Set<DestinyTopNestTab>(['profile', 'loadouts', 'builds'])
 
-export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) {
+export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner = false }: Props) {
   const [activeTab, setActiveTab] = useState<DestinyTopNestTab>('overview')
   const [profileView, setProfileView] = useState<ProfileView>('guardian')
   const [loadoutSection, setLoadoutSection] = useState<LoadoutSection | undefined>()
@@ -164,9 +165,9 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
         return <LeaderboardsPanel darkMode={darkMode} />
       case 'admin':
         return isAdmin ? (
-          <AdminPanel darkMode={darkMode} isAdmin />
+          <AdminPanel darkMode={darkMode} isAdmin isOwner={isOwner} />
         ) : (
-          <AdminPanel darkMode={darkMode} isAdmin={false} />
+          <AdminPanel darkMode={darkMode} isAdmin={false} isOwner={false} />
         )
     }
   }

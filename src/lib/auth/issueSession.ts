@@ -23,7 +23,7 @@ export async function attachSessionCookie(
   const dbUser = await client.db(getMongoDbName()).collection('users').findOne({ username: normalized })
   if (!dbUser) return false
 
-  const role = capOwnerRole(normalized, (dbUser.role as UserRole) || 'free')
+  const role = capOwnerRole(normalized, (dbUser.role as UserRole) || 'free', displayName)
   const jwt = signSessionJwt(
     {
       sub: normalized,
@@ -60,7 +60,7 @@ export async function ensureSiteUserRecord(
   const db = client.db(getMongoDbName())
 
   const existing = await db.collection('users').findOne({ username: normalized })
-  let role = capOwnerRole(normalized, (existing?.role as UserRole) || 'free')
+  let role = capOwnerRole(normalized, (existing?.role as UserRole) || 'free', bungieDisplayName)
   if (isAllowlistedOwner(normalized, bungieDisplayName) && role !== 'owner' && role !== 'admin') {
     role = 'owner'
   }
@@ -96,7 +96,7 @@ export async function signSessionCookieForUser(
   if (!secret) return false
 
   const normalized = siteUserId.toLowerCase()
-  const cappedRole = capOwnerRole(normalized, role)
+  const cappedRole = capOwnerRole(normalized, role, displayName)
   const jwt = signSessionJwt(
     {
       sub: normalized,

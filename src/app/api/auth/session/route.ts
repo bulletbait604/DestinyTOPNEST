@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
       displayName: user.displayName,
       role: user.role,
       isStaff: isStaffRole(user.role) || isAllowlistedOwner(user.username, user.displayName),
+      isOwner: isAllowlistedOwner(user.username, user.displayName),
       bungieLinked,
       bungieTokenHealthy,
       sessionExpiresInDays: SESSION_MAX_AGE_DAYS,

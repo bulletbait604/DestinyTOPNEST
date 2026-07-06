@@ -141,9 +141,15 @@ export async function verifyAuth(req: NextRequest): Promise<VerifiedUser> {
     user.displayName = dbUser.bungieDisplayName
   }
 
-  user.role = capOwnerRole(user.username, (dbUser.role as UserRole) ?? 'free')
-  if (isAllowlistedOwner(user.username, user.displayName) && user.role !== 'owner' && user.role !== 'admin') {
-    user.role = 'owner'
+  user.role = capOwnerRole(user.username, (dbUser.role as UserRole) ?? 'free', user.displayName)
+  if (isAllowlistedOwner(user.username, user.displayName)) {
+    if (user.role !== 'owner') {
+      user.role = 'owner'
+      await db.collection('users').updateOne(
+        { username: user.username },
+        { $set: { role: 'owner', updatedAt: new Date().toISOString() } }
+      )
+    }
   }
 
   if (await isUserBanned(user.username)) {

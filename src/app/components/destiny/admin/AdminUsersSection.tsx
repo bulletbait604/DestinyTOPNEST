@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Ban, Loader2, Search, UserCheck } from 'lucide-react'
+import { Ban, Loader2, Search, Shield, UserCheck, UserMinus, UserPlus } from 'lucide-react'
 import type { AdminUserDetail, AdminUserSummary } from '@/lib/destiny/types'
 import { GlassCard, LoadingBlock, SectionTitle, StatusPill } from '@/app/components/destiny/DestinyUi'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -16,9 +16,11 @@ type BannedRow = {
 
 export default function AdminUsersSection({
   darkMode,
+  isOwner = false,
   onAction,
 }: {
   darkMode: boolean
+  isOwner?: boolean
   onAction?: () => void
 }) {
   const [query, setQuery] = useState('')
@@ -105,6 +107,32 @@ export default function AdminUsersSection({
       setActing(false)
     }
   }
+
+  async function postStaffAction(action: 'grant_admin' | 'revoke_admin', username: string) {
+    setActing(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/destiny/admin/staff', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, username }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(json.error ?? 'Action failed.')
+        return
+      }
+      await loadList(query)
+      await loadDetail(username)
+      onAction?.()
+    } finally {
+      setActing(false)
+    }
+  }
+
+  const selectedIsStaff =
+    selected?.siteRole === 'admin' || selected?.siteRole === 'owner'
 
   return (
     <div className="space-y-4">
@@ -265,6 +293,37 @@ export default function AdminUsersSection({
           ) : null}
 
           <div className="space-y-3 border-t border-white/10 pt-4">
+            {isOwner ? (
+              <div className="flex flex-wrap gap-2 items-center pb-3 border-b border-white/10">
+                <Shield className="w-4 h-4 text-amber-400" />
+                {selectedIsStaff ? (
+                  selected.siteRole === 'owner' ? (
+                    <span className={cn('text-xs', t.muted)}>Primary owner — admin access cannot be changed here.</span>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={acting}
+                      onClick={() => void postStaffAction('revoke_admin', selected.userId)}
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs bg-red-500/20 text-red-200 border border-red-500/40"
+                    >
+                      {acting ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserMinus className="w-3 h-3" />}
+                      Remove admin
+                    </button>
+                  )
+                ) : (
+                  <button
+                    type="button"
+                    disabled={acting}
+                    onClick={() => void postStaffAction('grant_admin', selected.userId)}
+                    className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs bg-emerald-500/20 text-emerald-200 border border-emerald-500/40"
+                  >
+                    {acting ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
+                    Grant admin
+                  </button>
+                )}
+              </div>
+            ) : null}
+
             {!selected.isBanned ? (
               <div className="flex flex-wrap gap-2 items-end">
                 <input

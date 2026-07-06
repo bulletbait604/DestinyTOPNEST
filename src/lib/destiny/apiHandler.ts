@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { AuthError, createAuthErrorResponse, verifyAuth } from '@/lib/auth/verifyAuth'
-import { verifyStaffUser } from '@/lib/auth/staffAccess'
+import { verifyOwnerUser, verifyStaffUser } from '@/lib/auth/staffAccess'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +26,21 @@ export async function destinyStaffHandler(
 ): Promise<NextResponse> {
   try {
     await verifyStaffUser(req)
+    return await handler()
+  } catch (error) {
+    if (error instanceof AuthError) return createAuthErrorResponse(error)
+    console.error('[destiny]', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+/** Requires primary owner — staff grants and other owner-only actions. */
+export async function destinyOwnerHandler(
+  req: NextRequest,
+  handler: () => Promise<NextResponse>
+): Promise<NextResponse> {
+  try {
+    await verifyOwnerUser(req)
     return await handler()
   } catch (error) {
     if (error instanceof AuthError) return createAuthErrorResponse(error)

@@ -1,22 +1,24 @@
 ﻿'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ShieldAlert } from 'lucide-react'
 import AdminActivitySection from '@/app/components/destiny/admin/AdminActivitySection'
 import AdminLeaderboardsSection from '@/app/components/destiny/admin/AdminLeaderboardsSection'
 import AdminRunReviewSection from '@/app/components/destiny/admin/AdminRunReviewSection'
 import AdminSeasonSection from '@/app/components/destiny/admin/AdminSeasonSection'
+import AdminStaffSection from '@/app/components/destiny/admin/AdminStaffSection'
 import AdminUsersSection from '@/app/components/destiny/admin/AdminUsersSection'
 import { GlassCard, SegmentedControl, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
-type AdminSection = 'activity' | 'runs' | 'users' | 'leaderboards' | 'season'
+type AdminSection = 'activity' | 'runs' | 'users' | 'staff' | 'leaderboards' | 'season'
 
-const SECTIONS: { value: AdminSection; label: string }[] = [
+const SECTIONS: { value: AdminSection; label: string; ownerOnly?: boolean }[] = [
   { value: 'activity', label: 'Activity feed' },
   { value: 'runs', label: 'Run review' },
   { value: 'users', label: 'Users' },
+  { value: 'staff', label: 'Admin access', ownerOnly: true },
   { value: 'leaderboards', label: 'Leaderboards' },
   { value: 'season', label: 'Season & prizes' },
 ]
@@ -24,17 +26,27 @@ const SECTIONS: { value: AdminSection; label: string }[] = [
 export default function AdminPanel({
   darkMode,
   isAdmin = false,
+  isOwner = false,
 }: {
   darkMode: boolean
   isAdmin?: boolean
+  isOwner?: boolean
 }) {
   const [section, setSection] = useState<AdminSection>('activity')
   const [feedKey, setFeedKey] = useState(0)
   const t = getDestinyTheme(darkMode)
 
+  const visibleSections = SECTIONS.filter((item) => !item.ownerOnly || isOwner)
+
   const refreshFeed = useCallback(() => {
     setFeedKey((k) => k + 1)
   }, [])
+
+  useEffect(() => {
+    if (section === 'staff' && !isOwner) {
+      setSection('activity')
+    }
+  }, [section, isOwner])
 
   if (!isAdmin) {
     return (
@@ -59,9 +71,9 @@ export default function AdminPanel({
         <div className="mt-4">
           <SegmentedControl
             label="Section"
-            options={SECTIONS}
+            options={visibleSections}
             value={section}
-            onChange={setSection}
+            onChange={(value) => setSection(value as AdminSection)}
             darkMode={darkMode}
           />
         </div>
@@ -72,7 +84,10 @@ export default function AdminPanel({
         <AdminRunReviewSection darkMode={darkMode} onReviewed={refreshFeed} />
       ) : null}
       {section === 'users' ? (
-        <AdminUsersSection darkMode={darkMode} onAction={refreshFeed} />
+        <AdminUsersSection darkMode={darkMode} isOwner={isOwner} onAction={refreshFeed} />
+      ) : null}
+      {section === 'staff' && isOwner ? (
+        <AdminStaffSection darkMode={darkMode} onAction={refreshFeed} />
       ) : null}
       {section === 'leaderboards' ? (
         <AdminLeaderboardsSection darkMode={darkMode} onAction={refreshFeed} />
