@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Trophy, Unlink, Loader2 } from 'lucide-react'
-import type { PlayerProfile } from '@/lib/destiny/types'
 import BungieConnectBanner from '@/app/components/destiny/BungieConnectBanner'
 import EmblemPicker from '@/app/components/destiny/EmblemPicker'
 import PlayerCardDetail from '@/app/components/destiny/PlayerCardDetail'
@@ -21,6 +20,7 @@ import {
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { DEFAULT_PROFILE_FLEX_STATS } from '@/lib/destiny/profileFlex'
 import { useBungieLink } from '@/hooks/useBungieLink'
+import { useProfileData } from '@/contexts/ProfileDataContext'
 import { cn } from '@/lib/utils'
 
 type ProfileView = 'guardian' | 'activities' | 'loadouts'
@@ -37,8 +37,7 @@ export default function ProfilePanel({
   initialView = 'guardian',
   initialLoadoutSection,
 }: Props) {
-  const [profile, setProfile] = useState<PlayerProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { fullProfile, fullLoading, ensureFullProfile, setFullProfile } = useProfileData()
   const [switchingCharacter, setSwitchingCharacter] = useState(false)
   const [view, setView] = useState<ProfileView>(initialView)
   const bungie = useBungieLink()
@@ -48,31 +47,15 @@ export default function ProfilePanel({
     setView(initialView)
   }, [initialView])
 
-  const load = useCallback(async (characterId?: string) => {
-    if (!characterId) setLoading(true)
-    else setSwitchingCharacter(true)
-
-    try {
-      const qs = new URLSearchParams({ scope: 'full' })
-      if (characterId) qs.set('characterId', characterId)
-      const profileRes = await fetch(`/api/destiny/profile?${qs.toString()}`, { credentials: 'include' })
-      if (profileRes.ok) {
-        const profileJson = await profileRes.json()
-        setProfile(profileJson?.profile ?? null)
-      }
-    } finally {
-      setLoading(false)
-      setSwitchingCharacter(false)
-    }
-  }, [])
-
   useEffect(() => {
-    void load()
-  }, [load, bungie.linked])
+    if (bungie.linked) {
+      void ensureFullProfile()
+    }
+  }, [bungie.linked, ensureFullProfile])
 
   const handleCharacterSelect = useCallback(
     async (characterId: string) => {
-      if (!profile || characterId === profile.activeCharacterId) return
+      if (!fullProfile || characterId === fullProfile.activeCharacterId) return
       setSwitchingCharacter(true)
       try {
         const res = await fetch('/api/destiny/profile', {
@@ -83,20 +66,23 @@ export default function ProfilePanel({
         })
         if (res.ok) {
           const json = await res.json()
-          setProfile(json?.profile ?? null)
+          setFullProfile(json?.profile ?? null)
         } else {
-          await load(characterId)
+          await ensureFullProfile(characterId, { force: true })
         }
       } finally {
         setSwitchingCharacter(false)
       }
     },
-    [load, profile]
+    [ensureFullProfile, fullProfile, setFullProfile]
   )
 
-  if (loading) return <LoadingBlock darkMode={darkMode} label="Loading profile from Bungie…" />
+  const showInitialLoad = fullLoading && !fullProfile
+
+  if (showInitialLoad) return <LoadingBlock darkMode={darkMode} label="Loading profile from Bungie…" />
 
   const linked = bungie.linked
+  const profile = fullProfile
 
   if (!profile) {
     return (
@@ -107,7 +93,7 @@ export default function ProfilePanel({
   }
 
   return (
-    <div className="space-y-4 d2-profile-page">
+    <div className="space-y-4 d2-profile-page animate-in fade-in duration-300">
       <SegmentedControl
         label="Profile"
         darkMode={darkMode}
@@ -159,23 +145,23 @@ export default function ProfilePanel({
           )}
 
           <PlayerCardDetail
-              profile={profile}
-              darkMode={darkMode}
-              switchingCharacter={switchingCharacter}
-              onCharacterSelect={(id) => void handleCharacterSelect(id)}
+            profile={profile}
+            darkMode={darkMode}
+            switchingCharacter={switchingCharacter}
+            onCharacterSelect={(id) => void handleCharacterSelect(id)}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <EmblemPicker
-                darkMode={darkMode}
-                selectedSource={profile.displayEmblemSource}
-                selectedHash={profile.displayEmblemHash}
-                onSaved={() => void load()}
-              />
-              <StatCardEditor
-                darkMode={darkMode}
-                initialSelection={profile.profileFlexStats ?? DEFAULT_PROFILE_FLEX_STATS}
-              onSaved={() => void load()}
+              darkMode={darkMode}
+              selectedSource={profile.displayEmblemSource}
+              selectedHash={profile.displayEmblemHash}
+              onSaved={() => void ensureFullProfile(undefined, { force: true })}
+            />
+            <StatCardEditor
+              darkMode={darkMode}
+              initialSelection={profile.profileFlexStats ?? DEFAULT_PROFILE_FLEX_STATS}
+              onSaved={() => void ensureFullProfile(undefined, { force: true })}
             />
           </div>
 

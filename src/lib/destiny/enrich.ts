@@ -243,10 +243,10 @@ export async function enrichOverview(payload: OverviewPayload): Promise<Overview
         })
       ),
       Promise.all(payload.lookingForGroup.map(enrichLobby)),
-      Promise.all(payload.trendingBuilds.map(enrichBuildCard)),
+      Promise.all(payload.trendingBuilds.map(enrichExternalBuild)),
       Promise.all(
         (['titan', 'hunter', 'warlock'] as const).map(async (cls) =>
-          Promise.all((payload.topLoadoutsByClass[cls] ?? []).map(enrichBuildCard))
+          Promise.all((payload.topLoadoutsByClass[cls] ?? []).map(enrichExternalBuild))
         )
       ).then(([titan, hunter, warlock]) => ({ titan, hunter, warlock })),
     ])
@@ -342,7 +342,7 @@ export async function enrichLoadoutsResponse(data: {
   return { ...data, current, saved, favorites }
 }
 
-async function enrichExternalBuild(build: ExternalBuildSource): Promise<ExternalBuildSource> {
+export async function enrichExternalBuild(build: ExternalBuildSource): Promise<ExternalBuildSource> {
   const slots = ['helmet', 'gauntlets', 'chest', 'legs'] as const
   const [
     classRef,

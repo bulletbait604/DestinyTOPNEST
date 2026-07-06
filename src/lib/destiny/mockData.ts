@@ -12,7 +12,8 @@
   Season,
   WeeklyResetInfo,
 } from '@/lib/destiny/types'
-import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
+import { rankTopMetaLoadoutsByClass, rankTrendingMetaBuilds } from '@/lib/destiny/metaBuildConsensus'
+import { getResearchedMetaBuilds } from '@/lib/destiny/externalMetaResearch'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { emblemIconUrlForRank } from '@/lib/destiny/emblemIconPaths'
 
@@ -496,8 +497,8 @@ export function buildOverviewPayload(bungieApiConfigured: boolean): OverviewPayl
     seasonCountdown: getSeasonCountdown(),
     prizeSummary: 'Raid & Dungeon Top 5 win platform cards or 3D prints. Full Clan Team prizes for same-clan clears.',
     lookingForGroup: MOCK_LFG,
-    trendingBuilds: MOCK_BUILD_CARDS,
-    topLoadoutsByClass: rankTopLoadoutsByClass(MOCK_BUILD_CARDS, 2),
+    trendingBuilds: rankTrendingMetaBuilds(getResearchedMetaBuilds(), 3),
+    topLoadoutsByClass: rankTopMetaLoadoutsByClass(getResearchedMetaBuilds(), 2),
     bungieApiConfigured,
     hallOfFamePreview: [],
   }

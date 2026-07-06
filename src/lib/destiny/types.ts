@@ -576,6 +576,12 @@ export interface ExternalBuildSource {
   suggestionScope?: 'general' | 'activity' | 'specialist'
   /** Lower = higher priority within a class (1 = top general pick). */
   suggestionRank?: number
+  /** Stable cross-site identity for consensus scoring (class:subclass:exotic-slug). */
+  consensusKey?: string
+  /** Rank on the citing site’s list (1 = #1 on that site). */
+  sourceRank?: number
+  /** How many distinct build sites list this consensus identity. */
+  consensusSiteCount?: number
   classRef?: DestinyIconRef
   subclassRef?: DestinyIconRef
   exoticArmorRef?: DestinyIconRef
@@ -620,8 +626,10 @@ export interface OverviewPayload {
   seasonCountdown: { days: number; hours: number; label: string }
   prizeSummary: string
   lookingForGroup: FireteamLobby[]
-  trendingBuilds: BuildIntelligenceCard[]
-  topLoadoutsByClass: Record<'titan' | 'hunter' | 'warlock', BuildIntelligenceCard[]>
+  /** Cross-site meta builds trending this research window. */
+  trendingBuilds: ExternalBuildSource[]
+  /** Top meta loadouts per class from external build-site consensus. */
+  topLoadoutsByClass: Record<'titan' | 'hunter' | 'warlock', ExternalBuildSource[]>
   bungieApiConfigured: boolean
   hallOfFamePreview: SeasonWinner[]
   pendingRunActions?: PendingRunActions | null

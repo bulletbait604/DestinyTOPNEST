@@ -65,6 +65,7 @@ export default function ExternalMetaBuildCard({
             </p>
           </div>
           {build.excelsIn ? <StatusPill label={build.excelsIn} tone="purple" /> : null}
+          {build.aiScoreLabel ? <StatusPill label={build.aiScoreLabel} tone="gold" /> : null}
         </div>
       )}
 
@@ -75,6 +76,10 @@ export default function ExternalMetaBuildCard({
         subclass={build.subclass}
         darkMode={darkMode}
       />
+
+      {compact && build.aiScoreLabel ? (
+        <StatusPill label={build.aiScoreLabel} tone="gold" />
+      ) : null}
 
       {build.aspectRefs?.length ? (
         <div>

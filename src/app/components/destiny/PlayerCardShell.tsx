@@ -1,54 +1,40 @@
 ﻿'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import type { PlayerProfile } from '@/lib/destiny/types'
 import PlayerCardCompact from '@/app/components/destiny/PlayerCardCompact'
 import { useBungieLink } from '@/hooks/useBungieLink'
+import { useProfileData } from '@/contexts/ProfileDataContext'
 
 interface Props {
   darkMode: boolean
-  size?: 'compact' | 'featured'
+  size?: 'featured' | 'compact'
   onProfileLoaded?: (profile: PlayerProfile | null) => void
 }
 
 /** Compact player banner — summary only (no loadout fetch). */
 export default function PlayerCardShell({ darkMode, size = 'featured', onProfileLoaded }: Props) {
-  const [profile, setProfile] = useState<PlayerProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { summaryProfile, summaryLoading, ensureSummaryProfile } = useProfileData()
   const bungie = useBungieLink()
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/destiny/profile?scope=summary', { credentials: 'include' })
-      if (res.ok) {
-        const json = await res.json()
-        const p = (json.profile ?? null) as PlayerProfile | null
-        setProfile(p)
-        onProfileLoaded?.(p)
-      } else {
-        setProfile(null)
-        onProfileLoaded?.(null)
-      }
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    if (bungie.linked) {
+      void ensureSummaryProfile().then((profile) => onProfileLoaded?.(profile))
+    } else {
+      onProfileLoaded?.(null)
     }
-  }, [onProfileLoaded])
+  }, [bungie.linked, ensureSummaryProfile, onProfileLoaded])
 
   useEffect(() => {
-    void load()
-  }, [load, bungie.linked])
+    onProfileLoaded?.(summaryProfile)
+  }, [summaryProfile, onProfileLoaded])
 
-  useEffect(() => {
-    const onRefresh = () => void load()
-    window.addEventListener('topnest-profile-refresh', onRefresh)
-    return () => window.removeEventListener('topnest-profile-refresh', onRefresh)
-  }, [load])
+  const loading = summaryLoading && !summaryProfile
 
   return (
     <div className="w-full min-w-0">
       <PlayerCardCompact
-        profile={profile}
+        profile={summaryProfile}
         darkMode={darkMode}
         linked={bungie.linked}
         loading={loading}

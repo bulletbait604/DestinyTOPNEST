@@ -21,7 +21,9 @@ import PlayerCardShell from '@/app/components/destiny/PlayerCardShell'
 import TabPageHero from '@/app/components/destiny/TabPageHero'
 import TabShellAlerts from '@/app/components/destiny/TabShellAlerts'
 import HomeTopNestCallout from '@/app/components/destiny/HomeTopNestCallout'
+import HomeSoloPreview from '@/app/components/destiny/HomeSoloPreview'
 import RunSyncToast from '@/app/components/destiny/RunSyncToast'
+import { ProfileDataProvider } from '@/contexts/ProfileDataContext'
 import { cn } from '@/lib/utils'
 
 type ProfileView = 'guardian' | 'activities' | 'loadouts'
@@ -42,6 +44,8 @@ function resolveLoadoutSection(tab: DestinyTopNestTab): LoadoutSection | undefin
   return undefined
 }
 
+const PROFILE_TABS = new Set<DestinyTopNestTab>(['profile', 'loadouts', 'builds'])
+
 export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) {
   const [activeTab, setActiveTab] = useState<DestinyTopNestTab>('overview')
   const [profileView, setProfileView] = useState<ProfileView>('guardian')
@@ -49,6 +53,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
   const theme = getDestinyTheme(darkMode)
   const restored = useRef(false)
   const skipUrlSync = useRef(true)
+  const [profilePanelMounted, setProfilePanelMounted] = useState(false)
 
   const handleTabChange = useCallback((tab: DestinyTopNestTab) => {
     if (tab === 'admin' && !isAdmin) return
@@ -82,6 +87,9 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
         setActiveTab(resolved)
         setProfileView(resolveProfileView(resolved))
         setLoadoutSection(resolveLoadoutSection(resolved))
+        if (PROFILE_TABS.has(resolved)) {
+          setProfilePanelMounted(true)
+        }
       }
     }
     stripOAuthParams()
@@ -108,7 +116,35 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
     syncTabToUrl(activeTab)
   }, [activeTab])
 
+  useEffect(() => {
+    if (PROFILE_TABS.has(activeTab)) {
+      setProfilePanelMounted(true)
+    }
+  }, [activeTab])
+
   function renderPanel() {
+    const isProfileTab = PROFILE_TABS.has(activeTab)
+
+    return (
+      <>
+        {profilePanelMounted ? (
+          <div className={cn(!isProfileTab && 'hidden')} aria-hidden={!isProfileTab}>
+            <ProfilePanel
+              darkMode={darkMode}
+              initialView={profileView}
+              initialLoadoutSection={loadoutSection}
+            />
+          </div>
+        ) : null}
+
+        {!isProfileTab ? (
+          <div className="animate-in fade-in duration-300 min-w-0">{renderMainPanel()}</div>
+        ) : null}
+      </>
+    )
+  }
+
+  function renderMainPanel() {
     switch (activeTab) {
       case 'overview':
         return <OverviewPanel darkMode={darkMode} onGoToActivities={navigateToProfileActivities} />
@@ -119,13 +155,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
       case 'profile':
       case 'loadouts':
       case 'builds':
-        return (
-          <ProfilePanel
-            darkMode={darkMode}
-            initialView={profileView}
-            initialLoadoutSection={loadoutSection}
-          />
-        )
+        return null
       case 'clans':
         return <ClansPanel darkMode={darkMode} />
       case 'season':
@@ -140,20 +170,23 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
   }
 
   const showTopNestCallout = activeTab === 'overview'
+  const heroAside = showTopNestCallout ? <HomeSoloPreview darkMode={darkMode} /> : undefined
 
   return (
-    <div className={cn('rounded-xl overflow-hidden ring-1 ring-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.45)]', theme.shell)}>
-      <RunSyncToast darkMode={darkMode} />
-      <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4 space-y-4">
-        <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
-        <TabShellAlerts darkMode={darkMode} />
-        <TabPageHero tab={activeTab} />
-        {showTopNestCallout ? <HomeTopNestCallout darkMode={darkMode} /> : null}
-        <div className="d2-player-card-featured">
-          <PlayerCardShell darkMode={darkMode} size="featured" />
+    <ProfileDataProvider>
+      <div className={cn('rounded-xl overflow-hidden ring-1 ring-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.45)]', theme.shell)}>
+        <RunSyncToast darkMode={darkMode} />
+        <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4 space-y-4">
+          <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
+          <TabShellAlerts darkMode={darkMode} />
+          <TabPageHero tab={activeTab} aside={heroAside} />
+          {showTopNestCallout ? <HomeTopNestCallout darkMode={darkMode} /> : null}
+          <div className="d2-player-card-featured">
+            <PlayerCardShell darkMode={darkMode} size="featured" />
+          </div>
+          <div className="min-w-0">{renderPanel()}</div>
         </div>
-        <div className="animate-in fade-in duration-300 min-w-0">{renderPanel()}</div>
       </div>
-    </div>
+    </ProfileDataProvider>
   )
 }

@@ -17,7 +17,7 @@ import {
   META_RESEARCH_SOURCES,
 } from '@/lib/destiny/externalMetaResearch'
 import { aggregateBuildIntelligence, verifiedRunIdSet } from '@/lib/destiny/buildIntelligence'
-import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
+import { rankTopMetaLoadoutsByClass, rankTrendingMetaBuilds, sortExternalBuildsByConsensus } from '@/lib/destiny/metaBuildConsensus'
 import { ACTIVE_SEASON } from '@/lib/destiny/seasonConfig'
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
@@ -194,11 +194,11 @@ export async function getOverviewData(): Promise<OverviewPayload> {
   try {
     await ensureDestinyIndexes()
     const season = await getSeasonData()
-    const [runs, usersById, lobbies, buildCards, votes] = await Promise.all([
+    const [runs, usersById, lobbies, externalBuilds, votes] = await Promise.all([
       loadAllRuns(),
       loadUsersMap(),
       getFireteamLobbies(),
-      getBuildIntelligenceCards(),
+      getExternalBuildSources(),
       loadAllMvpVotes(),
     ])
 
@@ -215,7 +215,7 @@ export async function getOverviewData(): Promise<OverviewPayload> {
     const guardiansTop3 = (
       await buildLeaderboardWithAdjustments('top_guardians', 'monthly', season, runs, usersById, votes)
     ).slice(0, 3)
-    const topLoadoutsByClass = rankTopLoadoutsByClass(buildCards, 2)
+    const topLoadoutsByClass = rankTopMetaLoadoutsByClass(externalBuilds, 2)
     const { hallOfFame } = await computeSeasonStandings(runs, usersById, season, votes)
 
     return buildOverviewPayload({
@@ -225,13 +225,13 @@ export async function getOverviewData(): Promise<OverviewPayload> {
       guardiansTop3,
       recentRuns,
       lookingForGroup: lobbies,
-      trendingBuilds: buildCards.slice(0, 3),
+      trendingBuilds: rankTrendingMetaBuilds(externalBuilds, 3),
       topLoadoutsByClass,
       hallOfFamePreview: hallOfFame.slice(0, 9),
       season,
     })
   } catch {
-    const emptyLoadouts = rankTopLoadoutsByClass([], 2)
+    const emptyMeta = rankTopMetaLoadoutsByClass([], 2)
     return buildOverviewPayload({
       raidTop10: [],
       dungeonTop10: [],
@@ -240,7 +240,7 @@ export async function getOverviewData(): Promise<OverviewPayload> {
       recentRuns: [],
       lookingForGroup: [],
       trendingBuilds: [],
-      topLoadoutsByClass: emptyLoadouts,
+      topLoadoutsByClass: emptyMeta,
       hallOfFamePreview: [],
     })
   }
@@ -618,11 +618,9 @@ export async function getExternalBuildSources(): Promise<ExternalBuildSource[]> 
       if (!byId.has(row.id)) byId.set(row.id, row)
     }
 
-    return Array.from(byId.values()).sort(
-      (a, b) => Date.parse(b.lastChecked) - Date.parse(a.lastChecked)
-    )
+    return sortExternalBuildsByConsensus(Array.from(byId.values()))
   } catch {
-    return researched
+    return sortExternalBuildsByConsensus(researched)
   }
 }
 

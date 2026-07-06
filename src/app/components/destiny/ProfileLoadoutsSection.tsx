@@ -1,13 +1,10 @@
 ﻿'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Hammer } from 'lucide-react'
 import type {
-  BuildIntelligenceCard,
-  BuildSnapshot,
   CharacterSummary,
   DestinyCharacterClass,
-  ExternalBuildSource,
 } from '@/lib/destiny/types'
 import {
   EmptyBlock,
@@ -21,22 +18,15 @@ import CommunityBuildCard from '@/app/components/destiny/CommunityBuildCard'
 import ExternalMetaBuildCard from '@/app/components/destiny/ExternalMetaBuildCard'
 import SuggestedLoadoutsSection from '@/app/components/destiny/SuggestedLoadoutsSection'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
-import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
+import { rankTopMetaLoadoutsByClass } from '@/lib/destiny/metaBuildConsensus'
 import {
   rankSuggestedLoadoutsForClass,
   suggestedLoadoutsSummary,
 } from '@/lib/destiny/metaBuildRanker'
 import { destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { useBungieLink } from '@/hooks/useBungieLink'
+import { useProfileData } from '@/contexts/ProfileDataContext'
 import { cn } from '@/lib/utils'
-
-interface LoadoutsResponse {
-  current: BuildSnapshot | null
-  saved: BuildSnapshot[]
-  favorites: BuildSnapshot[]
-  equipSupported: boolean
-  equipMessage: string
-}
 
 type LoadoutSection = 'mine' | 'community' | 'builder'
 
@@ -60,54 +50,42 @@ export default function ProfileLoadoutsSection({
   switchingCharacter = false,
 }: Props) {
   const [section, setSection] = useState<LoadoutSection>(initialSection)
-  const [loadouts, setLoadouts] = useState<LoadoutsResponse | null>(null)
-  const [verifiedBuilds, setVerifiedBuilds] = useState<BuildIntelligenceCard[]>([])
-  const [externalBuilds, setExternalBuilds] = useState<ExternalBuildSource[]>([])
-  const [metaResearchSummary, setMetaResearchSummary] = useState('')
-  const [loading, setLoading] = useState(true)
+  const {
+    loadoutsByCharacter,
+    builds,
+    loadoutsLoading,
+    buildsLoading,
+    ensureLoadouts,
+    ensureBuilds,
+  } = useProfileData()
   const bungie = useBungieLink()
   const t = getDestinyTheme(darkMode)
 
+  const loadoutKey = activeCharacterId ?? 'default'
+  const loadouts = loadoutsByCharacter[loadoutKey] ?? null
+  const verifiedBuilds = builds?.verifiedBuilds ?? []
+  const externalBuilds = builds?.externalBuilds ?? []
+  const metaResearchSummary = builds?.metaResearchSummary ?? ''
+  const loading =
+    (loadoutsLoading && !loadouts && section !== 'builder') ||
+    (buildsLoading && !builds && section !== 'builder')
+
   const activeClass =
     characters.find((c) => c.characterId === activeCharacterId)?.characterClass ?? characterClass
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const loadoutQs = activeCharacterId
-        ? `?characterId=${encodeURIComponent(activeCharacterId)}`
-        : ''
-      const [loadoutRes, buildsRes] = await Promise.all([
-        fetch(`/api/destiny/loadouts${loadoutQs}`, { credentials: 'include' }),
-        fetch('/api/destiny/builds', { credentials: 'include' }),
-      ])
-      if (loadoutRes.ok) setLoadouts(await loadoutRes.json())
-      if (buildsRes.ok) {
-        const json = await buildsRes.json()
-        setVerifiedBuilds(json.verifiedBuilds ?? [])
-        setExternalBuilds(json.externalBuilds ?? [])
-        setMetaResearchSummary(json.metaResearchSummary ?? '')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [activeCharacterId])
 
   useEffect(() => {
     setSection(initialSection)
   }, [initialSection])
 
   useEffect(() => {
-    void load()
-  }, [load, bungie.linked])
+    if (!bungie.linked) return
+    if (section !== 'builder') {
+      void ensureLoadouts(activeCharacterId)
+      void ensureBuilds()
+    }
+  }, [activeCharacterId, bungie.linked, ensureLoadouts, ensureBuilds, section])
 
-  useEffect(() => {
-    const onRefresh = () => void load()
-    window.addEventListener('topnest-profile-refresh', onRefresh)
-    return () => window.removeEventListener('topnest-profile-refresh', onRefresh)
-  }, [load])
-
-  const topByClass = rankTopLoadoutsByClass(verifiedBuilds, 5)
+  const topMetaByClass = useMemo(() => rankTopMetaLoadoutsByClass(externalBuilds, 5), [externalBuilds])
   const suggestedPicks = useMemo(
     () => rankSuggestedLoadoutsForClass(activeClass, externalBuilds, verifiedBuilds, 4),
     [activeClass, externalBuilds, verifiedBuilds]
@@ -223,7 +201,7 @@ export default function ProfileLoadoutsSection({
           <GlassCard darkMode={darkMode}>
             <SectionTitle
               title="Meta builds (last 4 weeks)"
-              subtitle="Researched from Blueberries.gg, light.gg, togame.io, builders.gg"
+              subtitle="Researched from Blueberries.gg, light.gg, togame.io, D2Foundry, and builders.gg — ranked by cross-site consensus"
               darkMode={darkMode}
             />
             {metaResearchSummary && (
@@ -246,9 +224,9 @@ export default function ProfileLoadoutsSection({
 
           <TopLoadoutsByClass
             darkMode={darkMode}
-            topByClass={topByClass}
-            title="Top loadouts by class"
-            subtitle="Ranked from verified community clears"
+            topByClass={topMetaByClass}
+            title="Top meta loadouts by class"
+            subtitle="Ranked by cross-site consensus from external build research"
           />
 
           <GlassCard darkMode={darkMode}>

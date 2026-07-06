@@ -354,7 +354,7 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
         topByClass={data.topLoadoutsByClass}
         compact
         title="Top loadouts this season"
-        subtitle="Two most-used builds per class from verified clears"
+        subtitle="Top meta picks per class — cross-referenced across Blueberries, light.gg, togame.io, and D2Foundry"
       />
     </div>
     </>

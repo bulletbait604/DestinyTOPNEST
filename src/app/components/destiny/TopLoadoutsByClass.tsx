@@ -1,8 +1,9 @@
 ﻿'use client'
 
-import type { BuildIntelligenceCard, DestinyCharacterClass } from '@/lib/destiny/types'
+import type { BuildIntelligenceCard, DestinyCharacterClass, ExternalBuildSource } from '@/lib/destiny/types'
 import { GlassCard, SectionTitle, EmptyBlock } from '@/app/components/destiny/DestinyUi'
 import CommunityBuildCard from '@/app/components/destiny/CommunityBuildCard'
+import ExternalMetaBuildCard from '@/app/components/destiny/ExternalMetaBuildCard'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
@@ -12,20 +13,34 @@ const CLASS_LABELS: Record<DestinyCharacterClass, string> = {
   warlock: 'Warlock',
 }
 
-interface Props {
-  darkMode: boolean
+type MetaProps = {
+  variant?: 'meta'
+  topByClass: Record<DestinyCharacterClass, ExternalBuildSource[]>
+}
+
+type VerifiedProps = {
+  variant: 'verified'
   topByClass: Record<DestinyCharacterClass, BuildIntelligenceCard[]>
+}
+
+interface BaseProps {
+  darkMode: boolean
   compact?: boolean
   title?: string
   subtitle?: string
 }
 
+type Props = BaseProps & (MetaProps | VerifiedProps)
+
 export default function TopLoadoutsByClass({
   darkMode,
   topByClass,
   compact,
-  title = 'Top loadouts by class',
-  subtitle = 'Most-used builds from verified clears this season',
+  variant = 'meta',
+  title = variant === 'meta' ? 'Top meta loadouts by class' : 'Top loadouts by class',
+  subtitle = variant === 'meta'
+    ? 'Cross-referenced from Blueberries.gg, light.gg, togame.io, and more'
+    : 'Most-used builds from verified clears this season',
 }: Props) {
   const t = getDestinyTheme(darkMode)
   const hasAny = (['titan', 'hunter', 'warlock'] as const).some((c) => topByClass[c]?.length)
@@ -36,8 +51,12 @@ export default function TopLoadoutsByClass({
         <SectionTitle title={title} subtitle={subtitle} darkMode={darkMode} />
         <EmptyBlock
           darkMode={darkMode}
-          message="No community loadout data yet"
-          hint="Sync verified runs from Home after linking Bungie."
+          message={variant === 'meta' ? 'No meta loadout data yet' : 'No community loadout data yet'}
+          hint={
+            variant === 'meta'
+              ? 'External meta is refreshed on a rolling 4-week research schedule.'
+              : 'Sync verified runs from Home after linking Bungie.'
+          }
         />
       </GlassCard>
     )
@@ -52,9 +71,23 @@ export default function TopLoadoutsByClass({
             <p className={cn('d2-class-divider', `d2-class-${cls}`)}>{CLASS_LABELS[cls]}</p>
             <div className="space-y-3">
               {topByClass[cls]?.length ? (
-                topByClass[cls].map((b) => (
-                  <CommunityBuildCard key={b.id} build={b} darkMode={darkMode} compact={compact} />
-                ))
+                topByClass[cls].map((b) =>
+                  variant === 'verified' ? (
+                    <CommunityBuildCard
+                      key={(b as BuildIntelligenceCard).id}
+                      build={b as BuildIntelligenceCard}
+                      darkMode={darkMode}
+                      compact={compact}
+                    />
+                  ) : (
+                    <ExternalMetaBuildCard
+                      key={(b as ExternalBuildSource).id}
+                      build={b as ExternalBuildSource}
+                      darkMode={darkMode}
+                      compact={compact}
+                    />
+                  )
+                )
               ) : (
                 <p className={cn('text-sm', t.muted)}>No data for {CLASS_LABELS[cls]} yet.</p>
               )}

@@ -520,6 +520,24 @@ a { color: inherit; text-decoration: none; }
     }
   }
 
+  .tn-home-solo-preview {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    padding: 0.75rem;
+  }
+
+  .tn-home-solo-label {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--tn-solar);
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+
   .tn-home-hero-center {
     display: flex;
     flex-direction: column;
