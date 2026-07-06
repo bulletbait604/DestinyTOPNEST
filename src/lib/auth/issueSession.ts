@@ -5,6 +5,7 @@ import { getSessionSecret, signSessionJwt } from '@/lib/auth/sessionJwt'
 import { SESSION_MAX_AGE_SEC } from '@/lib/auth/sessionConfig'
 import type { VerifiedUser, UserRole } from '@/lib/auth/verifyAuth'
 import { capOwnerRole } from '@/lib/home/ownerIdentity'
+import { isAllowlistedOwner } from '@/lib/ownerAllowlist'
 import { getSessionCookieOptions } from '@/lib/sessionCookie'
 
 /** Issue a Bungie-backed session JWT after OAuth login or reconnect. */
@@ -59,7 +60,10 @@ export async function ensureSiteUserRecord(
   const db = client.db(getMongoDbName())
 
   const existing = await db.collection('users').findOne({ username: normalized })
-  const role = capOwnerRole(normalized, (existing?.role as UserRole) || 'free')
+  let role = capOwnerRole(normalized, (existing?.role as UserRole) || 'free')
+  if (isAllowlistedOwner(normalized, bungieDisplayName) && role !== 'owner' && role !== 'admin') {
+    role = 'owner'
+  }
 
   await db.collection('users').updateOne(
     { username: normalized },

@@ -9,8 +9,8 @@ export function isStaffRole(role: string | undefined): boolean {
   return role === 'admin' || role === 'owner'
 }
 
-export function isOwnerActor(_role: string | undefined, username: string): boolean {
-  return isAllowlistedOwner(username)
+export function isOwnerActor(_role: string | undefined, username: string, displayName?: string): boolean {
+  return isAllowlistedOwner(username, displayName)
 }
 
 async function staffRoleFromDb(username: string): Promise<string | undefined> {
@@ -22,7 +22,7 @@ async function staffRoleFromDb(username: string): Promise<string | undefined> {
 /** Requires admin or owner (JWT + Mongo role fallback). */
 export async function verifyStaffUser(req: NextRequest): Promise<VerifiedUser> {
   const user = await verifyAuth(req)
-  if (isStaffRole(user.role) || isAllowlistedOwner(user.username)) {
+  if (isStaffRole(user.role) || isAllowlistedOwner(user.username, user.displayName)) {
     return user
   }
   const dbRole = await staffRoleFromDb(user.username)
@@ -37,12 +37,12 @@ export async function verifyStaffUser(req: NextRequest): Promise<VerifiedUser> {
 /** Requires owner (or allowlisted owner username). */
 export async function verifyOwnerUser(req: NextRequest): Promise<VerifiedUser> {
   const user = await verifyAuth(req)
-  if (isOwnerActor(user.role, user.username)) {
+  if (isOwnerActor(user.role, user.username, user.displayName)) {
     return user
   }
   const dbRole = await staffRoleFromDb(user.username)
   const effectiveDbRole = dbRole ? capOwnerRole(user.username, dbRole as VerifiedUser['role']) : undefined
-  if (isOwnerActor(effectiveDbRole, user.username)) {
+  if (isOwnerActor(effectiveDbRole, user.username, user.displayName)) {
     user.role = effectiveDbRole as VerifiedUser['role']
     return user
   }

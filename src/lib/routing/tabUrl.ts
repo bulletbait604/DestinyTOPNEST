@@ -42,6 +42,16 @@ export function syncTabToUrl(tab: DestinyTopNestTab) {
   window.history.replaceState(null, '', next)
 }
 
+export const DESTINY_TAB_NAV_EVENT = 'destiny-topnest:tab'
+
+/** Update URL and notify the shell to switch tabs (e.g. header Settings → Admin). */
+export function navigateDestinyTab(tab: DestinyTopNestTab) {
+  syncTabToUrl(tab)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(DESTINY_TAB_NAV_EVENT, { detail: tab }))
+  }
+}
+
 export function defaultBungieReturnPath(): string {
   return '/'
 }

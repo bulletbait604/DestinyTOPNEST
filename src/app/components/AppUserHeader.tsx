@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2, LogOut, RefreshCw } from 'lucide-react'
+import { Loader2, LogOut, RefreshCw, Settings } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useBungieLink, SYNC_RECENT_MS } from '@/hooks/useBungieLink'
 import { useAutoBungieSync } from '@/hooks/useAutoBungieSync'
@@ -9,9 +9,16 @@ import { cn } from '@/lib/utils'
 interface Props {
   displayName: string
   onLogout: () => void
+  showAdminSettings?: boolean
+  onOpenAdmin?: () => void
 }
 
-export default function AppUserHeader({ displayName, onLogout }: Props) {
+export default function AppUserHeader({
+  displayName,
+  onLogout,
+  showAdminSettings = false,
+  onOpenAdmin,
+}: Props) {
   const bungie = useBungieLink()
   useAutoBungieSync(bungie)
   const [, setSyncTick] = useState(0)
@@ -71,17 +78,34 @@ export default function AppUserHeader({ displayName, onLogout }: Props) {
           ) : null}
         </div>
       </div>
-      <button
-        type="button"
-        onClick={onLogout}
-        className={cn(
-          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white/75',
-          'ring-1 ring-d2-arc/25 hover:bg-d2-arc/10 transition-colors shrink-0'
-        )}
-      >
-        <LogOut className="w-3.5 h-3.5" />
-        Log out
-      </button>
+      <div className="flex items-center gap-2 shrink-0">
+        {showAdminSettings ? (
+          <button
+            type="button"
+            title="Admin settings"
+            aria-label="Admin settings"
+            onClick={onOpenAdmin}
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white/75',
+              'ring-1 ring-amber-400/30 hover:bg-amber-400/10 transition-colors'
+            )}
+          >
+            <Settings className="w-3.5 h-3.5" />
+            Settings
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={onLogout}
+          className={cn(
+            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white/75',
+            'ring-1 ring-d2-arc/25 hover:bg-d2-arc/10 transition-colors shrink-0'
+          )}
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          Log out
+        </button>
+      </div>
     </header>
   )
 }

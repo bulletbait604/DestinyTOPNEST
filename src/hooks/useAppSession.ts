@@ -8,6 +8,7 @@ export interface AppUser {
   username: string
   displayName: string
   role: string
+  isStaff?: boolean
   bungieLinked?: boolean
   bungieTokenHealthy?: boolean
 }
@@ -27,6 +28,7 @@ export function useAppSession() {
           username: data.username,
           displayName: data.displayName ?? data.username,
           role: data.role,
+          isStaff: Boolean(data.isStaff),
           bungieLinked: data.bungieLinked,
           bungieTokenHealthy: data.bungieTokenHealthy,
         })
@@ -85,6 +87,7 @@ export function useAppSession() {
     login,
     logout,
     refresh,
-    isAdmin: user?.role === 'admin' || user?.role === 'owner',
+    isAdmin:
+      Boolean(user?.isStaff) || user?.role === 'admin' || user?.role === 'owner',
   }
 }

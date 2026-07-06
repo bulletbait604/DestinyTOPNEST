@@ -7,6 +7,7 @@ import {
   parseTabFromSearch,
   stripOAuthParams,
   syncTabToUrl,
+  DESTINY_TAB_NAV_EVENT,
 } from '@/lib/routing/tabUrl'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import DestinyNav from '@/app/components/destiny/DestinyNav'
@@ -84,6 +85,18 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
     }
     stripOAuthParams()
   }, [isAdmin])
+
+  useEffect(() => {
+    const onTabNav = (event: Event) => {
+      const tab = (event as CustomEvent<DestinyTopNestTab>).detail
+      if (!tab || !isDestinyTopNestTab(tab)) return
+      if (tab === 'admin' && !isAdmin) return
+      handleTabChange(tab)
+    }
+
+    window.addEventListener(DESTINY_TAB_NAV_EVENT, onTabNav)
+    return () => window.removeEventListener(DESTINY_TAB_NAV_EVENT, onTabNav)
+  }, [isAdmin, handleTabChange])
 
   useEffect(() => {
     if (!restored.current) return

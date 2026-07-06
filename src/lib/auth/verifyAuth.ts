@@ -137,10 +137,13 @@ export async function verifyAuth(req: NextRequest): Promise<VerifiedUser> {
     }
   }
 
-  user.role = capOwnerRole(user.username, (dbUser.role as UserRole) ?? 'free')
-
   if (typeof dbUser.bungieDisplayName === 'string' && dbUser.bungieDisplayName.trim()) {
     user.displayName = dbUser.bungieDisplayName
+  }
+
+  user.role = capOwnerRole(user.username, (dbUser.role as UserRole) ?? 'free')
+  if (isAllowlistedOwner(user.username, user.displayName) && user.role !== 'owner' && user.role !== 'admin') {
+    user.role = 'owner'
   }
 
   if (await isUserBanned(user.username)) {

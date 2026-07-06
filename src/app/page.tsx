@@ -10,7 +10,7 @@ import LoginTitleScreen from '@/app/components/LoginTitleScreen'
 import DestinyTopNestApp from '@/app/components/DestinyTopNestApp'
 import SiteBackdrop from '@/app/components/SiteBackdrop'
 import { useAppSession } from '@/hooks/useAppSession'
-import { stripUrlParams } from '@/lib/routing/tabUrl'
+import { stripUrlParams, navigateDestinyTab } from '@/lib/routing/tabUrl'
 
 export default function HomePage() {
   const { mounted, user, loading, login, logout, refresh, isAdmin } = useAppSession()
@@ -74,7 +74,12 @@ export default function HomePage() {
 
   return (
     <SiteBackdrop variant="hub">
-      <AppUserHeader displayName={user.displayName} onLogout={() => void logout()} />
+      <AppUserHeader
+        displayName={user.displayName}
+        onLogout={() => void logout()}
+        showAdminSettings={isAdmin}
+        onOpenAdmin={() => navigateDestinyTab('admin')}
+      />
       <main className="container mx-auto w-full max-w-7xl px-2 sm:px-4 py-2 sm:py-3 flex-1">
         <DestinyTopNestApp darkMode isAdmin={isAdmin} />
       </main>

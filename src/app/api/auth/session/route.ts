@@ -1,6 +1,8 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { refreshSessionCookie } from '@/lib/auth/issueSession'
 import { verifyAuth, createAuthErrorResponse, AuthError } from '@/lib/auth/verifyAuth'
+import { isStaffRole } from '@/lib/auth/staffAccess'
+import { isAllowlistedOwner } from '@/lib/ownerAllowlist'
 import { SESSION_MAX_AGE_DAYS } from '@/lib/auth/sessionConfig'
 import { getDestinyUserBySiteUserId, getValidAccessToken } from '@/lib/destiny/destinyUserStore'
 
@@ -33,6 +35,7 @@ export async function GET(req: NextRequest) {
       username: user.username,
       displayName: user.displayName,
       role: user.role,
+      isStaff: isStaffRole(user.role) || isAllowlistedOwner(user.username, user.displayName),
       bungieLinked,
       bungieTokenHealthy,
       sessionExpiresInDays: SESSION_MAX_AGE_DAYS,
