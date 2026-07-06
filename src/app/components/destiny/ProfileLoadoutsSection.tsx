@@ -1,19 +1,31 @@
 ﻿'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Hammer } from 'lucide-react'
-import type { BuildIntelligenceCard, BuildSnapshot, ExternalBuildSource } from '@/lib/destiny/types'
+import type {
+  BuildIntelligenceCard,
+  BuildSnapshot,
+  CharacterSummary,
+  DestinyCharacterClass,
+  ExternalBuildSource,
+} from '@/lib/destiny/types'
 import {
   EmptyBlock,
   GlassCard,
   SectionTitle,
   SegmentedControl,
 } from '@/app/components/destiny/DestinyUi'
+import { CharacterTileRow } from '@/app/components/destiny/CharacterTile'
 import LoadoutCard from '@/app/components/destiny/LoadoutCard'
 import CommunityBuildCard from '@/app/components/destiny/CommunityBuildCard'
 import ExternalMetaBuildCard from '@/app/components/destiny/ExternalMetaBuildCard'
+import SuggestedLoadoutsSection from '@/app/components/destiny/SuggestedLoadoutsSection'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
+import {
+  rankSuggestedLoadoutsForClass,
+  suggestedLoadoutsSummary,
+} from '@/lib/destiny/metaBuildRanker'
 import { destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { useBungieLink } from '@/hooks/useBungieLink'
 import { cn } from '@/lib/utils'
@@ -31,9 +43,22 @@ type LoadoutSection = 'mine' | 'community' | 'builder'
 interface Props {
   darkMode: boolean
   initialSection?: LoadoutSection
+  characters?: CharacterSummary[]
+  activeCharacterId?: string
+  characterClass?: DestinyCharacterClass
+  onCharacterSelect?: (characterId: string) => void
+  switchingCharacter?: boolean
 }
 
-export default function ProfileLoadoutsSection({ darkMode, initialSection = 'mine' }: Props) {
+export default function ProfileLoadoutsSection({
+  darkMode,
+  initialSection = 'mine',
+  characters = [],
+  activeCharacterId,
+  characterClass = 'hunter',
+  onCharacterSelect,
+  switchingCharacter = false,
+}: Props) {
   const [section, setSection] = useState<LoadoutSection>(initialSection)
   const [loadouts, setLoadouts] = useState<LoadoutsResponse | null>(null)
   const [verifiedBuilds, setVerifiedBuilds] = useState<BuildIntelligenceCard[]>([])
@@ -43,11 +68,17 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
   const bungie = useBungieLink()
   const t = getDestinyTheme(darkMode)
 
+  const activeClass =
+    characters.find((c) => c.characterId === activeCharacterId)?.characterClass ?? characterClass
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
+      const loadoutQs = activeCharacterId
+        ? `?characterId=${encodeURIComponent(activeCharacterId)}`
+        : ''
       const [loadoutRes, buildsRes] = await Promise.all([
-        fetch('/api/destiny/loadouts', { credentials: 'include' }),
+        fetch(`/api/destiny/loadouts${loadoutQs}`, { credentials: 'include' }),
         fetch('/api/destiny/builds', { credentials: 'include' }),
       ])
       if (loadoutRes.ok) setLoadouts(await loadoutRes.json())
@@ -60,7 +91,7 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [activeCharacterId])
 
   useEffect(() => {
     setSection(initialSection)
@@ -77,6 +108,14 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
   }, [load])
 
   const topByClass = rankTopLoadoutsByClass(verifiedBuilds, 5)
+  const suggestedPicks = useMemo(
+    () => rankSuggestedLoadoutsForClass(activeClass, externalBuilds, verifiedBuilds, 6),
+    [activeClass, externalBuilds, verifiedBuilds]
+  )
+  const suggestedSummary = useMemo(
+    () => suggestedLoadoutsSummary(activeClass, suggestedPicks),
+    [activeClass, suggestedPicks]
+  )
 
   return (
     <div className="space-y-6">
@@ -92,12 +131,33 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
         ]}
       />
 
-      {loading ? (
+      {loading || switchingCharacter ? (
         <GlassCard darkMode={darkMode}>
-          <p className={cn('text-sm text-center py-8', t.muted)}>Loading loadouts…</p>
+          <p className={cn('text-sm text-center py-8', t.muted)}>
+            {switchingCharacter ? 'Switching guardian…' : 'Loading loadouts…'}
+          </p>
         </GlassCard>
       ) : section === 'mine' ? (
         <>
+          {characters.length > 0 && onCharacterSelect ? (
+            <GlassCard darkMode={darkMode} padding="compact">
+              <SectionTitle
+                title="Active guardian"
+                subtitle="Loadout and suggestions follow the selected character"
+                darkMode={darkMode}
+                compact
+              />
+              <CharacterTileRow
+                characters={characters}
+                activeCharacterId={activeCharacterId}
+                onCharacterSelect={onCharacterSelect}
+                selectable
+                switching={switchingCharacter}
+                compact
+              />
+            </GlassCard>
+          ) : null}
+
           {loadouts?.equipMessage && !loadouts.current && (
             <p className={cn('text-sm leading-relaxed', t.muted)}>{loadouts.equipMessage}</p>
           )}
@@ -150,6 +210,13 @@ export default function ProfileLoadoutsSection({ darkMode, initialSection = 'min
               </div>
             </GlassCard>
           ) : null}
+
+          <SuggestedLoadoutsSection
+            darkMode={darkMode}
+            characterClass={activeClass}
+            picks={suggestedPicks}
+            summary={suggestedSummary}
+          />
         </>
       ) : section === 'community' ? (
         <>

@@ -23,11 +23,17 @@ export default function CommunityBuildCard({
   const t = getDestinyTheme(darkMode)
 
   const weaponRows = [
-    { slot: 'Exo', item: build.exoticArmorRef, fallback: build.exoticArmor },
+    ...(build.exoticWeaponRef || build.exoticWeapon
+      ? [{ slot: 'Exo W', item: build.exoticWeaponRef, fallback: build.exoticWeapon }]
+      : []),
     { slot: 'W1', item: build.weaponRefs?.[0], fallback: build.weapons[0] },
     { slot: 'W2', item: build.weaponRefs?.[1], fallback: build.weapons[1] },
     { slot: 'W3', item: build.weaponRefs?.[2], fallback: build.weapons[2] },
-  ]
+  ].filter((row) => row.fallback || row.item)
+
+  const armorRows = build.exoticArmor
+    ? [{ slot: 'Exo', item: build.exoticArmorRef, fallback: build.exoticArmor }]
+    : []
 
   return (
     <div className="d2-panel-inset p-4 rounded-lg space-y-3">
@@ -45,7 +51,10 @@ export default function CommunityBuildCard({
         subclass={build.subclass}
         darkMode={darkMode}
       />
-      <WeaponArmoryTable rows={weaponRows} title="Gear" showHeader={!compact} />
+      <WeaponArmoryTable rows={weaponRows} title="Weapons" showHeader={!compact} />
+      {armorRows.length > 0 ? (
+        <WeaponArmoryTable rows={armorRows} title="Armor" showHeader={!compact} />
+      ) : null}
       {!compact && (
         <>
           <div className="grid grid-cols-2 gap-2 text-xs">

@@ -126,7 +126,15 @@ export default function ProfilePanel({
           <FireteamReviewSection darkMode={darkMode} linked={linked} />
         </div>
       ) : view === 'loadouts' ? (
-        <ProfileLoadoutsSection darkMode={darkMode} initialSection={initialLoadoutSection} />
+        <ProfileLoadoutsSection
+          darkMode={darkMode}
+          initialSection={initialLoadoutSection}
+          characters={profile.characters}
+          activeCharacterId={profile.activeCharacterId}
+          characterClass={profile.characterClass}
+          onCharacterSelect={(id) => void handleCharacterSelect(id)}
+          switchingCharacter={switchingCharacter}
+        />
       ) : (
         <>
           {linked && (

@@ -127,7 +127,7 @@ export function buildWeaponRows(build: {
   exoticArmorRef?: DestinyIconRef
   exoticArmor?: string
 }): ArmoryRow[] {
-  return [
+  const rows: ArmoryRow[] = [
     {
       slot: 'Kin',
       item: build.kineticWeaponRef,
@@ -146,10 +146,15 @@ export function buildWeaponRows(build: {
       fallback: build.powerWeapon,
       perks: build.powerWeaponPerks,
     },
-    {
-      slot: 'Exo',
-      item: build.exoticWeaponRef ?? build.exoticArmorRef,
-      fallback: build.exoticWeapon ?? build.exoticArmor,
-    },
   ]
+
+  if (build.exoticWeaponRef || build.exoticWeapon) {
+    rows.push({
+      slot: 'Exo W',
+      item: build.exoticWeaponRef,
+      fallback: build.exoticWeapon ?? 'Exotic weapon',
+    })
+  }
+
+  return rows.filter((row) => (row.fallback && row.fallback !== '—') || row.item?.name)
 }

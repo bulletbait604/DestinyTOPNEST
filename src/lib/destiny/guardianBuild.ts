@@ -5,7 +5,7 @@
 import { getCharacterLoadout } from '@/lib/destiny/bungieClient'
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 import { resolveInventoryItem, resolveDefinition, type ManifestDefinitionInfo } from '@/lib/destiny/manifest'
-import type { BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
+import type { ArmorPiece, ArmorSlotLabel, BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
 import { ARMOR_STAT_HASH_LABEL } from '@/lib/destiny/armorStats'
 
 const CLASS_MAP: Record<number, DestinyCharacterClass> = {
@@ -21,7 +21,12 @@ const WEAPON_BUCKETS: Record<number, 'kinetic' | 'energy' | 'power'> = {
 }
 
 const SUBCLASS_BUCKET = 3284755031
-const ARMOR_BUCKETS = new Set([14239492, 20886954, 1585787867, 3551918588])
+const ARMOR_BUCKETS: Record<number, ArmorSlotLabel> = {
+  14239492: 'helmet',
+  3551918588: 'gauntlets',
+  20886954: 'chest',
+  1585787867: 'legs',
+}
 
 type PlugCategory = 'super' | 'class' | 'jump' | 'melee' | 'grenade' | 'aspect' | 'fragment' | 'other'
 
@@ -44,6 +49,34 @@ function isWeaponPerkPlug(info: ManifestDefinitionInfo): boolean {
   if (!type && !name) return false
   if (WEAPON_PERK_SKIP.test(type) || WEAPON_PERK_SKIP.test(name)) return false
   return /perk|trait/i.test(type)
+}
+
+function isArmorModPlug(info: ManifestDefinitionInfo): boolean {
+  const type = (info.itemTypeDisplayName ?? '').toLowerCase()
+  const name = info.name.toLowerCase()
+  if (WEAPON_PERK_SKIP.test(type) || WEAPON_PERK_SKIP.test(name)) return false
+  return /armor mod|combat style|activity mod|raid mod|dungeon mod|ghost mod|^mod\b/i.test(type)
+}
+
+async function resolveArmorMods(
+  itemInstanceId: string | undefined,
+  socketsData?: Record<
+    string,
+    { sockets?: Array<{ plugHash?: number; isEnabled?: boolean; isVisible?: boolean }> }
+  >
+): Promise<DestinyIconRef[]> {
+  if (!itemInstanceId) return []
+  const sockets = socketsData?.[itemInstanceId]?.sockets ?? []
+  const mods: DestinyIconRef[] = []
+
+  for (const socket of sockets) {
+    if (!socket.plugHash || socket.isEnabled === false) continue
+    const info = await resolveInventoryItem(socket.plugHash, 'Mod')
+    if (!isArmorModPlug(info)) continue
+    mods.push(iconRefFromInfo(info))
+  }
+
+  return mods
 }
 
 async function resolveWeaponPerks(
@@ -173,6 +206,8 @@ export async function fetchCharacterBuild(
   const fragmentRefs: DestinyIconRef[] = []
   const plugsByCategory: Partial<Record<PlugCategory, DestinyIconRef>> = {}
   const stats: Record<string, number> = {}
+  const armorPieces: ArmorPiece[] = []
+  const armorModNames: string[] = []
 
   for (const item of items) {
     if (!item.itemHash || !item.bucketHash) continue
@@ -222,11 +257,23 @@ export async function fetchCharacterBuild(
         exoticWeapon = name
         exoticWeaponRef = ref
       }
-    } else if (ARMOR_BUCKETS.has(bucket)) {
+    } else if (ARMOR_BUCKETS[bucket]) {
+      const slot = ARMOR_BUCKETS[bucket]
       if (isExotic) {
         exoticArmor = name
         exoticArmorRef = ref
       }
+      const pieceMods = await resolveArmorMods(item.itemInstanceId, profile.itemComponents?.sockets?.data)
+      for (const mod of pieceMods) {
+        if (!armorModNames.includes(mod.name)) armorModNames.push(mod.name)
+      }
+      armorPieces.push({
+        slot,
+        name,
+        ref,
+        mods: pieceMods,
+        isExotic,
+      })
       const statRow = profile.itemComponents?.stats?.data?.[item.itemInstanceId ?? '']
       if (statRow?.stats) {
         for (const [hash, val] of Object.entries(statRow.stats)) {
@@ -236,6 +283,9 @@ export async function fetchCharacterBuild(
       }
     }
   }
+
+  const slotOrder: ArmorSlotLabel[] = ['helmet', 'gauntlets', 'chest', 'legs']
+  armorPieces.sort((a, b) => slotOrder.indexOf(a.slot) - slotOrder.indexOf(b.slot))
 
   const socketData = profile.itemComponents?.sockets?.data
   const [kineticWeaponPerks, energyWeaponPerks, powerWeaponPerks] = await Promise.all([
@@ -268,6 +318,7 @@ export async function fetchCharacterBuild(
     abilities: [superAbility, classAbility, jump, melee, grenade].filter((a) => a !== '—'),
     exoticArmor,
     exoticWeapon,
+    armorPieces,
     kineticWeapon: weapons.kinetic ?? '—',
     energyWeapon: weapons.energy ?? '—',
     powerWeapon: weapons.power ?? '—',
@@ -279,7 +330,7 @@ export async function fetchCharacterBuild(
     kineticWeaponPerks,
     energyWeaponPerks,
     powerWeaponPerks,
-    armorMods: [],
+    armorMods: armorModNames,
     artifactPerks: [],
     stats,
     activityId: 0,

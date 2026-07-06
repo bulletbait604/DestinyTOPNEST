@@ -70,6 +70,7 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     jumpRef,
     meleeRef,
     grenadeRef,
+    armorPieces,
   ] = await Promise.all([
     enrichOrResolve(build.classRef, build.characterClass).then(
       (ref) => ref ?? resolveClassIcon(build.characterClass)
@@ -115,6 +116,17 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     enrichOrResolve(build.jumpRef, build.abilities[2]),
     enrichOrResolve(build.meleeRef, build.abilities[3], 'DestinySandboxPerkDefinition'),
     enrichOrResolve(build.grenadeRef, build.abilities[4]),
+    build.armorPieces?.length
+      ? Promise.all(
+          build.armorPieces.map(async (piece) => {
+            const ref = await enrichOrResolve(piece.ref, piece.name)
+            const mods = piece.mods?.length
+              ? await enrichPerkList(piece.mods)
+              : piece.mods
+            return { ...piece, ref: ref ?? piece.ref, mods }
+          })
+        )
+      : Promise.resolve(build.armorPieces),
   ])
 
   return {
@@ -136,6 +148,7 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     jumpRef,
     meleeRef,
     grenadeRef,
+    armorPieces,
   }
 }
 
@@ -330,15 +343,47 @@ export async function enrichLoadoutsResponse(data: {
 }
 
 async function enrichExternalBuild(build: ExternalBuildSource): Promise<ExternalBuildSource> {
-  const [classRef, subclassRef, exoticArmorRef, exoticWeaponRef, weaponRefs, activityRef] =
-    await Promise.all([
-      resolveClassIcon(build.class),
-      resolveSubclass(build.subclass),
-      build.exoticArmor ? resolveByName(build.exoticArmor) : Promise.resolve(undefined),
-      build.exoticWeapon ? resolveByName(build.exoticWeapon) : Promise.resolve(undefined),
-      Promise.all((build.weapons ?? []).map((w) => resolveByName(w))),
-      build.activityFocus ? resolveActivity(build.activityFocus) : Promise.resolve(undefined),
-    ])
+  const slots = ['helmet', 'gauntlets', 'chest', 'legs'] as const
+  const [
+    classRef,
+    subclassRef,
+    exoticArmorRef,
+    exoticWeaponRef,
+    weaponRefs,
+    activityRef,
+    aspectRefs,
+    fragmentRefs,
+    legendaryArmorRefs,
+  ] = await Promise.all([
+    resolveClassIcon(build.class),
+    resolveSubclass(build.subclass),
+    build.exoticArmor ? resolveByName(build.exoticArmor) : Promise.resolve(undefined),
+    build.exoticWeapon ? resolveByName(build.exoticWeapon) : Promise.resolve(undefined),
+    Promise.all((build.weapons ?? []).map((w) => resolveByName(w))),
+    build.activityFocus ? resolveActivity(build.activityFocus) : Promise.resolve(undefined),
+    build.aspects?.length
+      ? Promise.all(build.aspects.map((a) => resolveByName(a, 'DestinySandboxPerkDefinition')))
+      : Promise.resolve(undefined),
+    build.fragments?.length
+      ? Promise.all(build.fragments.map((f) => resolveByName(f, 'DestinySandboxPerkDefinition')))
+      : Promise.resolve(undefined),
+    build.legendaryArmor
+      ? Promise.all(
+          slots.map(async (slot) => {
+            const name = build.legendaryArmor?.[slot]
+            if (!name) return undefined
+            const ref = await resolveByName(name)
+            return ref ? ([slot, ref] as const) : undefined
+          })
+        ).then((entries) => {
+          const refs: NonNullable<ExternalBuildSource['legendaryArmorRefs']> = {}
+          for (const entry of entries) {
+            if (entry) refs[entry[0]] = entry[1]
+          }
+          return Object.keys(refs).length ? refs : undefined
+        })
+      : Promise.resolve(undefined),
+  ])
 
   return {
     ...build,
@@ -348,6 +393,9 @@ async function enrichExternalBuild(build: ExternalBuildSource): Promise<External
     exoticWeaponRef,
     weaponRefs,
     activityRef,
+    aspectRefs,
+    fragmentRefs,
+    legendaryArmorRefs,
   }
 }
 

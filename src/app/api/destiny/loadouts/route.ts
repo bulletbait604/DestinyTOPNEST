@@ -33,13 +33,17 @@ export async function GET(req: NextRequest) {
     const membershipType = stored.destinyMembershipType
     const membershipId = stored.bungieMembershipId
 
-    let activeCharacterId = stored.activeCharacterId
+    const requestedCharacterId = req.nextUrl.searchParams.get('characterId')?.trim() || undefined
+    let activeCharacterId = requestedCharacterId ?? stored.activeCharacterId
     if (accessToken && membershipType && membershipId) {
       try {
         const characters = await fetchAllCharactersPresentation(membershipType, membershipId, accessToken)
-        activeCharacterId = resolveActiveCharacterId(stored.activeCharacterId, characters)
+        if (requestedCharacterId && !characters.some((c) => c.characterId === requestedCharacterId)) {
+          return NextResponse.json({ error: 'Invalid characterId' }, { status: 400 })
+        }
+        activeCharacterId = requestedCharacterId ?? resolveActiveCharacterId(stored.activeCharacterId, characters)
       } catch {
-        /* use stored active character */
+        /* use stored or requested character */
       }
     }
 

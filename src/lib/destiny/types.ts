@@ -4,6 +4,15 @@ import type { ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 
 export type DestinyPlatform = 'steam' | 'xbox' | 'playstation' | 'epic' | 'stadia'
 export type DestinyCharacterClass = 'titan' | 'hunter' | 'warlock'
+export type ArmorSlotLabel = 'helmet' | 'gauntlets' | 'chest' | 'legs'
+
+export interface ArmorPiece {
+  slot: ArmorSlotLabel
+  name: string
+  ref?: DestinyIconRef
+  mods?: DestinyIconRef[]
+  isExotic?: boolean
+}
 export type ActivityType = 'raid' | 'dungeon' | 'pantheon'
 export type VerificationStatus = 'verified' | 'pending' | 'flagged' | 'rejected'
 export type LegitimacyStatus = 'clean' | 'warning' | 'suspicious' | 'highly_suspicious'
@@ -303,6 +312,8 @@ export interface BuildSnapshot {
   abilities: string[]
   exoticArmor: string
   exoticWeapon?: string
+  /** Full equipped armor — helmet through legs. */
+  armorPieces?: ArmorPiece[]
   kineticWeapon: string
   energyWeapon: string
   powerWeapon: string
@@ -550,6 +561,11 @@ export interface ExternalBuildSource {
   exoticArmor?: string
   exoticWeapon?: string
   weapons?: string[]
+  /** Legendary armor pieces (helmet, gauntlets, chest, legs) when known. */
+  legendaryArmor?: Partial<Record<ArmorSlotLabel, string>>
+  aspects?: string[]
+  fragments?: string[]
+  armorMods?: string[]
   activityFocus?: string
   excelsIn?: string
   summary?: string
@@ -561,7 +577,12 @@ export interface ExternalBuildSource {
   exoticArmorRef?: DestinyIconRef
   exoticWeaponRef?: DestinyIconRef
   weaponRefs?: DestinyIconRef[]
+  legendaryArmorRefs?: Partial<Record<ArmorSlotLabel, DestinyIconRef>>
+  aspectRefs?: DestinyIconRef[]
+  fragmentRefs?: DestinyIconRef[]
   activityRef?: DestinyIconRef
+  aiScore?: number
+  aiScoreLabel?: string
 }
 
 export interface ClanProfile {
