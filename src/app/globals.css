@@ -864,6 +864,60 @@ a { color: inherit; text-decoration: none; }
     }
   }
 
+  /* Main nav tab heroes — larger title, description, and prize sticker */
+  .tn-home-hero-compact.tn-home-hero-tab .tn-home-title {
+    font-size: clamp(1.2rem, 3.5vw, 1.75rem);
+  }
+
+  .tn-home-hero-compact.tn-home-hero-tab .tn-home-mission-brand {
+    margin-top: 0.4rem;
+    font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+    line-height: 1.45;
+  }
+
+  .tn-home-hero-compact.tn-home-hero-tab .tn-hero-prize-sticker-inline {
+    font-size: 12px;
+    padding: 0.42rem 0.95rem;
+    letter-spacing: 0.12em;
+  }
+
+  @media (min-width: 640px) {
+    .tn-home-hero-compact.tn-home-hero-tab .tn-hero-prize-sticker-inline {
+      font-size: 13px;
+      padding: 0.48rem 1.05rem;
+    }
+  }
+
+  .tn-home-hero-compact.tn-home-hero-tab .tn-hero-prize-sticker-below-title {
+    font-size: 11px;
+    padding: 0.34rem 0.8rem;
+    margin-top: 0.45rem;
+  }
+
+  @media (min-width: 640px) {
+    .tn-home-hero-compact.tn-home-hero-tab .tn-hero-prize-sticker-below-title {
+      font-size: 12px;
+      padding: 0.38rem 0.9rem;
+      margin-top: 0.5rem;
+    }
+  }
+
+  .tn-home-hero-compact.tn-home-hero-tab .tn-home-hero-right-stack {
+    width: min(240px, 48vw);
+  }
+
+  @media (max-width: 767px) {
+    .tn-home-hero-compact.tn-home-hero-tab.tn-home-hero-has-right-stack .tn-home-hero-grid-brand {
+      padding-top: calc(5.75rem * 0.6);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .tn-home-hero-compact.tn-home-hero-tab.tn-home-hero-has-right-stack .tn-home-hero-grid-brand {
+      padding-right: calc(240px + 0.75rem);
+    }
+  }
+
   .tn-home-mission {
     margin: 0.65rem auto 0;
     max-width: 42rem;

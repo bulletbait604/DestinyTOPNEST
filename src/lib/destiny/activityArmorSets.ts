@@ -24,7 +24,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   "King's Fall": {
     setName: "Oryx's Memory",
     lightGgSlug: 'oryxs-memory',
-    iconItem: "Oryx's Memory Plate",
+    iconItem: "War Numen's Chest",
     twoPiece: {
       requiredCount: 2,
       perkName: 'Iron Sharpens Iron',
@@ -39,7 +39,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   'Vault of Glass': {
     setName: "Atheon's Memory",
     lightGgSlug: 'atheons-memory',
-    iconItem: "Atheon's Memory Plate",
+    iconItem: "Kabr's Wrath",
     twoPiece: {
       requiredCount: 2,
       perkName: 'Radiolaria Breach',
@@ -55,7 +55,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   'Garden of Salvation': {
     setName: 'Kentarch 3',
     lightGgSlug: 'kentarch-3',
-    iconItem: 'Kentarch 3 Plate',
+    iconItem: 'Plate of Transcendence',
     twoPiece: {
       requiredCount: 2,
       perkName: 'Network Admin',
@@ -70,7 +70,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   'Last Wish': {
     setName: 'Great Hunt',
     lightGgSlug: 'great-hunt',
-    iconItem: 'Great Hunt Plate',
+    iconItem: 'Plate of the Great Hunt',
     twoPiece: {
       requiredCount: 2,
       perkName: 'Taken Barrier',
@@ -85,7 +85,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   "Crota's End": {
     setName: "Crota's Memory",
     lightGgSlug: 'crotas-memory',
-    iconItem: "Crota's Memory Plate",
+    iconItem: 'Bane of Crota Shell',
     twoPiece: {
       requiredCount: 2,
       perkName: 'Cursed Fist',
@@ -100,7 +100,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   'Root of Nightmares': {
     setName: "Nezarec's Nightmare",
     lightGgSlug: 'nezarecs-nightmare',
-    iconItem: "Nezarec's Nightmare Plate",
+    iconItem: 'Plate of Agony',
     twoPiece: {
       requiredCount: 2,
       perkName: 'Bad Dreams',
@@ -145,7 +145,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   "Salvation's Edge": {
     setName: 'Promised',
     lightGgSlug: 'promised',
-    iconItem: 'Promised Plate',
+    iconItem: 'Promised Reign Vest',
     twoPiece: {
       requiredCount: 2,
       perkName: 'Stable Resonance',
@@ -160,7 +160,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   'Grasp of Avarice': {
     setName: 'Yearning Echo',
     lightGgSlug: 'yearning-echo',
-    iconItem: 'Yearning Echo Plate',
+    iconItem: 'Twisting Echo Vest',
     twoPiece: {
       requiredCount: 2,
       perkName: 'Untold Greed',
@@ -190,7 +190,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   'Spire of the Watcher': {
     setName: 'TM Custom',
     lightGgSlug: 'tm-custom',
-    iconItem: 'TM Custom Plate',
+    iconItem: 'TM-Cogburn Custom Plate',
     twoPiece: {
       requiredCount: 2,
       perkName: 'Old Martian Diplomacy',
@@ -220,7 +220,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   'Ghosts of the Deep': {
     setName: 'Taken King',
     lightGgSlug: 'taken-king',
-    iconItem: 'Taken King Plate',
+    iconItem: 'Plate of the Taken King',
     twoPiece: {
       requiredCount: 2,
       perkName: 'The Ceremony',
@@ -250,7 +250,7 @@ export const ACTIVITY_ARMOR_SET_BY_NAME: Record<string, ActivityArmorSet> = {
   Prophecy: {
     setName: 'CODA',
     lightGgSlug: 'coda',
-    iconItem: 'CODA Plate',
+    iconItem: 'Crushing Plate (CODA)',
     twoPiece: {
       requiredCount: 2,
       perkName: 'Between Poles',

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Destiny's Top Nest — Creator Pitch</title>
+  <style>
+    :root {
+      --bg: #121418;
+      --panel: #1a1d24;
+      --bronze: #c9956e;
+      --silver: #e8ecf0;
+      --muted: #9aa3b2;
+      --arc: #73d2ff;
+      --gold: #f5dc56;
+      --purple: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--silver);
+      overflow: hidden;
+      height: 100vh;
+    }
+    .deck { height: 100vh; position: relative; }
+    .slide {
+      display: none;
+      height: 100vh;
+      padding: 3rem 4rem 5rem;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 0%, rgba(115, 210, 255, 0.08), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 90% 100%, rgba(201, 149, 110, 0.12), transparent 50%),
+        var(--bg);
+    }
+    .slide.active { display: flex; flex-direction: column; justify-content: center; }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.75rem;
+      color: var(--bronze);
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-bottom: 1rem;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    }
+    h2 {
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      font-weight: 800;
+      margin-bottom: 1.25rem;
+    }
+    p, li { font-size: 1.05rem; line-height: 1.6; color: var(--muted); max-width: 52rem; }
+    .lead { font-size: 1.25rem; color: var(--silver); margin-bottom: 1.5rem; }
+    ul { margin: 1rem 0 0 1.25rem; }
+    li { margin-bottom: 0.55rem; }
+    .badge {
+      display: inline-block;
+      margin-top: 1.25rem;
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(245, 220, 86, 0.2), rgba(201, 149, 110, 0.25));
+      border: 1px solid rgba(245, 220, 86, 0.45);
+      color: var(--gold);
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+      max-width: 56rem;
+    }
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+    }
+    .card strong { display: block; color: var(--silver); margin-bottom: 0.35rem; }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.65rem 1.2rem;
+      border-radius: 10px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    .cta-app { background: linear-gradient(135deg, #a8775a, #c9956e); color: #111; }
+    .cta-discord { background: linear-gradient(135deg, #5865f2, #4752c4); color: #fff; }
+    .logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 1.25rem;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.45));
+    }
+    table {
+      width: 100%;
+      max-width: 40rem;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    th { color: var(--bronze); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    td { color: var(--silver); }
+    .nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1.25rem;
+      background: rgba(18, 20, 24, 0.92);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
+    }
+    .nav button {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--silver);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .nav button:hover { background: rgba(255,255,255,0.12); }
+    .progress { color: var(--muted); font-size: 0.85rem; }
+    .quote {
+      margin-top: 1.5rem;
+      padding-left: 1rem;
+      border-left: 3px solid var(--bronze);
+      font-style: italic;
+      color: var(--silver);
+    }
+    .note {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <!-- Edit Discord URL before sharing -->
+  <script>
+    const DISCORD_URL = 'YOUR_DISCORD_INVITE';
+    const APP_URL = 'https://topnest.app';
+  </script>
+
+  <div class="deck" id="deck">
+    <section class="slide active">
+      <img class="logo" src="../public/brand/topnest-logo.png" alt="Top Nest logo" />
+      <p class="eyebrow">Creator pitch · 2026</p>
+      <h1>Destiny's Top Nest</h1>
+      <p class="lead">The community hub where Guardians compete with honor — verified leaderboards, fireteams, and real season prizes.</p>
+      <span class="badge">$250+ PRIZE POOL · SEASON 1 JULY 1</span>
+      <div class="cta-row">
+        <a class="cta cta-app" id="cta-app-1" href="https://topnest.app">topnest.app</a>
+        <a class="cta cta-discord" id="cta-discord-1" href="#">Join Discord</a>
+      </div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">The opportunity</p>
+      <h2>Endgame needs a home base</h2>
+      <p>Raids and dungeons are social — but finding reliable fireteams and tracking real skill is still fragmented.</p>
+      <ul>
+        <li>Self-reported clears don't build trust</li>
+        <li>LFG is loud, anonymous, and easy to game</li>
+        <li>Great teammates rarely get lasting recognition</li>
+      </ul>
+      <p class="quote">Top Nest exists to unite Guardians — sparking healthy competition and rewarding friendships forged in fireteams.</p>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">The product</p>
+      <h2>What players do on Top Nest</h2>
+      <div class="grid">
+        <div class="card"><strong>Link Bungie</strong>Sync verified PGCR clears automatically.</div>
+        <div class="card"><strong>Climb boards</strong>Raid · Dungeon · Pantheon · Commanders.</div>
+        <div class="card"><strong>Find fireteams</strong>Site-native lobbies for featured activities.</div>
+        <div class="card"><strong>Vote MVPs</strong>Crown monthly Commanders with real prizes.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Leaderboards</p>
+      <h2>Four ways to be TopNest</h2>
+      <table>
+        <thead><tr><th>Board</th><th>Focus</th></tr></thead>
+        <tbody>
+          <tr><td>Raid</td><td>Verified raid clears · seasonal standings</td></tr>
+          <tr><td>Dungeon</td><td>Dungeon delvers · same scoring rules</td></tr>
+          <tr><td>Pantheon</td><td>Boss encounters = raid-equivalent points</td></tr>
+          <tr><td>Commanders</td><td>Top 3 monthly from MVP votes</td></tr>
+        </tbody>
+      </table>
+      <span class="badge">$250+ PRIZE POOL PER SEASON</span>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Scoring</p>
+      <h2>Fair, verified, community-first</h2>
+      <ul>
+        <li>Points only for <strong style="color:var(--silver)">verified full completions</strong></li>
+        <li>2 pts per clan member · 5 pts per Random Fireteam Member via Top Nest finder</li>
+        <li>MVP: +1 to vote · +3 to your pick (Commanders board)</li>
+        <li>Suspicious runs held for review — no score gaming</li>
+      </ul>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Season 1</p>
+      <h2>Season of the Monument Era</h2>
+      <p class="lead">Inaugural launch season · July 1 – July 31, 2026</p>
+      <p>Twelve themed monthly seasons are planned for Year 1 — each with its own name, vibe, and prize track.</p>
+      <span class="badge">LAUNCH WEEK = BEST TIME TO ONBOARD YOUR COMMUNITY</span>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Prizes</p>
+      <h2>Real rewards, not just bragging rights</h2>
+      <div class="grid">
+        <div class="card"><strong>1st place</strong>$50 CAD platform card</div>
+        <div class="card"><strong>2nd place</strong>$25 CAD platform card</div>
+        <div class="card"><strong>3rd–5th</strong>Custom 3D-print prizes</div>
+        <div class="card"><strong>Commanders</strong>Top 3 monthly MVP leaders</div>
+      </div>
+      <p class="note">Xbox · PlayStation · Steam — claims handled in-app after season lock.</p>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">For creators</p>
+      <h2>What to share with your audience</h2>
+      <ul>
+        <li>Sign up at <strong style="color:var(--silver)">topnest.app</strong> and link Bungie</li>
+        <li>Join the Discord for fireteams, updates, and community events</li>
+        <li>Challenge viewers: "Can you hit Top 5 this season?"</li>
+        <li>Stream fireteam fills using Top Nest lobbies</li>
+        <li>Weekly reset leaderboard check-ins</li>
+      </ul>
+      <p class="quote">Verified clears. Real leaderboards. Real prizes.</p>
+    </section>
+
+    <section class="slide">
+      <p class="eyebrow">Let's collaborate</p>
+      <h2>Join the Nest</h2>
+      <p class="lead">We're looking for creators who care about community-first endgame.</p>
+      <ul>
+        <li>Launch shoutouts & co-branded posts</li>
+        <li>Fireteam event nights with the community</li>
+        <li>Early feature previews for your audience</li>
+      </ul>
+      <p style="margin-top:1rem;color:var(--silver)"><strong>Contact:</strong> bulletbait604@gmail.com</p>
+      <div class="cta-row">
+        <a class="cta cta-app" href="https://topnest.app">topnest.app</a>
+        <a class="cta cta-discord" id="cta-discord-2" href="#">Join Discord</a>
+      </div>
+      <p class="note">Edit DISCORD_URL at the top of this file before presenting.</p>
+    </section>
+  </div>
+
+  <nav class="nav">
+    <button type="button" id="prev">← Back</button>
+    <span class="progress" id="progress">1 / 9</span>
+    <button type="button" id="next">Next →</button>
+  </nav>
+
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    let index = 0;
+    const progress = document.getElementById('progress');
+    const show = (i) => {
+      slides.forEach((s, n) => s.classList.toggle('active', n === i));
+      progress.textContent = `${i + 1} / ${slides.length}`;
+    };
+    document.getElementById('prev').onclick = () => { index = (index - 1 + slides.length) % slides.length; show(index); };
+    document.getElementById('next').onclick = () => { index = (index + 1) % slides.length; show(index); };
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { index = Math.min(index + 1, slides.length - 1); show(index); }
+      if (e.key === 'ArrowLeft') { index = Math.max(index - 1, 0); show(index); }
+    });
+    document.querySelectorAll('.cta-discord, [id^="cta-discord"]').forEach((el) => { el.href = DISCORD_URL; });
+  </script>
+</body>
+</html>

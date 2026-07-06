@@ -13,9 +13,29 @@ interface Props {
   aside?: ReactNode
 }
 
-const PRIZE_STICKER_TABS: DestinyTopNestTab[] = ['overview', 'leaderboards', 'season']
+const PRIZE_STICKER_TABS: DestinyTopNestTab[] = [
+  'overview',
+  'leaderboards',
+  'season',
+  'profile',
+  'fireteam',
+  'clans',
+  'loadouts',
+  'builds',
+]
 
 const PRIZE_UNDER_TITLE_TABS: DestinyTopNestTab[] = ['leaderboards', 'season']
+
+/** Main nav tabs — larger hero title, description, and prize sticker than admin/compact default. */
+const ENLARGED_TAB_HERO_TABS: DestinyTopNestTab[] = [
+  'leaderboards',
+  'season',
+  'profile',
+  'fireteam',
+  'clans',
+  'loadouts',
+  'builds',
+]
 
 function HeroLogo({ compact }: { compact?: boolean }) {
   return (
@@ -50,6 +70,7 @@ export default function TabPageHero({ tab, aside }: Props) {
   const heroArt = navTabArtUrl(artKey) ?? homeSectionArtUrl('hero')
   const isHomeHero = artKey === 'overview'
   const compact = !isHomeHero
+  const enlargedTabHero = ENLARGED_TAB_HERO_TABS.includes(tab)
   const showPrizeSticker = PRIZE_STICKER_TABS.includes(tab)
   const prizeUnderTitle = showPrizeSticker && PRIZE_UNDER_TITLE_TABS.includes(tab)
   const prizeInRightStack = showPrizeSticker && !prizeUnderTitle
@@ -61,6 +82,7 @@ export default function TabPageHero({ tab, aside }: Props) {
         'tn-home-hero tn-home-hero-brand',
         isHomeHero && 'tn-home-hero-tower',
         compact && 'tn-home-hero-compact',
+        enlargedTabHero && 'tn-home-hero-tab',
         hasRightStack && 'tn-home-hero-has-right-stack'
       )}
       style={{ ['--tn-home-hero-art' as string]: `url('${heroArt}')` }}

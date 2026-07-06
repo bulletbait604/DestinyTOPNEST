@@ -61,4 +61,18 @@ export const ITEM_HASH_OVERRIDES = {
   'tusked allegiance plate': 438108034,
   'dark age chestrig': 818195096,
   'braytech combat vest': 2656719840,
+  // Armor 3.0 weekly rotation set icons (canonical chest/vest piece)
+  "war numen's chest": 337167078,
+  "kabr's wrath": 1665627227,
+  'plate of transcendence': 144341472,
+  'plate of the great hunt': 469499338,
+  'bane of crota shell': 3708784304,
+  'plate of agony': 824228793,
+  'promised reign vest': 150976396,
+  'twisting echo vest': 1951355667,
+  'tm-cogburn custom plate': 436695703,
+  'plate of the taken king': 567982130,
+  'crushing plate (coda)': 688405494,
+  "techeun's regalia plate": 950387978,
+  "apostate's blade plate": 404887494,
 }

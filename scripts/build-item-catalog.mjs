@@ -157,6 +157,22 @@ const ITEM_NAMES = [
   'Tusked Allegiance Plate',
   'Dark Age Chestrig',
   'BrayTech Combat Vest',
+  // Armor 3.0 weekly rotation sets (activityArmorSets.ts)
+  "War Numen's Chest",
+  "Kabr's Wrath",
+  'Plate of Transcendence',
+  'Plate of the Great Hunt',
+  'Bane of Crota Shell',
+  'Plate of Agony',
+  'Promised Reign Vest',
+  'Twisting Echo Vest',
+  'TM-Cogburn Custom Plate',
+  'Plate of the Taken King',
+  'Crushing Plate (CODA)',
+  "Techeun's Regalia Plate",
+  "Apostate's Blade Plate",
+  'Spacewalk Vest',
+  'Pantheos Resplendent Plate',
   'Perfect Pitch',
   'Duality',
   'Xenophage Catalyst',
@@ -359,6 +375,26 @@ export type ManifestEntityType =
   | 'DestinyEquipableItemSetDefinition'
   | 'DestinyPlugSetDefinition'
   | 'DestinyPresentationNodeDefinition'
+  | 'DestinyLoadoutNameDefinition'
+
+const MANIFEST_ENTITY_TYPES: ManifestEntityType[] = [
+  'DestinyInventoryItemDefinition',
+  'DestinyActivityDefinition',
+  'DestinyActivityModeDefinition',
+  'DestinySandboxPerkDefinition',
+  'DestinyClassDefinition',
+  'DestinyDamageTypeDefinition',
+  'DestinyStatDefinition',
+  'DestinyEquipableItemSetDefinition',
+  'DestinyPlugSetDefinition',
+  'DestinyPresentationNodeDefinition',
+  'DestinyLoadoutNameDefinition',
+]
+
+export function isManifestEntityType(value: string | null | undefined): value is ManifestEntityType {
+  if (!value) return false
+  return MANIFEST_ENTITY_TYPES.includes(value as ManifestEntityType)
+}
 
 export interface CatalogEntry {
   hash: number

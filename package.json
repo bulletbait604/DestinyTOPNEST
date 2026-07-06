@@ -13,7 +13,9 @@
     "catalog:activities": "node scripts/build-activity-icon-paths.mjs",
     "catalog:all": "node scripts/build-activity-icon-paths.mjs && node scripts/build-item-catalog.mjs",
     "manifest:download": "node scripts/download-manifest-sqlite.mjs",
-    "migrate:from-sdhq": "node scripts/migrate-from-sdhq.mjs"
+    "migrate:from-sdhq": "node scripts/migrate-from-sdhq.mjs",
+    "poster:export": "node scripts/export-poster.mjs",
+    "poster:export:twitter": "node scripts/export-poster.mjs twitter"
   },
   "dependencies": {
     "@types/node": "^20.14.10",
@@ -34,6 +36,7 @@
   },
   "devDependencies": {
     "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.0"
+    "eslint-config-next": "^14.2.0",
+    "playwright": "^1.61.1"
   }
 }

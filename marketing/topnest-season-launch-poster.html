@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Top Nest — Season Poster</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a0b0d;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+    .poster {
+      width: 1200px;
+      height: 675px;
+      position: relative;
+      overflow: hidden;
+      color: #e8ecf0;
+      background:
+        radial-gradient(ellipse 85% 65% at 12% 0%, rgba(115, 210, 255, 0.16), transparent 55%),
+        radial-gradient(ellipse 75% 55% at 88% 100%, rgba(201, 149, 110, 0.2), transparent 50%),
+        radial-gradient(ellipse 45% 35% at 50% 42%, rgba(245, 220, 86, 0.07), transparent 60%),
+        linear-gradient(165deg, #121418 0%, #0e1014 45%, #121418 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .poster::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255, 255, 255, 0.01) 2px,
+        rgba(255, 255, 255, 0.01) 4px
+      );
+      pointer-events: none;
+    }
+    .frame {
+      position: absolute;
+      inset: 18px;
+      border: 1px solid rgba(201, 149, 110, 0.22);
+      border-radius: 4px;
+      pointer-events: none;
+    }
+    .content {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      padding: 36px 48px 32px;
+      display: grid;
+      grid-template-columns: 340px 1fr 250px;
+      align-items: center;
+      gap: 28px;
+    }
+    .logo-col {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo {
+      width: 300px;
+      height: auto;
+      filter: drop-shadow(0 12px 36px rgba(0, 0, 0, 0.65));
+    }
+    .main-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+    }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #c9956e;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      text-shadow: 0 4px 28px rgba(0, 0, 0, 0.55);
+      margin-bottom: 10px;
+    }
+    .tagline {
+      font-size: 17px;
+      color: #c8cdd4;
+      line-height: 1.45;
+      margin-bottom: 18px;
+    }
+    .tagline em {
+      font-style: normal;
+      color: #f5dc56;
+      font-weight: 700;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .chip {
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .chip-raid { color: #ffd580; border-color: rgba(255, 213, 128, 0.35); }
+    .chip-dungeon { color: #8e749e; border-color: rgba(142, 116, 158, 0.35); }
+    .chip-pantheon { color: #73d2ff; border-color: rgba(115, 210, 255, 0.35); }
+    .chip-commanders { color: #e3619b; border-color: rgba(227, 97, 155, 0.35); }
+    .url {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #a8775a, #c9956e);
+      color: #111;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(201, 149, 110, 0.35);
+    }
+    .side-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-self: center;
+    }
+    .prize-badge {
+      text-align: center;
+      padding: 22px 20px;
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(245, 220, 86, 0.14), rgba(201, 149, 110, 0.12));
+      border: 1px solid rgba(245, 220, 86, 0.45);
+      box-shadow: 0 0 40px rgba(245, 220, 86, 0.12);
+    }
+    .prize-badge .amount {
+      display: block;
+      font-size: 38px;
+      font-weight: 900;
+      color: #f5dc56;
+      line-height: 1;
+    }
+    .prize-badge .label {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #c9956e;
+    }
+    .stat {
+      padding: 11px 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      font-size: 12px;
+      color: #9aa3b2;
+    }
+    .stat strong {
+      display: block;
+      color: #e8ecf0;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+    .disclaimer {
+      position: absolute;
+      bottom: 10px;
+      right: 48px;
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.28);
+    }
+    .hint { display: none; }
+  </style>
+</head>
+<body>
+  <article class="poster" id="poster">
+    <div class="frame" aria-hidden="true"></div>
+    <div class="content">
+      <div class="logo-col">
+        <img class="logo" src="./topnest-logo.png" alt="Destiny Top Nest logo" />
+      </div>
+      <div class="main-col">
+        <p class="eyebrow">Season 1</p>
+        <h1>Season of the Monument Era</h1>
+        <p class="tagline">
+          Verified clears. <em>Real</em> leaderboards. <em>Real</em> prizes.<br />
+          Bungie-linked runs · Fireteam finder · MVP &amp; Trust Rank
+        </p>
+        <div class="chips">
+          <span class="chip chip-raid">Raid</span>
+          <span class="chip chip-dungeon">Dungeon</span>
+          <span class="chip chip-pantheon">Pantheon</span>
+          <span class="chip chip-commanders">Commanders</span>
+        </div>
+        <a class="url" href="https://topnest.app">topnest.app</a>
+      </div>
+      <div class="side-col">
+        <div class="prize-badge">
+          <span class="amount">$250+</span>
+          <span class="label">Prize pool</span>
+        </div>
+        <div class="stat">
+          <strong>Top 5 per board</strong>
+          Platform cards &amp; 3D-print rewards
+        </div>
+        <div class="stat">
+          <strong>Monthly Commanders</strong>
+          Crowned from MVP votes
+        </div>
+      </div>
+    </div>
+    <p class="disclaimer">Fan community · Not affiliated with Bungie</p>
+  </article>
+</body>
+</html>
