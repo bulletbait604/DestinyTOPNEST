@@ -9,6 +9,10 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "catalog:items": "node scripts/build-item-catalog.mjs",
+    "catalog:activities": "node scripts/build-activity-icon-paths.mjs",
+    "catalog:all": "node scripts/build-activity-icon-paths.mjs && node scripts/build-item-catalog.mjs",
+    "manifest:download": "node scripts/download-manifest-sqlite.mjs",
     "migrate:from-sdhq": "node scripts/migrate-from-sdhq.mjs"
   },
   "dependencies": {

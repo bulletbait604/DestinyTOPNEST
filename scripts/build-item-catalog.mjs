@@ -1,8 +1,15 @@
 /**
  * Build static item/perk icon paths from Bungie manifest JSON.
+ * Icons: DestinyInventoryItemDefinition.displayProperties.icon (+ perks, classes, damage types)
  * Run: node scripts/build-item-catalog.mjs
  */
-import { readFileSync, writeFileSync } from 'fs'
+import { writeFileSync } from 'fs'
+import {
+  MANIFEST_TABLES,
+  definitionIcon,
+  iconOk,
+  loadManifestTables,
+} from './lib/manifestClient.mjs'
 
 const ITEM_NAMES = [
   'Ophidian Aspect',
@@ -172,33 +179,23 @@ function scoreName(displayName, target) {
   return 0
 }
 
-async function iconOk(path) {
-  if (!path || path.includes('missing_icon')) return false
-  const res = await fetch(`https://www.bungie.net${path}`, { method: 'HEAD' })
-  return res.status === 200
-}
-
-const manifest = (await fetch('https://www.bungie.net/Platform/Destiny2/Manifest/').then((r) => r.json()))
-  .Response
-const paths = manifest.jsonWorldComponentContentPaths.en
-
-async function load(table) {
-  console.log('Loading', table)
-  return fetch(`https://www.bungie.net${paths[table]}`).then((r) => r.json())
-}
-
-const [inventory, perks, classes, damageTypes] = await Promise.all([
-  load('DestinyInventoryItemDefinition'),
-  load('DestinySandboxPerkDefinition'),
-  load('DestinyClassDefinition'),
-  load('DestinyDamageTypeDefinition'),
+const { tables } = await loadManifestTables([
+  MANIFEST_TABLES.inventory,
+  MANIFEST_TABLES.perks,
+  MANIFEST_TABLES.classes,
+  MANIFEST_TABLES.damageTypes,
 ])
 
-const tables = [
-  { table: 'DestinyInventoryItemDefinition', defs: inventory, entity: 'DestinyInventoryItemDefinition' },
-  { table: 'DestinySandboxPerkDefinition', defs: perks, entity: 'DestinySandboxPerkDefinition' },
-  { table: 'DestinyClassDefinition', defs: classes, entity: 'DestinyClassDefinition' },
-  { table: 'DestinyDamageTypeDefinition', defs: damageTypes, entity: 'DestinyDamageTypeDefinition' },
+const inventory = tables[MANIFEST_TABLES.inventory]
+const perks = tables[MANIFEST_TABLES.perks]
+const classes = tables[MANIFEST_TABLES.classes]
+const damageTypes = tables[MANIFEST_TABLES.damageTypes]
+
+const manifestTables = [
+  { table: MANIFEST_TABLES.inventory, defs: inventory, entity: MANIFEST_TABLES.inventory },
+  { table: MANIFEST_TABLES.perks, defs: perks, entity: MANIFEST_TABLES.perks },
+  { table: MANIFEST_TABLES.classes, defs: classes, entity: MANIFEST_TABLES.classes },
+  { table: MANIFEST_TABLES.damageTypes, defs: damageTypes, entity: MANIFEST_TABLES.damageTypes },
 ]
 
 const catalog = {}
@@ -223,7 +220,7 @@ for (const target of ITEM_NAMES) {
   }
 
   let best = null
-  for (const { defs, entity } of tables) {
+  for (const { defs, entity } of manifestTables) {
     for (const [hash, def] of Object.entries(defs)) {
       const name = def?.displayProperties?.name
       const icon = def?.displayProperties?.icon

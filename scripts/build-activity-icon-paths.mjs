@@ -1,9 +1,17 @@
 /**
  * Build activity catalog hashes + verified icon paths from Bungie manifest JSON.
- * Sources (in order): activity defs, presentation nodes, triumph records, emblem inventory items.
+ * Icons: DestinyActivityDefinition.pgcrImage (preferred), displayProperties.icon fallbacks.
  * Run: node scripts/build-activity-icon-paths.mjs
  */
 import { writeFileSync } from 'fs'
+import {
+  MANIFEST_TABLES,
+  activityIconCandidates,
+  definitionIcon,
+  iconOk,
+  isGenericIcon,
+  loadManifestTables,
+} from './lib/manifestClient.mjs'
 
 const ACTIVITY_NAMES = [
   'Garden of Salvation',
@@ -64,18 +72,6 @@ function scoreName(displayName, target) {
   return 0
 }
 
-const GENERIC_ICON_MARKERS = [
-  'bd7a1fc995f87be96698263bc16698e7',
-  '8b1bfd1c1ce1cab51d23c78235a6e067',
-  'missing_icon',
-  'placeholder.jpg',
-]
-
-function isGenericIcon(path) {
-  if (!path) return true
-  return GENERIC_ICON_MARKERS.some((m) => path.includes(m))
-}
-
 async function pickBestIcon(candidates) {
   const valid = []
   for (const c of candidates) {
@@ -96,67 +92,25 @@ async function pickBestIconAllowGeneric(candidates) {
 }
 
 function pickActivityIconFields(def) {
-  return [
-    { icon: def?.pgcrImage, score: 96 },
-    { icon: def?.selectionScreenDisplayProperties?.icon, score: 90 },
-    { icon: def?.displayProperties?.icon, score: 85 },
-    { icon: def?.releaseIcon, score: 80 },
-  ].filter((f) => f.icon)
+  return activityIconCandidates(def).map((icon, index) => ({
+    icon,
+    score: 96 - index * 4,
+  }))
 }
 
-async function fetchJson(path) {
-  const res = await fetch(`https://www.bungie.net${path}`)
-  return res.json()
-}
-
-async function iconOk(path) {
-  if (!path || path.includes('missing_icon')) return false
-  const res = await fetch(`https://www.bungie.net${path}`, { method: 'HEAD' })
-  return res.status === 200
-}
-
-async function bestIconFromRecords(records, target) {
-  let best = null
-  for (const [hash, def] of Object.entries(records)) {
-    const name = def?.displayProperties?.name
-    const icon = def?.displayProperties?.icon
-    if (!name || !icon || icon.includes('missing_icon')) continue
-    const score = scoreName(name, target)
-    if (score < 55) continue
-    const candidate = { name, icon, score }
-    if (!best || candidate.score > best.score) best = candidate
-  }
-  if (best && (await iconOk(best.icon))) return best.icon
-  return undefined
-}
-
-async function bestIconFromInventory(items, target) {
-  let best = null
-  for (const [hash, def] of Object.entries(items)) {
-    const name = def?.displayProperties?.name
-    const icon = def?.displayProperties?.icon
-    const type = def?.itemTypeDisplayName ?? ''
-    if (!name || !icon || icon.includes('missing_icon')) continue
-    if (!/emblem|seal/i.test(type) && !norm(name).includes(normalizeTarget(target))) continue
-    const score = scoreName(name, target)
-    if (score < 80) continue
-    const candidate = { name, icon, score }
-    if (!best || candidate.score > best.score) best = candidate
-  }
-  if (best && (await iconOk(best.icon))) return best.icon
-  return undefined
-}
-
-const manifest = (await fetch('https://www.bungie.net/Platform/Destiny2/Manifest/').then((r) => r.json()))
-  .Response
-
-const paths = manifest.jsonWorldComponentContentPaths.en
-const [activityDefs, presentationDefs, recordDefs, inventoryDefs] = await Promise.all([
-  fetchJson(paths.DestinyActivityDefinition),
-  fetchJson(paths.DestinyPresentationNodeDefinition),
-  fetchJson(paths.DestinyRecordDefinition),
-  fetchJson(paths.DestinyInventoryItemDefinition),
+const { tables } = await loadManifestTables([
+  MANIFEST_TABLES.activities,
+  MANIFEST_TABLES.activityGraphs,
+  MANIFEST_TABLES.presentation,
+  MANIFEST_TABLES.records,
+  MANIFEST_TABLES.inventory,
 ])
+
+const activityDefs = tables[MANIFEST_TABLES.activities]
+const activityGraphDefs = tables[MANIFEST_TABLES.activityGraphs]
+const presentationDefs = tables[MANIFEST_TABLES.presentation]
+const recordDefs = tables[MANIFEST_TABLES.records]
+const inventoryDefs = tables[MANIFEST_TABLES.inventory]
 
 const catalog = {}
 const iconPaths = {}
@@ -205,6 +159,14 @@ for (const target of ACTIVITY_NAMES) {
     if (!/emblem|seal/i.test(type) && !norm(name).includes(key)) continue
     const score = scoreName(name, target)
     if (score >= 80) iconCandidates.push({ icon, score: score - 5 })
+  }
+
+  for (const [hash, def] of Object.entries(activityGraphDefs)) {
+    const name = def?.displayProperties?.name
+    const icon = definitionIcon(def)
+    if (!name || !icon) continue
+    const score = scoreName(name, target)
+    if (score >= 55) iconCandidates.push({ icon, score: score + 3 })
   }
 
   for (const [hash, def] of Object.entries(activityDefs)) {

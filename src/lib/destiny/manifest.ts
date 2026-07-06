@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Bungie Destiny 2 manifest resolution.
  * Index: https://www.bungie.net/Platform/Destiny2/Manifest/
  * Per-entity: /Destiny2/Manifest/{EntityType}/{hash}/
@@ -214,7 +214,7 @@ export async function getLiveManifestVersion(): Promise<string | undefined> {
   }
 }
 
-/** Resolve any manifest definition hash â†’ name, icon, tier, description. */
+/** Resolve any manifest definition hash to name, icon, tier, and description. */
 export async function resolveDefinition(
   entityType: ManifestEntityType,
   hash: number,
@@ -231,10 +231,15 @@ export async function resolveDefinition(
   try {
     const def = await getDestinyEntityDefinition(entityType, hash)
     const props = propsFromDefinition(def)
+    let iconPath = props?.icon
     let iconUrl =
       entityType === 'DestinyActivityDefinition'
         ? activityIconFromDefinition(def)
         : buildBungieIconUrl(props?.icon)
+    if (entityType === 'DestinyActivityDefinition' && def && typeof def === 'object') {
+      const pgcr = (def as { pgcrImage?: string }).pgcrImage
+      if (pgcr && !isGenericIconPath(pgcr)) iconPath = pgcr
+    }
     if (!iconUrl || isGenericIconUrl(iconUrl)) iconUrl = catalogIconUrl(fallbackName)
     const name = props?.name || fallbackName
     const tierLabel = tierFromDefinition(def)
@@ -246,7 +251,7 @@ export async function resolveDefinition(
       hash,
       entityType,
       name,
-      iconPath: props?.icon,
+      iconPath,
       iconUrl,
       tierLabel,
       description,
