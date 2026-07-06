@@ -38,15 +38,17 @@ function AbilitySlotCell({
   item,
   fallback,
   glow,
+  compact,
 }: {
   slot: string
   item?: DestinyIconRef
   fallback?: string
   glow: 'gold' | 'arc' | 'void' | 'solar' | 'strand' | 'stasis' | 'neutral' | 'auto'
+  compact?: boolean
 }) {
   return (
     <div className="flex flex-col items-center min-w-0">
-      <AbilityChip item={item} fallback={fallback} size={48} glow={glow} slotLabel={slot} />
+      <AbilityChip item={item} fallback={fallback} size={compact ? 40 : 48} glow={glow} slotLabel={slot} />
       <span className="d2-slot-label truncate w-full">{slot}</span>
     </div>
   )
@@ -135,34 +137,37 @@ export default function PlayerCardDetail({ profile, darkMode, switchingCharacter
               <WeaponArmoryTable rows={armorRows} title="Armor" iconSize={44} />
             </BuildSection>
 
-            <BuildSection label="Stats" className="d2-profile-build-panel d2-profile-stats-panel">
-              <ArmorStatMatrix stats={loadout.stats} ingame />
-            </BuildSection>
-          </div>
+            <div className="d2-profile-loadout-right">
+              <BuildSection label="Stats" className="d2-profile-build-panel d2-profile-stats-panel">
+                <ArmorStatMatrix stats={loadout.stats} ingame />
+              </BuildSection>
 
-          <BuildSection label="Abilities" className="d2-profile-build-panel">
-            <div className="d2-ability-grid d2-ability-grid-profile">
-              {ABILITY_SLOTS.map(({ slot, getRef, getFallback }) => (
-                <AbilitySlotCell
-                  key={slot}
-                  slot={slot}
-                  item={getRef(loadout)}
-                  fallback={getFallback(loadout)}
-                  glow={elementGlow}
-                />
-              ))}
+              <BuildSection label="Abilities" className="d2-profile-build-panel d2-profile-abilities-panel">
+                <div className="d2-ability-grid d2-ability-grid-profile">
+                  {ABILITY_SLOTS.map(({ slot, getRef, getFallback }) => (
+                    <AbilitySlotCell
+                      key={slot}
+                      slot={slot}
+                      item={getRef(loadout)}
+                      fallback={getFallback(loadout)}
+                      glow={elementGlow}
+                      compact
+                    />
+                  ))}
+                </div>
+                {loadout.aspectRefs?.length || loadout.fragmentRefs?.length ? (
+                  <div className="d2-mod-grid d2-mod-grid-profile-side">
+                    {loadout.aspectRefs?.map((aspect) => (
+                      <ModSlotCell key={aspect.name} item={aspect} kind="Aspect" glow={elementGlow} />
+                    ))}
+                    {loadout.fragmentRefs?.map((fragment) => (
+                      <ModSlotCell key={fragment.name} item={fragment} kind="Fragment" glow={elementGlow} />
+                    ))}
+                  </div>
+                ) : null}
+              </BuildSection>
             </div>
-            {loadout.aspectRefs?.length || loadout.fragmentRefs?.length ? (
-              <div className="d2-mod-grid">
-                {loadout.aspectRefs?.map((aspect) => (
-                  <ModSlotCell key={aspect.name} item={aspect} kind="Aspect" glow={elementGlow} />
-                ))}
-                {loadout.fragmentRefs?.map((fragment) => (
-                  <ModSlotCell key={fragment.name} item={fragment} kind="Fragment" glow={elementGlow} />
-                ))}
-              </div>
-            ) : null}
-          </BuildSection>
+          </div>
         </div>
       )}
     </GameCard>

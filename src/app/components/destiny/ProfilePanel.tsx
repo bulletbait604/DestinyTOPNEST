@@ -77,8 +77,25 @@ export default function ProfilePanel({
     )
   }
 
+  const pointTiles = [
+    { label: 'Raid pts', value: profile.raidPoints },
+    { label: 'Dungeon pts', value: profile.dungeonPoints },
+    { label: 'Pantheon pts', value: profile.pantheonPoints ?? 0 },
+    { label: 'Guardian pts', value: profile.guardianPoints ?? profile.fullClanPoints ?? 0 },
+    { label: 'Verified clears', value: profile.verifiedClears },
+  ]
+
   return (
     <div className="space-y-4 d2-profile-page animate-in fade-in duration-300">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+        {pointTiles.map((stat) => (
+          <div key={stat.label} className="d2-profile-stat-tile">
+            <p className="d2-profile-stat-label">{stat.label}</p>
+            <p className="d2-profile-stat-value">{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
       <SegmentedControl
         label="Profile"
         darkMode={darkMode}
@@ -129,21 +146,6 @@ export default function ProfilePanel({
               />
               <StatCardPreview stats={profile.flexStats ?? []} darkMode={darkMode} />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
-            {[
-              { label: 'Raid pts', value: profile.raidPoints },
-              { label: 'Dungeon pts', value: profile.dungeonPoints },
-              { label: 'Pantheon pts', value: profile.pantheonPoints ?? 0 },
-              { label: 'Guardian pts', value: profile.guardianPoints ?? profile.fullClanPoints ?? 0 },
-              { label: 'Verified clears', value: profile.verifiedClears },
-            ].map((stat) => (
-              <div key={stat.label} className="d2-profile-stat-tile">
-                <p className="d2-profile-stat-label">{stat.label}</p>
-                <p className="d2-profile-stat-value">{stat.value}</p>
-              </div>
-            ))}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
