@@ -22,10 +22,11 @@ export default function TabPageHero({ tab, aside }: Props) {
   const heroArt = navTabArtUrl(artKey) ?? homeSectionArtUrl('hero')
   const isBrand = copy.brand === true
   const showPrizeSticker = PRIZE_STICKER_TABS.includes(tab)
+  const isHomeHero = artKey === 'overview'
 
   return (
     <section
-      className={cn('tn-home-hero', !aside && 'tn-tab-hero-single')}
+      className={cn('tn-home-hero', isHomeHero && 'tn-home-hero-tower', !aside && 'tn-tab-hero-single')}
       style={{ ['--tn-home-hero-art' as string]: `url('${heroArt}')` }}
     >
       <div className="tn-home-hero-overlay" aria-hidden />

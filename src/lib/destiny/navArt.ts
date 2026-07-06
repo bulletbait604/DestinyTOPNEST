@@ -7,6 +7,8 @@ export const COMMUNITY_ART = {
   /** Guardians' Oath emblem — Guardians united under the Light. */
   guardiansOath: '/common/destiny2_content/icons/cadea54a317eb0c131a9b93925422370.jpg',
   guardiansOathIcon: '/common/destiny2_content/icons/524388229145e86a3dc6bf79d8a641f4.jpg',
+  /** The Tower — Last City social hub backdrop. */
+  tower: '/img/destiny_content/pgcr/tower.jpg',
   fireteamRaid: '/img/destiny_content/pgcr/raid_garden_of_salvation.jpg',
   fireteamDSC: '/img/destiny_content/pgcr/europa-raid-deep-stone-crypt.jpg',
   communityDares: '/img/destiny_content/pgcr/30th-anniversary-dares-of-eternity.jpg',
@@ -14,7 +16,7 @@ export const COMMUNITY_ART = {
 
 /** Bungie PGCR / activity art for main nav tabs. */
 export const NAV_TAB_ART: Partial<Record<DestinyTopNestTab, string>> = {
-  overview: COMMUNITY_ART.guardiansOath,
+  overview: COMMUNITY_ART.tower,
   leaderboards: COMMUNITY_ART.fireteamRaid,
   profile: ACTIVITY_ICON_PATHS.duality,
   fireteam: COMMUNITY_ART.fireteamDSC,
@@ -32,7 +34,7 @@ export function navTabArtUrl(tab: DestinyTopNestTab): string | undefined {
 
 /** Home section hero/backdrop art. */
 export const HOME_SECTION_ART = {
-  hero: COMMUNITY_ART.guardiansOath,
+  hero: COMMUNITY_ART.tower,
   raidBoard: ACTIVITY_ICON_PATHS["king's fall"],
   soloBoard: COMMUNITY_ART.communityDares,
   dungeonBoard: ACTIVITY_ICON_PATHS['ghosts of the deep'],
