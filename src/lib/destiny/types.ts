@@ -208,6 +208,27 @@ export interface LeaderboardEntry {
   /** Pantheon squad board — number of guardians in the fireteam. */
   squadSize?: number
   isSquadEntry?: boolean
+  /** Set when staff manual adjustment affects this row. */
+  hasManualAdjustment?: boolean
+}
+
+export interface LeaderboardAdjustment {
+  id: string
+  /** Site user id, squad key (Pantheon), or guardian id for Top Guardians. */
+  entryKey: string
+  displayName?: string
+  category: LeaderboardCategory
+  period: LeaderboardPeriod
+  seasonId: string
+  pointsDelta?: number
+  pointsOverride?: number
+  verifiedClearsDelta?: number
+  verifiedClearsOverride?: number
+  excluded?: boolean
+  notes?: string
+  adjustedBy: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface FireteamLobby {
@@ -403,6 +424,52 @@ export interface AdminReviewRecord {
   notes?: string
   reviewedAt?: string
   run?: RunRecord
+}
+
+export type AdminActivityKind =
+  | 'run_flagged'
+  | 'run_review'
+  | 'user_ban'
+  | 'user_unban'
+  | 'user_note'
+  | 'prize_claim'
+  | 'season_finalize'
+  | 'leaderboard_adjust'
+
+export interface AdminActivityEntry {
+  id: string
+  kind: AdminActivityKind
+  actorId: string
+  actorLabel?: string
+  targetUserId?: string
+  targetLabel?: string
+  summary: string
+  detail?: string
+  metadata?: Record<string, string | number | boolean>
+  createdAt: string
+}
+
+export interface AdminUserSummary {
+  userId: string
+  bungieDisplayName: string
+  platform?: DestinyPlatform
+  clanTag?: string
+  connectedAt?: string
+  isBanned: boolean
+  siteRole?: string
+  verifiedRunCount: number
+  flaggedRunCount: number
+}
+
+export interface AdminUserDetail extends AdminUserSummary {
+  bungieMembershipId?: string
+  emblemUrl?: string
+  powerLevel?: number
+  recentRuns: RunRecord[]
+  reputationReviews: ReputationReview[]
+  trustReviews: TrustReview[]
+  mvpVotesReceived: number
+  adminNotes: AdminActivityEntry[]
 }
 
 /** One guardian slot — DIM-style horizontal character tile data. */

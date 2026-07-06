@@ -1,4 +1,4 @@
-﻿import { aggregateGuardianLeaderboard, aggregateLeaderboard, aggregatePantheonSquadLeaderboard } from '@/lib/destiny/leaderboards'
+﻿import { buildLeaderboardWithAdjustments } from '@/lib/destiny/leaderboardAdjustments'
 import type { LeaderboardCategory, LeaderboardEntry, MvpVote, RunRecord, Season, SeasonWinner } from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 
@@ -26,19 +26,28 @@ function prizeForRank(
 }
 
 /** Live season standings → hall of fame preview (Phase 5). */
-export function computeSeasonStandings(
+export async function computeSeasonStandings(
   runs: RunRecord[],
   usersById: Map<string, StoredDestinyUser>,
   season: Season,
   votes: MvpVote[] = []
-): {
+): Promise<{
   hallOfFame: SeasonWinner[]
   eligibility: string
-} {
-  const raidTop = aggregateLeaderboard(runs, usersById, 'raid', 'season', season).slice(0, 5)
-  const dungeonTop = aggregateLeaderboard(runs, usersById, 'dungeon', 'season', season).slice(0, 5)
-  const pantheonTop = aggregatePantheonSquadLeaderboard(runs, usersById, 'season', season).slice(0, 5)
-  const guardianTop = aggregateGuardianLeaderboard(votes, usersById, 'monthly', season, 3)
+}> {
+  const raidTop = (await buildLeaderboardWithAdjustments('raid', 'season', season, runs, usersById, votes)).slice(
+    0,
+    5
+  )
+  const dungeonTop = (
+    await buildLeaderboardWithAdjustments('dungeon', 'season', season, runs, usersById, votes)
+  ).slice(0, 5)
+  const pantheonTop = (
+    await buildLeaderboardWithAdjustments('pantheon', 'season', season, runs, usersById, votes)
+  ).slice(0, 5)
+  const guardianTop = (
+    await buildLeaderboardWithAdjustments('top_guardians', 'monthly', season, runs, usersById, votes)
+  ).slice(0, 3)
 
   const hallOfFame: SeasonWinner[] = [
     ...toWinners(raidTop, 'raid', season, 5),

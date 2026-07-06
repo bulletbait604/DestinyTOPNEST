@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const season = await getSeasonData()
     const weeklyReset = await buildWeeklyResetInfo()
     const { runs, usersById, votes } = await getSeasonStandingsInput()
-    const { hallOfFame, eligibility } = computeSeasonStandings(runs, usersById, season, votes)
+    const { hallOfFame, eligibility } = await computeSeasonStandings(runs, usersById, season, votes)
     const myStandings = await getSeasonStandingForUser(siteUserId)
     const prizeTrack = buildUserPrizeTrack(myStandings, season)
     const prizeClaims = await getPrizeClaimsForUser(siteUserId, season.id)

@@ -9,11 +9,7 @@ import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import { buildOverviewPayload } from '@/lib/destiny/overviewBuilder'
 import { computeSeasonStandings } from '@/lib/destiny/seasonPrizes'
 import { computeReputationScore } from '@/lib/destiny/reputation'
-import {
-  aggregateGuardianLeaderboard,
-  aggregateLeaderboard,
-  aggregatePantheonSquadLeaderboard,
-} from '@/lib/destiny/leaderboards'
+import { buildLeaderboardWithAdjustments } from '@/lib/destiny/leaderboardAdjustments'
 import { squadKeyIncludesMember } from '@/lib/destiny/pantheonActivities'
 import {
   getResearchedMetaBuilds,
@@ -27,6 +23,7 @@ import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destin
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
 import { filterRunsFromTodayPacific } from '@/lib/destiny/runDates'
 import type { AdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
+import { logAdminActivity } from '@/lib/destiny/adminActivityLog'
 import type {
   AdminReviewRecord,
   BuildIntelligenceCard,
@@ -70,6 +67,12 @@ export async function ensureDestinyIndexes(): Promise<void> {
   await database.collection(DESTINY_COLLECTIONS.mvpVotes).createIndex({ selectedUserId: 1, createdAt: -1 })
   await database.collection(DESTINY_COLLECTIONS.mvpVotes).createIndex({ voterId: 1, createdAt: -1 })
   await database.collection(DESTINY_COLLECTIONS.mvpVotes).createIndex({ createdAt: -1 })
+  await database.collection(DESTINY_COLLECTIONS.adminActivity).createIndex({ createdAt: -1 })
+  await database.collection(DESTINY_COLLECTIONS.adminActivity).createIndex({ kind: 1, createdAt: -1 })
+  await database.collection(DESTINY_COLLECTIONS.adminActivity).createIndex({ targetUserId: 1, createdAt: -1 })
+  await database
+    .collection(DESTINY_COLLECTIONS.leaderboardAdjustments)
+    .createIndex({ category: 1, period: 1, seasonId: 1, entryKey: 1 }, { unique: true })
 }
 
 export async function loadAllMvpVotes(): Promise<MvpVote[]> {
@@ -113,16 +116,21 @@ export async function getSeasonStandingForUser(userId: string): Promise<Leaderbo
     const season = await getSeasonData()
     const [runs, usersById, votes] = await Promise.all([loadAllRuns(), loadUsersMap(), loadAllMvpVotes()])
     const user = usersById.get(userId)
-    const individual = [
-      ...aggregateLeaderboard(runs, usersById, 'raid', 'season', season),
-      ...aggregateLeaderboard(runs, usersById, 'dungeon', 'season', season),
-      ...aggregateGuardianLeaderboard(votes, usersById, 'season', season),
-    ].filter((entry) => entry.userId === userId)
+    const individual = (
+      await Promise.all([
+        buildLeaderboardWithAdjustments('raid', 'season', season, runs, usersById, votes),
+        buildLeaderboardWithAdjustments('dungeon', 'season', season, runs, usersById, votes),
+        buildLeaderboardWithAdjustments('top_guardians', 'season', season, runs, usersById, votes),
+      ])
+    )
+      .flat()
+      .filter((entry) => entry.userId === userId)
+
     const pantheon =
       user?.bungieMembershipId != null
-        ? aggregatePantheonSquadLeaderboard(runs, usersById, 'season', season).filter((entry) =>
-            squadKeyIncludesMember(entry.userId, user.bungieMembershipId)
-          )
+        ? (
+            await buildLeaderboardWithAdjustments('pantheon', 'season', season, runs, usersById, votes)
+          ).filter((entry) => squadKeyIncludesMember(entry.userId, user.bungieMembershipId))
         : []
     return [...individual, ...pantheon]
   } catch {
@@ -196,17 +204,19 @@ export async function getOverviewData(): Promise<OverviewPayload> {
 
     const recentRuns = filterRunsFromTodayPacific(runs).slice(0, 10)
     const raidTop10 = await attachReputationScores(
-      aggregateLeaderboard(runs, usersById, 'raid', 'season', season)
+      await buildLeaderboardWithAdjustments('raid', 'season', season, runs, usersById, votes)
     )
     const dungeonTop10 = await attachReputationScores(
-      aggregateLeaderboard(runs, usersById, 'dungeon', 'season', season)
+      await buildLeaderboardWithAdjustments('dungeon', 'season', season, runs, usersById, votes)
     )
     const pantheonTop10 = await attachReputationScores(
-      aggregatePantheonSquadLeaderboard(runs, usersById, 'season', season)
+      await buildLeaderboardWithAdjustments('pantheon', 'season', season, runs, usersById, votes)
     )
-    const guardiansTop3 = aggregateGuardianLeaderboard(votes, usersById, 'monthly', season, 3)
+    const guardiansTop3 = (
+      await buildLeaderboardWithAdjustments('top_guardians', 'monthly', season, runs, usersById, votes)
+    ).slice(0, 3)
     const topLoadoutsByClass = rankTopLoadoutsByClass(buildCards, 2)
-    const { hallOfFame } = computeSeasonStandings(runs, usersById, season, votes)
+    const { hallOfFame } = await computeSeasonStandings(runs, usersById, season, votes)
 
     return buildOverviewPayload({
       raidTop10,
@@ -270,12 +280,7 @@ export async function getLeaderboardEntries(
     await ensureDestinyIndexes()
     const season = await getSeasonData()
     const [runs, usersById, votes] = await Promise.all([loadAllRuns(), loadUsersMap(), loadAllMvpVotes()])
-    const entries =
-      category === 'top_guardians'
-        ? aggregateGuardianLeaderboard(votes, usersById, period, season)
-        : category === 'pantheon'
-          ? aggregatePantheonSquadLeaderboard(runs, usersById, period, season)
-          : aggregateLeaderboard(runs, usersById, category, period, season)
+    const entries = await buildLeaderboardWithAdjustments(category, period, season, runs, usersById, votes)
     return attachReputationScores(entries)
   } catch {
     return []
@@ -332,7 +337,7 @@ export async function saveSeasonData(season: Season): Promise<void> {
 export async function finalizeActiveSeason(): Promise<Season> {
   const season = await getSeasonData()
   const { runs, usersById, votes } = await getSeasonStandingsInput()
-  const { hallOfFame } = computeSeasonStandings(runs, usersById, season, votes)
+  const { hallOfFame } = await computeSeasonStandings(runs, usersById, season, votes)
 
   const archived: Season = {
     ...season,
@@ -640,11 +645,30 @@ export async function saveRunRecord(record: RunRecord): Promise<void> {
 
 export async function queueAdminReview(record: AdminReviewRecord): Promise<void> {
   const database = await db()
+  const existing = (await database
+    .collection(DESTINY_COLLECTIONS.adminReviews)
+    .findOne({ id: record.id })) as AdminReviewRecord | null
+
   await database.collection(DESTINY_COLLECTIONS.adminReviews).updateOne(
     { id: record.id },
     { $set: { ...record, updatedAt: new Date().toISOString() } },
     { upsert: true }
   )
+
+  if (record.status === 'pending' && existing?.status !== 'pending') {
+    await logAdminActivity({
+      kind: 'run_flagged',
+      actorId: 'system',
+      targetUserId: record.run?.ownerUserId,
+      targetLabel: record.run?.ownerDisplayName,
+      summary: `Run flagged — ${record.run?.activityName ?? record.runId}`,
+      detail: record.aiSummary,
+      metadata: {
+        suspiciousScore: record.suspiciousScore,
+        runId: record.runId,
+      },
+    })
+  }
 }
 
 export async function resolveAdminReview(
@@ -714,6 +738,20 @@ export async function resolveAdminReview(
       { $set: { verificationStatus, updatedAt: now } }
     )
   }
+
+  await logAdminActivity({
+    kind: 'run_review',
+    actorId: adminId,
+    targetUserId: review.run?.ownerUserId,
+    targetLabel: review.run?.ownerDisplayName,
+    summary: `Run ${decision.replace(/_/g, ' ')} — ${review.run?.activityName ?? review.runId}`,
+    detail: notes,
+    metadata: {
+      decision,
+      reviewId,
+      suspiciousScore: review.suspiciousScore,
+    },
+  })
 
   return true
 }

@@ -55,6 +55,7 @@ export async function listBannedUsers(): Promise<BannedUserRow[]> {
 export async function banUsername(params: {
   username: string
   bannedBy: string
+  reason?: string
 }): Promise<void> {
   const normalized = normalizeBanUsername(params.username)
   if (!normalized) {
@@ -73,6 +74,7 @@ export async function banUsername(params: {
         username: normalized,
         bannedAt: new Date().toISOString(),
         bannedBy: normalizeBanUsername(params.bannedBy),
+        ...(params.reason?.trim() ? { reason: params.reason.trim().slice(0, 500) } : {}),
       },
     },
     { upsert: true }

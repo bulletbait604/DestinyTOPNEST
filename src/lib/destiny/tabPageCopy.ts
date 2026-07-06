@@ -44,7 +44,7 @@ export const TAB_PAGE_COPY: Record<
   },
   admin: {
     title: 'Admin',
-    description: 'Review flagged runs, manage prize claims, and finalize season results.',
+    description: 'Review flagged runs, moderate users, adjust leaderboards, ban accounts, and monitor the staff activity feed.',
   },
 }
 

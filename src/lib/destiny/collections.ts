@@ -15,4 +15,6 @@ export const DESTINY_COLLECTIONS = {
   prizeClaims: 'destiny_prize_claims',
   trustReviews: 'destiny_trust_reviews',
   mvpVotes: 'destiny_mvp_votes',
+  adminActivity: 'destiny_admin_activity',
+  leaderboardAdjustments: 'destiny_leaderboard_adjustments',
 } as const

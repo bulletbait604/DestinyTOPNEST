@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyStaffHandler } from '@/lib/destiny/apiHandler'
+import { logAdminActivity } from '@/lib/destiny/adminActivityLog'
 import {
   finalizeActiveSeason,
   getPendingPrizeClaims,
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
   return destinyStaffHandler(req, async () => {
     const season = await getSeasonData()
     const { runs, usersById, votes } = await getSeasonStandingsInput()
-    const { hallOfFame } = computeSeasonStandings(runs, usersById, season, votes)
+    const { hallOfFame } = await computeSeasonStandings(runs, usersById, season, votes)
     const pendingClaims = await getPendingPrizeClaims()
 
     return NextResponse.json({
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return destinyStaffHandler(req, async () => {
-    await verifyAuth(req)
+    const authUser = await verifyAuth(req)
+    const actorId = authUser.username.toLowerCase()
     const body = (await req.json().catch(() => ({}))) as {
       action?: string
       claimId?: string
@@ -44,6 +46,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'No active season to finalize' }, { status: 400 })
       }
       const archived = await finalizeActiveSeason()
+      await logAdminActivity({
+        kind: 'season_finalize',
+        actorId,
+        actorLabel: authUser.displayName,
+        summary: `Finalized season ${archived.name}`,
+        metadata: { seasonId: archived.id },
+      })
       return NextResponse.json({
         ok: true,
         message: 'Season finalized and winners locked.',
@@ -59,6 +68,14 @@ export async function POST(req: NextRequest) {
       if (!ok) {
         return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
       }
+      await logAdminActivity({
+        kind: 'prize_claim',
+        actorId,
+        actorLabel: authUser.displayName,
+        summary: `Prize claim ${body.claimStatus} — ${body.claimId}`,
+        detail: body.adminNotes,
+        metadata: { claimId: body.claimId, status: body.claimStatus },
+      })
       return NextResponse.json({ ok: true, claimId: body.claimId, status: body.claimStatus })
     }
 

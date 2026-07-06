@@ -49,6 +49,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
   const skipUrlSync = useRef(true)
 
   const handleTabChange = useCallback((tab: DestinyTopNestTab) => {
+    if (tab === 'admin' && !isAdmin) return
     if (tab === 'profile') {
       setProfileView('guardian')
       setLoadoutSection(undefined)
@@ -58,7 +59,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
       setLoadoutSection('mine')
     }
     setActiveTab(tab)
-  }, [])
+  }, [isAdmin])
 
   const navigateToProfileActivities = useCallback(() => {
     setProfileView('activities')
@@ -72,13 +73,17 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
 
     const tab = parseTabFromSearch(window.location.search)
     if (isDestinyTopNestTab(tab)) {
-      setActiveTab(tab === 'season' ? 'leaderboards' : tab)
       const resolved = tab === 'season' ? 'leaderboards' : tab
-      setProfileView(resolveProfileView(resolved))
-      setLoadoutSection(resolveLoadoutSection(resolved))
+      if (resolved === 'admin' && !isAdmin) {
+        setActiveTab('overview')
+      } else {
+        setActiveTab(resolved)
+        setProfileView(resolveProfileView(resolved))
+        setLoadoutSection(resolveLoadoutSection(resolved))
+      }
     }
     stripOAuthParams()
-  }, [])
+  }, [isAdmin])
 
   useEffect(() => {
     if (!restored.current) return
@@ -112,7 +117,11 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
       case 'season':
         return <LeaderboardsPanel darkMode={darkMode} />
       case 'admin':
-        return <AdminPanel darkMode={darkMode} />
+        return isAdmin ? (
+          <AdminPanel darkMode={darkMode} isAdmin />
+        ) : (
+          <AdminPanel darkMode={darkMode} isAdmin={false} />
+        )
     }
   }
 
