@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Gamepad2, Mic, Plus, Users } from 'lucide-react'
+import { Gamepad2, Mic, Plus, Trash2, Users } from 'lucide-react'
 import FireteamReviewSection from '@/app/components/destiny/FireteamReviewSection'
 import FlierTeamCreateWizard from '@/app/components/destiny/FlierTeamCreateWizard'
 import FlierTeamMemberModal from '@/app/components/destiny/FlierTeamMemberModal'
@@ -51,8 +51,10 @@ function MemberCard({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex flex-col items-center gap-1 p-2 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] hover:border-amber-500/30 transition-colors min-w-[80px]'
+        'flex flex-col items-center gap-1 p-2 rounded-xl border border-white/10 bg-white/[0.03]',
+        'hover:bg-white/[0.08] hover:border-amber-500/30 transition-colors min-w-[80px] cursor-pointer'
       )}
+      title="View guardian build"
     >
       {member.emblemUrl ? (
         <img src={member.emblemUrl} alt="" className="w-10 h-10 rounded-full border border-amber-500/20" />
@@ -102,6 +104,13 @@ function RoomCard({
   ]
 
   const act = async (action: string, extra?: Record<string, string>) => {
+    if (action === 'delete') {
+      const ok = window.confirm(
+        'Delete this FlierTeam room? This cannot be undone and all members will be removed.'
+      )
+      if (!ok) return
+    }
+
     setBusy(true)
     setMessage(null)
     try {
@@ -164,7 +173,7 @@ function RoomCard({
             key={m.userId}
             member={m}
             darkMode={darkMode}
-            onClick={() => inRoom && onViewMember(m.userId, m.displayName)}
+            onClick={() => onViewMember(m.userId, m.displayName)}
           />
         ))}
         {Array.from({ length: Math.max(0, lobby.maxPlayers - members.length) }).map((_, i) => (
@@ -213,14 +222,29 @@ function RoomCard({
               <Gamepad2 className="w-4 h-4" />
               Invite in-game
             </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void act('leave')}
-              className={cn(destinySecondaryBtn(darkMode), 'text-xs py-2')}
-            >
-              {isHost ? 'Close room' : 'Leave'}
-            </button>
+            {isHost ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void act('delete')}
+                className={cn(
+                  destinySecondaryBtn(darkMode),
+                  'text-xs py-2 text-red-200/90 border-red-500/30 hover:border-red-400/50'
+                )}
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete room
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void act('leave')}
+                className={cn(destinySecondaryBtn(darkMode), 'text-xs py-2')}
+              >
+                Leave
+              </button>
+            )}
           </>
         ) : full ? (
           <span className={cn('text-sm', t.muted)}>Room full</span>
@@ -251,6 +275,7 @@ function RoomCard({
           applications={lobby.pendingApplications}
           busy={busy}
           onApprove={(userId) => void act('approve', { applicantUserId: userId })}
+          onViewMember={onViewMember}
         />
       ) : null}
     </div>
@@ -262,11 +287,13 @@ function PendingApplications({
   applications,
   busy,
   onApprove,
+  onViewMember,
 }: {
   darkMode: boolean
   applications: FlierTeamApplication[]
   busy: boolean
   onApprove: (userId: string) => void
+  onViewMember: (userId: string, name: string) => void
 }) {
   const t = getDestinyTheme(darkMode)
   return (
@@ -274,12 +301,19 @@ function PendingApplications({
       <p className={cn('text-xs font-semibold mb-2', t.gold)}>Pending applications</p>
       {applications.map((app) => (
         <div key={app.userId} className="flex items-center justify-between gap-2 py-1.5">
-          <span className="text-sm text-white">{app.displayName}</span>
+          <button
+            type="button"
+            onClick={() => onViewMember(app.userId, app.displayName)}
+            className="text-sm text-white hover:text-amber-200 underline-offset-2 hover:underline text-left"
+            title="View applicant build"
+          >
+            {app.displayName}
+          </button>
           <button
             type="button"
             disabled={busy}
             onClick={() => onApprove(app.userId)}
-            className={cn(destinySecondaryBtn(darkMode), 'text-xs py-1 px-2')}
+            className={cn(destinySecondaryBtn(darkMode), 'text-xs py-1 px-2 shrink-0')}
           >
             Approve
           </button>

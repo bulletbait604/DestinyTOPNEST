@@ -6,11 +6,19 @@ import { buildUserProfile } from '@/lib/destiny/profileService'
 
 export const dynamic = 'force-dynamic'
 
-/** Guardian build card for FlierTeam room members (lobby members only). */
+function canViewMemberInLobby(
+  lobby: NonNullable<Awaited<ReturnType<typeof getLobbyById>>>,
+  memberUserId: string
+): boolean {
+  const members = flierTeamRoomMembers(lobby)
+  if (members.some((m) => m.userId === memberUserId)) return true
+  return (lobby.pendingApplications ?? []).some((a) => a.userId === memberUserId)
+}
+
+/** Guardian build card for FlierTeam room members and applicants. */
 export async function GET(req: NextRequest) {
   return destinyAuthHandler(req, async () => {
-    const authUser = await verifyAuth(req)
-    const viewerId = authUser.username.toLowerCase()
+    await verifyAuth(req)
     const params = new URL(req.url).searchParams
     const lobbyId = params.get('lobbyId')
     const memberUserId = params.get('userId')
@@ -24,14 +32,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 })
     }
 
-    const members = flierTeamRoomMembers(lobby)
-    const viewerInRoom = members.some((m) => m.userId === viewerId)
-    if (!viewerInRoom) {
-      return NextResponse.json({ error: 'You must be in this room to view member builds.' }, { status: 403 })
-    }
-
-    if (!members.some((m) => m.userId === memberUserId)) {
-      return NextResponse.json({ error: 'Not a member of this room.' }, { status: 404 })
+    if (!canViewMemberInLobby(lobby, memberUserId)) {
+      return NextResponse.json({ error: 'Guardian is not in this room.' }, { status: 404 })
     }
 
     const result = await buildUserProfile(memberUserId, 'full')

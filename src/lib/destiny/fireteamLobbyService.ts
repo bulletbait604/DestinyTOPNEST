@@ -360,6 +360,30 @@ export async function leaveFlierTeamRoom(
   return { ok: true }
 }
 
+export async function deleteFlierTeamRoom(
+  lobbyId: string,
+  userId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const database = await db()
+    const lobby = (await database
+      .collection(DESTINY_COLLECTIONS.fireteamLobbies)
+      .findOne({ id: lobbyId })) as FireteamLobby | null
+
+    if (!lobby) {
+      return { ok: false, error: 'Room not found.' }
+    }
+    if (lobby.hostUserId !== userId) {
+      return { ok: false, error: 'Only the host can delete this room.' }
+    }
+
+    await database.collection(DESTINY_COLLECTIONS.fireteamLobbies).deleteOne({ id: lobbyId })
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Could not delete room.' }
+  }
+}
+
 export async function inviteToAppLobby(input: {
   lobbyId: string
   inviterUserId: string

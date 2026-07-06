@@ -7,6 +7,7 @@ import { enrichLobbies } from '@/lib/destiny/enrich'
 import {
   approveFlierTeamApplication,
   applyToFlierTeamRoom,
+  deleteFlierTeamRoom,
   flierTeamRoomMembers,
   getLobbyById,
   isFlierTeamRoomFull,
@@ -18,7 +19,7 @@ import { fetchSocialPresence } from '@/lib/destiny/socialPresence'
 export const dynamic = 'force-dynamic'
 
 interface ActionBody {
-  action?: 'join' | 'apply' | 'approve' | 'leave' | 'invite-ingame'
+  action?: 'join' | 'apply' | 'approve' | 'leave' | 'delete' | 'invite-ingame'
   message?: string
   applicantUserId?: string
   bungieFireteamId?: string
@@ -73,7 +74,13 @@ export async function POST(
     if (action === 'leave') {
       const result = await leaveFlierTeamRoom(lobbyId, userId)
       if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
-      return NextResponse.json({ ok: true })
+      return NextResponse.json({ ok: true, message: 'Left the room.' })
+    }
+
+    if (action === 'delete') {
+      const result = await deleteFlierTeamRoom(lobbyId, userId)
+      if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+      return NextResponse.json({ ok: true, message: 'Room deleted.' })
     }
 
     if (action === 'invite-ingame') {
