@@ -1377,6 +1377,55 @@ a { color: inherit; text-decoration: none; }
     letter-spacing: 0.04em;
   }
 
+  .tn-weekly-activity-intel {
+    margin-top: 0.55rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 0.45rem;
+  }
+
+  .tn-weekly-activity-intel-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.2rem 0.15rem 0.35rem;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+    list-style: none;
+  }
+
+  .tn-weekly-activity-intel-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .tn-weekly-activity-intel-chevron {
+    color: rgba(255, 255, 255, 0.4);
+    transition: transform 0.15s ease;
+  }
+
+  .tn-weekly-activity-intel[open] .tn-weekly-activity-intel-chevron {
+    transform: rotate(180deg);
+  }
+
+  .tn-weekly-activity-intel-body {
+    padding: 0 0.1rem 0.25rem;
+  }
+
+  .tn-weekly-activity-intel-body .d2-wiki-box-summary-text {
+    margin-bottom: 0.65rem;
+  }
+
+  .tn-weekly-activity-intel-body .d2-loot-panel {
+    margin-top: 0;
+  }
+
+  .tn-weekly-activity-intel-body .d2-wiki-box-tips {
+    margin-top: 0.65rem;
+  }
+
   .tn-armor-set-panel {
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.08);

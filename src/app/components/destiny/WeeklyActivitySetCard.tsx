@@ -1,8 +1,11 @@
 'use client'
 
+import { ChevronDown } from 'lucide-react'
 import type { FeaturedActivity } from '@/lib/destiny/types'
 import { activityArmorSet } from '@/lib/destiny/activityArmorSets'
+import { activityIntel } from '@/lib/destiny/activityIntel'
 import ActivityArmorSetPanel from '@/app/components/destiny/ActivityArmorSetPanel'
+import { ActivityIntelSections } from '@/app/components/destiny/ActivityIntelSections'
 import { activityWalkthroughLinkTitle, activityWalkthroughUrl } from '@/lib/destiny/activityWalkthroughLinks'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -16,12 +19,14 @@ interface Props {
   darkMode: boolean
 }
 
-/** Home rotation tile — activity name + droppable armor set bonuses. */
+/** Home rotation tile — activity header, armor set, and expandable loot intel. */
 export default function WeeklyActivitySetCard({ label, activity, kind, resetsIn, darkMode }: Props) {
   const t = getDestinyTheme(darkMode)
   const armorSet = activityArmorSet(activity.name) ?? (kind === 'pantheon' ? activityArmorSet('Pantheon') : null)
   const walkthrough = activityWalkthroughUrl(activity.name)
   const kindLabel = kind === 'raid' ? 'Raid' : kind === 'dungeon' ? 'Dungeon' : 'Pantheon'
+  const showIntel = kind === 'raid' || kind === 'dungeon'
+  const intel = showIntel ? activityIntel({ ...activity, resetsIn: activity.resetsIn ?? resetsIn }) : null
 
   return (
     <article className="tn-weekly-activity-card">
@@ -49,6 +54,7 @@ export default function WeeklyActivitySetCard({ label, activity, kind, resetsIn,
           <p className={cn('tn-weekly-activity-name truncate', t.heading)}>{activity.name}</p>
           <p className={cn('tn-weekly-activity-meta', t.muted)}>
             {kindLabel}
+            {intel ? ` · ${intel.difficulty}` : ''}
             {resetsIn ? ` · Resets ${resetsIn}` : ''}
           </p>
         </div>
@@ -59,6 +65,16 @@ export default function WeeklyActivitySetCard({ label, activity, kind, resetsIn,
       ) : (
         <p className={cn('text-[11px] px-1 py-2', t.muted)}>Armor set data coming soon.</p>
       )}
+
+      {showIntel ? (
+        <details className="tn-weekly-activity-intel group">
+          <summary className="tn-weekly-activity-intel-summary list-none cursor-pointer">
+            <span>Chase loot & tips</span>
+            <ChevronDown className="tn-weekly-activity-intel-chevron w-4 h-4 shrink-0" aria-hidden />
+          </summary>
+          <ActivityIntelSections activity={activity} resetsIn={resetsIn} />
+        </details>
+      ) : null}
     </article>
   )
 }

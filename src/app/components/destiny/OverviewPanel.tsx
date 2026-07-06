@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import type { FeaturedActivity } from '@/lib/destiny/types'
-import ActivityIntelAccordion from '@/app/components/destiny/ActivityIntelAccordion'
 import HomeLeaderboardCard from '@/app/components/destiny/HomeLeaderboardCard'
 import {
   GlassCard,
@@ -207,7 +206,7 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
             />
           </div>
 
-          <div className="tn-weekly-activity-grid mb-5">
+          <div className="tn-weekly-activity-grid">
             {rotationActivityCards(
               featuredRaids,
               featuredDungeons,
@@ -217,8 +216,6 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
               darkMode
             )}
           </div>
-
-          <ActivityIntelAccordion raids={featuredRaids} dungeons={featuredDungeons} embedded />
         </div>
       </GlassCard>
 
