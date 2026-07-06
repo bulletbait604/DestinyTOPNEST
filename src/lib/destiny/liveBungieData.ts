@@ -1,8 +1,10 @@
 ﻿import {
   getClan,
-  getClanMembers,
+  getClanMembersWithPresence,
   getGroupsForMember,
+  type ClanMemberPresenceRow,
 } from '@/lib/destiny/bungieClient'
+import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 import { fetchAllCharactersPresentation, fetchGuardianPresentation } from '@/lib/destiny/guardianPresentation'
 import { resolveActiveCharacterId } from '@/lib/destiny/activeCharacter'
 import { fetchGuardianBungieStats } from '@/lib/destiny/guardianBungieStats'
@@ -143,8 +145,8 @@ async function fetchClanById(clanId: string, stored: StoredDestinyUser): Promise
         detail?: { name?: string; motto?: string; memberCount?: number }
         clanInfo?: { clanCallsign?: string; clanBannerData?: { emblemPath?: string } }
       }>,
-      getClanMembers(clanId) as Promise<{
-        results?: Array<{ destMemberDisplayName?: string; memberType?: number }>
+      getClanMembersWithPresence(clanId) as Promise<{
+        results?: ClanMemberPresenceRow[]
       }>,
     ])
 
@@ -153,10 +155,40 @@ async function fetchClanById(clanId: string, stored: StoredDestinyUser): Promise
     const emblemUrl = emblemPath ? `https://www.bungie.net${emblemPath}` : undefined
 
     const topMembers =
-      membersData.results?.slice(0, 5).map((m) => ({
-        displayName: m.destMemberDisplayName ?? 'Member',
-        points: 0,
-      })) ?? []
+      membersData.results?.slice(0, 5).map((m) => {
+        const info = m.destinyUserInfo ?? m.bungieNetUserInfo
+        return {
+          displayName:
+            m.destinyUserInfo?.LastSeenDisplayName ??
+            info?.displayName ??
+            'Member',
+          points: 0,
+          emblemUrl: buildBungieIconUrl(info?.iconPath),
+        }
+      }) ?? []
+
+    const onlineMembers =
+      membersData.results
+        ?.filter((m) => m.isOnline)
+        .map((m) => {
+          const info = m.destinyUserInfo ?? m.bungieNetUserInfo
+          if (!info?.membershipId) return null
+          const displayName =
+            m.destinyUserInfo?.LastSeenDisplayName ?? info.displayName ?? 'Member'
+          return {
+            displayName,
+            bungieName:
+              info.bungieGlobalDisplayName && info.bungieGlobalDisplayNameCode != null
+                ? `${info.bungieGlobalDisplayName}#${String(info.bungieGlobalDisplayNameCode).padStart(4, '0')}`
+                : displayName,
+            membershipId: String(info.membershipId),
+            membershipType: m.destinyUserInfo?.membershipType,
+            emblemUrl: buildBungieIconUrl(info.iconPath),
+            isOnline: true,
+            inDestiny: true,
+          }
+        })
+        .filter((row): row is NonNullable<typeof row> => row != null) ?? []
 
     return {
       id: clanId,
@@ -170,6 +202,7 @@ async function fetchClanById(clanId: string, stored: StoredDestinyUser): Promise
       avgRaidClearSeconds: 0,
       avgDungeonClearSeconds: 0,
       topMembers,
+      onlineMembers,
       achievements: [],
     }
   } catch {

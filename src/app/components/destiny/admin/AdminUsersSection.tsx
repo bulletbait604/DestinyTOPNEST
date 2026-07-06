@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Ban, Loader2, Search, Shield, UserCheck, UserMinus, UserPlus } from 'lucide-react'
 import type { AdminUserDetail, AdminUserSummary } from '@/lib/destiny/types'
+import AdminUserProfileView from '@/app/components/destiny/admin/AdminUserProfileView'
 import { GlassCard, LoadingBlock, SectionTitle, StatusPill } from '@/app/components/destiny/DestinyUi'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
@@ -237,9 +238,16 @@ export default function AdminUsersSection({
       </GlassCard>
 
       {detailLoading ? (
-        <LoadingBlock darkMode={darkMode} label="Loading profile…" />
+        <LoadingBlock darkMode={darkMode} label="Loading guardian profile and loadout from Bungie…" />
       ) : selected ? (
-        <GlassCard darkMode={darkMode}>
+        <>
+          <AdminUserProfileView
+            profile={selected.profile}
+            bungieLinked={selected.bungieLinked ?? false}
+            darkMode={darkMode}
+          />
+
+          <GlassCard darkMode={darkMode}>
           <SectionTitle title={selected.bungieDisplayName} subtitle="Manual user review" darkMode={darkMode} />
           <div className="flex flex-wrap gap-2 mb-3">
             {selected.isBanned ? <StatusPill label="Banned" tone="red" /> : <StatusPill label="Active" tone="green" />}
@@ -372,6 +380,7 @@ export default function AdminUsersSection({
             </div>
           </div>
         </GlassCard>
+        </>
       ) : null}
     </div>
   )

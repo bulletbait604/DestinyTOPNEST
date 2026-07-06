@@ -6,6 +6,7 @@ import {
   armorStatValue,
   type ArmorStatKey,
 } from '@/lib/destiny/armorStats'
+import StatBenefitTooltip from '@/app/components/destiny/StatBenefitTooltip'
 import { cn } from '@/lib/utils'
 
 /** Armor 3.0 horizontal stat bars (0–200 per stat). */
@@ -38,21 +39,23 @@ export default function ArmorStatMatrix({
         const color = D2_ARMOR_STAT_COLORS[key as ArmorStatKey]
 
         return (
-          <div key={key} className="d2-stat-matrix-row" title={`${label}: ${value}`}>
-            <span className="d2-stat-matrix-label">{label}</span>
-            <div className="d2-stat-matrix-track">
-              <div
-                className="d2-stat-matrix-fill"
-                style={
-                  {
-                    width: `${pct}%`,
-                    '--stat-color': color,
-                  } as React.CSSProperties
-                }
-              />
+          <StatBenefitTooltip key={key} statKey={key as ArmorStatKey} label={label} value={value}>
+            <div className="d2-stat-matrix-row">
+              <span className="d2-stat-matrix-label">{label}</span>
+              <div className="d2-stat-matrix-track">
+                <div
+                  className="d2-stat-matrix-fill"
+                  style={
+                    {
+                      width: `${pct}%`,
+                      '--stat-color': color,
+                    } as React.CSSProperties
+                  }
+                />
+              </div>
+              <span className="d2-stat-matrix-value">{value}</span>
             </div>
-            <span className="d2-stat-matrix-value">{value}</span>
-          </div>
+          </StatBenefitTooltip>
         )
       })}
     </div>

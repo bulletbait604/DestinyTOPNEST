@@ -34,16 +34,24 @@ export async function GET(req: NextRequest) {
         : 'No verified PGCR builds yet — sync runs from Home after linking Bungie.'
 
     const researchSummary = metaResearchSummary(filteredExternal)
+    const meta = await getMetaResearchMeta()
+    const weeklyLine = meta.weeklySync.syncedAt
+      ? `Checked with the ${meta.weekLabel} weekly reset${
+          meta.weeklySync.featuredActivities.length
+            ? ` (${meta.weeklySync.featuredActivities.join(', ')})`
+            : ''
+        } on ${new Date(meta.weeklySync.syncedAt).toLocaleDateString()}.`
+      : `Weekly check for ${meta.weekLabel} runs on first load after reset.`
 
     return NextResponse.json({
       ...(await enrichBuildsResponse({
         verifiedBuilds: filteredVerified,
         externalBuilds: filteredExternal,
         aiSummary,
-        metaResearchSummary: researchSummary,
+        metaResearchSummary: [researchSummary, weeklyLine].filter(Boolean).join(' '),
         activity: activity || 'all',
       })),
-      metaResearch: getMetaResearchMeta(),
+      metaResearch: meta,
     })
   })
 }

@@ -90,4 +90,12 @@ export const ITEM_HASH_OVERRIDES = {
   'collective obligation': 3505113722,
   optative: 2817683783,
   "calus's selected": 2817683783,
+  gyrfalcon: 691207129,
+  'melas penoplia': 3889116149,
+  "winter's resilience": 3350824946,
+  bleakwatch: 2805250666,
+  'lightning storm': 2448134789,
+  'shock absorber': 3355999979,
+  dynamism: 1355399118,
+  'khvostov 7g-0x': 4129629253,
 }

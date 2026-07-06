@@ -67,9 +67,9 @@ export async function GET(req: NextRequest) {
         current,
         saved,
         favorites: [],
-        equipSupported: false,
+        equipSupported: true,
         equipMessage:
-          'Direct equip requires Bungie OAuth with MoveEquipDestinyItems scope. View and copy loadouts for now.',
+          'Apply meta builds from Top builds, or equip saved loadouts in-game when Bungie OAuth includes MoveEquipDestinyItems.',
       })
     )
   })

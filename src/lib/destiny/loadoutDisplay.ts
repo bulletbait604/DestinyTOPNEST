@@ -48,7 +48,7 @@ export function buildExternalArmorRows(build: ExternalBuildSource): ArmoryRow[] 
     })
   }
 
-  const slots: ArmorSlotLabel[] = ['helmet', 'gauntlets', 'chest', 'legs']
+  const slots: ArmorSlotLabel[] = ['helmet', 'gauntlets', 'chest', 'legs', 'class']
   for (const slot of slots) {
     const name = build.legendaryArmor?.[slot]
     if (!name) continue

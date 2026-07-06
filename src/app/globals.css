@@ -3345,6 +3345,164 @@ a { color: inherit; text-decoration: none; }
     min-height: 0;
   }
 
+  /* Armor 3.0 stat benefit tooltips */
+  .d2-stat-row-tooltip-wrap {
+    position: relative;
+    display: block;
+    min-width: 0;
+    cursor: help;
+    border-radius: 6px;
+    outline: none;
+  }
+
+  .d2-stat-row-tooltip-wrap:hover,
+  .d2-stat-row-tooltip-wrap:focus-visible {
+    z-index: 20;
+  }
+
+  .d2-stat-row-tooltip-wrap:hover .d2-stat-matrix-row,
+  .d2-stat-row-tooltip-wrap:focus-visible .d2-stat-matrix-row {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 6px;
+  }
+
+  .d2-stat-row-tooltip {
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 8px);
+    left: auto;
+    z-index: 30;
+    width: max-content;
+    min-width: 210px;
+    max-width: min(280px, 70vw);
+    padding: 0.65rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(8, 10, 18, 0.97);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-50%) translateX(6px);
+    transition: opacity 150ms ease, transform 150ms ease, visibility 150ms ease;
+    text-align: left;
+  }
+
+  .d2-stat-row-tooltip-wrap:hover .d2-stat-row-tooltip,
+  .d2-stat-row-tooltip-wrap:focus-visible .d2-stat-row-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%) translateX(0);
+  }
+
+  @media (max-width: 767px) {
+    .d2-stat-row-tooltip {
+      top: calc(100% + 6px);
+      right: 0;
+      left: 0;
+      width: auto;
+      max-width: none;
+      transform: translateY(-4px);
+    }
+
+    .d2-stat-row-tooltip-wrap:hover .d2-stat-row-tooltip,
+    .d2-stat-row-tooltip-wrap:focus-visible .d2-stat-row-tooltip {
+      transform: translateY(0);
+    }
+  }
+
+  .d2-stat-row-tooltip-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .d2-stat-row-tooltip-value {
+    font-size: 15px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    color: #fff;
+  }
+
+  .d2-stat-row-tooltip-tiers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .d2-stat-benefit-tier {
+    opacity: 0.55;
+  }
+
+  .d2-stat-benefit-tier-active {
+    opacity: 1;
+  }
+
+  .d2-stat-benefit-tier-label {
+    margin-bottom: 0.2rem;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.42);
+  }
+
+  .d2-stat-benefit-tier-active .d2-stat-benefit-tier-label {
+    color: rgba(255, 196, 92, 0.95);
+  }
+
+  .d2-stat-benefit-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .d2-stat-benefit-list li {
+    position: relative;
+    padding-left: 0.75rem;
+    font-size: 12px;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .d2-stat-benefit-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .d2-stat-benefit-list-active li {
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .d2-stat-benefit-list-active li::before {
+    color: rgba(255, 196, 92, 0.85);
+  }
+
+  .d2-loadout-build-stats .d2-build-section,
+  .d2-profile-stats-panel,
+  .d2-profile-build-body,
+  .d2-loadout-build-grid {
+    overflow: visible;
+  }
+
+  .d2-stat-matrix-loadout,
+  .d2-stat-matrix-ingame {
+    overflow: visible;
+  }
+
   /* â”€â”€ Step 3: Build synergy rail â”€â”€ */
   .d2-synergy-rail {
     display: flex;

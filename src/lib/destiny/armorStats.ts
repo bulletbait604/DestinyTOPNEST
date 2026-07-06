@@ -34,6 +34,45 @@ export const D2_ARMOR_STAT_COLORS: Record<ArmorStatKey, string> = {
   Melee: '#e67e22',
 }
 
+/** Armor 3.0 stat benefits by tier (Edge of Fate). */
+export const ARMOR_STAT_BENEFITS: Record<
+  ArmorStatKey,
+  { base: readonly string[]; bonus: readonly string[] }
+> = {
+  Weapons: {
+    base: ['Faster reload and handling', 'Bonus damage vs minors and majors'],
+    bonus: ['Boss damage bonus', 'Higher ammo brick drop chance'],
+  },
+  Health: {
+    base: ['Healing from Orbs of Power', 'Flinch resistance'],
+    bonus: ['Faster shield recharge', 'Increased shield capacity'],
+  },
+  Class: {
+    base: ['Faster class ability cooldown', 'More class ability energy from kills'],
+    bonus: ['Overshield when you cast class ability'],
+  },
+  Super: {
+    base: ['More Super energy from damage and orbs'],
+    bonus: ['Increased Super damage'],
+  },
+  Grenade: {
+    base: ['Faster grenade cooldown', 'More grenade energy from kills'],
+    bonus: ['Increased grenade damage'],
+  },
+  Melee: {
+    base: ['Faster melee cooldown', 'More melee energy from kills'],
+    bonus: ['Increased melee, powered, and glaive damage'],
+  },
+}
+
+/** Plain-text summary for native title fallback. */
+export function armorStatBenefitSummary(key: ArmorStatKey, value: number): string {
+  const { base, bonus } = ARMOR_STAT_BENEFITS[key]
+  const tier = value > 100 ? '101–200' : '1–100'
+  const active = value > 100 ? bonus : base
+  return `${tier}: ${active.join('; ')}`
+}
+
 /** Read a stat total from mixed legacy / Armor 3.0 payload keys. */
 export function armorStatValue(stats: Record<string, number>, key: ArmorStatKey, legacyKey: string): number {
   const direct = stats[key] ?? stats[key.toLowerCase()]

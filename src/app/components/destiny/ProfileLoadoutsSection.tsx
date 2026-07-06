@@ -210,8 +210,8 @@ export default function ProfileLoadoutsSection({
         <>
           <GlassCard darkMode={darkMode}>
             <SectionTitle
-              title="Meta builds (last 4 weeks)"
-              subtitle="Researched from Blueberries.gg, light.gg, togame.io, D2Foundry, and builders.gg — ranked by cross-site consensus"
+              title="Meta builds"
+              subtitle="Researched from Blueberries.gg, light.gg, togame.io, D2Foundry, and builders.gg — checked each week with the Destiny reset"
               darkMode={darkMode}
             />
             {metaResearchSummary && (
@@ -220,14 +220,19 @@ export default function ProfileLoadoutsSection({
             {externalBuilds.length ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {externalBuilds.map((b) => (
-                  <ExternalMetaBuildCard key={b.id} build={b} darkMode={darkMode} />
+                  <ExternalMetaBuildCard
+                    key={b.id}
+                    build={b}
+                    darkMode={darkMode}
+                    characterId={activeCharacterId}
+                  />
                 ))}
               </div>
             ) : (
               <EmptyBlock
                 darkMode={darkMode}
                 message="No meta builds in the research window"
-                hint="External meta is refreshed on a rolling 4-week schedule."
+                hint="Meta builds refresh each week with the Destiny reset and featured raid/dungeon rotation."
               />
             )}
           </GlassCard>
@@ -236,7 +241,7 @@ export default function ProfileLoadoutsSection({
             darkMode={darkMode}
             topByClass={topMetaByClass}
             title="Top meta loadouts by class"
-            subtitle="Unmodified picks from build sites (June 2026 research)"
+            subtitle="Unmodified picks from build sites — updated weekly with the reset"
           />
 
           <TopLoadoutsByClass

@@ -19,7 +19,7 @@ const MAIN_NAV: { id: DestinyTopNestTab; label: string; icon: LucideIcon }[] = [
   { id: 'overview', label: 'Home', icon: LayoutDashboard },
   { id: 'leaderboards', label: 'Leaderboards', icon: Trophy },
   { id: 'profile', label: 'Profile', icon: User },
-  { id: 'fireteam', label: 'FIRETEAMS', icon: Users },
+  { id: 'fireteam', label: 'FLIER TEAM', icon: Users },
   { id: 'clans', label: 'Clan', icon: Building2 },
   { id: 'loadouts', label: 'Builds', icon: Hammer },
 ]

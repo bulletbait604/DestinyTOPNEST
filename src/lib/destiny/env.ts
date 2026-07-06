@@ -153,6 +153,12 @@ export function bungieOAuthConfigured(): boolean {
   return Boolean(bungieOAuthClientId() && bungieOAuthClientSecret() && destinyApiKey())
 }
 
+/** Bearer token for Vercel cron routes (CRON_SECRET). */
+export function cronSecret(): string | undefined {
+  const secret = process.env.CRON_SECRET || ''
+  return secret.trim() || undefined
+}
+
 export const BUNGIE_API_BASE = 'https://www.bungie.net/Platform' // https://bungie-net.github.io/
 /** Live Destiny 2 manifest index — lists current definition tables and versions. */
 export const DESTINY_MANIFEST_PATH = '/Destiny2/Manifest/'

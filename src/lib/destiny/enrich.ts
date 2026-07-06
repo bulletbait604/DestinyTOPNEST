@@ -26,6 +26,7 @@ import {
   type DestinyIconRef,
 } from '@/lib/destiny/manifest'
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
+import { flierTeamRequirementLabels } from '@/lib/destiny/flierTeamRequirements'
 import { activityIconUrlForName, pantheonActivityIconUrl } from '@/lib/destiny/activityIconPaths'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { getOrBuildWeeklyLootIcons } from '@/lib/destiny/weeklyLootIcons'
@@ -202,7 +203,11 @@ async function enrichLeaderboardEntry(entry: LeaderboardEntry): Promise<Leaderbo
 async function enrichLobby(lobby: FireteamLobby): Promise<FireteamLobby> {
   const activityRef = await resolveActivity(lobby.activityName)
   const classRef = lobby.hostClass ? await resolveClassIcon(lobby.hostClass) : undefined
-  return { ...lobby, activityRef, hostClassRef: classRef }
+  const reqLabels = lobby.requirementSelections?.length
+    ? flierTeamRequirementLabels(lobby.requirementSelections)
+    : []
+  const tags = Array.from(new Set([...(lobby.tags ?? []), ...reqLabels]))
+  return { ...lobby, activityRef, hostClassRef: classRef, tags }
 }
 
 export async function buildWeeklyResetInfo(): Promise<WeeklyResetInfo> {
@@ -388,10 +393,22 @@ export async function enrichExternalBuild(build: ExternalBuildSource): Promise<E
     Promise.all((build.weapons ?? []).map((w) => resolveByName(w))),
     build.activityFocus ? resolveActivity(build.activityFocus) : Promise.resolve(undefined),
     build.aspects?.length
-      ? Promise.all(build.aspects.map((a) => resolveByName(a, 'DestinyInventoryItemDefinition')))
+      ? Promise.all(
+          build.aspects.map(async (a) => {
+            const fromItem = await resolveByName(a, 'DestinyInventoryItemDefinition')
+            if (fromItem?.iconUrl) return fromItem
+            return resolveByName(a, 'DestinySandboxPerkDefinition')
+          })
+        )
       : Promise.resolve(undefined),
     build.fragments?.length
-      ? Promise.all(build.fragments.map((f) => resolveByName(f, 'DestinyInventoryItemDefinition')))
+      ? Promise.all(
+          build.fragments.map(async (f) => {
+            const fromItem = await resolveByName(f, 'DestinyInventoryItemDefinition')
+            if (fromItem?.iconUrl) return fromItem
+            return resolveByName(f, 'DestinySandboxPerkDefinition')
+          })
+        )
       : Promise.resolve(undefined),
     build.legendaryArmor
       ? Promise.all(
@@ -410,7 +427,13 @@ export async function enrichExternalBuild(build: ExternalBuildSource): Promise<E
         })
       : Promise.resolve(undefined),
     build.armorMods?.length
-      ? Promise.all(build.armorMods.map((mod) => resolveByName(mod, 'DestinyInventoryItemDefinition')))
+      ? Promise.all(
+          build.armorMods.map(async (mod) => {
+            const fromItem = await resolveByName(mod, 'DestinyInventoryItemDefinition')
+            if (fromItem?.iconUrl) return fromItem
+            return resolveByName(mod, 'DestinySandboxPerkDefinition')
+          })
+        )
       : Promise.resolve(undefined),
   ])
 

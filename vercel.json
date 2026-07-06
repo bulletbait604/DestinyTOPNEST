@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/destiny/cron/weekly-meta-builds",
+      "schedule": "30 17 * * 2"
+    }
+  ]
+}

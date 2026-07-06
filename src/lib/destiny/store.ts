@@ -16,6 +16,9 @@ import {
   META_BUILD_RESEARCH_DATE,
   META_RESEARCH_SOURCES,
 } from '@/lib/destiny/externalMetaResearch'
+import { ensureWeeklyMetaBuildSync, getMetaBuildWeeklySyncStatus } from '@/lib/destiny/metaBuildWeeklySync'
+import { isValidMetaBuild } from '@/lib/destiny/metaBuildClassRules'
+import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { aggregateBuildIntelligence, verifiedRunIdSet } from '@/lib/destiny/buildIntelligence'
 import { rankTopMetaLoadoutsByClass, rankTrendingMetaBuilds, sortExternalBuildsByConsensus } from '@/lib/destiny/metaBuildConsensus'
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
@@ -662,6 +665,18 @@ export async function saveMvpVote(vote: MvpVote): Promise<void> {
 }
 
 export async function getExternalBuildSources(): Promise<ExternalBuildSource[]> {
+  const state = getWeeklyResetState()
+  const featuredActivities = [
+    ...state.featuredRaids.map((r) => r.name),
+    ...state.featuredDungeons.map((d) => d.name),
+  ]
+
+  try {
+    await ensureWeeklyMetaBuildSync(state.weekStart, state.resetAt, featuredActivities)
+  } catch (error) {
+    console.warn('[metaBuildWeeklySync] ensure failed:', error)
+  }
+
   const researched = getResearchedMetaBuilds()
   try {
     await ensureDestinyIndexes()
@@ -688,17 +703,23 @@ export async function getExternalBuildSources(): Promise<ExternalBuildSource[]> 
       if (!byId.has(row.id)) byId.set(row.id, row)
     }
 
-    return sortExternalBuildsByConsensus(Array.from(byId.values()))
+    return sortExternalBuildsByConsensus(
+      Array.from(byId.values()).filter((build) => isValidMetaBuild(build) || build.id.startsWith('weekly-'))
+    )
   } catch {
-    return sortExternalBuildsByConsensus(researched)
+    return sortExternalBuildsByConsensus(researched.filter(isValidMetaBuild))
   }
 }
 
-export function getMetaResearchMeta() {
+export async function getMetaResearchMeta() {
+  const state = getWeeklyResetState()
+  const weeklySync = await getMetaBuildWeeklySyncStatus(state.weekStart)
   return {
     researchedAt: META_BUILD_RESEARCH_DATE,
     sources: META_RESEARCH_SOURCES,
     windowWeeks: 4,
+    weeklySync,
+    weekLabel: state.weekLabel,
   }
 }
 

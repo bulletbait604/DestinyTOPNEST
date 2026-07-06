@@ -2,28 +2,18 @@
 import { getMongoDbName } from '@/lib/database'
 import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
-import { resolveActiveCharacterId, syncProfileWithActiveCharacter } from '@/lib/destiny/activeCharacter'
-import { enrichProfile } from '@/lib/destiny/enrich'
+import { resolveActiveCharacterId } from '@/lib/destiny/activeCharacter'
 import { resolveDisplayEmblem } from '@/lib/destiny/guardianEmblems'
 import { fetchAllCharactersPresentation } from '@/lib/destiny/guardianPresentation'
-import { getDestinyUserBySiteUserId, getValidAccessToken, upsertDestinyUser } from '@/lib/destiny/destinyUserStore'
-import { fetchLiveClan, fetchLiveLoadout, refreshGuardianFromBungie } from '@/lib/destiny/liveBungieData'
-import { buildPlayerProfileFromStored, emptyPlayerProfile } from '@/lib/destiny/profileBuilder'
+import { getDestinyUserBySiteUserId, upsertDestinyUser } from '@/lib/destiny/destinyUserStore'
+import { buildUserProfile } from '@/lib/destiny/profileService'
 import { sanitizeFlexPreferences } from '@/lib/destiny/profileFlex'
-import { guardianPointsForUser } from '@/lib/destiny/mvpVoting'
-import {
-  getReputationReviewsForUser,
-  getRunsForUser,
-  getSeasonData,
-  getSeasonStandingForUser,
-  getTrustReviewsForUser,
-  loadAllMvpVotes,
-} from '@/lib/destiny/store'
 
 export const dynamic = 'force-dynamic'
 
 async function fetchProfileCharacters(stored: Awaited<ReturnType<typeof getDestinyUserBySiteUserId>>) {
   if (!stored?.oauth) return undefined
+  const { getValidAccessToken } = await import('@/lib/destiny/destinyUserStore')
   const accessToken = await getValidAccessToken(stored)
   const membershipType = stored.destinyMembershipType
   const membershipId = stored.bungieMembershipId
@@ -36,70 +26,6 @@ async function fetchProfileCharacters(stored: Awaited<ReturnType<typeof getDesti
   }
 }
 
-async function buildProfile(
-  siteUserId: string,
-  scope: 'summary' | 'full',
-  requestedCharacterId?: string | null
-) {
-  let stored = await getDestinyUserBySiteUserId(siteUserId)
-
-  if (!stored?.oauth) {
-    return {
-      profile: await enrichProfile(emptyPlayerProfile(siteUserId), scope),
-      bungieLinked: false,
-    }
-  }
-
-  stored = await refreshGuardianFromBungie(stored)
-  await fetchLiveClan(stored).catch(() => null)
-  stored = (await getDestinyUserBySiteUserId(siteUserId)) ?? stored
-
-  const characters = (await fetchProfileCharacters(stored)) ?? []
-  const activeCharacterId = resolveActiveCharacterId(
-    requestedCharacterId ?? stored.activeCharacterId,
-    characters
-  )
-
-  if (activeCharacterId && activeCharacterId !== stored.activeCharacterId) {
-    stored = await upsertDestinyUser(siteUserId, { activeCharacterId })
-  }
-
-  const displayEmblem = await resolveDisplayEmblem(stored)
-
-  let loadout = undefined
-  if (scope === 'full' && activeCharacterId) {
-    loadout = (await fetchLiveLoadout(stored, activeCharacterId).catch(() => null)) ?? undefined
-  }
-
-  const [runs, reviews, trustReviews, seasonLeaderboardEntries, season, mvpVotes] = await Promise.all([
-    scope === 'full' ? getRunsForUser(siteUserId) : Promise.resolve([]),
-    scope === 'full' ? getReputationReviewsForUser(siteUserId) : Promise.resolve([]),
-    getTrustReviewsForUser(siteUserId, stored?.bungieMembershipId),
-    scope === 'full' ? getSeasonStandingForUser(siteUserId) : Promise.resolve([]),
-    getSeasonData(),
-    loadAllMvpVotes(),
-  ])
-
-  const guardianPoints = guardianPointsForUser(siteUserId, mvpVotes, 'monthly', season)
-
-  const profile = syncProfileWithActiveCharacter(
-    buildPlayerProfileFromStored(stored, runs, {
-      loadout,
-      reviews,
-      trustReviews,
-      seasonLeaderboardEntries,
-      displayEmblem,
-      characters,
-      guardianPoints,
-    })
-  )
-
-  return {
-    profile: await enrichProfile(profile, scope),
-    bungieLinked: true,
-  }
-}
-
 export async function GET(req: NextRequest) {
   return destinyAuthHandler(req, async () => {
     const authUser = await verifyAuth(req)
@@ -108,7 +34,7 @@ export async function GET(req: NextRequest) {
     const scope = params.get('scope') === 'full' ? 'full' : 'summary'
     const characterId = params.get('characterId')
 
-    const result = await buildProfile(siteUserId, scope, characterId)
+    const result = await buildUserProfile(siteUserId, scope, characterId)
     return NextResponse.json(result)
   })
 }
@@ -168,7 +94,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (patch.activeCharacterId) {
-      const result = await buildProfile(siteUserId, 'full', String(patch.activeCharacterId))
+      const result = await buildUserProfile(siteUserId, 'full', String(patch.activeCharacterId))
       return NextResponse.json(result)
     }
 

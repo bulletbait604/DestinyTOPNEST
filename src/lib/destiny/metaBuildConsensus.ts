@@ -181,7 +181,7 @@ export function sortExternalBuildsByConsensus(builds: ExternalBuildSource[]): Ex
 
 export function consensusResearchSummary(builds: ExternalBuildSource[]): string {
   if (!builds.length) {
-    return 'No external meta builds in the 4-week research window. Check back after the next research pass.'
+    return 'No external meta builds yet. Builds are checked each week with the Destiny reset.'
   }
   const deduped = pickBestBuildPerConsensusKey(builds)
   const multiSite = deduped.filter((b) => (b.consensusSiteCount ?? 0) >= 2).length

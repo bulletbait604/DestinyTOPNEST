@@ -223,9 +223,95 @@ export async function getActivityHistoryInstance(
 }
 
 /**
- * Equip loadout — only where Bungie API supports it (requires OAuth + appropriate scopes).
- * Returns null with reason when not supported in current phase.
+ * Equip loadout — requires Bungie OAuth with MoveEquipDestinyItems scope.
  */
+export async function transferDestinyItem(
+  membershipType: number,
+  itemInstanceId: string,
+  characterId: string,
+  transferToVault: boolean,
+  accessToken: string,
+  stackSize = 1,
+  itemReferenceHash = 0
+): Promise<void> {
+  await bungieFetch<{ TransferStatus: number }>('/Destiny2/Actions/Items/TransferItems/', {
+    method: 'POST',
+    accessToken,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      itemReferenceHash,
+      stackSize,
+      transferToVault,
+      itemId: itemInstanceId,
+      characterId,
+      membershipType,
+    }),
+  })
+}
+
+export async function equipDestinyItems(
+  membershipType: number,
+  characterId: string,
+  itemInstanceIds: string[],
+  accessToken: string
+): Promise<void> {
+  if (!itemInstanceIds.length) return
+  await bungieFetch('/Destiny2/Actions/Items/EquipItems/', {
+    method: 'POST',
+    accessToken,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      itemIds: itemInstanceIds,
+      characterId,
+      membershipType,
+    }),
+  })
+}
+
+export async function applyMetaBuildToCharacter(
+  membershipType: number,
+  membershipId: string,
+  characterId: string,
+  plan: {
+    items: Array<{
+      itemInstanceId?: string
+      location?: 'character' | 'vault' | 'other_character'
+      ownerCharacterId?: string
+    }>
+  },
+  accessToken: string
+): Promise<{ equipped: number; transferred: number }> {
+  let transferred = 0
+  let equipped = 0
+
+  for (const item of plan.items) {
+    if (!item.itemInstanceId) continue
+    if (item.location === 'vault') {
+      await transferDestinyItem(membershipType, item.itemInstanceId, characterId, false, accessToken)
+      transferred += 1
+    } else if (item.location === 'other_character' && item.ownerCharacterId) {
+      await transferDestinyItem(
+        membershipType,
+        item.itemInstanceId,
+        item.ownerCharacterId,
+        true,
+        accessToken
+      )
+      await transferDestinyItem(membershipType, item.itemInstanceId, characterId, false, accessToken)
+      transferred += 2
+    }
+  }
+
+  const ids = plan.items.map((i) => i.itemInstanceId).filter(Boolean) as string[]
+  if (ids.length) {
+    await equipDestinyItems(membershipType, characterId, ids, accessToken)
+    equipped = ids.length
+  }
+
+  return { equipped, transferred }
+}
+
+/** @deprecated Use applyMetaBuildToCharacter — kept for older callers. */
 export async function equipLoadoutItem(
   _membershipType: number,
   _membershipId: string,
@@ -236,7 +322,7 @@ export async function equipLoadoutItem(
   return {
     supported: false,
     reason:
-      'Direct equip requires Bungie OAuth with inventory write scope. Use view/copy in Loadouts until OAuth is connected.',
+      'Use POST /api/destiny/loadouts/apply with a meta build plan. Requires MoveEquipDestinyItems OAuth scope.',
   }
 }
 
@@ -257,6 +343,109 @@ export function bungieMembershipTypeLabel(type: number): string {
     default:
       return 'unknown'
   }
+}
+
+/** Bungie Fireteam platform enum from membership type. */
+export function membershipTypeToFireteamPlatform(membershipType: number): number {
+  switch (membershipType) {
+    case 1:
+      return 2
+    case 2:
+      return 1
+    case 3:
+      return 4
+    case 6:
+      return 6
+    default:
+      return 0
+  }
+}
+
+export interface BungieFriendRow {
+  lastSeenAsMembershipId?: string | number
+  lastSeenAsBungieMembershipType?: number
+  bungieGlobalDisplayName?: string
+  bungieGlobalDisplayNameCode?: number
+  onlineStatus?: number
+  onlineTitle?: number
+  bungieNetUser?: { membershipId?: string | number; displayName?: string }
+}
+
+export interface ClanMemberPresenceRow {
+  memberType?: number
+  isOnline?: boolean
+  destinyUserInfo?: {
+    membershipId?: string | number
+    membershipType?: number
+    displayName?: string
+    LastSeenDisplayName?: string
+    iconPath?: string
+    bungieGlobalDisplayName?: string
+    bungieGlobalDisplayNameCode?: number
+  }
+  bungieNetUserInfo?: {
+    membershipId?: string | number
+    displayName?: string
+    iconPath?: string
+    bungieGlobalDisplayName?: string
+    bungieGlobalDisplayNameCode?: number
+  }
+}
+
+export async function getBungieFriends(accessToken: string) {
+  return bungieFetch<{ friends?: BungieFriendRow[] }>('/Social/Friends/', { accessToken })
+}
+
+export async function getClanMembersWithPresence(clanId: string) {
+  return bungieFetch<{ results?: ClanMemberPresenceRow[]; hasMore?: boolean }>(
+    `/GroupV2/${clanId}/Members/`
+  )
+}
+
+export async function getMyClanFireteams(
+  groupId: string,
+  platform: number,
+  accessToken: string,
+  includeClosed = false,
+  page = 0
+) {
+  return bungieFetch<{
+    results?: Array<{ fireteamId?: string | number; id?: string | number; isClosed?: boolean }>
+  }>(`/Fireteam/Clan/${groupId}/My/${platform}/${includeClosed}/${page}/`, { accessToken })
+}
+
+/**
+ * Best-effort Bungie.net fireteam platform invite (undocumented endpoint used by bungie.net).
+ * Returns ok:false when Bungie does not accept the invite.
+ */
+export async function sendFireteamPlatformInvite(
+  groupId: string,
+  fireteamId: string,
+  membershipType: number,
+  membershipId: string,
+  accessToken: string
+): Promise<{ ok: boolean; result?: number; message?: string }> {
+  const paths = [
+    `/Fireteam/Clan/${groupId}/PlatformInvite/${fireteamId}/${membershipType}/${membershipId}/`,
+    `/Fireteam/Clan/${groupId}/IndividualInvite/${fireteamId}/${membershipType}/${membershipId}/`,
+  ]
+
+  let lastMessage = 'Platform invite unavailable'
+  for (const path of paths) {
+    try {
+      const result = await bungieFetch<number | boolean>(path, {
+        method: 'POST',
+        accessToken,
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      })
+      return { ok: true, result: typeof result === 'number' ? result : undefined }
+    } catch (err) {
+      lastMessage = err instanceof BungieApiError ? err.message : lastMessage
+    }
+  }
+
+  return { ok: false, message: lastMessage }
 }
 
 export async function checkBungieApiHealth(): Promise<{

@@ -16,6 +16,11 @@ import {
   suggestArmorSetStrategy,
   validateExoticRules,
 } from '@/lib/destiny/destinyBuildKnowledge'
+import {
+  isValidMetaBuild,
+  legendaryArmorForMetaBuild,
+  validateMetaBuildIntegrity,
+} from '@/lib/destiny/metaBuildClassRules'
 
 export interface RankedRecommendedLoadout {
   id: string
@@ -87,6 +92,17 @@ function mergeMods(meta: ExternalBuildSource): string[] {
   return Array.from(mods)
 }
 
+function isCompleteMetaBuild(build: ExternalBuildSource): boolean {
+  const weapons = (build.weapons ?? []).filter((w) => w.trim() && !PLACEHOLDER_WEAPON.test(w.trim()))
+  return (
+    weapons.length >= 3 &&
+    Boolean(build.exoticArmor?.trim()) &&
+    Boolean(build.subclass?.trim()) &&
+    (build.aspects?.length ?? 0) >= 1 &&
+    isValidMetaBuild(build)
+  )
+}
+
 function findBestVerifiedMatch(
   meta: ExternalBuildSource,
   verifiedBuilds: BuildIntelligenceCard[]
@@ -118,6 +134,7 @@ function optimizeBuild(
   const armorMods = mergeMods(meta)
   const armorStrategy = suggestArmorSetStrategy(meta.activityFocus, meta.class)
   const exoticIssues = validateExoticRules(meta.exoticArmor, meta.exoticWeapon, weapons)
+  const classIssues = validateMetaBuildIntegrity(meta)
 
   const optimizationNotes: string[] = [
     armorStrategy.note,
@@ -141,6 +158,9 @@ function optimizeBuild(
   if (exoticIssues.length) {
     optimizationNotes.push(...exoticIssues)
   }
+  if (classIssues.length) {
+    optimizationNotes.push(...classIssues)
+  }
 
   const consensusScore = scoreBuildConsensus(meta, allMeta)
   const score = consensusScore + (verified ? Math.min(40, scoreVerified(verified) / 3) : 0)
@@ -151,6 +171,7 @@ function optimizeBuild(
     title: `${meta.title} (Optimized)`,
     weapons,
     armorMods,
+    legendaryArmor: legendaryArmorForMetaBuild(meta),
     summary: [
       meta.summary,
       verified
@@ -203,7 +224,8 @@ export function rankRecommendedLoadoutsForClass(
       isRecentMeta(b) &&
       b.suggestionScope !== 'activity' &&
       b.suggestionScope !== 'specialist' &&
-      b.exoticArmor?.trim()
+      b.exoticArmor?.trim() &&
+      isCompleteMetaBuild(b)
   )
 
   const candidates = pickBestBuildPerConsensusKey(recentMeta)
@@ -212,7 +234,9 @@ export function rankRecommendedLoadoutsForClass(
 
   const classVerified = verifiedBuilds.filter((b) => b.characterClass === characterClass)
 
-  return candidates.map((meta) => optimizeBuild(meta, findBestVerifiedMatch(meta, classVerified), externalBuilds))
+  return candidates
+    .map((meta) => optimizeBuild(meta, findBestVerifiedMatch(meta, classVerified), externalBuilds))
+    .filter((pick) => isValidMetaBuild(pick.build))
 }
 
 export function recommendedLoadoutsSummary(

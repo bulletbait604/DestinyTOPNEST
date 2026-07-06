@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Check, Gift, ImageIcon, Loader2, Trophy, X } from 'lucide-react'
+import { Check, Gift, ImageIcon, Layers, Loader2, Trophy, X } from 'lucide-react'
 import type { PrizeClaim, SeasonWinner } from '@/lib/destiny/types'
 import { GlassCard, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -29,7 +29,27 @@ export default function AdminSeasonSection({
     featuredActivities?: string[]
   } | null>(null)
   const [rebuildingLoot, setRebuildingLoot] = useState(false)
+  const [metaBuildStatus, setMetaBuildStatus] = useState<{
+    weekLabel?: string
+    syncedAt?: string
+    resetAt?: string
+    buildsRefreshed?: number
+    buildsAdded?: number
+    buildCount?: number
+    needsSync?: boolean
+    featuredActivities?: string[]
+    resetTimeLabel?: string
+  } | null>(null)
+  const [syncingMetaBuilds, setSyncingMetaBuilds] = useState(false)
   const t = getDestinyTheme(darkMode)
+
+  const loadMetaBuildStatus = useCallback(async () => {
+    const res = await fetch('/api/destiny/admin/meta-builds', { credentials: 'include' })
+    if (res.ok) {
+      const json = await res.json()
+      setMetaBuildStatus(json)
+    }
+  }, [])
 
   const loadLootStatus = useCallback(async () => {
     const res = await fetch('/api/destiny/admin/loot-icons', { credentials: 'include' })
@@ -45,6 +65,7 @@ export default function AdminSeasonSection({
       const [seasonRes] = await Promise.all([
         fetch('/api/destiny/admin/season', { credentials: 'include' }),
         loadLootStatus(),
+        loadMetaBuildStatus(),
       ])
       if (seasonRes.ok) {
         const json = await seasonRes.json()
@@ -55,7 +76,7 @@ export default function AdminSeasonSection({
     } finally {
       setLoading(false)
     }
-  }, [loadLootStatus])
+  }, [loadLootStatus, loadMetaBuildStatus])
 
   useEffect(() => {
     void load()
@@ -93,6 +114,25 @@ export default function AdminSeasonSection({
       onAction?.()
     } finally {
       setRebuildingLoot(false)
+    }
+  }
+
+  async function syncMetaBuilds() {
+    setSyncingMetaBuilds(true)
+    try {
+      const res = await fetch('/api/destiny/admin/meta-builds', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sync' }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setMetaBuildStatus(json)
+      }
+      onAction?.()
+    } finally {
+      setSyncingMetaBuilds(false)
     }
   }
 
@@ -194,6 +234,53 @@ export default function AdminSeasonSection({
         >
           {rebuildingLoot ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
           Rebuild loot icons
+        </button>
+      </GlassCard>
+
+      <GlassCard darkMode={darkMode}>
+        <div className="flex items-center gap-2 mb-2">
+          <Layers className="w-5 h-5 text-violet-400" />
+          <SectionTitle
+            title="Weekly meta builds"
+            subtitle="Refresh curated builds and spotlight picks for featured raids/dungeons"
+            darkMode={darkMode}
+          />
+        </div>
+        {metaBuildStatus ? (
+          <div className="space-y-2">
+            <p className={cn('text-xs', t.muted)}>
+              {metaBuildStatus.weekLabel ?? 'Current week'}
+              {metaBuildStatus.syncedAt
+                ? ` · Last synced ${new Date(metaBuildStatus.syncedAt).toLocaleString()}`
+                : metaBuildStatus.needsSync
+                  ? ' · Not synced yet this week'
+                  : ''}
+            </p>
+            <p className={cn('text-xs', t.body)}>
+              {metaBuildStatus.buildsRefreshed ?? 0} curated refreshed ·{' '}
+              {metaBuildStatus.buildsAdded ?? 0} weekly spotlight
+              {typeof metaBuildStatus.buildCount === 'number'
+                ? ` · ${metaBuildStatus.buildCount} total tracked`
+                : ''}
+            </p>
+            {metaBuildStatus.featuredActivities?.length ? (
+              <p className={cn('text-xs', t.muted)}>{metaBuildStatus.featuredActivities.join(' · ')}</p>
+            ) : null}
+          </div>
+        ) : (
+          <p className={t.muted}>No sync status loaded for this reset week.</p>
+        )}
+        <button
+          type="button"
+          disabled={syncingMetaBuilds}
+          onClick={() => void syncMetaBuilds()}
+          className={cn(
+            'mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium',
+            'bg-violet-400/20 text-violet-100 ring-1 ring-violet-400/30'
+          )}
+        >
+          {syncingMetaBuilds ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          Run weekly meta sync
         </button>
       </GlassCard>
 

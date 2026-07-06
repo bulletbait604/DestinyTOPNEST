@@ -54,7 +54,7 @@ export default function TopLoadoutsByClass({
           message={variant === 'meta' ? 'No meta loadout data yet' : 'No community loadout data yet'}
           hint={
             variant === 'meta'
-              ? 'External meta is refreshed on a rolling 4-week research schedule.'
+              ? 'Meta builds are checked each week with the Destiny reset.'
               : 'Sync verified runs from Home after linking Bungie.'
           }
         />

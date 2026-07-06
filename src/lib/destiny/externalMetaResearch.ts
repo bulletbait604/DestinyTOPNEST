@@ -13,9 +13,12 @@
 
 import type { ExternalBuildSource } from '@/lib/destiny/types'
 import { consensusResearchSummary } from '@/lib/destiny/metaBuildConsensus'
+import { META_BUILD_EARLIEST_PUBLISHED } from '@/lib/destiny/destinyBuildKnowledge'
+import { META_BUILD_ARMOR_PATCHES, META_BUILD_SOURCE_URLS, META_BUILD_STAT_PRIORITIES } from '@/lib/destiny/metaBuildPatches'
+import { isValidMetaBuild, legendaryArmorForMetaBuild } from '@/lib/destiny/metaBuildClassRules'
 
 /** Research pass timestamp (update when curating a new batch). */
-export const META_BUILD_RESEARCH_DATE = '2026-06-17T12:00:00.000Z'
+export const META_BUILD_RESEARCH_DATE = '2026-07-06T12:00:00.000Z'
 
 const FOUR_WEEKS_MS = 28 * 24 * 60 * 60 * 1000
 
@@ -43,7 +46,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     sourceRank: 2,
     summary:
       'Ice turret + Devour loop with Praxic Blade heavy for survivability and passive clear. Top Warlock pick for GMs and solo endgame.',
-    publishedAt: '2026-06-10T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -69,7 +72,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     sourceRank: 2,
     summary:
       'Praxic Blade paired with Stronghold for infinite block — frontline pick for raid teams that need a durable anchor.',
-    publishedAt: '2026-06-10T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -95,7 +98,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     sourceRank: 3,
     summary:
       'Tempest Strike + Gambler\'s Dodge Combination Blow loop with Ascension for AoE — strong Hunter option when you want melee uptime.',
-    publishedAt: '2026-06-10T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -120,7 +123,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     sourceRank: 1,
     summary:
       '#1 Warlock PvE build on Blueberries — flexible Prismatic kit for expert raids and dungeons.',
-    publishedAt: '2026-06-01T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -142,7 +145,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     suggestionScope: 'specialist',
     summary:
       'Solar fusion grenade spam for raid boss melts — specialist DPS pick for sustained damage phases.',
-    publishedAt: '2026-06-01T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -167,7 +170,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     sourceRank: 1,
     summary:
       '#1 Titan PvE build on Blueberries — bonk / slam loop for high burst in expert content.',
-    publishedAt: '2026-06-01T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -191,7 +194,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     sourceRank: 1,
     summary:
       '#1 Hunter PvE build — Arc super and ability spam for raid add-clear and boss damage.',
-    publishedAt: '2026-06-01T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -215,7 +218,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     sourceRank: 2,
     summary:
       'Top GM Hunter pick — Prismatic sustain with void debuff support for Master content.',
-    publishedAt: '2026-06-01T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -241,7 +244,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     sourceRank: 3,
     summary:
       'Cuirass Thundercrash burst DPS — high-skill raid pick from light.gg for boss damage windows.',
-    publishedAt: '2026-06-12T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -260,7 +263,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     suggestionScope: 'specialist',
     summary:
       'Thundercrash + Cuirass contest-mode build — specialist pick for day-one raid damage checks.',
-    publishedAt: '2026-06-08T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -280,7 +283,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     suggestionScope: 'activity',
     summary:
       'Void well + Divinity support for Garden relay and final encounter teams.',
-    publishedAt: '2026-06-16T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -299,7 +302,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     suggestionScope: 'activity',
     summary:
       'Solar Hunter burst for King\'s Fall damage checks — Star-Eater rocket spam for Warpriest and Oryx phases.',
-    publishedAt: '2026-06-16T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -323,7 +326,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     consensusKey: 'warlock:prismatic:ophidian-aspect',
     sourceRank: 1,
     summary: 'Top Warlock Prismatic pick on light.gg — matches Blueberries #1 general PvE build.',
-    publishedAt: '2026-06-12T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -348,7 +351,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     consensusKey: 'warlock:prismatic:getaway-artist',
     sourceRank: 2,
     summary: 'GM sustain Warlock — cross-referenced with togame.io meta for Renegades season.',
-    publishedAt: '2026-06-14T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -372,7 +375,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     consensusKey: 'warlock:void:contraverse-hold',
     sourceRank: 3,
     summary: 'Contraverse Hold Magnetic grenade burst DPS — premier Warlock boss damage on Blueberries.',
-    publishedAt: '2026-06-01T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -396,7 +399,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     consensusKey: 'warlock:void:contraverse-hold',
     sourceRank: 4,
     summary: 'Void grenade DPS loop — listed on light.gg raid loadouts alongside Blueberries Magnetic Supernova.',
-    publishedAt: '2026-06-11T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -420,7 +423,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     consensusKey: 'titan:prismatic:wormgod-caress',
     sourceRank: 1,
     summary: 'Prismatic bonk Titan — matches Blueberries #1 Titan build for Renegades.',
-    publishedAt: '2026-06-10T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -444,7 +447,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     consensusKey: 'titan:prismatic:wormgod-caress',
     sourceRank: 2,
     summary: 'Melee Titan staple on light.gg — same identity as Blueberries Come on and Slam.',
-    publishedAt: '2026-06-12T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -468,7 +471,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     consensusKey: 'titan:arc:peacekeepers',
     sourceRank: 3,
     summary: 'Arc Titan ability spam — top-3 Titan pick on Blueberries for add-clear and boss damage.',
-    publishedAt: '2026-06-01T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -492,7 +495,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     consensusKey: 'hunter:arc:raiden-flux',
     sourceRank: 1,
     summary: 'Arc Hunter raid staple — cross-referenced with Blueberries Gift of the Tempest.',
-    publishedAt: '2026-06-12T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -517,7 +520,7 @@ export const RESEARCHED_META_BUILDS: ExternalBuildSource[] = [
     consensusKey: 'hunter:prismatic:gifted-conviction',
     sourceRank: 2,
     summary: 'Tempest Strike + Gambler\'s Dodge loop — Blueberries name for the Gifted Conviction Prismatic Hunter.',
-    publishedAt: '2026-06-01T00:00:00.000Z',
+    publishedAt: '2026-07-05T00:00:00.000Z',
     lastChecked: META_BUILD_RESEARCH_DATE,
     approved: true,
   },
@@ -527,17 +530,35 @@ export function metaResearchWindowStart(now = Date.now()): Date {
   return new Date(now - FOUR_WEEKS_MS)
 }
 
-/** Meta builds published or re-validated after June 10, 2026 within the rolling research window. */
+/** Meta builds published on or after July 5, 2026 within the rolling research window. */
 export function getResearchedMetaBuilds(now = Date.now()): ExternalBuildSource[] {
   const windowStart = metaResearchWindowStart(now).getTime()
-  const earliestPublished = Date.parse('2026-06-10T00:00:00.000Z')
-  return RESEARCHED_META_BUILDS.filter((build) => {
-    const published = build.publishedAt ? Date.parse(build.publishedAt) : 0
-    const checked = Date.parse(build.lastChecked)
-    const inWindow = published >= windowStart || checked >= windowStart
-    const recentEnough = !published || published >= earliestPublished
-    return inWindow && recentEnough
+  const earliestPublished = Date.parse(META_BUILD_EARLIEST_PUBLISHED)
+  return RESEARCHED_META_BUILDS.map(applyMetaBuildPatches)
+    .filter((build) => {
+      const published = build.publishedAt ? Date.parse(build.publishedAt) : 0
+      const checked = Date.parse(build.lastChecked)
+      const inWindow = published >= windowStart || checked >= windowStart
+      const recentEnough = published >= earliestPublished
+      return inWindow && recentEnough && isValidMetaBuild(build)
+    })
+}
+
+/** Fill legendary armor + fix source links for display and inventory matching. */
+function applyMetaBuildPatches(build: ExternalBuildSource): ExternalBuildSource {
+  const patchOverrides = META_BUILD_ARMOR_PATCHES[build.id] ?? {}
+  const sourceUrl = META_BUILD_SOURCE_URLS[build.id] ?? build.sourceUrl
+  const statPriorities = build.statPriorities ?? META_BUILD_STAT_PRIORITIES[build.id]
+  const legendaryArmor = legendaryArmorForMetaBuild({
+    ...build,
+    legendaryArmor: { ...patchOverrides, ...build.legendaryArmor },
   })
+  return {
+    ...build,
+    sourceUrl,
+    legendaryArmor,
+    statPriorities,
+  }
 }
 
 export function metaResearchSummary(builds: ExternalBuildSource[]): string {

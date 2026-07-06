@@ -18,4 +18,5 @@ export const DESTINY_COLLECTIONS = {
   adminActivity: 'destiny_admin_activity',
   leaderboardAdjustments: 'destiny_leaderboard_adjustments',
   weeklyLootIcons: 'destiny_weekly_loot_icons',
+  metaBuildWeeklySync: 'destiny_meta_build_weekly_sync',
 } as const

@@ -8,6 +8,7 @@ import {
   listBannedUsers,
   searchAdminUsers,
 } from '@/lib/destiny/adminUsers'
+import { buildUserProfile } from '@/lib/destiny/profileService'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +20,15 @@ export async function GET(req: NextRequest) {
       if (!detail) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 })
       }
-      return NextResponse.json({ user: detail })
+      const characterId = req.nextUrl.searchParams.get('characterId')?.trim() || undefined
+      const { profile, bungieLinked } = await buildUserProfile(userId, 'full', characterId)
+      return NextResponse.json({
+        user: {
+          ...detail,
+          profile,
+          bungieLinked,
+        },
+      })
     }
 
     const q = req.nextUrl.searchParams.get('q')?.trim() ?? ''

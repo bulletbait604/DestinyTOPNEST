@@ -26,7 +26,7 @@ export default function SuggestedLoadoutsSection({
     <GlassCard darkMode={darkMode}>
       <SectionTitle
         title={`Recommended ${label} loadouts`}
-        subtitle="Armor 3.0 hybrid builds — meta sites cross-referenced with verified Top Nest clears"
+        subtitle="Class-correct hybrid builds from Blueberries.gg, light.gg, and togame.io — cross-referenced with verified clears"
         darkMode={darkMode}
       />
       <p className={cn('text-sm mb-4 leading-relaxed', t.muted)}>{summary}</p>

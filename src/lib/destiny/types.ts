@@ -1,6 +1,7 @@
 ﻿/** DestinyTopNest domain types — Mongo + API shapes. */
 
 import type { ManifestEntityType } from '@/lib/destiny/itemsCatalog'
+import type { FlierTeamRequirementSelection } from '@/lib/destiny/flierTeamRequirements'
 
 export type DestinyPlatform = 'steam' | 'xbox' | 'playstation' | 'epic' | 'stadia'
 export type DestinyCharacterClass = 'titan' | 'hunter' | 'warlock'
@@ -45,6 +46,30 @@ export type FireteamGoal =
   | 'chill_clear'
   | 'competitive_scoring'
 export type FireteamStatus = 'open' | 'full' | 'in_progress' | 'closed'
+
+export type FlierTeamJoinMode = 'instant' | 'apply'
+
+export type FlierTeamActivityKind = 'raid' | 'dungeon' | 'pantheon'
+
+export interface FlierTeamLobbyMember {
+  userId: string
+  displayName: string
+  bungieMembershipId?: string
+  destinyMembershipType?: number
+  emblemUrl?: string
+  characterClass?: DestinyCharacterClass
+  powerLevel?: number
+  guardianRank?: number
+  joinedAt: string
+}
+
+export interface FlierTeamApplication {
+  userId: string
+  displayName: string
+  emblemUrl?: string
+  message?: string
+  appliedAt: string
+}
 
 export const PROFILE_FLEX_STAT_IDS = [
   'guardian_rank',
@@ -296,6 +321,53 @@ export interface FireteamLobby {
   createdAt: string
   activityRef?: DestinyIconRef
   hostClassRef?: DestinyIconRef
+  /** Site users in this lobby (excluding host). */
+  memberUserIds?: string[]
+  pendingInvites?: FireteamLobbyInvite[]
+  /** FlierTeam Finder fields */
+  joinMode?: FlierTeamJoinMode
+  activityKind?: FlierTeamActivityKind
+  encounterId?: string
+  encounterName?: string
+  requirementSelections?: FlierTeamRequirementSelection[]
+  customRequirements?: string
+  roomNotes?: string
+  memberRoster?: FlierTeamLobbyMember[]
+  pendingApplications?: FlierTeamApplication[]
+  updatedAt?: string
+}
+
+export interface FireteamLobbyInvite {
+  membershipId: string
+  membershipType?: number
+  displayName: string
+  invitedByUserId: string
+  invitedAt: string
+}
+
+export interface ActiveFireteamLobbySummary {
+  id: string
+  activityName: string
+  hostDisplayName: string
+  isHost: boolean
+}
+
+export interface OnlineSocialMember {
+  displayName: string
+  bungieName?: string
+  membershipId: string
+  membershipType?: number
+  emblemUrl?: string
+  isOnline: boolean
+  inDestiny?: boolean
+}
+
+export interface SocialPresencePayload {
+  onlineClanMembers: OnlineSocialMember[]
+  onlineFriends: OnlineSocialMember[]
+  activeLobby: ActiveFireteamLobbySummary | null
+  /** Open Bungie.net fireteam listing for in-game platform invites, when available. */
+  bungieFireteamId?: string | null
 }
 
 export interface ReputationReview {
@@ -410,7 +482,7 @@ export interface BuildSnapshot {
   /** In-game saved loadout label from Bungie. */
   loadoutName?: string
   loadoutIndex?: number
-  loadoutSource?: 'equipped' | 'saved'
+  loadoutSource?: 'equipped' | 'saved' | 'meta'
   /** Internal aggregation key (Phase 4). */
   buildSignature?: string
   verificationStatus?: VerificationStatus
@@ -521,6 +593,7 @@ export type AdminActivityKind =
   | 'season_finalize'
   | 'leaderboard_adjust'
   | 'loot_icons_rebuild'
+  | 'meta_builds_sync'
 
 export interface AdminActivityEntry {
   id: string
@@ -564,6 +637,9 @@ export interface AdminUserDetail extends AdminUserSummary {
   trustReviews: TrustReview[]
   mvpVotesReceived: number
   adminNotes: AdminActivityEntry[]
+  /** Full app profile (Guardian tab) — populated on detail fetch. */
+  profile?: PlayerProfile | null
+  bungieLinked?: boolean
 }
 
 /** One guardian slot — DIM-style horizontal character tile data. */
@@ -648,6 +724,8 @@ export interface ExternalBuildSource {
   legendaryArmor?: Partial<Record<ArmorSlotLabel, string>>
   aspects?: string[]
   fragments?: string[]
+  /** Armor 3.0 stat priorities from source research (e.g. Health, Class, Grenade). */
+  statPriorities?: string[]
   armorMods?: string[]
   armorModRefs?: DestinyIconRef[]
   activityFocus?: string
@@ -700,6 +778,8 @@ export interface ClanProfile {
   avgDungeonClearSeconds: number
   topMembers: { displayName: string; points: number; emblemUrl?: string }[]
   achievements: string[]
+  /** Clan members currently online (populated from live Bungie data). */
+  onlineMembers?: OnlineSocialMember[]
 }
 
 export interface OverviewPayload {
