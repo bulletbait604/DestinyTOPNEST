@@ -12,7 +12,7 @@ import {
 import { calculateRunPoints } from '@/lib/destiny/scoring'
 import { isRunOnOrAfterTodayPacific } from '@/lib/destiny/runDates'
 import { isPantheonActivityName, squadKeyFromMembers } from '@/lib/destiny/pantheonActivities'
-import { ensureDestinyIndexes, queueAdminReview, saveBuildSnapshot, saveRunRecord } from '@/lib/destiny/store'
+import { ensureDestinyIndexes, queueAdminReview, runRecordExists, saveBuildSnapshot, saveRunRecord } from '@/lib/destiny/store'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { getValidAccessToken } from '@/lib/destiny/destinyUserStore'
 import type {
@@ -229,9 +229,16 @@ async function pgcrToRunRecord(
 
 export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
   synced: number
+  imported: number
   flagged: number
   skipped: number
   builds: number
+  newRuns: {
+    activityName: string
+    activityType: ActivityType
+    pointsAwarded: number
+    verificationStatus: RunRecord['verificationStatus']
+  }[]
 }> {
   await ensureDestinyIndexes()
 
@@ -257,9 +264,16 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
 
   const seen = new Set<string>()
   let synced = 0
+  let imported = 0
   let flagged = 0
   let skipped = 0
   let builds = 0
+  const newRuns: {
+    activityName: string
+    activityType: ActivityType
+    pointsAwarded: number
+    verificationStatus: RunRecord['verificationStatus']
+  }[] = []
 
   for (const characterId of characterIds) {
     for (const [mode, activityTypeHint, pantheonOnly] of [
@@ -300,7 +314,19 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
             skipped++
             continue
           }
+
+          const isNew = !(await runRecordExists(record.id))
           await saveRunRecord(record)
+
+          if (isNew) {
+            imported++
+            newRuns.push({
+              activityName: record.activityName,
+              activityType: record.type,
+              pointsAwarded: record.pointsAwarded ?? 0,
+              verificationStatus: record.verificationStatus,
+            })
+          }
 
           const build = await extractBuildFromPgcr(pgcr, record, membershipId)
           if (build) {
@@ -329,5 +355,5 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
     }
   }
 
-  return { synced, flagged, skipped, builds }
+  return { synced, imported, flagged, skipped, builds, newRuns }
 }

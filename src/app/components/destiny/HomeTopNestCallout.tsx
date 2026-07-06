@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { LeaderboardEntry } from '@/lib/destiny/types'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { cn } from '@/lib/utils'
 
 const RANK_LABELS = ['1st', '2nd', '3rd'] as const
@@ -18,20 +19,26 @@ export default function HomeTopNestCallout({ darkMode }: { darkMode: boolean }) 
   const [loading, setLoading] = useState(true)
   const t = getDestinyTheme(darkMode)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true)
     try {
       const res = await fetch('/api/destiny/overview', { credentials: 'include' })
       if (!res.ok) return
       const json = await res.json()
       setEntries((json.guardiansTop3 ?? json.clanTop5 ?? []).slice(0, 3))
     } finally {
-      setLoading(false)
+      if (!opts?.silent) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     void load()
+  }, [load])
+
+  useEffect(() => {
+    const onRefresh = () => void load({ silent: true })
+    window.addEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
+    return () => window.removeEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
   }, [load])
 
   return (

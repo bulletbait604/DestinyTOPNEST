@@ -643,6 +643,18 @@ export async function saveRunRecord(record: RunRecord): Promise<void> {
   )
 }
 
+export async function runRecordExists(id: string): Promise<boolean> {
+  try {
+    const database = await db()
+    const doc = await database
+      .collection(DESTINY_COLLECTIONS.runRecords)
+      .findOne({ id }, { projection: { _id: 1 } })
+    return doc != null
+  } catch {
+    return false
+  }
+}
+
 export async function queueAdminReview(record: AdminReviewRecord): Promise<void> {
   const database = await db()
   const existing = (await database

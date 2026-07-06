@@ -24,10 +24,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         ok: true,
         synced: result.synced,
+        imported: result.imported,
         flagged: result.flagged,
         skipped: result.skipped,
         builds: result.builds,
-        message: `Synced ${result.synced} run(s) · ${result.builds} build(s) captured.`,
+        newRuns: result.newRuns,
+        message: `Synced ${result.synced} run(s) · ${result.builds} build(s) captured${result.imported ? ` · ${result.imported} new` : ''}.`,
       })
     } catch (error) {
       console.error('[destiny/runs/sync]', error)

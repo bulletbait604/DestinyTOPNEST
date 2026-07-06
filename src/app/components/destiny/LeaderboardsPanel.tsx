@@ -10,6 +10,7 @@ import {
 } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import SeasonSection from '@/app/components/destiny/SeasonSection'
+import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { cn } from '@/lib/utils'
 
 const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
@@ -33,8 +34,8 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
   const [loading, setLoading] = useState(true)
   const t = getDestinyTheme(darkMode)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true)
     try {
       const params = new URLSearchParams({ period, category })
       const res = await fetch(`/api/destiny/leaderboards?${params}`, { credentials: 'include' })
@@ -43,12 +44,18 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
         setEntries(json.entries ?? [])
       }
     } finally {
-      setLoading(false)
+      if (!opts?.silent) setLoading(false)
     }
   }, [period, category])
 
   useEffect(() => {
     load()
+  }, [load])
+
+  useEffect(() => {
+    const onRefresh = () => void load({ silent: true })
+    window.addEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
+    return () => window.removeEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
   }, [load])
 
   useEffect(() => {

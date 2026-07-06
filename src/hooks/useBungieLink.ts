@@ -3,10 +3,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import { defaultBungieReturnPath, stripUrlParams } from '@/lib/routing/tabUrl'
 import { bungieOAuthErrorMessage } from '@/lib/destiny/bungieOAuthMessages'
+import {
+  dispatchSyncSuccess,
+  readLastSyncedAt,
+  SYNC_RECENT_MS,
+  SYNC_AT_STORAGE_KEY,
+  SYNC_UPDATED_EVENT,
+  type SyncResultDetail,
+  type SyncedRunSummary,
+} from '@/lib/destiny/syncEvents'
 
-export const SYNC_AT_STORAGE_KEY = 'topnestLastSyncAt'
-export const SYNC_UPDATED_EVENT = 'topnest-sync-updated'
-export const SYNC_RECENT_MS = 5 * 60 * 1000
+export { SYNC_RECENT_MS } from '@/lib/destiny/syncEvents'
 
 export interface BungieLinkStatus {
   configured: boolean
@@ -20,18 +27,13 @@ export interface BungieLinkStatus {
   powerLevel?: number
 }
 
-function readLastSyncedAt(): number | null {
-  if (typeof window === 'undefined') return null
-  const raw = sessionStorage.getItem(SYNC_AT_STORAGE_KEY)
-  if (!raw) return null
-  const n = Number(raw)
-  return Number.isFinite(n) ? n : null
-}
-
-function writeLastSyncedAt(at: number) {
-  sessionStorage.setItem(SYNC_AT_STORAGE_KEY, String(at))
-  window.dispatchEvent(new Event(SYNC_UPDATED_EVENT))
-  window.dispatchEvent(new Event('topnest-profile-refresh'))
+export interface SyncRunsResult {
+  synced?: number
+  imported?: number
+  flagged?: number
+  builds?: number
+  newRuns?: SyncedRunSummary[]
+  error?: string
 }
 
 export function useBungieLink(options?: { returnPath?: string }) {
@@ -113,39 +115,54 @@ export function useBungieLink(options?: { returnPath?: string }) {
     }
   }, [load])
 
-  const syncRuns = useCallback(
-    async (opts?: { silent?: boolean }): Promise<{ synced?: number; flagged?: number; error?: string }> => {
-      setSyncing(true)
-      try {
-        const res = await fetch('/api/destiny/runs/sync', {
-          method: 'POST',
-          credentials: 'include',
-        })
-        const json = (await res.json().catch(() => ({}))) as {
-          synced?: number
-          flagged?: number
-          builds?: number
-          error?: string
-          message?: string
-        }
-        if (!res.ok) {
-          const text = json.error || json.message || 'Sync failed'
-          if (!opts?.silent) setLinkMessage(text)
-          return { error: text }
-        }
-        writeLastSyncedAt(Date.now())
-        setLastSyncedAt(Date.now())
-        if (!opts?.silent) {
-          const text = `Synced ${json.synced ?? 0} run(s)${json.builds ? ` · ${json.builds} build(s)` : ''}${json.flagged ? ` · ${json.flagged} flagged for review` : ''}.`
-          setLinkMessage(text)
-        }
-        return { synced: json.synced, flagged: json.flagged }
-      } finally {
-        setSyncing(false)
+  const syncRuns = useCallback(async (opts?: { silent?: boolean }): Promise<SyncRunsResult> => {
+    setSyncing(true)
+    try {
+      const res = await fetch('/api/destiny/runs/sync', {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const json = (await res.json().catch(() => ({}))) as {
+        synced?: number
+        imported?: number
+        flagged?: number
+        builds?: number
+        newRuns?: SyncedRunSummary[]
+        error?: string
+        message?: string
       }
-    },
-    []
-  )
+      if (!res.ok) {
+        const text = json.error || json.message || 'Sync failed'
+        if (!opts?.silent) setLinkMessage(text)
+        return { error: text }
+      }
+
+      const detail: SyncResultDetail = {
+        synced: json.synced ?? 0,
+        imported: json.imported ?? 0,
+        flagged: json.flagged ?? 0,
+        builds: json.builds ?? 0,
+        newRuns: json.newRuns ?? [],
+      }
+      dispatchSyncSuccess(detail)
+      setLastSyncedAt(readLastSyncedAt())
+
+      if (!opts?.silent) {
+        const text = `Synced ${detail.synced} run(s)${detail.builds ? ` · ${detail.builds} build(s)` : ''}${detail.imported ? ` · ${detail.imported} new` : ''}${detail.flagged ? ` · ${detail.flagged} flagged for review` : ''}.`
+        setLinkMessage(text)
+      }
+
+      return {
+        synced: detail.synced,
+        imported: detail.imported,
+        flagged: detail.flagged,
+        builds: detail.builds,
+        newRuns: detail.newRuns,
+      }
+    } finally {
+      setSyncing(false)
+    }
+  }, [])
 
   const copyRedirectUri = useCallback(async () => {
     if (!status?.redirectUri) return
@@ -157,8 +174,7 @@ export function useBungieLink(options?: { returnPath?: string }) {
     }
   }, [status?.redirectUri])
 
-  const isRecentlySynced =
-    lastSyncedAt != null && Date.now() - lastSyncedAt < SYNC_RECENT_MS
+  const isRecentlySynced = lastSyncedAt != null && Date.now() - lastSyncedAt < SYNC_RECENT_MS
 
   return {
     status,

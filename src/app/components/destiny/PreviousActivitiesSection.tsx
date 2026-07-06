@@ -10,6 +10,7 @@ import {
 } from '@/app/components/destiny/DestinyUi'
 import { destinyPrimaryBtn, formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { useBungieLink } from '@/hooks/useBungieLink'
+import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -25,8 +26,8 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
   const bungie = useBungieLink()
   const t = getDestinyTheme(darkMode)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true)
     try {
       const res = await fetch('/api/destiny/runs', { credentials: 'include' })
       if (res.ok) {
@@ -34,13 +35,19 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
         setActivities(json.activities ?? [])
       }
     } finally {
-      setLoading(false)
+      if (!opts?.silent) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     void load()
   }, [load, bungie.linked])
+
+  useEffect(() => {
+    const onRefresh = () => void load({ silent: true })
+    window.addEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
+    return () => window.removeEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
+  }, [load])
 
   const submitVote = async (runId: string, selectedUserId: string) => {
     setVotingRunId(runId)
