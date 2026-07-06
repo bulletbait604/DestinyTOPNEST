@@ -11,13 +11,13 @@ import {
   LoadingBlock,
   ResetCountdown,
   SectionTitle,
-  StatCard,
   StatusPill,
 } from '@/app/components/destiny/DestinyUi'
 import { cn } from '@/lib/utils'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import PendingVotePrompt from '@/app/components/destiny/PendingVotePrompt'
+import WeeklyActivitySetCard from '@/app/components/destiny/WeeklyActivitySetCard'
 import { homeSectionArtUrl, soloLeaderboardIconUrl } from '@/lib/destiny/navArt'
 import { leaderboardCategoryIconUrl } from '@/lib/destiny/activityIconPaths'
 import { useOverviewData } from '@/contexts/OverviewDataContext'
@@ -31,30 +31,47 @@ function countdownParts(ms: number) {
   }
 }
 
-function rotationStatCards(
+function rotationActivityCards(
   raids: FeaturedActivity[],
   dungeons: FeaturedActivity[],
+  pantheonName: string | undefined,
+  pantheonIconUrl: string | undefined,
   resetsIn: string,
   darkMode: boolean
 ) {
-  const cards: { label: string; activity: FeaturedActivity; kind: 'raid' | 'dungeon' }[] = [
+  const cards: {
+    label: string
+    activity: FeaturedActivity
+    kind: 'raid' | 'dungeon' | 'pantheon'
+  }[] = [
     { label: 'Weekly raid', activity: raids[0], kind: 'raid' },
     { label: 'Weekly raid', activity: raids[1], kind: 'raid' },
     { label: 'Weekly dungeon', activity: dungeons[0], kind: 'dungeon' },
     { label: 'Weekly dungeon', activity: dungeons[1], kind: 'dungeon' },
   ]
 
+  if (pantheonName) {
+    cards.push({
+      label: 'Pantheon',
+      activity: {
+        name: pantheonName,
+        difficulty: 'normal',
+        iconUrl: pantheonIconUrl,
+      },
+      kind: 'pantheon',
+    })
+  }
+
   return cards
     .filter((c) => c.activity?.name)
     .map((c, i) => (
-      <StatCard
+      <WeeklyActivitySetCard
         key={`${c.kind}-${c.activity.name}-${i}`}
-        darkMode={darkMode}
         label={c.label}
-        value={c.activity.name}
-        iconUrl={c.activity.iconUrl}
-        activityName={c.activity.name}
-        sub={`${c.kind === 'raid' ? 'Raid' : 'Dungeon'} · Resets ${resetsIn}`}
+        activity={c.activity}
+        kind={c.kind}
+        resetsIn={resetsIn}
+        darkMode={darkMode}
       />
     ))
 }
@@ -184,14 +201,6 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
                 />
                 <StatusPill label={data.weeklyReset.resetTimeLabel} tone="neutral" />
               </div>
-              {data.weeklyReset.pantheon && (
-                <div className="flex items-center gap-2 mb-1">
-                  {data.weeklyReset.pantheonIconUrl ? (
-                    <ItemIcon iconUrl={data.weeklyReset.pantheonIconUrl} name="Pantheon" size={28} />
-                  ) : null}
-                  <p className={cn('text-xs italic', t.purple)}>Pantheon: {data.weeklyReset.pantheon}</p>
-                </div>
-              )}
             </div>
             <ResetCountdown
               {...countdownParts(data.weeklyReset.resetsInMs)}
@@ -199,8 +208,15 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
-            {rotationStatCards(featuredRaids, featuredDungeons, resetsInLabel, darkMode)}
+          <div className="tn-weekly-activity-grid mb-5">
+            {rotationActivityCards(
+              featuredRaids,
+              featuredDungeons,
+              data.weeklyReset.pantheon,
+              data.weeklyReset.pantheonIconUrl,
+              resetsInLabel,
+              darkMode
+            )}
           </div>
 
           <ActivityIntelAccordion raids={featuredRaids} dungeons={featuredDungeons} embedded />

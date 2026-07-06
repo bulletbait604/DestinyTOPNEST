@@ -1,7 +1,8 @@
 ﻿/** Curated drop tables for featured raid/dungeon rotation UI. */
 
-import { catalogLookup } from '@/lib/destiny/itemsCatalog'
+import { activityArmorSet, armorSetIconRef, armorSetLootMeta } from '@/lib/destiny/activityArmorSets'
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
+import { catalogLookup } from '@/lib/destiny/itemsCatalog'
 import { itemIconPathFallback } from '@/lib/destiny/itemIconPaths'
 import type { DestinyIconRef } from '@/lib/destiny/types'
 
@@ -213,7 +214,16 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
 }
 
 export function activityLootIntel(activityName: string): ActivityLootIntel | null {
-  return ACTIVITY_LOOT[activityName] ?? null
+  const loot = ACTIVITY_LOOT[activityName]
+  if (!loot) return null
+
+  const armor = activityArmorSet(activityName)
+  if (!armor) return loot
+
+  return {
+    ...loot,
+    armorSet: armorSetLootMeta(armor),
+  }
 }
 
 /** Map loot table labels to catalog keys when names differ in-game. */
@@ -284,8 +294,10 @@ function lootItemIconRef(name: string, tierLabel = 'Legendary'): DestinyIconRef 
   }
 }
 
-/** Armor set row uses a real chest piece from the activity loot pool. */
-export function lootArmorSetIconRef(intel: ActivityLootIntel): DestinyIconRef | undefined {
+/** Armor set row uses the activity's Armor 3.0 chest piece icon. */
+export function lootArmorSetIconRef(intel: ActivityLootIntel, activityName?: string): DestinyIconRef | undefined {
+  const armor = activityName ? activityArmorSet(activityName) : null
+  if (armor) return armorSetIconRef(armor)
   const ref = lootItemIconRef(intel.armorSet.iconItem, 'Armor')
   return { ...ref, name: intel.armorSet.name }
 }

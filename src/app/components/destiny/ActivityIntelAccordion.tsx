@@ -1,10 +1,12 @@
 ﻿'use client'
 
-import { ChevronDown, Sparkles, Shield } from 'lucide-react'
+import { ChevronDown, Sparkles } from 'lucide-react'
 import type { FeaturedActivity } from '@/lib/destiny/types'
 import type { ActivityLootDrop, ActivityLootIntel } from '@/lib/destiny/activityLoot'
 import { activityIntel } from '@/lib/destiny/activityIntel'
-import { lootArmorSetIconRef, lootDropIconRef } from '@/lib/destiny/activityLoot'
+import { lootDropIconRef } from '@/lib/destiny/activityLoot'
+import { activityArmorSet } from '@/lib/destiny/activityArmorSets'
+import ActivityArmorSetPanel from '@/app/components/destiny/ActivityArmorSetPanel'
 import { activityWalkthroughLinkTitle, activityWalkthroughUrl } from '@/lib/destiny/activityWalkthroughLinks'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
@@ -33,29 +35,18 @@ function LootDropChip({ drop }: { drop: ActivityLootDrop }) {
   )
 }
 
-function LootSection({ loot }: { loot: ActivityLootIntel }) {
+function LootSection({ loot, activityName }: { loot: ActivityLootIntel; activityName: string }) {
   const exotics = loot.drops.filter((d) => d.kind === 'exotic' || d.kind === 'catalyst')
   const legendaries = loot.drops.filter((d) => d.kind === 'legendary')
-  const setIcon = lootArmorSetIconRef(loot)
+  const armorSet = activityArmorSet(activityName)
 
   return (
     <div className="d2-loot-panel mt-3 space-y-3">
       {loot.tagline ? <p className="d2-loot-tagline">{loot.tagline}</p> : null}
 
-      <div className="d2-loot-armor-banner">
-        {setIcon ? (
-          <ItemExternalLink item={setIcon} className="shrink-0">
-            <ItemIcon item={setIcon} name={setIcon.name} size={44} className="d2-loot-item-thumb" />
-          </ItemExternalLink>
-        ) : (
-          <Shield className="w-9 h-9 shrink-0 text-[var(--tn-arc)]" aria-hidden />
-        )}
-        <div className="min-w-0">
-          <p className="d2-loot-armor-label">Armor set</p>
-          <p className="d2-loot-armor-name">{loot.armorSet.name}</p>
-          {loot.armorSet.note ? <p className="d2-loot-armor-note">{loot.armorSet.note}</p> : null}
-        </div>
-      </div>
+      {armorSet ? (
+        <ActivityArmorSetPanel set={armorSet} />
+      ) : null}
 
       {exotics.length > 0 ? (
         <div>
@@ -130,7 +121,7 @@ function IntelBox({
       </summary>
       <div className="d2-wiki-box-body">
         <p className="d2-wiki-box-summary-text">{intel.summary}</p>
-        {intel.loot ? <LootSection loot={intel.loot} /> : null}
+        {intel.loot ? <LootSection loot={intel.loot} activityName={activity.name} /> : null}
         <ul className="d2-wiki-box-tips">
           {intel.tips.map((tip) => (
             <li key={tip}>{tip}</li>
