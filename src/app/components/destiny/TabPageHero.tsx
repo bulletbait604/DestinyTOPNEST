@@ -17,7 +17,6 @@ const PRIZE_STICKER_TABS: DestinyTopNestTab[] = [
   'overview',
   'leaderboards',
   'season',
-  'profile',
   'fireteam',
   'clans',
   'loadouts',

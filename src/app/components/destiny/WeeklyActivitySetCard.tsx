@@ -48,7 +48,7 @@ export default function WeeklyActivitySetCard({ label, activity, kind, resetsIn,
               entityType: 'DestinyActivityDefinition',
             }}
             name={activity.name}
-            size={36}
+            size={44}
           />
         </a>
         <div className="min-w-0 flex-1">

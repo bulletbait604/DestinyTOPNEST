@@ -24,8 +24,9 @@ import HomeTopNestCallout from '@/app/components/destiny/HomeTopNestCallout'
 import HomeSoloPreview from '@/app/components/destiny/HomeSoloPreview'
 import LeaderboardRulesSection from '@/app/components/destiny/LeaderboardRulesSection'
 import RunSyncToast from '@/app/components/destiny/RunSyncToast'
-import { ProfileDataProvider } from '@/contexts/ProfileDataContext'
+import { ProfileDataProvider, useProfileData } from '@/contexts/ProfileDataContext'
 import { OverviewDataProvider } from '@/contexts/OverviewDataContext'
+import { useActiveCharacterSelect } from '@/hooks/useActiveCharacterSelect'
 import { cn } from '@/lib/utils'
 
 type ProfileView = 'guardian' | 'activities' | 'loadouts'
@@ -48,6 +49,33 @@ function resolveLoadoutSection(tab: DestinyTopNestTab): LoadoutSection | undefin
 }
 
 const PROFILE_TABS = new Set<DestinyTopNestTab>(['profile', 'loadouts', 'builds'])
+
+function ProfilePlayerBanner({
+  darkMode,
+  activeTab,
+}: {
+  darkMode: boolean
+  activeTab: DestinyTopNestTab
+}) {
+  const { fullProfile } = useProfileData()
+  const { selectCharacter, switchingCharacter } = useActiveCharacterSelect()
+  const selectable = PROFILE_TABS.has(activeTab)
+
+  return (
+    <PlayerCardShell
+      darkMode={darkMode}
+      size="featured"
+      selectable={selectable}
+      onCharacterSelect={(id) => void selectCharacter(id)}
+      switchingCharacter={switchingCharacter}
+      subtitleFor={(character) =>
+        character.characterId === fullProfile?.activeCharacterId && fullProfile?.currentLoadout?.subclass
+          ? fullProfile.currentLoadout.subclass
+          : undefined
+      }
+    />
+  )
+}
 
 export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner = false }: Props) {
   const [activeTab, setActiveTab] = useState<DestinyTopNestTab>('overview')
@@ -186,7 +214,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner =
           <TabShellAlerts darkMode={darkMode} />
           <TabPageHero tab={activeTab} aside={heroAside} />
           <div className="d2-player-card-featured">
-            <PlayerCardShell darkMode={darkMode} size="featured" />
+            <ProfilePlayerBanner darkMode={darkMode} activeTab={activeTab} />
           </div>
           {showLeaderboardRules ? <LeaderboardRulesSection darkMode={darkMode} /> : null}
           {showTopNestCallout ? <HomeTopNestCallout darkMode={darkMode} /> : null}

@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import type { PlayerProfile } from '@/lib/destiny/types'
+import type { CharacterSummary, PlayerProfile } from '@/lib/destiny/types'
 import { CharacterTileRow } from '@/app/components/destiny/CharacterTile'
 import GuardianProfileBanner from '@/app/components/destiny/GuardianProfileBanner'
 import { PowerBadge, TrustRankBadge, GameCard } from '@/app/components/destiny/destinyGameUi'
@@ -13,6 +13,10 @@ interface Props {
   linked?: boolean
   loading?: boolean
   size?: 'compact' | 'featured'
+  selectable?: boolean
+  onCharacterSelect?: (characterId: string) => void
+  switchingCharacter?: boolean
+  subtitleFor?: (character: CharacterSummary) => string | undefined
 }
 
 function fallbackCharacters(profile: PlayerProfile): PlayerProfile['characters'] {
@@ -42,6 +46,10 @@ export default function PlayerCardCompact({
   linked = true,
   loading,
   size = 'featured',
+  selectable = false,
+  onCharacterSelect,
+  switchingCharacter = false,
+  subtitleFor,
 }: Props) {
   const t = getDestinyTheme(darkMode)
   const featured = size === 'featured'
@@ -104,10 +112,17 @@ export default function PlayerCardCompact({
               featured && 'dim-player-header-featured mt-4 px-2 pt-3 pb-2'
             )}
           >
+            {selectable ? (
+              <p className="d2-profile-char-label mb-2 px-0.5">Select character</p>
+            ) : null}
             <CharacterTileRow
               characters={characters}
               activeCharacterId={profile.activeCharacterId}
               compact={!featured}
+              selectable={selectable && !!onCharacterSelect}
+              onCharacterSelect={onCharacterSelect}
+              switching={switchingCharacter}
+              subtitleFor={subtitleFor}
             />
           </div>
         ) : null}

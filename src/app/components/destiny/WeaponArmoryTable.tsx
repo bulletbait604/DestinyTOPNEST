@@ -55,7 +55,7 @@ function WeaponPerkRow({ perks }: { perks: DestinyIconRef[] }) {
   )
 }
 
-function ArmoryRowView({ row }: { row: ArmoryRow }) {
+function ArmoryRowView({ row, iconSize = 40 }: { row: ArmoryRow; iconSize?: number }) {
   const name = row.item?.name ?? row.fallback
   if (!name) return null
 
@@ -67,7 +67,7 @@ function ArmoryRowView({ row }: { row: ArmoryRow }) {
       <span className="d2-armory-slot">{row.slot}</span>
       <ElementStripe label={name} />
       <ItemExternalLink item={row.item} name={row.fallback}>
-        <ItemIcon item={row.item} name={row.fallback} size={40} className="d2-armory-icon" />
+        <ItemIcon item={row.item} name={row.fallback} size={iconSize} className="d2-armory-icon" />
       </ItemExternalLink>
       <div className="d2-armory-name-wrap min-w-0">
         <ItemLink item={row.item} name={row.fallback} className="d2-armory-name truncate block" />
@@ -83,10 +83,12 @@ export default function WeaponArmoryTable({
   rows,
   title = 'Armory',
   showHeader = true,
+  iconSize = 40,
 }: {
   rows: ArmoryRow[]
   title?: string
   showHeader?: boolean
+  iconSize?: number
 }) {
   const visible = rows.filter((r) => r.item?.name || r.fallback)
   if (!visible.length) return null
@@ -105,7 +107,7 @@ export default function WeaponArmoryTable({
       ) : null}
       <div className="d2-armory-body">
         {visible.map((row) => (
-          <ArmoryRowView key={`${row.slot}-${row.item?.name ?? row.fallback}`} row={row} />
+          <ArmoryRowView key={`${row.slot}-${row.item?.name ?? row.fallback}`} row={row} iconSize={iconSize} />
         ))}
       </div>
     </div>

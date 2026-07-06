@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useEffect } from 'react'
-import type { PlayerProfile } from '@/lib/destiny/types'
+import type { CharacterSummary, PlayerProfile } from '@/lib/destiny/types'
 import PlayerCardCompact from '@/app/components/destiny/PlayerCardCompact'
 import { useBungieLink } from '@/hooks/useBungieLink'
 import { useProfileData } from '@/contexts/ProfileDataContext'
@@ -10,10 +10,22 @@ interface Props {
   darkMode: boolean
   size?: 'featured' | 'compact'
   onProfileLoaded?: (profile: PlayerProfile | null) => void
+  selectable?: boolean
+  onCharacterSelect?: (characterId: string) => void
+  switchingCharacter?: boolean
+  subtitleFor?: (character: CharacterSummary) => string | undefined
 }
 
 /** Compact player banner — summary only (no loadout fetch). */
-export default function PlayerCardShell({ darkMode, size = 'featured', onProfileLoaded }: Props) {
+export default function PlayerCardShell({
+  darkMode,
+  size = 'featured',
+  onProfileLoaded,
+  selectable = false,
+  onCharacterSelect,
+  switchingCharacter = false,
+  subtitleFor,
+}: Props) {
   const { summaryProfile, summaryLoading, ensureSummaryProfile } = useProfileData()
   const bungie = useBungieLink()
 
@@ -39,6 +51,10 @@ export default function PlayerCardShell({ darkMode, size = 'featured', onProfile
         linked={bungie.linked}
         loading={loading}
         size={size}
+        selectable={selectable}
+        onCharacterSelect={onCharacterSelect}
+        switchingCharacter={switchingCharacter}
+        subtitleFor={subtitleFor}
       />
     </div>
   )

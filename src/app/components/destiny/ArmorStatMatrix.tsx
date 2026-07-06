@@ -13,13 +13,15 @@ export default function ArmorStatMatrix({
   stats,
   tier = 200,
   compact,
+  ingame,
 }: {
   stats: Record<string, number>
   tier?: number
   compact?: boolean
+  ingame?: boolean
 }) {
   return (
-    <div className={cn('d2-stat-matrix', compact && 'd2-stat-matrix-compact')}>
+    <div className={cn('d2-stat-matrix', compact && 'd2-stat-matrix-compact', ingame && 'd2-stat-matrix-ingame')}>
       {ARMOR_STAT_ORDER.map(({ key, legacyKey, label }) => {
         const value = armorStatValue(stats, key, legacyKey)
         const pct = Math.min(100, Math.max(0, (value / tier) * 100))

@@ -1389,7 +1389,7 @@ a { color: inherit; text-decoration: none; }
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(0, 0, 0, 0.35);
-    padding: 0.65rem 0.7rem 0.7rem;
+    padding: 0.75rem 0.8rem 0.8rem;
   }
 
   .tn-weekly-activity-head {
@@ -1411,7 +1411,7 @@ a { color: inherit; text-decoration: none; }
 
   .tn-weekly-activity-label {
     margin: 0;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -1419,16 +1419,17 @@ a { color: inherit; text-decoration: none; }
   }
 
   .tn-weekly-activity-name {
-    margin: 0.08rem 0 0;
-    font-size: 0.92rem;
+    margin: 0.1rem 0 0;
+    font-size: 1.125rem;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.25;
   }
 
   .tn-weekly-activity-meta {
-    margin: 0.12rem 0 0;
-    font-size: 10px;
+    margin: 0.15rem 0 0;
+    font-size: 12px;
     letter-spacing: 0.04em;
+    line-height: 1.35;
   }
 
   .tn-weekly-activity-intel {
@@ -1443,7 +1444,7 @@ a { color: inherit; text-decoration: none; }
     justify-content: space-between;
     gap: 0.5rem;
     padding: 0.25rem 0.15rem 0.4rem;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: none;
@@ -1474,6 +1475,8 @@ a { color: inherit; text-decoration: none; }
 
   .tn-weekly-activity-intel-body .d2-wiki-box-summary-text {
     margin-bottom: 0.65rem;
+    font-size: 14px;
+    line-height: 1.55;
   }
 
   .tn-weekly-activity-intel-body .d2-loot-panel {
@@ -1482,6 +1485,49 @@ a { color: inherit; text-decoration: none; }
 
   .tn-weekly-activity-intel-body .d2-wiki-box-tips {
     margin-top: 0.65rem;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .tn-weekly-activity-intel-body .d2-loot-tagline {
+    font-size: 14px;
+  }
+
+  .tn-weekly-activity-intel-body .d2-loot-section-label {
+    font-size: 14px;
+  }
+
+  .tn-weekly-activity-intel-body .d2-loot-chip-kind {
+    font-size: 13px;
+  }
+
+  .tn-weekly-activity-intel-body .d2-loot-chip-name {
+    font-size: 14px;
+  }
+
+  .tn-weekly-activity-intel-body .d2-loot-chip-note {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .tn-weekly-activity-intel-armor .tn-armor-set-eyebrow {
+    font-size: 11px;
+  }
+
+  .tn-weekly-activity-intel-armor .tn-armor-set-name {
+    font-size: 0.95rem;
+  }
+
+  .tn-weekly-activity-intel-armor .tn-armor-set-tier-label {
+    font-size: 12px;
+  }
+
+  .tn-weekly-activity-intel-armor .tn-armor-set-tier-desc {
+    font-size: 12px;
+  }
+
+  .tn-weekly-activity-intel-armor .tn-armor-set-tier-compact .tn-armor-set-tier-desc {
+    font-size: 11px;
   }
 
   .tn-armor-set-panel {
@@ -2103,7 +2149,7 @@ a { color: inherit; text-decoration: none; }
   }
 
   .d2-profile-char-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -2141,10 +2187,106 @@ a { color: inherit; text-decoration: none; }
   }
 
   .d2-profile-build-body {
-    padding: 0.85rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.85rem;
+  }
+
+  .d2-profile-build-bar-class {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .d2-profile-loadout-split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  @media (min-width: 768px) {
+    .d2-profile-loadout-split {
+      grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.75fr);
+      align-items: start;
+    }
+  }
+
+  .d2-profile-stats-panel {
+    max-width: 100%;
+  }
+
+  .d2-profile-armor-panel .d2-armory-table,
+  .d2-profile-build-card .d2-armory-table {
+    font-size: 14px;
+  }
+
+  .d2-profile-build-card .d2-armory-header-title {
+    font-size: 13px;
+    letter-spacing: 0.14em;
+  }
+
+  .d2-profile-build-card .d2-armory-slot {
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .d2-profile-build-card .d2-armory-name {
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .d2-profile-build-card .d2-armory-perk {
+    font-size: 12px;
+  }
+
+  .d2-profile-build-card .d2-armory-tier {
+    font-size: 10px;
+  }
+
+  .d2-profile-build-card .d2-armory-row {
+    padding: 0.55rem 0.45rem;
+    gap: 0.55rem;
+  }
+
+  .d2-profile-build-card .d2-slot-label {
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .d2-stat-card-preview {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.28);
+    padding: 0.85rem;
+  }
+
+  .d2-stat-card-preview-label {
+    margin: 0 0 0.65rem;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .d2-stat-card-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  @media (min-width: 640px) {
+    .d2-stat-card-preview-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .d2-stat-card-preview-note {
+    margin: 0.65rem 0 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.42);
   }
 
   .d2-profile-build-grid {
@@ -2160,12 +2302,17 @@ a { color: inherit; text-decoration: none; }
   }
 
   .d2-profile-build-panel {
-    padding: 0.65rem !important;
+    padding: 0.75rem !important;
+  }
+
+  .d2-profile-build-card .d2-panel-header-title {
+    font-size: 12px;
+    letter-spacing: 0.16em;
   }
 
   .d2-ability-grid-profile {
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.35rem;
+    gap: 0.45rem;
   }
 
   .d2-mod-grid {
@@ -2889,6 +3036,38 @@ a { color: inherit; text-decoration: none; }
     font-variant-numeric: tabular-nums;
     color: #fff;
     text-align: right;
+  }
+
+  .d2-stat-matrix-ingame {
+    gap: 0.22rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(0, 0, 0, 0.35) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .d2-stat-matrix-ingame .d2-stat-matrix-row {
+    grid-template-columns: 3.75rem 1fr 1.35rem;
+    gap: 0.35rem;
+  }
+
+  .d2-stat-matrix-ingame .d2-stat-matrix-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.62);
+  }
+
+  .d2-stat-matrix-ingame .d2-stat-matrix-track {
+    height: 5px;
+    border-radius: 1px;
+  }
+
+  .d2-stat-matrix-ingame .d2-stat-matrix-value {
+    font-size: 10px;
+    font-weight: 900;
   }
 
   /* â”€â”€ Step 3: Build synergy rail â”€â”€ */

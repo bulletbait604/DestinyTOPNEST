@@ -1,11 +1,12 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Trophy, Unlink, Loader2 } from 'lucide-react'
+import { Trophy } from 'lucide-react'
 import BungieConnectBanner from '@/app/components/destiny/BungieConnectBanner'
 import EmblemPicker from '@/app/components/destiny/EmblemPicker'
 import PlayerCardDetail from '@/app/components/destiny/PlayerCardDetail'
 import StatCardEditor from '@/app/components/destiny/StatCardEditor'
+import StatCardPreview from '@/app/components/destiny/StatCardPreview'
 import FireteamReviewSection from '@/app/components/destiny/FireteamReviewSection'
 import ReputationSummarySection from '@/app/components/destiny/ReputationSummarySection'
 import ProfileLoadoutsSection from '@/app/components/destiny/ProfileLoadoutsSection'
@@ -22,6 +23,7 @@ import { DEFAULT_PROFILE_FLEX_STATS } from '@/lib/destiny/profileFlex'
 import { useBungieLink } from '@/hooks/useBungieLink'
 import { useProfileData } from '@/contexts/ProfileDataContext'
 import { cn } from '@/lib/utils'
+import { useActiveCharacterSelect } from '@/hooks/useActiveCharacterSelect'
 
 type ProfileView = 'guardian' | 'activities' | 'loadouts'
 type LoadoutSection = 'mine' | 'community' | 'builder'
@@ -37,8 +39,8 @@ export default function ProfilePanel({
   initialView = 'guardian',
   initialLoadoutSection,
 }: Props) {
-  const { fullProfile, fullLoading, ensureFullProfile, setFullProfile } = useProfileData()
-  const [switchingCharacter, setSwitchingCharacter] = useState(false)
+  const { fullProfile, fullLoading, ensureFullProfile } = useProfileData()
+  const { selectCharacter, switchingCharacter } = useActiveCharacterSelect()
   const [view, setView] = useState<ProfileView>(initialView)
   const bungie = useBungieLink()
   const t = getDestinyTheme(darkMode)
@@ -54,27 +56,10 @@ export default function ProfilePanel({
   }, [bungie.linked, ensureFullProfile])
 
   const handleCharacterSelect = useCallback(
-    async (characterId: string) => {
-      if (!fullProfile || characterId === fullProfile.activeCharacterId) return
-      setSwitchingCharacter(true)
-      try {
-        const res = await fetch('/api/destiny/profile', {
-          method: 'PATCH',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ activeCharacterId: characterId }),
-        })
-        if (res.ok) {
-          const json = await res.json()
-          setFullProfile(json?.profile ?? null)
-        } else {
-          await ensureFullProfile(characterId, { force: true })
-        }
-      } finally {
-        setSwitchingCharacter(false)
-      }
+    (characterId: string) => {
+      void selectCharacter(characterId)
     },
-    [ensureFullProfile, fullProfile, setFullProfile]
+    [selectCharacter]
   )
 
   const showInitialLoad = fullLoading && !fullProfile
@@ -123,32 +108,10 @@ export default function ProfilePanel({
         />
       ) : (
         <>
-          {linked && (
-            <div className="flex flex-wrap items-center justify-end gap-2 rounded-xl border border-white/[0.08] bg-black/25 px-3 py-2.5">
-              <button
-                type="button"
-                disabled={bungie.disconnecting}
-                onClick={() => void bungie.disconnect()}
-                className={cn(
-                  'ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs',
-                  'ring-1 ring-red-500/30 text-red-300 bg-red-500/10'
-                )}
-              >
-                {bungie.disconnecting ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Unlink className="w-3 h-3" />
-                )}
-                Sign out
-              </button>
-            </div>
-          )}
-
           <PlayerCardDetail
             profile={profile}
             darkMode={darkMode}
             switchingCharacter={switchingCharacter}
-            onCharacterSelect={(id) => void handleCharacterSelect(id)}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -158,11 +121,14 @@ export default function ProfilePanel({
               selectedHash={profile.displayEmblemHash}
               onSaved={() => void ensureFullProfile(undefined, { force: true })}
             />
-            <StatCardEditor
-              darkMode={darkMode}
-              initialSelection={profile.profileFlexStats ?? DEFAULT_PROFILE_FLEX_STATS}
-              onSaved={() => void ensureFullProfile(undefined, { force: true })}
-            />
+            <div className="space-y-3">
+              <StatCardEditor
+                darkMode={darkMode}
+                initialSelection={profile.profileFlexStats ?? DEFAULT_PROFILE_FLEX_STATS}
+                onSaved={() => void ensureFullProfile(undefined, { force: true })}
+              />
+              <StatCardPreview stats={profile.flexStats ?? []} darkMode={darkMode} />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
