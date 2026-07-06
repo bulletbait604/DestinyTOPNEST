@@ -5,10 +5,16 @@ import {
 } from '@/lib/destiny/legitimacyChecker'
 import { resolveActivityByHash } from '@/lib/destiny/manifest'
 import {
-  extractBuildFromPgcr,
-  parsePgcrDurationSeconds,
+  extractAllBuildsFromPgcr,
   type PgcrPayload,
 } from '@/lib/destiny/pgcrBuildExtractor'
+import {
+  pgcrStatValue,
+  resolvePgcrCompleted,
+  resolvePgcrDurationSeconds,
+  type ActivityHistoryRowLike,
+  type BungieValueMap,
+} from '@/lib/destiny/pgcrStats'
 import { calculateRunPoints } from '@/lib/destiny/scoring'
 import { isRunInActiveSeasonPacific } from '@/lib/destiny/runDates'
 import { isPantheonActivityName, squadKeyFromMembers } from '@/lib/destiny/pantheonActivities'
@@ -28,7 +34,7 @@ const DUNGEON_MODE = 82
 const ALL_PVE_MODE = 7
 const SYNC_COUNT = 15
 
-interface ActivityHistoryRow {
+interface ActivityHistoryRow extends ActivityHistoryRowLike {
   activityDetails?: {
     instanceId?: string
     mode?: number
@@ -36,6 +42,7 @@ interface ActivityHistoryRow {
     completionReason?: number
   }
   period?: string
+  values?: BungieValueMap
 }
 
 interface PgcrEntry {
@@ -46,14 +53,10 @@ interface PgcrEntry {
       membershipType?: number
     }
     characterClass?: string
+    lightLevel?: number
   }
-  values?: {
-    kills?: number
-    deaths?: number
-    assists?: number
-    score?: number
-    completed?: number
-  }
+  extended?: { values?: BungieValueMap }
+  values?: BungieValueMap
 }
 
 interface PgcrResponse extends PgcrPayload {
@@ -80,6 +83,7 @@ function parseTeamMembers(entries: PgcrEntry[] = []): RunTeamMember[] {
         classKey === 'titan' || classKey === 'warlock' || classKey === 'hunter'
           ? classKey
           : 'hunter'
+      const statValues = e.values ?? e.extended?.values
 
       return {
         membershipId: String(info.membershipId),
@@ -93,11 +97,11 @@ function parseTeamMembers(entries: PgcrEntry[] = []): RunTeamMember[] {
                 ? 'epic'
                 : 'steam') as DestinyPlatform,
         characterClass,
-        kills: e.values?.kills ?? 0,
-        deaths: e.values?.deaths ?? 0,
-        assists: e.values?.assists ?? 0,
-        score: e.values?.score ?? 0,
-        powerLevel: 0,
+        kills: pgcrStatValue(statValues, 'kills'),
+        deaths: pgcrStatValue(statValues, 'deaths'),
+        assists: pgcrStatValue(statValues, 'assists'),
+        score: pgcrStatValue(statValues, 'score'),
+        powerLevel: e.player?.lightLevel ?? pgcrStatValue(statValues, 'characterLevel'),
       }
     })
 }
@@ -138,15 +142,15 @@ async function pgcrToRunRecord(
   userId: string,
   displayName: string,
   userClanId?: string,
-  options?: { pantheonOnly?: boolean }
+  options?: { pantheonOnly?: boolean; historyRow?: ActivityHistoryRow }
 ): Promise<{ record: RunRecord; pgcr: PgcrResponse } | null> {
   const pgcr = (await getPostGameCarnageReport(instanceId)) as PgcrResponse
   const details = pgcr.activityDetails
   if (!details) return null
 
-  const completed = (details.completionReason ?? 1) === 0
+  const completed = resolvePgcrCompleted(pgcr, options?.historyRow)
   const checkpointLikely = pgcr.activityWasStartedFromBeginning === false
-  const durationSeconds = parsePgcrDurationSeconds(pgcr)
+  const durationSeconds = resolvePgcrDurationSeconds(pgcr, options?.historyRow)
   const teamMembers = parseTeamMembers(pgcr.entries)
 
   const activityHash = Number(details.referenceId ?? details.directorActivityHash ?? 0)
@@ -302,7 +306,7 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
             stored.userId,
             stored.bungieDisplayName,
             stored.clanId,
-            { pantheonOnly }
+            { pantheonOnly, historyRow: row }
           )
           if (!result) {
             skipped++
@@ -328,8 +332,8 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
             })
           }
 
-          const build = await extractBuildFromPgcr(pgcr, record, membershipId)
-          if (build) {
+          const memberBuilds = await extractAllBuildsFromPgcr(pgcr, record, membershipId)
+          for (const build of memberBuilds) {
             await saveBuildSnapshot(build)
             builds++
           }

@@ -32,8 +32,9 @@ export function evaluateRunLegitimacy(input: LegitimacyInput): AiReview {
   }
 
   const isPantheon = input.activityType === 'pantheon'
-  const minDuration = isPantheon ? 120 : input.activityType === 'raid' ? 900 : 480
+  const minDuration = isPantheon ? 120 : input.activityType === 'raid' ? 900 : 240
   const maxDuration = isPantheon ? 3600 : input.activityType === 'raid' ? 7200 : 3600
+  const minPlayers = isPantheon ? 3 : input.activityType === 'raid' ? 3 : 1
 
   if (input.durationSeconds < minDuration) {
     score += 40
@@ -45,7 +46,7 @@ export function evaluateRunLegitimacy(input: LegitimacyInput): AiReview {
     reasons.push('Duration within expected range')
   }
 
-  if (input.playerCount < (isPantheon ? 3 : input.activityType === 'raid' ? 6 : 3)) {
+  if (input.playerCount < minPlayers) {
     score += 25
     reasons.push(`Only ${input.playerCount} players in fireteam`)
   }

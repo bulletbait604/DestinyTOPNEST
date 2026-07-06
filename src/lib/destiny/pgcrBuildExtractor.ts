@@ -5,6 +5,12 @@
 
 import { resolveInventoryBucketHash } from '@/lib/destiny/guardianBuild'
 import { resolveInventoryItem } from '@/lib/destiny/manifest'
+import {
+  pgcrStatValue,
+  resolvePgcrDurationSeconds,
+  type ActivityHistoryRowLike,
+  type BungieValueMap,
+} from '@/lib/destiny/pgcrStats'
 import type {
   BuildSnapshot,
   DestinyCharacterClass,
@@ -24,16 +30,14 @@ interface PgcrEntry {
     }
     characterClass?: string
     classHash?: number
+    lightLevel?: number
   }
   characterClass?: string
   extended?: {
     weapons?: PgcrWeapon[]
-    values?: Record<string, unknown>
+    values?: BungieValueMap
   }
-  values?: {
-    deaths?: number
-    kills?: number
-  }
+  values?: BungieValueMap
 }
 
 export interface PgcrPayload {
@@ -121,31 +125,19 @@ async function bucketPgcrWeapons(
   return { kinetic, energy, power, exoticWeapon, exoticArmor }
 }
 
-export function parsePgcrDurationSeconds(pgcr: PgcrPayload): number {
-  if (typeof pgcr.activityDurationInSeconds === 'number' && pgcr.activityDurationInSeconds > 0) {
-    return pgcr.activityDurationInSeconds
-  }
-
-  for (const entry of pgcr.entries ?? []) {
-    const values = entry.extended?.values ?? entry.values
-    if (!values || typeof values !== 'object') continue
-    const raw = (values as Record<string, unknown>).activityDurationSeconds
-    if (typeof raw === 'number' && raw > 0) return raw
-  }
-
-  return 0
+export function parsePgcrDurationSeconds(
+  pgcr: PgcrPayload,
+  historyRow?: ActivityHistoryRowLike
+): number {
+  return resolvePgcrDurationSeconds(pgcr, historyRow)
 }
 
-export async function extractBuildFromPgcr(
-  pgcr: PgcrPayload,
+async function buildSnapshotFromEntry(
+  entry: PgcrEntry,
   run: RunRecord,
-  ownerMembershipId: string
+  membershipId: string,
+  userId: string
 ): Promise<BuildSnapshot | null> {
-  const entry = (pgcr.entries ?? []).find(
-    (e) => String(e.player?.destinyUserInfo?.membershipId ?? '') === String(ownerMembershipId)
-  )
-  if (!entry) return null
-
   const weaponRows = entry.extended?.weapons ?? []
   if (!weaponRows.length) return null
 
@@ -162,7 +154,8 @@ export async function extractBuildFromPgcr(
 
   const slots = await bucketPgcrWeapons(resolved)
   const characterClass = parseClass(entry)
-  const deaths = entry.values?.deaths ?? 0
+  const statValues = entry.values ?? entry.extended?.values
+  const deaths = pgcrStatValue(statValues, 'deaths')
 
   const buildKey = [
     characterClass,
@@ -174,9 +167,9 @@ export async function extractBuildFromPgcr(
   ].join('|')
 
   return {
-    id: `build-${run.id}-${ownerMembershipId}`,
+    id: `build-${run.id}-${membershipId}`,
     runId: run.id,
-    userId: run.ownerUserId ?? '',
+    userId,
     characterClass,
     subclass: 'Unknown',
     super: 'Unknown',
@@ -201,4 +194,38 @@ export async function extractBuildFromPgcr(
     buildSignature: buildKey,
     verificationStatus: run.verificationStatus,
   }
+}
+
+export async function extractBuildFromPgcr(
+  pgcr: PgcrPayload,
+  run: RunRecord,
+  ownerMembershipId: string
+): Promise<BuildSnapshot | null> {
+  const entry = (pgcr.entries ?? []).find(
+    (e) => String(e.player?.destinyUserInfo?.membershipId ?? '') === String(ownerMembershipId)
+  )
+  if (!entry) return null
+  return buildSnapshotFromEntry(entry, run, String(ownerMembershipId), run.ownerUserId ?? '')
+}
+
+/** Extract loadout snapshots for every fireteam member with weapon data in the PGCR. */
+export async function extractAllBuildsFromPgcr(
+  pgcr: PgcrPayload,
+  run: RunRecord,
+  ownerMembershipId: string
+): Promise<BuildSnapshot[]> {
+  const builds: BuildSnapshot[] = []
+  const ownerId = String(ownerMembershipId)
+
+  for (const entry of pgcr.entries ?? []) {
+    const membershipId = String(entry.player?.destinyUserInfo?.membershipId ?? '')
+    if (!membershipId) continue
+
+    const userId =
+      membershipId === ownerId ? run.ownerUserId ?? '' : `bungie:${membershipId}`
+    const build = await buildSnapshotFromEntry(entry, run, membershipId, userId)
+    if (build) builds.push(build)
+  }
+
+  return builds
 }
