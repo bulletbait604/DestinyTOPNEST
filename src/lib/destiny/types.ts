@@ -12,6 +12,22 @@ export interface ArmorPiece {
   ref?: DestinyIconRef
   mods?: DestinyIconRef[]
   isExotic?: boolean
+  itemHash?: number
+  equipableItemSetHash?: number
+}
+
+/** Active armor set bonus tiers (2-piece / 4-piece) for a loadout. */
+export interface ArmorSetBonusGroup {
+  setName: string
+  pieceCount: number
+  setRef?: DestinyIconRef
+  bonuses: Array<{
+    requiredCount: number
+    name: string
+    description?: string
+    active: boolean
+    perkRef?: DestinyIconRef
+  }>
 }
 export type ActivityType = 'raid' | 'dungeon' | 'pantheon'
 export type VerificationStatus = 'verified' | 'pending' | 'flagged' | 'rejected'
@@ -315,6 +331,8 @@ export interface BuildSnapshot {
   exoticWeapon?: string
   /** Full equipped armor — helmet through legs. */
   armorPieces?: ArmorPiece[]
+  /** Resolved 2-piece / 4-piece set bonuses from equipped legendary armor. */
+  armorSetBonuses?: ArmorSetBonusGroup[]
   kineticWeapon: string
   energyWeapon: string
   powerWeapon: string

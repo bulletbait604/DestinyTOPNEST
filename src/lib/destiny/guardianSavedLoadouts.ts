@@ -138,7 +138,14 @@ async function buildFromLoadoutItems(
           exoticArmor = info.name
           exoticArmorRef = ref
         }
-        armorPieces.push({ slot: armorSlot, name: info.name, ref, mods: [], isExotic })
+        armorPieces.push({
+          slot: armorSlot,
+          name: info.name,
+          ref,
+          mods: [],
+          isExotic,
+          itemHash: hash,
+        })
         continue
       }
 
@@ -179,7 +186,7 @@ async function buildFromLoadoutItems(
         exoticArmor = info.name
         exoticArmorRef = ref
       }
-      armorPieces.push({ slot, name: info.name, ref, mods: [], isExotic })
+      armorPieces.push({ slot, name: info.name, ref, mods: [], isExotic, itemHash: hash })
     }
   }
 

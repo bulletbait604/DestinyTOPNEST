@@ -1,4 +1,5 @@
 import type { ArmorPiece, ArmorSlotLabel, BuildSnapshot, ExternalBuildSource } from '@/lib/destiny/types'
+import { formatArmorSetBonusesForCopy } from '@/lib/destiny/armorSetBonusFormat'
 import type { ArmoryRow } from '@/app/components/destiny/WeaponArmoryTable'
 
 const ARMOR_SLOT_LABEL: Record<ArmorSlotLabel, string> = {
@@ -79,6 +80,13 @@ export function abilityRows(build: BuildSnapshot): ArmoryRow[] {
     }))
 }
 
+export function buildExoticArmorRow(
+  build: Pick<BuildSnapshot, 'exoticArmor' | 'exoticArmorRef'>
+): ArmoryRow[] {
+  if (!build.exoticArmor || build.exoticArmor === '—') return []
+  return [{ slot: 'Exo', item: build.exoticArmorRef, fallback: build.exoticArmor }]
+}
+
 export function loadoutCopyText(build: BuildSnapshot): string {
   const lines = [
     `${build.subclass} ${build.characterClass}`,
@@ -88,10 +96,14 @@ export function loadoutCopyText(build: BuildSnapshot): string {
     `Weapons: ${build.kineticWeapon} / ${build.energyWeapon} / ${build.powerWeapon}`,
   ]
 
-  if (build.armorPieces?.length) {
-    lines.push(`Armor: ${build.armorPieces.map((p) => p.name).join(' · ')}`)
-  } else if (build.exoticArmor !== '—') {
+  if (build.exoticArmor && build.exoticArmor !== '—') {
     lines.push(`Exotic armor: ${build.exoticArmor}`)
+  }
+
+  const setBonusLines = formatArmorSetBonusesForCopy(build.armorSetBonuses)
+  if (setBonusLines.length) {
+    lines.push('Armor set bonuses:')
+    lines.push(...setBonusLines.map((line) => `- ${line}`))
   }
 
   if (build.armorMods.length) {

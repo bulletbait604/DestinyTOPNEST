@@ -28,6 +28,7 @@ import {
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
 import { activityIconUrlForName, pantheonActivityIconUrl } from '@/lib/destiny/activityIconPaths'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
+import { resolveArmorSetBonusesFromPieces } from '@/lib/destiny/armorSetBonuses'
 
 function activityIconUrl(name: string, resolved?: { iconUrl?: string }): string | undefined {
   return activityIconUrlForName(name) ?? resolved?.iconUrl
@@ -130,6 +131,10 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
       : Promise.resolve(build.armorPieces),
   ])
 
+  const armorSetBonuses = armorPieces?.length
+    ? await resolveArmorSetBonusesFromPieces(armorPieces)
+    : build.armorSetBonuses
+
   return {
     ...build,
     classRef,
@@ -150,6 +155,7 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     meleeRef,
     grenadeRef,
     armorPieces,
+    armorSetBonuses,
   }
 }
 

@@ -46,7 +46,7 @@ export function homeSectionArtUrl(key: keyof typeof HOME_SECTION_ART): string {
   return buildBungieIconUrl(HOME_SECTION_ART[key]) ?? ''
 }
 
-/** Solo / monthly Commanders leaderboard tile icon. */
+/** Solo / monthly Commanders leaderboard tile icon (Guardians' Oath emblem). */
 export function soloLeaderboardIconUrl(): string {
-  return buildBungieIconUrl(COMMUNITY_ART.guardiansOathIcon) ?? ''
+  return buildBungieIconUrl(COMMUNITY_ART.guardiansOath) ?? ''
 }

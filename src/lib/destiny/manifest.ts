@@ -95,6 +95,8 @@ export interface ManifestDefinitionInfo {
   tierLabel?: string
   description?: string
   itemTypeDisplayName?: string
+  /** Armor 3.0 set hash from equippingBlock.equipableItemSetHash. */
+  equipableItemSetHash?: number
 }
 
 interface CacheDoc {
@@ -107,6 +109,7 @@ interface CacheDoc {
   tierLabel?: string
   description?: string
   itemTypeDisplayName?: string
+  equipableItemSetHash?: number
   cachedAt: string
 }
 
@@ -159,6 +162,13 @@ function itemTypeFromDefinition(def: unknown): string | undefined {
   return (def as { itemTypeDisplayName?: string }).itemTypeDisplayName
 }
 
+function equipableItemSetHashFromDefinition(def: unknown): number | undefined {
+  if (!def || typeof def !== 'object') return undefined
+  const hash = (def as { equippingBlock?: { equipableItemSetHash?: number } }).equippingBlock
+    ?.equipableItemSetHash
+  return typeof hash === 'number' && hash > 0 ? hash : undefined
+}
+
 function cacheToInfo(doc: CacheDoc): ManifestDefinitionInfo {
   return {
     hash: doc.hash,
@@ -168,6 +178,7 @@ function cacheToInfo(doc: CacheDoc): ManifestDefinitionInfo {
     tierLabel: doc.tierLabel,
     description: doc.description,
     itemTypeDisplayName: doc.itemTypeDisplayName,
+    equipableItemSetHash: doc.equipableItemSetHash,
   }
 }
 
@@ -248,6 +259,10 @@ export async function resolveDefinition(
     const tierLabel = tierFromDefinition(def)
     const description = props?.description
     const itemTypeDisplayName = itemTypeFromDefinition(def)
+    const equipableItemSetHash =
+      entityType === 'DestinyInventoryItemDefinition'
+        ? equipableItemSetHashFromDefinition(def)
+        : undefined
 
     await writeCache({
       _id: cacheId(entityType, hash),
@@ -259,10 +274,20 @@ export async function resolveDefinition(
       tierLabel,
       description,
       itemTypeDisplayName,
+      equipableItemSetHash,
       cachedAt: new Date().toISOString(),
     })
 
-    return { hash, entityType, name, iconUrl, tierLabel, description, itemTypeDisplayName }
+    return {
+      hash,
+      entityType,
+      name,
+      iconUrl,
+      tierLabel,
+      description,
+      itemTypeDisplayName,
+      equipableItemSetHash,
+    }
   } catch {
     const iconUrl = catalogIconUrl(fallbackName)
     return { hash, entityType, name: fallbackName, iconUrl }

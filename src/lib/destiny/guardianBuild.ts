@@ -274,6 +274,7 @@ export async function fetchCharacterBuild(
         ref,
         mods: pieceMods,
         isExotic,
+        itemHash: item.itemHash,
       })
       const statRow = profile.itemComponents?.stats?.data?.[item.itemInstanceId ?? '']
       if (statRow?.stats) {

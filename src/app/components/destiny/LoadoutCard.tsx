@@ -2,6 +2,7 @@
 
 import { Copy } from 'lucide-react'
 import type { BuildSnapshot, DestinyIconRef } from '@/lib/destiny/types'
+import ArmorSetBonusSection from '@/app/components/destiny/ArmorSetBonusSection'
 import ArmorStatMatrix from '@/app/components/destiny/ArmorStatMatrix'
 import BuildSynergyRail from '@/app/components/destiny/BuildSynergyRail'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
@@ -9,7 +10,7 @@ import { ItemIcon, SubclassBadge } from '@/app/components/destiny/DestinyUi'
 import WeaponArmoryTable, { buildWeaponRows } from '@/app/components/destiny/WeaponArmoryTable'
 import {
   abilityRows,
-  buildArmorRows,
+  buildExoticArmorRow,
   loadoutCopyText,
 } from '@/lib/destiny/loadoutDisplay'
 import { destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -44,7 +45,7 @@ export default function LoadoutCard({
 }) {
   const t = getDestinyTheme(darkMode)
   const weaponRows = buildWeaponRows(build)
-  const armorRows = buildArmorRows(build)
+  const exoticArmorRows = buildExoticArmorRow(build)
   const abilityTableRows = abilityRows(build)
   const armorModRefs = uniqueModRefs(build.armorPieces)
 
@@ -103,7 +104,13 @@ export default function LoadoutCard({
 
       {weaponRows.length > 0 ? <WeaponArmoryTable rows={weaponRows} title="Weapons" /> : null}
 
-      {armorRows.length > 0 ? <WeaponArmoryTable rows={armorRows} title="Armor" /> : null}
+      {exoticArmorRows.length > 0 ? (
+        <WeaponArmoryTable rows={exoticArmorRows} title="Exotic armor" />
+      ) : null}
+
+      {build.armorSetBonuses?.length ? (
+        <ArmorSetBonusSection groups={build.armorSetBonuses} darkMode={darkMode} />
+      ) : null}
 
       {armorModRefs.length > 0 ? (
         <div>
