@@ -22,6 +22,7 @@ import TabPageHero from '@/app/components/destiny/TabPageHero'
 import TabShellAlerts from '@/app/components/destiny/TabShellAlerts'
 import HomeTopNestCallout from '@/app/components/destiny/HomeTopNestCallout'
 import HomeSoloPreview from '@/app/components/destiny/HomeSoloPreview'
+import LeaderboardRulesSection from '@/app/components/destiny/LeaderboardRulesSection'
 import RunSyncToast from '@/app/components/destiny/RunSyncToast'
 import { ProfileDataProvider } from '@/contexts/ProfileDataContext'
 import { OverviewDataProvider } from '@/contexts/OverviewDataContext'
@@ -171,6 +172,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
   }
 
   const showTopNestCallout = activeTab === 'overview'
+  const showLeaderboardRules = activeTab === 'leaderboards' || activeTab === 'season'
   const heroAside = showTopNestCallout ? <HomeSoloPreview darkMode={darkMode} /> : undefined
 
   return (
@@ -185,6 +187,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
           <div className="d2-player-card-featured">
             <PlayerCardShell darkMode={darkMode} size="featured" />
           </div>
+          {showLeaderboardRules ? <LeaderboardRulesSection darkMode={darkMode} /> : null}
           {showTopNestCallout ? <HomeTopNestCallout darkMode={darkMode} /> : null}
           <div className="min-w-0">{renderPanel()}</div>
         </div>

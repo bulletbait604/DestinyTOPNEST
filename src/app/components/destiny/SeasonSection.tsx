@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Clock, Trophy, Target } from 'lucide-react'
-import type { LeaderboardEntry, PrizeClaim, Season, SeasonWinner, WeeklyResetInfo } from '@/lib/destiny/types'
+import { Clock, Target } from 'lucide-react'
+import type { LeaderboardEntry, PrizeClaim, Season, WeeklyResetInfo } from '@/lib/destiny/types'
 import type { UserPrizeTrackEntry } from '@/lib/destiny/seasonPrizes'
 import SeasonPrizeClaimSection from '@/app/components/destiny/SeasonPrizeClaimSection'
 import { ActivityBadge, GlassCard, ItemIcon, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
@@ -17,12 +17,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   top_guardians: 'Top Guardians (Commanders)',
 }
 
-/** Season prizes, hall of fame, and rules — rendered inside Leaderboards. */
+/** Season prizes and standings — rendered below Leaderboards grid. */
 export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
   const [season, setSeason] = useState<Season | null>(null)
   const [countdown, setCountdown] = useState<{ days: number; hours: number; label: string } | null>(null)
-  const [eligibility, setEligibility] = useState('')
-  const [hallOfFame, setHallOfFame] = useState<SeasonWinner[]>([])
   const [prizeTrack, setPrizeTrack] = useState<UserPrizeTrackEntry[]>([])
   const [prizeClaims, setPrizeClaims] = useState<PrizeClaim[]>([])
   const [prizeEligible, setPrizeEligible] = useState<UserPrizeTrackEntry[]>([])
@@ -40,8 +38,6 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
         const json = await res.json()
         setSeason(json.season)
         setCountdown(json.countdown)
-        setEligibility(json.eligibility)
-        setHallOfFame(json.hallOfFame ?? [])
         setPrizeTrack(json.prizeTrack ?? [])
         setPrizeEligible(json.prizeEligible ?? [])
         setPrizeClaims(json.prizeClaims ?? [])
@@ -60,13 +56,6 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
 
   if (loading) return <LoadingBlock darkMode={darkMode} label="Loading season…" />
   if (!season) return null
-
-  const grouped = {
-    raid: hallOfFame.filter((w) => w.category === 'raid'),
-    dungeon: hallOfFame.filter((w) => w.category === 'dungeon'),
-    pantheon: hallOfFame.filter((w) => w.category === 'pantheon'),
-    top_guardians: hallOfFame.filter((w) => w.category === 'top_guardians'),
-  }
 
   return (
     <div className="space-y-4 pt-2 border-t border-white/[0.08]">
@@ -142,9 +131,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
       {season?.status === 'archived' && (
         <GlassCard darkMode={darkMode}>
           <SectionTitle title="Season complete" darkMode={darkMode} />
-          <p className={cn('text-sm', t.muted)}>
-            Winners are locked. Final hall of fame below reflects official season results.
-          </p>
+          <p className={cn('text-sm', t.muted)}>Winners are locked for this season.</p>
         </GlassCard>
       )}
 
@@ -192,66 +179,6 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
           </div>
         </GlassCard>
       )}
-
-      <GlassCard darkMode={darkMode}>
-        <SectionTitle title="Eligibility & rules" darkMode={darkMode} />
-        <p className={cn('text-sm', t.muted)}>{eligibility}</p>
-        <ul className={cn('text-xs mt-3 space-y-1 list-disc list-inside', t.muted)}>
-          <li>Points only for verified full completions</li>
-          <li>2 pts per clan member · 5 pts per rando (raid max 2 randos, dungeon max 1)</li>
-          <li>Pantheon squads: each boss encounter counts as one raid worth of points for the fireteam</li>
-          <li>MVP votes: +1 pt for voting, +3 pts for the Guardian you pick (Top Guardians board)</li>
-          <li>Checkpoint runs tracked but not scored unless admin approved</li>
-          <li>Suspicious runs blocked until review (score 70+)</li>
-        </ul>
-      </GlassCard>
-
-      <GlassCard darkMode={darkMode}>
-        <div className="flex items-center gap-2 mb-3">
-          <Trophy className="w-4 h-4 text-amber-400" />
-          <SectionTitle
-            title="Hall of Fame"
-            subtitle="Current season leaders — ranks lock at season end"
-            darkMode={darkMode}
-          />
-        </div>
-        {hallOfFame.length ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-            {(Object.entries(grouped) as Array<[keyof typeof grouped, SeasonWinner[]]>).map(
-              ([category, winners]) => (
-                <div key={category}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <ItemIcon
-                      iconUrl={leaderboardCategoryIconUrl(category)}
-                      name={CATEGORY_LABELS[category] ?? category}
-                      size={22}
-                    />
-                    <p className={cn('text-xs font-semibold', t.gold)}>
-                      {CATEGORY_LABELS[category] ?? category}
-                    </p>
-                  </div>
-                  {winners.length ? (
-                    winners.map((w, i) => (
-                      <div key={i} className="py-2 border-b border-white/5 flex items-center gap-2">
-                        {w.emblemUrl ? (
-                          <ItemIcon iconUrl={w.emblemUrl} name={w.displayName} size={28} className="rounded-sm shrink-0" />
-                        ) : null}
-                        <span className="text-white text-sm truncate">
-                          #{w.rank} {w.displayName} {w.clanTag}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className={cn('text-xs', t.muted)}>No leaders yet.</p>
-                  )}
-                </div>
-              )
-            )}
-          </div>
-        ) : (
-          <p className={t.muted}>Sync verified runs to populate season leaders.</p>
-        )}
-      </GlassCard>
     </div>
   )
 }
