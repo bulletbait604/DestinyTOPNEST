@@ -392,8 +392,17 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
         darkMode={darkMode}
         topByClass={data.topLoadoutsByClass}
         compact
-        title="Top loadouts this season"
-        subtitle="Top meta picks per class — cross-referenced across Blueberries, light.gg, togame.io, and D2Foundry"
+        title="Top meta loadouts this season"
+        subtitle="Unmodified best builds from Blueberries, light.gg, togame.io, and D2Foundry (June 2026+)"
+      />
+
+      <TopLoadoutsByClass
+        darkMode={darkMode}
+        variant="verified"
+        topByClass={data.topVerifiedLoadoutsByClass}
+        compact
+        title="Top verified loadouts this season"
+        subtitle="Unmodified most-used builds from Top Nest PGCR clears"
       />
     </div>
     </>

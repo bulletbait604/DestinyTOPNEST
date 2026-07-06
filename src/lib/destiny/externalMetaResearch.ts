@@ -527,13 +527,16 @@ export function metaResearchWindowStart(now = Date.now()): Date {
   return new Date(now - FOUR_WEEKS_MS)
 }
 
-/** Meta builds published or re-validated within the last 4 weeks. */
+/** Meta builds published or re-validated after June 10, 2026 within the rolling research window. */
 export function getResearchedMetaBuilds(now = Date.now()): ExternalBuildSource[] {
   const windowStart = metaResearchWindowStart(now).getTime()
+  const earliestPublished = Date.parse('2026-06-10T00:00:00.000Z')
   return RESEARCHED_META_BUILDS.filter((build) => {
     const published = build.publishedAt ? Date.parse(build.publishedAt) : 0
     const checked = Date.parse(build.lastChecked)
-    return published >= windowStart || checked >= windowStart
+    const inWindow = published >= windowStart || checked >= windowStart
+    const recentEnough = !published || published >= earliestPublished
+    return inWindow && recentEnough
   })
 }
 

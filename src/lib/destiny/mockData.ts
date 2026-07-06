@@ -13,6 +13,7 @@
   WeeklyResetInfo,
 } from '@/lib/destiny/types'
 import { rankTopMetaLoadoutsByClass, rankTrendingMetaBuilds } from '@/lib/destiny/metaBuildConsensus'
+import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 import { getResearchedMetaBuilds } from '@/lib/destiny/externalMetaResearch'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { emblemIconUrlForRank } from '@/lib/destiny/emblemIconPaths'
@@ -499,6 +500,7 @@ export function buildOverviewPayload(bungieApiConfigured: boolean): OverviewPayl
     lookingForGroup: MOCK_LFG,
     trendingBuilds: rankTrendingMetaBuilds(getResearchedMetaBuilds(), 3),
     topLoadoutsByClass: rankTopMetaLoadoutsByClass(getResearchedMetaBuilds(), 2),
+    topVerifiedLoadoutsByClass: rankTopLoadoutsByClass([], 2),
     bungieApiConfigured,
     hallOfFamePreview: [],
   }

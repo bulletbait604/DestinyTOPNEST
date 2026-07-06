@@ -7,6 +7,7 @@ import { fetchAllCharactersPresentation, fetchGuardianPresentation } from '@/lib
 import { resolveActiveCharacterId } from '@/lib/destiny/activeCharacter'
 import { fetchGuardianBungieStats } from '@/lib/destiny/guardianBungieStats'
 import { fetchCharacterBuild } from '@/lib/destiny/guardianBuild'
+import { fetchSavedLoadouts } from '@/lib/destiny/guardianSavedLoadouts'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { getValidAccessToken, upsertDestinyUser } from '@/lib/destiny/destinyUserStore'
 import type {
@@ -69,17 +70,43 @@ export async function fetchLiveLoadout(
   if (!accessToken || !membershipType || !membershipId) return null
 
   const targetCharacterId = characterId ?? stored.activeCharacterId
+  if (!targetCharacterId) return null
 
   try {
-    return await fetchCharacterBuild(
+    const build = await fetchCharacterBuild(
       membershipType,
       membershipId,
       accessToken,
       stored.userId,
       targetCharacterId
     )
+    if (!build) return null
+    return { ...build, loadoutSource: 'equipped' as const }
   } catch {
     return null
+  }
+}
+
+export async function fetchSavedLoadoutsForCharacter(
+  stored: StoredDestinyUser,
+  characterId?: string
+): Promise<BuildSnapshot[]> {
+  const accessToken = await getValidAccessToken(stored)
+  const membershipType = stored.destinyMembershipType
+  const membershipId = stored.bungieMembershipId
+  const targetCharacterId = characterId ?? stored.activeCharacterId
+  if (!accessToken || !membershipType || !membershipId || !targetCharacterId) return []
+
+  try {
+    return await fetchSavedLoadouts(
+      membershipType,
+      membershipId,
+      accessToken,
+      targetCharacterId,
+      stored.userId
+    )
+  } catch {
+    return []
   }
 }
 

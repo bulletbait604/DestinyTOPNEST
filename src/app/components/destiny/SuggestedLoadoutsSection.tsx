@@ -3,9 +3,8 @@
 import { ExternalLink } from 'lucide-react'
 import type { DestinyCharacterClass } from '@/lib/destiny/types'
 import ExternalMetaBuildCard from '@/app/components/destiny/ExternalMetaBuildCard'
-import CommunityBuildCard from '@/app/components/destiny/CommunityBuildCard'
 import { EmptyBlock, GlassCard, SectionTitle, StatusPill } from '@/app/components/destiny/DestinyUi'
-import type { RankedSuggestedLoadout } from '@/lib/destiny/metaBuildRanker'
+import type { RankedRecommendedLoadout } from '@/lib/destiny/recommendedBuildOptimizer'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
@@ -17,7 +16,7 @@ export default function SuggestedLoadoutsSection({
 }: {
   darkMode: boolean
   characterClass: DestinyCharacterClass
-  picks: RankedSuggestedLoadout[]
+  picks: RankedRecommendedLoadout[]
   summary: string
 }) {
   const t = getDestinyTheme(darkMode)
@@ -26,8 +25,8 @@ export default function SuggestedLoadoutsSection({
   return (
     <GlassCard darkMode={darkMode}>
       <SectionTitle
-        title={`Suggested ${label} loadouts`}
-        subtitle="Top curated general PvE picks for this class"
+        title={`Recommended ${label} loadouts`}
+        subtitle="Armor 3.0 hybrid builds — meta sites cross-referenced with verified Top Nest clears"
         darkMode={darkMode}
       />
       <p className={cn('text-sm mb-4 leading-relaxed', t.muted)}>{summary}</p>
@@ -35,8 +34,8 @@ export default function SuggestedLoadoutsSection({
       {!picks.length ? (
         <EmptyBlock
           darkMode={darkMode}
-          message={`No suggestions for ${label} yet`}
-          hint="Link Bungie and sync runs, or check the Top builds tab for global meta."
+          message={`No recommendations for ${label} yet`}
+          hint="Sync verified runs and check Top builds for unmodified meta and PGCR lists."
         />
       ) : (
         <div className="space-y-4">
@@ -50,30 +49,30 @@ export default function SuggestedLoadoutsSection({
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <StatusPill
-                    label={pick.kind === 'meta' ? 'Meta research' : 'Verified'}
-                    tone={pick.kind === 'meta' ? 'purple' : 'green'}
-                  />
+                  <StatusPill label="Optimized" tone="purple" />
                   <span className={cn('text-[10px] uppercase tracking-wide', t.gold)}>{pick.scoreLabel}</span>
                 </div>
               </div>
               <div className="p-4">
-                {pick.external ? (
-                  <ExternalMetaBuildCard build={pick.external} darkMode={darkMode} compact />
-                ) : pick.verified ? (
-                  <CommunityBuildCard build={pick.verified} darkMode={darkMode} compact />
-                ) : null}
+                <ExternalMetaBuildCard build={pick.build} darkMode={darkMode} compact />
                 {pick.summary ? (
                   <p className={cn('text-xs mt-3 leading-relaxed', t.muted)}>{pick.summary}</p>
                 ) : null}
-                {pick.external?.sourceUrl ? (
+                {pick.optimizationNotes.length ? (
+                  <ul className={cn('text-xs mt-2 space-y-1 list-disc list-inside', t.muted)}>
+                    {pick.optimizationNotes.map((note) => (
+                      <li key={note}>{note}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {pick.build.sourceUrl ? (
                   <a
-                    href={pick.external.sourceUrl}
+                    href={pick.build.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 mt-3 text-xs text-sky-300/90 hover:text-sky-200"
                   >
-                    View on {pick.external.sourceSite ?? 'source'} <ExternalLink className="w-3 h-3" />
+                    View original meta source <ExternalLink className="w-3 h-3" />
                   </a>
                 ) : null}
               </div>

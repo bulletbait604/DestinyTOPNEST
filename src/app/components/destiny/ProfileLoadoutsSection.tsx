@@ -19,10 +19,11 @@ import ExternalMetaBuildCard from '@/app/components/destiny/ExternalMetaBuildCar
 import SuggestedLoadoutsSection from '@/app/components/destiny/SuggestedLoadoutsSection'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import { rankTopMetaLoadoutsByClass } from '@/lib/destiny/metaBuildConsensus'
+import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 import {
-  rankSuggestedLoadoutsForClass,
-  suggestedLoadoutsSummary,
-} from '@/lib/destiny/metaBuildRanker'
+  rankRecommendedLoadoutsForClass,
+  recommendedLoadoutsSummary,
+} from '@/lib/destiny/recommendedBuildOptimizer'
 import { destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { useBungieLink } from '@/hooks/useBungieLink'
 import { useProfileData } from '@/contexts/ProfileDataContext'
@@ -86,13 +87,17 @@ export default function ProfileLoadoutsSection({
   }, [activeCharacterId, bungie.linked, ensureLoadouts, ensureBuilds, section])
 
   const topMetaByClass = useMemo(() => rankTopMetaLoadoutsByClass(externalBuilds, 5), [externalBuilds])
-  const suggestedPicks = useMemo(
-    () => rankSuggestedLoadoutsForClass(activeClass, externalBuilds, verifiedBuilds, 4),
+  const topVerifiedByClass = useMemo(
+    () => rankTopLoadoutsByClass(verifiedBuilds, 5),
+    [verifiedBuilds]
+  )
+  const recommendedPicks = useMemo(
+    () => rankRecommendedLoadoutsForClass(activeClass, externalBuilds, verifiedBuilds, 4),
     [activeClass, externalBuilds, verifiedBuilds]
   )
-  const suggestedSummary = useMemo(
-    () => suggestedLoadoutsSummary(activeClass, suggestedPicks),
-    [activeClass, suggestedPicks]
+  const recommendedSummary = useMemo(
+    () => recommendedLoadoutsSummary(activeClass, recommendedPicks),
+    [activeClass, recommendedPicks]
   )
 
   return (
@@ -154,18 +159,23 @@ export default function ProfileLoadoutsSection({
           </GlassCard>
 
           <GlassCard darkMode={darkMode}>
-            <SectionTitle title="Saved loadouts" subtitle="Builds you save for quick copy or equip" darkMode={darkMode} />
+            <SectionTitle title="Saved loadouts" subtitle="In-game loadout slots from your Bungie account" darkMode={darkMode} />
             {loadouts?.saved?.length ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {loadouts.saved.map((b, i) => (
-                  <LoadoutCard key={b.id + i} build={b} darkMode={darkMode} title={`Saved ${i + 1}`} />
+                  <LoadoutCard
+                    key={b.id + i}
+                    build={b}
+                    darkMode={darkMode}
+                    title={b.loadoutName ?? `Saved ${i + 1}`}
+                  />
                 ))}
               </div>
             ) : (
               <EmptyBlock
                 darkMode={darkMode}
-                message="No saved loadouts yet"
-                hint="Use the builder (coming soon) or save from your current gear."
+                message="No in-game saved loadouts"
+                hint="Save loadouts in Destiny 2 (orbit or social space) and they will appear here."
               />
             )}
             <button
@@ -192,8 +202,8 @@ export default function ProfileLoadoutsSection({
           <SuggestedLoadoutsSection
             darkMode={darkMode}
             characterClass={activeClass}
-            picks={suggestedPicks}
-            summary={suggestedSummary}
+            picks={recommendedPicks}
+            summary={recommendedSummary}
           />
         </>
       ) : section === 'community' ? (
@@ -226,7 +236,15 @@ export default function ProfileLoadoutsSection({
             darkMode={darkMode}
             topByClass={topMetaByClass}
             title="Top meta loadouts by class"
-            subtitle="Ranked by cross-site consensus from external build research"
+            subtitle="Unmodified picks from build sites (June 2026 research)"
+          />
+
+          <TopLoadoutsByClass
+            darkMode={darkMode}
+            variant="verified"
+            topByClass={topVerifiedByClass}
+            title="Top verified loadouts by class"
+            subtitle="Unmodified from Top Nest PGCR clears — most used this season"
           />
 
           <GlassCard darkMode={darkMode}>

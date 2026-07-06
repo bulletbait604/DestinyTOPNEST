@@ -3,6 +3,7 @@ import { destinyApiConfigured } from '@/lib/destiny/env'
 import { ACTIVE_SEASON, getSeasonCountdown, PRIZE_SUMMARY } from '@/lib/destiny/seasonConfig'
 import type { OverviewPayload, PendingRunActions, Season, SeasonWinner } from '@/lib/destiny/types'
 import type { TopMetaLoadoutsByClass } from '@/lib/destiny/metaBuildConsensus'
+import type { TopLoadoutsByClass as TopVerifiedLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 
 export function buildOverviewPayload(input: {
   raidTop10: OverviewPayload['raidTop10']
@@ -13,6 +14,7 @@ export function buildOverviewPayload(input: {
   lookingForGroup: OverviewPayload['lookingForGroup']
   trendingBuilds: OverviewPayload['trendingBuilds']
   topLoadoutsByClass: TopMetaLoadoutsByClass
+  topVerifiedLoadoutsByClass: TopVerifiedLoadoutsByClass
   hallOfFamePreview?: SeasonWinner[]
   season?: Season
   pendingRunActions?: PendingRunActions | null
@@ -56,6 +58,7 @@ export function buildOverviewPayload(input: {
     lookingForGroup: input.lookingForGroup,
     trendingBuilds: input.trendingBuilds,
     topLoadoutsByClass: input.topLoadoutsByClass,
+    topVerifiedLoadoutsByClass: input.topVerifiedLoadoutsByClass,
     bungieApiConfigured: destinyApiConfigured(),
     hallOfFamePreview: input.hallOfFamePreview ?? [],
     pendingRunActions: input.pendingRunActions ?? null,

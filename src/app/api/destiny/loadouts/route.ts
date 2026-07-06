@@ -5,7 +5,7 @@ import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { getDestinyUserBySiteUserId, getValidAccessToken } from '@/lib/destiny/destinyUserStore'
 import { enrichLoadoutsResponse } from '@/lib/destiny/enrich'
 import { fetchAllCharactersPresentation } from '@/lib/destiny/guardianPresentation'
-import { fetchLiveLoadout, refreshGuardianFromBungie } from '@/lib/destiny/liveBungieData'
+import { fetchLiveLoadout, fetchSavedLoadoutsForCharacter, refreshGuardianFromBungie } from '@/lib/destiny/liveBungieData'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +48,9 @@ export async function GET(req: NextRequest) {
     }
 
     const current = await fetchLiveLoadout(stored, activeCharacterId)
-    if (!current) {
+    const saved = await fetchSavedLoadoutsForCharacter(stored, activeCharacterId)
+
+    if (!current && !saved.length) {
       return NextResponse.json({
         current: null,
         saved: [],
@@ -63,7 +65,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       await enrichLoadoutsResponse({
         current,
-        saved: [],
+        saved,
         favorites: [],
         equipSupported: false,
         equipMessage:

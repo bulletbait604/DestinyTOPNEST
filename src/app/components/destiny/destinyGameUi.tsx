@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import type { DestinyIconRef } from '@/lib/destiny/types'
-import { itemExternalUrl } from '@/lib/destiny/itemExternalLinks'
+import { itemExternalLinkTitle, itemExternalUrl } from '@/lib/destiny/itemExternalLinks'
 import { ItemExternalLink } from '@/app/components/destiny/ItemLink'
 import { D2_ARMOR_STAT_COLORS, type ArmorStatKey } from '@/lib/destiny/armorStats'
 import { getDestinyTheme, tierGlowClass } from '@/app/components/destiny/destinyTheme'
@@ -173,7 +173,7 @@ export function IconTooltip({
         {displayName ? <p className="d2-tooltip-name">{displayName}</p> : null}
         {tier ? <p className="d2-tooltip-tier">{tier}</p> : null}
         {externalUrl ? (
-          <p className="d2-tooltip-link">Opens on light.gg</p>
+          <p className="d2-tooltip-link">{itemExternalLinkTitle(item, fallback ?? name)}</p>
         ) : null}
       </div>
     </div>

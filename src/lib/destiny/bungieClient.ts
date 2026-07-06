@@ -148,17 +148,26 @@ export async function getPlayerProfile(
   )
 }
 
+/** Character equipment + inventories + in-game saved loadouts. */
+export async function getCharacterLoadoutProfile(
+  membershipType: number,
+  membershipId: string,
+  accessToken?: string
+) {
+  return bungieFetch(
+    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=200,205,102,206,300,304,305`,
+    { accessToken }
+  )
+}
+
 /** Character equipment + item sockets/stats for live build parsing. */
 export async function getCharacterLoadout(
   membershipType: number,
   membershipId: string,
-  characterId: string,
+  _characterId: string,
   accessToken?: string
 ) {
-  return bungieFetch(
-    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=200,205,300,304,305`,
-    { accessToken }
-  )
+  return getCharacterLoadoutProfile(membershipType, membershipId, accessToken)
 }
 
 /** Activity history for a character. */

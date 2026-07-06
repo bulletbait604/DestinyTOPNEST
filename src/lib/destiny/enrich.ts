@@ -232,7 +232,7 @@ export async function enrichOverview(payload: OverviewPayload): Promise<Overview
   const primaryRaid = weeklyReset.featuredRaids[0]
   const primaryDungeon = weeklyReset.featuredDungeons[0]
 
-  const [raidTop10, dungeonTop10, pantheonTop10, guardiansTop3, recentRuns, lookingForGroup, trendingBuilds, topLoadoutsByClass] =
+  const [raidTop10, dungeonTop10, pantheonTop10, guardiansTop3, recentRuns, lookingForGroup, trendingBuilds, topLoadoutsByClass, topVerifiedLoadoutsByClass] =
     await Promise.all([
       Promise.all(payload.raidTop10.map(enrichLeaderboardEntry)),
       Promise.all(payload.dungeonTop10.map(enrichLeaderboardEntry)),
@@ -249,6 +249,11 @@ export async function enrichOverview(payload: OverviewPayload): Promise<Overview
       Promise.all(
         (['titan', 'hunter', 'warlock'] as const).map(async (cls) =>
           Promise.all((payload.topLoadoutsByClass[cls] ?? []).map(enrichExternalBuild))
+        )
+      ).then(([titan, hunter, warlock]) => ({ titan, hunter, warlock })),
+      Promise.all(
+        (['titan', 'hunter', 'warlock'] as const).map(async (cls) =>
+          Promise.all((payload.topVerifiedLoadoutsByClass[cls] ?? []).map(enrichBuildCard))
         )
       ).then(([titan, hunter, warlock]) => ({ titan, hunter, warlock })),
     ])
@@ -279,6 +284,7 @@ export async function enrichOverview(payload: OverviewPayload): Promise<Overview
     lookingForGroup,
     trendingBuilds,
     topLoadoutsByClass,
+    topVerifiedLoadoutsByClass,
   }
 }
 
@@ -333,11 +339,11 @@ export async function enrichLoadoutsResponse(data: {
   equipSupported: boolean
   equipMessage: string
 }) {
-  if (!data.current) {
+  if (!data.current && !data.saved.length) {
     return { ...data, current: null, saved: [], favorites: [] }
   }
   const [current, saved, favorites] = await Promise.all([
-    enrichBuildSnapshot(data.current),
+    data.current ? enrichBuildSnapshot(data.current) : Promise.resolve(null),
     Promise.all(data.saved.map(enrichBuildSnapshot)),
     Promise.all(data.favorites.map(enrichBuildSnapshot)),
   ])

@@ -18,6 +18,7 @@ import {
 } from '@/lib/destiny/externalMetaResearch'
 import { aggregateBuildIntelligence, verifiedRunIdSet } from '@/lib/destiny/buildIntelligence'
 import { rankTopMetaLoadoutsByClass, rankTrendingMetaBuilds, sortExternalBuildsByConsensus } from '@/lib/destiny/metaBuildConsensus'
+import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 import { ACTIVE_SEASON } from '@/lib/destiny/seasonConfig'
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
@@ -194,12 +195,13 @@ export async function getOverviewData(): Promise<OverviewPayload> {
   try {
     await ensureDestinyIndexes()
     const season = await getSeasonData()
-    const [runs, usersById, lobbies, externalBuilds, votes] = await Promise.all([
+    const [runs, usersById, lobbies, externalBuilds, votes, verifiedBuilds] = await Promise.all([
       loadAllRuns(),
       loadUsersMap(),
       getFireteamLobbies(),
       getExternalBuildSources(),
       loadAllMvpVotes(),
+      getBuildIntelligenceCards(),
     ])
 
     const recentRuns = filterRunsFromTodayPacific(runs).slice(0, 10)
@@ -216,6 +218,7 @@ export async function getOverviewData(): Promise<OverviewPayload> {
       await buildLeaderboardWithAdjustments('top_guardians', 'monthly', season, runs, usersById, votes)
     ).slice(0, 3)
     const topLoadoutsByClass = rankTopMetaLoadoutsByClass(externalBuilds, 2)
+    const topVerifiedLoadoutsByClass = rankTopLoadoutsByClass(verifiedBuilds, 2)
     const { hallOfFame } = await computeSeasonStandings(runs, usersById, season, votes)
 
     return buildOverviewPayload({
@@ -227,11 +230,13 @@ export async function getOverviewData(): Promise<OverviewPayload> {
       lookingForGroup: lobbies,
       trendingBuilds: rankTrendingMetaBuilds(externalBuilds, 3),
       topLoadoutsByClass,
+      topVerifiedLoadoutsByClass,
       hallOfFamePreview: hallOfFame.slice(0, 9),
       season,
     })
   } catch {
     const emptyMeta = rankTopMetaLoadoutsByClass([], 2)
+    const emptyVerified = rankTopLoadoutsByClass([], 2)
     return buildOverviewPayload({
       raidTop10: [],
       dungeonTop10: [],
@@ -241,6 +246,7 @@ export async function getOverviewData(): Promise<OverviewPayload> {
       lookingForGroup: [],
       trendingBuilds: [],
       topLoadoutsByClass: emptyMeta,
+      topVerifiedLoadoutsByClass: emptyVerified,
       hallOfFamePreview: [],
     })
   }

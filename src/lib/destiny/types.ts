@@ -345,6 +345,10 @@ export interface BuildSnapshot {
   jumpRef?: DestinyIconRef
   meleeRef?: DestinyIconRef
   grenadeRef?: DestinyIconRef
+  /** In-game saved loadout label from Bungie. */
+  loadoutName?: string
+  loadoutIndex?: number
+  loadoutSource?: 'equipped' | 'saved'
   /** Internal aggregation key (Phase 4). */
   buildSignature?: string
   verificationStatus?: VerificationStatus
@@ -597,6 +601,14 @@ export interface ExternalBuildSource {
   activityRef?: DestinyIconRef
   aiScore?: number
   aiScoreLabel?: string
+  /** True when produced by recommendedBuildOptimizer (not raw meta research). */
+  optimized?: boolean
+  optimizationNotes?: string[]
+  verifiedCrossRef?: {
+    activityName: string
+    usageRatePercent: number
+    successRatePercent: number
+  }
 }
 
 export interface ClanProfile {
@@ -634,6 +646,8 @@ export interface OverviewPayload {
   trendingBuilds: ExternalBuildSource[]
   /** Top meta loadouts per class from external build-site consensus. */
   topLoadoutsByClass: Record<'titan' | 'hunter' | 'warlock', ExternalBuildSource[]>
+  /** Top PGCR loadouts per class — unmodified from verified app data. */
+  topVerifiedLoadoutsByClass: Record<'titan' | 'hunter' | 'warlock', BuildIntelligenceCard[]>
   bungieApiConfigured: boolean
   hallOfFamePreview: SeasonWinner[]
   pendingRunActions?: PendingRunActions | null
