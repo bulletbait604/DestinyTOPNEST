@@ -2,6 +2,7 @@
 import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
+import { invalidateOverviewCache } from '@/lib/destiny/overviewCache'
 import { syncRunsForUser } from '@/lib/destiny/runIngestion'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +22,9 @@ export async function POST(req: NextRequest) {
 
     try {
       const result = await syncRunsForUser(stored)
+      if (result.synced > 0 || result.imported > 0) {
+        invalidateOverviewCache()
+      }
       return NextResponse.json({
         ok: true,
         synced: result.synced,

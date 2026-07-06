@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import type { useBungieLink } from '@/hooks/useBungieLink'
-import { SYNC_ACTIVE_MS, SYNC_RECENT_MS } from '@/lib/destiny/syncEvents'
+import type { BungieLinkValue } from '@/contexts/BungieLinkContext'
+import { SYNC_ACTIVE_MS, SYNC_INITIAL_DELAY_MS, SYNC_RECENT_MS } from '@/lib/destiny/syncEvents'
 
 /** Background Bungie run sync — faster polling when no new runs are found yet. */
-export function useAutoBungieSync(bungie: ReturnType<typeof useBungieLink>) {
+export function useAutoBungieSync(bungie: BungieLinkValue) {
   const syncRuns = bungie.syncRuns
   const syncRunsRef = useRef(syncRuns)
   syncRunsRef.current = syncRuns
@@ -30,11 +30,15 @@ export function useAutoBungieSync(bungie: ReturnType<typeof useBungieLink>) {
       schedule(foundNew ? SYNC_RECENT_MS : SYNC_ACTIVE_MS)
     }
 
-    void tick()
+    if (bungie.isRecentlySynced) {
+      schedule(SYNC_RECENT_MS)
+    } else {
+      schedule(SYNC_INITIAL_DELAY_MS)
+    }
 
     return () => {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [bungie.linked, bungie.status?.needsReconnect, syncRuns])
+  }, [bungie.isRecentlySynced, bungie.linked, bungie.status?.needsReconnect, syncRuns])
 }

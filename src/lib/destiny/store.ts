@@ -47,7 +47,19 @@ async function db() {
   return client.db(getMongoDbName())
 }
 
+let indexesPromise: Promise<void> | null = null
+
 export async function ensureDestinyIndexes(): Promise<void> {
+  if (!indexesPromise) {
+    indexesPromise = ensureDestinyIndexesOnce().catch((error) => {
+      indexesPromise = null
+      throw error
+    })
+  }
+  return indexesPromise
+}
+
+async function ensureDestinyIndexesOnce(): Promise<void> {
   const database = await db()
   await database.collection(DESTINY_COLLECTIONS.runRecords).createIndex({ pgcrId: 1 }, { unique: true })
   await database.collection(DESTINY_COLLECTIONS.runRecords).createIndex({ verificationStatus: 1, completedAt: -1 })

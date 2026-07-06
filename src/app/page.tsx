@@ -9,6 +9,7 @@ import AppUserHeader from '@/app/components/AppUserHeader'
 import LoginTitleScreen from '@/app/components/LoginTitleScreen'
 import DestinyTopNestApp from '@/app/components/DestinyTopNestApp'
 import SiteBackdrop from '@/app/components/SiteBackdrop'
+import { BungieLinkProvider } from '@/contexts/BungieLinkContext'
 import { useAppSession } from '@/hooks/useAppSession'
 import { stripUrlParams, navigateDestinyTab } from '@/lib/routing/tabUrl'
 
@@ -84,19 +85,21 @@ export default function HomePage() {
   }
 
   return (
-    <SiteBackdrop variant="hub">
-      <AppUserHeader
-        displayName={user.displayName}
-        onLogout={() => void logout()}
-        showAdminSettings={isAdmin}
-        onOpenAdmin={() => navigateDestinyTab('admin')}
-      />
-      <main className="container mx-auto w-full max-w-7xl px-2 sm:px-4 py-2 sm:py-3 flex-1">
-        <DestinyTopNestApp darkMode isAdmin={isAdmin} />
-      </main>
-      <footer className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.18em] text-white/30 border-t border-white/[0.06] bg-black/20">
-        Fan community hub · Not affiliated with Bungie
-      </footer>
-    </SiteBackdrop>
+    <BungieLinkProvider>
+      <SiteBackdrop variant="hub">
+        <AppUserHeader
+          displayName={user.displayName}
+          onLogout={() => void logout()}
+          showAdminSettings={isAdmin}
+          onOpenAdmin={() => navigateDestinyTab('admin')}
+        />
+        <main className="container mx-auto w-full max-w-7xl px-2 sm:px-4 py-2 sm:py-3 flex-1">
+          <DestinyTopNestApp darkMode isAdmin={isAdmin} />
+        </main>
+        <footer className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.18em] text-white/30 border-t border-white/[0.06] bg-black/20">
+          Fan community hub · Not affiliated with Bungie
+        </footer>
+      </SiteBackdrop>
+    </BungieLinkProvider>
   )
 }

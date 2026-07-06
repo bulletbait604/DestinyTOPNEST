@@ -1,10 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import type { LeaderboardEntry } from '@/lib/destiny/types'
+import { useMemo } from 'react'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
-import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
+import { useOverviewData } from '@/contexts/OverviewDataContext'
 import { cn } from '@/lib/utils'
 
 const RANK_LABELS = ['1st', '2nd', '3rd'] as const
@@ -16,31 +15,12 @@ function seasonLabel(): string {
 
 /** Top 3 monthly Commanders — sits between the home hero and player card. */
 export default function HomeTopNestCallout({ darkMode }: { darkMode: boolean }) {
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, loading } = useOverviewData()
   const t = getDestinyTheme(darkMode)
-
-  const load = useCallback(async (opts?: { silent?: boolean }) => {
-    if (!opts?.silent) setLoading(true)
-    try {
-      const res = await fetch('/api/destiny/overview', { credentials: 'include' })
-      if (!res.ok) return
-      const json = await res.json()
-      setEntries((json.guardiansTop3 ?? json.clanTop5 ?? []).slice(0, 3))
-    } finally {
-      if (!opts?.silent) setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    void load()
-  }, [load])
-
-  useEffect(() => {
-    const onRefresh = () => void load({ silent: true })
-    window.addEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
-    return () => window.removeEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
-  }, [load])
+  const entries = useMemo(
+    () => (data?.guardiansTop3 ?? data?.clanTop5 ?? []).slice(0, 3),
+    [data]
+  )
 
   return (
     <section className="tn-topnest-callout" aria-labelledby="topnest-callout-heading">
@@ -52,7 +32,7 @@ export default function HomeTopNestCallout({ darkMode }: { darkMode: boolean }) 
           <p className={cn('tn-topnest-callout-sub', t.muted)}>{seasonLabel()}</p>
         </div>
 
-        {loading ? (
+        {loading && entries.length === 0 ? (
           <p className={cn('tn-topnest-callout-empty', t.muted)}>Loading monthly leaders…</p>
         ) : entries.length === 0 ? (
           <p className={cn('tn-topnest-callout-empty', t.muted)}>

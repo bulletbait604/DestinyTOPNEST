@@ -29,7 +29,13 @@ export function normalizeMongoUri(raw: string | undefined): string {
 
 function connect(): Promise<MongoClient> {
   const uri = normalizeMongoUri(process.env.MONGODB_URI)
-  const client = new MongoClient(uri)
+  const client = new MongoClient(uri, {
+    /** Keep serverless instances from opening large pools (Atlas M0 ~500 conn cap). */
+    maxPoolSize: 10,
+    minPoolSize: 0,
+    maxIdleTimeMS: 10_000,
+    serverSelectionTimeoutMS: 10_000,
+  })
   return client.connect()
 }
 

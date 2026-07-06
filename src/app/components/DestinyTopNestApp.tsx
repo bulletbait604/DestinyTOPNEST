@@ -24,6 +24,7 @@ import HomeTopNestCallout from '@/app/components/destiny/HomeTopNestCallout'
 import HomeSoloPreview from '@/app/components/destiny/HomeSoloPreview'
 import RunSyncToast from '@/app/components/destiny/RunSyncToast'
 import { ProfileDataProvider } from '@/contexts/ProfileDataContext'
+import { OverviewDataProvider } from '@/contexts/OverviewDataContext'
 import { cn } from '@/lib/utils'
 
 type ProfileView = 'guardian' | 'activities' | 'loadouts'
@@ -173,8 +174,9 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
   const heroAside = showTopNestCallout ? <HomeSoloPreview darkMode={darkMode} /> : undefined
 
   return (
-    <ProfileDataProvider>
-      <div className={cn('rounded-xl overflow-hidden ring-1 ring-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.45)]', theme.shell)}>
+    <OverviewDataProvider>
+      <ProfileDataProvider>
+        <div className={cn('rounded-xl overflow-hidden ring-1 ring-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.45)]', theme.shell)}>
         <RunSyncToast darkMode={darkMode} />
         <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4 space-y-4">
           <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
@@ -186,7 +188,8 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
           </div>
           <div className="min-w-0">{renderPanel()}</div>
         </div>
-      </div>
-    </ProfileDataProvider>
+        </div>
+      </ProfileDataProvider>
+    </OverviewDataProvider>
   )
 }

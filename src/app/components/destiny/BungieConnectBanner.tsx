@@ -4,10 +4,10 @@ import { Link2, Loader2, RefreshCw, Unlink } from 'lucide-react'
 import { GlassCard } from '@/app/components/destiny/DestinyUi'
 import { GlowIcon } from '@/app/components/destiny/destinyGameUi'
 import { destinyPrimaryBtn, destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
-import type { useBungieLink } from '@/hooks/useBungieLink'
+import type { BungieLinkValue } from '@/contexts/BungieLinkContext'
 import { cn } from '@/lib/utils'
 
-type BungieLink = ReturnType<typeof useBungieLink>
+type BungieLink = BungieLinkValue
 
 interface Props {
   darkMode: boolean

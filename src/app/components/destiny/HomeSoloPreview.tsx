@@ -1,11 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import type { LeaderboardEntry } from '@/lib/destiny/types'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { soloLeaderboardIconUrl } from '@/lib/destiny/navArt'
-import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
+import { useOverviewData } from '@/contexts/OverviewDataContext'
 import { cn } from '@/lib/utils'
 
 const SOLO_PREVIEW_SLOTS = 3
@@ -64,29 +64,11 @@ function SoloPreviewRow({
 
 /** Solo top-3 preview beside the home hero title — empty slots show rank only. */
 export default function HomeSoloPreview({ darkMode }: { darkMode: boolean }) {
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([])
-
-  const load = useCallback(async (opts?: { silent?: boolean }) => {
-    try {
-      const res = await fetch('/api/destiny/overview', { credentials: 'include' })
-      if (!res.ok) return
-      const json = await res.json()
-      setEntries((json.guardiansTop3 ?? json.clanTop5 ?? []).slice(0, SOLO_PREVIEW_SLOTS))
-    } catch {
-      if (!opts?.silent) setEntries([])
-    }
-  }, [])
-
-  useEffect(() => {
-    void load()
-  }, [load])
-
-  useEffect(() => {
-    const onRefresh = () => void load({ silent: true })
-    window.addEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
-    return () => window.removeEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
-  }, [load])
-
+  const { data } = useOverviewData()
+  const entries = useMemo(
+    () => (data?.guardiansTop3 ?? data?.clanTop5 ?? []).slice(0, SOLO_PREVIEW_SLOTS),
+    [data]
+  )
   const slots = useMemo(() => buildSoloSlots(entries), [entries])
   const iconUrl = soloLeaderboardIconUrl()
 

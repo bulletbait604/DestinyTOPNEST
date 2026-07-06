@@ -1,7 +1,12 @@
 import type { ActivityType, VerificationStatus } from '@/lib/destiny/types'
 
+/** Shared overview payload TTL — balances freshness vs Mongo load on serverless. */
+export const OVERVIEW_CACHE_TTL_MS = 45_000
+
 export const SYNC_RECENT_MS = 5 * 60 * 1000
 export const SYNC_ACTIVE_MS = 45 * 1000
+/** Delay first background sync so the home UI can paint first. */
+export const SYNC_INITIAL_DELAY_MS = 5 * 1000
 
 export const SYNC_AT_STORAGE_KEY = 'topnestLastSyncAt'
 export const SYNC_UPDATED_EVENT = 'topnest-sync-updated'

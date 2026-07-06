@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import type { FeaturedActivity, OverviewPayload } from '@/lib/destiny/types'
+import type { FeaturedActivity } from '@/lib/destiny/types'
 import ActivityIntelAccordion from '@/app/components/destiny/ActivityIntelAccordion'
 import HomeLeaderboardCard from '@/app/components/destiny/HomeLeaderboardCard'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
@@ -20,7 +20,7 @@ import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import PendingVotePrompt from '@/app/components/destiny/PendingVotePrompt'
 import { homeSectionArtUrl, soloLeaderboardIconUrl } from '@/lib/destiny/navArt'
 import { leaderboardCategoryIconUrl } from '@/lib/destiny/activityIconPaths'
-import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
+import { useOverviewData } from '@/contexts/OverviewDataContext'
 
 function countdownParts(ms: number) {
   const totalSec = Math.max(0, Math.floor(ms / 1000))
@@ -67,40 +67,9 @@ interface OverviewPanelProps {
 }
 
 export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPanelProps) {
-  const [data, setData] = useState<OverviewPayload | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, loading, error } = useOverviewData()
   const [showVotePrompt, setShowVotePrompt] = useState(false)
   const t = getDestinyTheme(darkMode)
-
-  const load = useCallback(async (opts?: { silent?: boolean }) => {
-    if (!opts?.silent) {
-      setError(null)
-      setLoading(true)
-    }
-    try {
-      const res = await fetch('/api/destiny/overview', { credentials: 'include' })
-      if (!res.ok) throw new Error('Failed to load overview')
-      setData(await res.json())
-      if (!opts?.silent) setError(null)
-    } catch (e) {
-      if (!opts?.silent) {
-        setError(e instanceof Error ? e.message : 'Load failed')
-      }
-    } finally {
-      if (!opts?.silent) setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    load()
-  }, [load])
-
-  useEffect(() => {
-    const onRefresh = () => void load({ silent: true })
-    window.addEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
-    return () => window.removeEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
-  }, [load])
 
   useEffect(() => {
     const pending = data?.pendingRunActions
