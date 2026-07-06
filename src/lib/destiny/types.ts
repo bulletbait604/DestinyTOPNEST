@@ -4,10 +4,10 @@ import type { ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 
 export type DestinyPlatform = 'steam' | 'xbox' | 'playstation' | 'epic' | 'stadia'
 export type DestinyCharacterClass = 'titan' | 'hunter' | 'warlock'
-export type ActivityType = 'raid' | 'dungeon'
+export type ActivityType = 'raid' | 'dungeon' | 'pantheon'
 export type VerificationStatus = 'verified' | 'pending' | 'flagged' | 'rejected'
 export type LegitimacyStatus = 'clean' | 'warning' | 'suspicious' | 'highly_suspicious'
-export type LeaderboardCategory = 'raid' | 'dungeon' | 'top_guardians'
+export type LeaderboardCategory = 'raid' | 'dungeon' | 'pantheon' | 'top_guardians'
 export type LeaderboardPeriod = 'weekly' | 'monthly' | 'season' | 'all_time'
 export type Difficulty = 'normal' | 'master'
 export type FireteamGoal =
@@ -182,6 +182,8 @@ export interface RunRecord {
   activityRef?: DestinyIconRef
   ownerUserId?: string
   ownerDisplayName?: string
+  /** Pantheon fireteam fingerprint (sorted membership ids). */
+  squadKey?: string
 }
 
 export interface LeaderboardEntry {
@@ -203,6 +205,9 @@ export interface LeaderboardEntry {
   fastestActivityRef?: DestinyIconRef
   reputationScore?: number
   reputationReviewCount?: number
+  /** Pantheon squad board — number of guardians in the fireteam. */
+  squadSize?: number
+  isSquadEntry?: boolean
 }
 
 export interface FireteamLobby {
@@ -416,6 +421,7 @@ export interface CharacterSummary {
 export interface PlayerProfile extends DestinyUser {
   raidPoints: number
   dungeonPoints: number
+  pantheonPoints: number
   /** Top Guardians score from MVP votes (current month). */
   guardianPoints: number
   /** @deprecated Use guardianPoints — kept for legacy profile reads */
@@ -509,6 +515,7 @@ export interface ClanProfile {
 export interface OverviewPayload {
   raidTop10: LeaderboardEntry[]
   dungeonTop10: LeaderboardEntry[]
+  pantheonTop10: LeaderboardEntry[]
   /** Top 3 monthly Commanders (Top Guardians board). */
   guardiansTop3: LeaderboardEntry[]
   /** @deprecated Renamed to guardiansTop3 */

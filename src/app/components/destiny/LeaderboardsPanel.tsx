@@ -22,6 +22,7 @@ const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
 const CATEGORIES: { value: LeaderboardCategory; label: string }[] = [
   { value: 'raid', label: 'Raids' },
   { value: 'dungeon', label: 'Dungeons' },
+  { value: 'pantheon', label: 'Pantheon squads' },
   { value: 'top_guardians', label: 'Top Guardians' },
 ]
 
@@ -94,7 +95,14 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
         {loading ? (
           <LoadingBlock darkMode={darkMode} label="Loading rankings…" />
         ) : (
-          <LeaderboardTable entries={entries} darkMode={darkMode} />
+          <>
+            {category === 'pantheon' ? (
+              <p className={cn('text-xs mb-4', t.muted)}>
+                Squads are ranked by fireteam. Each verified Pantheon boss encounter scores like a raid clear.
+              </p>
+            ) : null}
+            <LeaderboardTable entries={entries} darkMode={darkMode} />
+          </>
         )}
       </GlassCard>
 

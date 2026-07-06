@@ -125,7 +125,7 @@ export async function verifyAuth(req: NextRequest): Promise<VerifiedUser> {
           updatedAt: now,
         },
         $setOnInsert: {
-          role: (user.role || 'free') as string,
+          role: capOwnerRole(user.username, 'free'),
           createdAt: now,
         },
       },

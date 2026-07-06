@@ -171,10 +171,11 @@ export default function ProfilePanel({
             />
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
             {[
               { label: 'Raid pts', value: profile.raidPoints },
               { label: 'Dungeon pts', value: profile.dungeonPoints },
+              { label: 'Pantheon pts', value: profile.pantheonPoints ?? 0 },
               { label: 'Guardian pts', value: profile.guardianPoints ?? profile.fullClanPoints ?? 0 },
               { label: 'Verified clears', value: profile.verifiedClears },
             ].map((stat) => (

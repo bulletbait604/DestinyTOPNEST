@@ -11,6 +11,7 @@ import {
 } from '@/lib/destiny/pgcrBuildExtractor'
 import { calculateRunPoints } from '@/lib/destiny/scoring'
 import { isRunOnOrAfterTodayPacific } from '@/lib/destiny/runDates'
+import { isPantheonActivityName, squadKeyFromMembers } from '@/lib/destiny/pantheonActivities'
 import { ensureDestinyIndexes, queueAdminReview, saveBuildSnapshot, saveRunRecord } from '@/lib/destiny/store'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { getValidAccessToken } from '@/lib/destiny/destinyUserStore'
@@ -24,6 +25,7 @@ import type {
 
 const RAID_MODE = 4
 const DUNGEON_MODE = 82
+const ALL_PVE_MODE = 7
 const SYNC_COUNT = 15
 
 interface ActivityHistoryRow {
@@ -132,10 +134,11 @@ async function fetchActivityList(
 
 async function pgcrToRunRecord(
   instanceId: string,
-  activityType: ActivityType,
+  activityTypeHint: ActivityType,
   userId: string,
   displayName: string,
-  userClanId?: string
+  userClanId?: string,
+  options?: { pantheonOnly?: boolean }
 ): Promise<{ record: RunRecord; pgcr: PgcrResponse } | null> {
   const pgcr = (await getPostGameCarnageReport(instanceId)) as PgcrResponse
   const details = pgcr.activityDetails
@@ -145,6 +148,26 @@ async function pgcrToRunRecord(
   const checkpointLikely = pgcr.activityWasStartedFromBeginning === false
   const durationSeconds = parsePgcrDurationSeconds(pgcr)
   const teamMembers = parseTeamMembers(pgcr.entries)
+
+  const activityHash = Number(details.referenceId ?? details.directorActivityHash ?? 0)
+  let activityName = `Activity ${activityHash || instanceId}`
+
+  if (activityHash > 0) {
+    try {
+      const activityDef = await resolveActivityByHash(activityHash)
+      activityName = activityDef.name
+    } catch {
+      /* keep fallback name */
+    }
+  }
+
+  let activityType: ActivityType = activityTypeHint
+  if (isPantheonActivityName(activityName)) {
+    activityType = 'pantheon'
+  } else if (options?.pantheonOnly || activityTypeHint === 'pantheon') {
+    return null
+  }
+
   const kills = teamMembers.map((m) => m.kills)
   const deaths = teamMembers.map((m) => m.deaths)
   const teamAvgKills = kills.length ? kills.reduce((a, b) => a + b, 0) / kills.length : 0
@@ -174,19 +197,6 @@ async function pgcrToRunRecord(
     suspiciousScore: aiReview.suspiciousScore,
   })
 
-  const activityHash = Number(details.referenceId ?? details.directorActivityHash ?? 0)
-  let activityName =
-    activityType === 'raid' ? `Raid ${activityHash || instanceId}` : `Dungeon ${activityHash || instanceId}`
-
-  if (activityHash > 0) {
-    try {
-      const activityDef = await resolveActivityByHash(activityHash)
-      activityName = activityDef.name
-    } catch {
-      /* keep fallback name */
-    }
-  }
-
   const record: RunRecord = {
     id: `run-${instanceId}`,
     pgcrId: instanceId,
@@ -208,6 +218,10 @@ async function pgcrToRunRecord(
     pointsAwarded: scoring.points,
     ownerUserId: userId,
     ownerDisplayName: displayName,
+    squadKey:
+      activityType === 'pantheon'
+        ? squadKeyFromMembers(teamMembers.map((member) => member.membershipId))
+        : undefined,
   }
 
   return { record, pgcr }
@@ -248,9 +262,10 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
   let builds = 0
 
   for (const characterId of characterIds) {
-    for (const [mode, activityType] of [
-      [RAID_MODE, 'raid'],
-      [DUNGEON_MODE, 'dungeon'],
+    for (const [mode, activityTypeHint, pantheonOnly] of [
+      [RAID_MODE, 'raid', false],
+      [DUNGEON_MODE, 'dungeon', false],
+      [ALL_PVE_MODE, 'pantheon', true],
     ] as const) {
       let activities: ActivityHistoryRow[] = []
       try {
@@ -269,10 +284,11 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
         try {
           const result = await pgcrToRunRecord(
             instanceId,
-            activityType,
+            activityTypeHint,
             stored.userId,
             stored.bungieDisplayName,
-            stored.clanId
+            stored.clanId,
+            { pantheonOnly }
           )
           if (!result) {
             skipped++

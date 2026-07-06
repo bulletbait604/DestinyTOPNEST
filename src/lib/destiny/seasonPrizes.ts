@@ -1,4 +1,4 @@
-﻿import { aggregateGuardianLeaderboard, aggregateLeaderboard } from '@/lib/destiny/leaderboards'
+﻿import { aggregateGuardianLeaderboard, aggregateLeaderboard, aggregatePantheonSquadLeaderboard } from '@/lib/destiny/leaderboards'
 import type { LeaderboardCategory, LeaderboardEntry, MvpVote, RunRecord, Season, SeasonWinner } from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 
@@ -9,7 +9,7 @@ function prizeForRank(
 ): string {
   const legacy = rules as Season['prizeRules'] & { fullClanTeam?: Season['prizeRules']['topGuardians'] }
   const bucket =
-    category === 'raid'
+    category === 'raid' || category === 'pantheon'
       ? rules.raid
       : category === 'dungeon'
         ? rules.dungeon
@@ -37,18 +37,20 @@ export function computeSeasonStandings(
 } {
   const raidTop = aggregateLeaderboard(runs, usersById, 'raid', 'season', season).slice(0, 5)
   const dungeonTop = aggregateLeaderboard(runs, usersById, 'dungeon', 'season', season).slice(0, 5)
+  const pantheonTop = aggregatePantheonSquadLeaderboard(runs, usersById, 'season', season).slice(0, 5)
   const guardianTop = aggregateGuardianLeaderboard(votes, usersById, 'monthly', season, 3)
 
   const hallOfFame: SeasonWinner[] = [
     ...toWinners(raidTop, 'raid', season, 5),
     ...toWinners(dungeonTop, 'dungeon', season, 5),
+    ...toWinners(pantheonTop, 'pantheon', season, 5),
     ...toWinners(guardianTop, 'top_guardians', season, 3),
   ]
 
   const storedWinners = season.winners ?? []
   const eligibility =
-    raidTop.length || dungeonTop.length || guardianTop.length
-      ? `Season ends ${new Date(season.endDate).toLocaleDateString()}. Top 3 monthly Commanders are crowned from MVP votes — vote in Previous Activities.`
+    raidTop.length || dungeonTop.length || pantheonTop.length || guardianTop.length
+      ? `Season ends ${new Date(season.endDate).toLocaleDateString()}. Pantheon squads score per boss encounter (raid-equivalent points). Top 3 monthly Commanders are crowned from MVP votes — vote in Previous Activities.`
       : 'Sync verified runs and cast MVP votes in Previous Activities to climb the Top Guardians board.'
 
   return {

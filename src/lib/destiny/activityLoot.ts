@@ -14,7 +14,7 @@ export interface ActivityLootDrop {
 }
 
 export interface ActivityLootIntel {
-  armorSet: { name: string; note?: string }
+  armorSet: { name: string; note?: string; iconItem: string }
   drops: ActivityLootDrop[]
   tagline?: string
 }
@@ -22,7 +22,7 @@ export interface ActivityLootIntel {
 export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
   "King's Fall": {
     tagline: 'Chase Touch of Malice and the Kingslayer catalyst this week.',
-    armorSet: { name: 'Warpriest\'s Chest', note: 'Full raid armor set — high-stat rolls on Master' },
+    armorSet: { name: 'Bushido', note: 'Full raid armor set — high-stat rolls on Master', iconItem: 'Bushido Plate' },
     drops: [
       { name: 'Touch of Malice', kind: 'exotic', note: 'Final boss exotic scout' },
       { name: 'Kingslayer', kind: 'catalyst', note: 'Touch of Malice catalyst' },
@@ -32,7 +32,7 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
   },
   'Vault of Glass': {
     tagline: 'Vex Mythoclast and Fatebringer are the headline farms.',
-    armorSet: { name: 'Praetorian Suit', note: 'Classic VoG armor — high Intellect / Recovery builds' },
+    armorSet: { name: 'Fused Aurum', note: 'Classic VoG armor — high Intellect / Recovery builds', iconItem: 'Fused Aurum Plate' },
     drops: [
       { name: 'Vex Mythoclast', kind: 'exotic', note: 'Atheon exotic fusion rifle' },
       { name: 'Fatebringer', kind: 'legendary', note: 'Hand cannon — Firefly / Explosive Payload' },
@@ -42,17 +42,17 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
   },
   'Garden of Salvation': {
     tagline: 'Divinity remains the must-have exotic for boss DPS.',
-    armorSet: { name: 'Garden of Salvation Suit', note: 'Relay-themed armor — spike Resilience on chest' },
+    armorSet: { name: 'Prime Zealot', note: 'Relay-themed armor — spike Resilience on chest', iconItem: 'Prime Zealot Cuirass' },
     drops: [
       { name: 'Divinity', kind: 'exotic', note: 'Trace rifle — weaken on sustained aim' },
-      { name: 'Zealot\'s Robe', kind: 'legendary', note: 'High-stat raid armor' },
+      { name: 'Zealot\'s Reward', kind: 'legendary', note: 'Fusion rifle — high-stat raid weapon' },
       { name: 'Emperor\'s Courtesy', kind: 'legendary', note: 'Shotgun from final encounter' },
       { name: 'Reckless Endangerment', kind: 'legendary', note: 'Sniper from Sanctified Mind' },
     ],
   },
   'Last Wish': {
     tagline: 'One Thousand Voices and curated raid weapons on rotation.',
-    armorSet: { name: 'Riven\'s Curse Suit', note: 'Dreaming City raid armor — spike Recovery gloves' },
+    armorSet: { name: 'Willbreaker\'s Resolve', note: 'Dreaming City raid armor — spike Recovery gloves', iconItem: 'Willbreaker\'s Resolve' },
     drops: [
       { name: 'One Thousand Voices', kind: 'exotic', note: 'Riven exotic fusion rifle' },
       { name: 'Nation of Beasts', kind: 'legendary', note: 'Hand cannon — Outlaw / Rampage' },
@@ -62,27 +62,27 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
   },
   "Crota's End": {
     tagline: 'Necrochasm and Swordbreaker define the reprised loot pool.',
-    armorSet: { name: 'Ascendant Plate', note: 'Moon raid armor — high Strength / Discipline' },
+    armorSet: { name: 'Moonfang-X7', note: 'Moon raid armor — high Strength / Discipline', iconItem: 'Moonfang-X7 Rig' },
     drops: [
       { name: 'Necrochasm', kind: 'exotic', note: 'Crota exotic auto rifle' },
       { name: 'Swordbreaker', kind: 'legendary', note: 'Shotgun — Surrounded / One-Two Punch' },
-      { name: 'Omnigul\'s Grieve', kind: 'legendary', note: 'Hand cannon from Ir YÃ»t' },
-      { name: 'Abyssal Defiant', kind: 'legendary', note: 'Scout rifle — Subsistence / Frenzy' },
+      { name: 'Word of Crota', kind: 'legendary', note: 'Hand cannon from Ir Yût' },
+      { name: 'Abyss Defiant', kind: 'legendary', note: 'Scout rifle — Subsistence / Frenzy' },
     ],
   },
   'Root of Nightmares': {
     tagline: 'Conditional Finality is the exotic everyone still needs.',
-    armorSet: { name: 'Root of Nightmares Suit', note: 'Neomuna pyramid armor — Resilience focus' },
+    armorSet: { name: 'Resonant Fury', note: 'Neomuna pyramid armor — Resilience focus', iconItem: 'Resonant Fury Plate' },
     drops: [
       { name: 'Conditional Finality', kind: 'exotic', note: 'Nezarec exotic shotgun' },
       { name: 'Rufus\'s Fury', kind: 'legendary', note: 'Auto rifle — Demolitionist / Repulsor Brace' },
       { name: 'Mykel\'s Reverence', kind: 'legendary', note: 'Sidearm — Pugilist / One-Two Punch' },
-      { name: 'Nimrod\'s Hunter', kind: 'legendary', note: 'Scout rifle — Explosive Payload' },
+      { name: 'Acacia\'s Dejection', kind: 'legendary', note: 'Trace rifle — Lead from Gold' },
     ],
   },
   'Vow of the Disciple': {
-    tagline: 'Forbearance and Lubrae\'s Ruin anchor the Rhulk farm.',
-    armorSet: { name: 'Vow of the Disciple Suit', note: 'Throne World raid armor — spike Discipline' },
+    tagline: 'Lubrae\'s Ruin anchor the Rhulk farm.',
+    armorSet: { name: 'Eidolon Pursuant', note: 'Throne World raid armor — spike Discipline', iconItem: 'Eidolon Pursuant Plate' },
     drops: [
       { name: 'Lubrae\'s Ruin', kind: 'exotic', note: 'Rhulk exotic glaive' },
       { name: 'Forbearance', kind: 'legendary', note: 'Grenade launcher — Ambitious Assassin / Chain Reaction' },
@@ -92,7 +92,7 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
   },
   'Deep Stone Crypt': {
     tagline: 'Eyes of Tomorrow and Heritage still print on repeat clears.',
-    armorSet: { name: 'Deep Stone Crypt Suit', note: 'Cosmodrome raid armor — Recovery / Intellect spikes' },
+    armorSet: { name: 'Legacy\'s Oath', note: 'Cosmodrome raid armor — Recovery / Intellect spikes', iconItem: 'Legacy\'s Oath Plate' },
     drops: [
       { name: 'Eyes of Tomorrow', kind: 'exotic', note: 'Taniks exotic rocket launcher' },
       { name: 'Heritage', kind: 'legendary', note: 'Shotgun — Reconstruction / Slideshot' },
@@ -102,7 +102,7 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
   },
   "Salvation's Edge": {
     tagline: 'Ergo Sum and the latest raid weapons are on farm.',
-    armorSet: { name: 'Salvation\'s Edge Suit', note: 'Newest raid armor — high-stat artifice slots on Master' },
+    armorSet: { name: 'Untethered Edge', note: 'Newest raid armor — high-stat artifice slots on Master', iconItem: 'Untethered Edge Plate' },
     drops: [
       { name: 'Ergo Sum', kind: 'exotic', note: 'Final boss exotic sword' },
       { name: 'Imminence', kind: 'legendary', note: 'Submachine gun — PvE staple' },
@@ -112,7 +112,7 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
   },
   'Crown of Sorrow': {
     tagline: 'Tarrabah and Crown weapons return on rotation.',
-    armorSet: { name: 'Crown of Sorrow Suit', note: 'Leviathan raid armor reprised' },
+    armorSet: { name: 'Twofold Crown', note: 'Leviathan raid armor reprised', iconItem: 'Twofold Crown Plate' },
     drops: [
       { name: 'Tarrabah', kind: 'exotic', note: 'Exotic SMG — ramping damage' },
       { name: 'Apex Predator', kind: 'legendary', note: 'Rocket launcher — Clown Cartridge / Bait and Switch' },
@@ -122,7 +122,7 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
   },
   'Grasp of Avarice': {
     tagline: 'Gjallarhorn and Xenophage catalyst routes live here.',
-    armorSet: { name: 'Avarice Suit', note: 'Dungeon armor — high Recovery on legs' },
+    armorSet: { name: 'Opulent Duelist', note: 'Dungeon armor — high Recovery on legs', iconItem: 'Opulent Duelist Plate' },
     drops: [
       { name: 'Gjallarhorn', kind: 'exotic', note: 'Exotic rocket — Wolfpack Rounds' },
       { name: 'Xenophage', kind: 'catalyst', note: 'Catalyst quest / dungeon route' },
@@ -132,7 +132,7 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
   },
   'Shattered Throne': {
     tagline: 'Wish-Ender and Twilight Oath are the classic chase items.',
-    armorSet: { name: 'Reverie Dawn Suit', note: 'Dreaming City dungeon armor — spike Mobility' },
+    armorSet: { name: 'Reverie Dawn', note: 'Dreaming City dungeon armor — spike Mobility', iconItem: 'Reverie Dawn Plate' },
     drops: [
       { name: 'Wish-Ender', kind: 'exotic', note: 'Exotic bow — wall-hack rounds' },
       { name: 'Twilight Oath', kind: 'legendary', note: 'Sniper — Snapshot / Opening Shot' },
@@ -141,70 +141,70 @@ export const ACTIVITY_LOOT: Record<string, ActivityLootIntel> = {
     ],
   },
   'Spire of the Watcher': {
-    tagline: 'Hierarchy of Needs and Zaouli\'s Wrath headline the Seraph dungeon.',
-    armorSet: { name: 'Seraph Suit', note: 'Bunker dungeon armor — Resilience / Recovery focus' },
+    tagline: 'Hierarchy of Needs and Zaouli\'s Bane headline the Seraph dungeon.',
+    armorSet: { name: 'Seventh Seraph', note: 'Bunker dungeon armor — Resilience / Recovery focus', iconItem: 'Seventh Seraph Plate' },
     drops: [
       { name: 'Hierarchy of Needs', kind: 'exotic', note: 'Persys exotic bow' },
-      { name: 'Zaouli\'s Wrath', kind: 'legendary', note: 'Grenade launcher — Chain Reaction' },
+      { name: 'Zaouli\'s Bane', kind: 'legendary', note: 'Hand cannon — Incandescent' },
       { name: 'Forgiveness', kind: 'legendary', note: 'Sidearm — Kill Clip / Rangefinder' },
       { name: 'Terminus Horizon', kind: 'legendary', note: 'Linear fusion — Envious Assassin' },
     ],
   },
   Duality: {
     tagline: 'Heartshadow and craftable dungeon weapons on repeat.',
-    armorSet: { name: 'Nightmare Suit', note: 'Nightmare realm armor — high Discipline' },
+    armorSet: { name: 'Temptation', note: 'Nightmare realm armor — high Discipline', iconItem: 'Temptation\'s Bond' },
     drops: [
       { name: 'Heartshadow', kind: 'exotic', note: 'Caiatl co-op exotic sword' },
       { name: 'Forgiveness', kind: 'legendary', note: 'Sidearm — PvP / PvE hybrid' },
-      { name: 'Incursion', kind: 'legendary', note: 'Pulse rifle — Outlaw / Frenzy' },
+      { name: 'Duality', kind: 'legendary', note: 'Shotgun — One-Two Punch / Incursion' },
       { name: 'Fixed Odds', kind: 'legendary', note: 'Auto rifle — Subsistence / Rampage' },
     ],
   },
   'Ghosts of the Deep': {
     tagline: 'The Navigator exotic glaive drops from the final encounter.',
-    armorSet: { name: 'Deep Explorer Suit', note: 'Titan dungeon armor — Strength / Resilience' },
+    armorSet: { name: 'Deep Explorer', note: 'Titan dungeon armor — Strength / Resilience', iconItem: 'Deep Explorer Plate' },
     drops: [
-      { name: 'The Navigator', kind: 'exotic', note: 'Exotic glaive — heal on melee' },
-      { name: 'Rufus\'s Fire', kind: 'legendary', note: 'Trace rifle — Lead from Gold' },
+      { name: 'The Navigator', kind: 'exotic', note: 'Exotic trace rifle — heal on melee' },
+      { name: 'Thoughtless', kind: 'legendary', note: 'Sniper rifle — Firing Line / Fourth Time' },
       { name: 'Under Your Skin', kind: 'legendary', note: 'Bow — Archer\'s Tempo / Rampage' },
       { name: 'Out of Bounds', kind: 'legendary', note: 'SMG — Dynamic Sway Reduction' },
     ],
   },
   'Pit of Heresy': {
-    tagline: 'Ballista and the Moon dungeon armor set farm.',
-    armorSet: { name: 'Pit of Heresy Suit', note: 'Moon dungeon armor — high-stat spike rolls' },
+    tagline: 'Heretic and the Moon dungeon armor set farm.',
+    armorSet: { name: 'Unassailable', note: 'Moon dungeon armor — high-stat spike rolls', iconItem: 'Mark of the Unassailable' },
     drops: [
-      { name: 'Ballista', kind: 'legendary', note: 'Heavy grenade launcher — Spike / Auto-Loading' },
+      { name: 'Heretic', kind: 'legendary', note: 'Heavy grenade launcher — Spike / Auto-Loading' },
       { name: 'The Militia\'s Birthright', kind: 'legendary', note: 'Grenade launcher — Spike / Ambitious Assassin' },
-      { name: 'The Clever Rat', kind: 'legendary', note: 'Sidearm — Kill Clip' },
+      { name: 'Perfect Pitch', kind: 'legendary', note: 'Sidearm — Kill Clip' },
       { name: 'The Long Goodbye', kind: 'legendary', note: 'Sniper — Triple Tap / Firing Line' },
     ],
   },
   Prophecy: {
     tagline: 'IKELOS weapons and the Nine-themed armor return.',
-    armorSet: { name: 'Prophecy Suit', note: 'Nine dungeon armor — Recovery / Intellect' },
+    armorSet: { name: 'Tusked Allegiance', note: 'Nine dungeon armor — Recovery / Intellect', iconItem: 'Tusked Allegiance Plate' },
     drops: [
-      { name: 'IKELOS_SMG_v1.0.1.', kind: 'legendary', note: 'SMG — Threat Detector / Surrounded' },
-      { name: 'IKELOS_SG_v1.0.1.', kind: 'legendary', note: 'Shotgun — Trench Barrel / Lead from Gold' },
-      { name: 'IKELOS_SR_v1.0.1.', kind: 'legendary', note: 'Sniper — Fourth Time\'s the Charm' },
+      { name: 'IKELOS_SMG_v1.0.1', kind: 'legendary', note: 'SMG — Threat Detector / Surrounded' },
+      { name: 'IKELOS_SG_v1.0.1', kind: 'legendary', note: 'Shotgun — Trench Barrel / Lead from Gold' },
+      { name: 'IKELOS_SR_v1.0.1', kind: 'legendary', note: 'Sniper — Fourth Time\'s the Charm' },
       { name: 'Midnight Coup', kind: 'legendary', note: 'Hand cannon — Outlaw / Rampage' },
     ],
   },
   "Warlord's Ruin": {
-    tagline: 'Dark Age arsenal and the Warlord exotic SMG.',
-    armorSet: { name: 'Warlord\'s Ruin Suit', note: 'Dark Age dungeon armor — Resilience spikes' },
+    tagline: 'Warlord\'s Spear and the Dark Age arsenal.',
+    armorSet: { name: 'Dark Age', note: 'Dark Age dungeon armor — Resilience spikes', iconItem: 'Dark Age Chestrig' },
     drops: [
-      { name: 'Dark Age Arsenal', kind: 'exotic', note: 'Final boss exotic SMG' },
+      { name: 'Warlord\'s Spear', kind: 'exotic', note: 'Final boss exotic trace rifle' },
       { name: 'Forgiveness', kind: 'legendary', note: 'Sidearm — curated roll' },
       { name: 'Incisor', kind: 'legendary', note: 'Trace rifle — Envious Assassin' },
       { name: 'Outlast', kind: 'legendary', note: 'Pulse rifle — Outlaw / Kill Clip' },
     ],
   },
   "Vesper's Host": {
-    tagline: 'Vesper\'s Host exotic and Bray tech weapons.',
-    armorSet: { name: 'Vesper\'s Host Suit', note: 'Braytech dungeon armor — high-stat artifice' },
+    tagline: 'Icefall Mantle and Braytech weapons.',
+    armorSet: { name: 'BrayTech Combat', note: 'Braytech dungeon armor — high-stat artifice', iconItem: 'BrayTech Combat Vest' },
     drops: [
-      { name: 'Vesper\'s Host', kind: 'exotic', note: 'Final encounter exotic' },
+      { name: 'Icefall Mantle', kind: 'exotic', note: 'Exotic gauntlets — stasis buffs' },
       { name: 'Cold Comfort', kind: 'legendary', note: 'Shotgun — One-Two Punch' },
       { name: 'Swordbreaker', kind: 'legendary', note: 'Shotgun — PvE roll chase' },
       { name: 'Forgiveness', kind: 'legendary', note: 'Sidearm — Rangefinder' },
@@ -218,16 +218,26 @@ export function activityLootIntel(activityName: string): ActivityLootIntel | nul
 
 /** Map loot table labels to catalog keys when names differ in-game. */
 const LOOT_ICON_ALIASES: Record<string, string> = {
-  "ikelos_smg_v1.0.1.": 'ikeleos smg v1.0.1',
-  "ikelos_sg_v1.0.1.": 'ikeleos shotgun v1.0.1',
-  "ikelos_sr_v1.0.1.": 'ikeleos sniper v1.0.1',
+  'ikelos_smg_v1.0.1': 'ikelos_smg_v1.0.1',
+  'ikelos_sg_v1.0.1': 'ikelos_sg_v1.0.1',
+  'ikelos_sr_v1.0.1': 'ikelos_sr_v1.0.1',
   'the tyranny of heaven': 'tyranny of heaven',
   'the militia\'s birthright': 'militia\'s birthright',
   'the long goodbye': 'long goodbye',
   'the comedian': 'comedian',
-  'the navigator': 'navigator',
-  'the clever rat': 'clever rat',
-  kingslayer: 'touch of malice',
+  'the navigator': 'the navigator',
+  kingslayer: 'touch of malice catalyst',
+  'zaouli\'s wrath': 'zaouli\'s bane',
+  'omnigul\'s grieve': 'word of crota',
+  'abyssal defiant': 'abyss defiant',
+  'nimrod\'s hunter': 'acacia\'s dejection',
+  'rufus\'s fire': 'thoughtless',
+  'dark age arsenal': 'warlord\'s spear',
+  'vesper\'s host': 'icefall mantle',
+  ballista: 'heretic',
+  'the clever rat': 'perfect pitch',
+  incursion: 'duality',
+  'zealot\'s robe': 'prime zealot cuirass',
 }
 
 function tierForKind(kind: LootRarity): string {
@@ -243,7 +253,11 @@ function resolveLootCatalogName(name: string): string {
 
 /** Build an icon ref for a weekly loot drop (catalog + manifest fallback in UI). */
 export function lootDropIconRef(drop: ActivityLootDrop): DestinyIconRef {
-  const catalogKey = resolveLootCatalogName(drop.name)
+  const aliasKey =
+    drop.kind === 'catalyst' && drop.name.trim().toLowerCase() === 'xenophage'
+      ? 'xenophage catalyst'
+      : resolveLootCatalogName(drop.name)
+  const catalogKey = aliasKey
   const catalog = catalogLookup(catalogKey) ?? catalogLookup(drop.name)
   const iconPath = catalog?.iconPath ?? itemIconPathFallback(catalogKey) ?? itemIconPathFallback(drop.name)
 
@@ -252,12 +266,26 @@ export function lootDropIconRef(drop: ActivityLootDrop): DestinyIconRef {
     hash: catalog?.hash,
     iconUrl: iconPath ? buildBungieIconUrl(iconPath) : undefined,
     tierLabel: tierForKind(drop.kind),
-    entityType: 'DestinyInventoryItemDefinition',
+    entityType: catalog?.entity ?? 'DestinyInventoryItemDefinition',
   }
 }
 
-/** Prefer the first exotic drop as a visual for the armor set row. */
+function lootItemIconRef(name: string, tierLabel = 'Legendary'): DestinyIconRef {
+  const catalogKey = resolveLootCatalogName(name)
+  const catalog = catalogLookup(catalogKey) ?? catalogLookup(name)
+  const iconPath = catalog?.iconPath ?? itemIconPathFallback(catalogKey) ?? itemIconPathFallback(name)
+
+  return {
+    name,
+    hash: catalog?.hash,
+    iconUrl: iconPath ? buildBungieIconUrl(iconPath) : undefined,
+    tierLabel,
+    entityType: catalog?.entity ?? 'DestinyInventoryItemDefinition',
+  }
+}
+
+/** Armor set row uses a real chest piece from the activity loot pool. */
 export function lootArmorSetIconRef(intel: ActivityLootIntel): DestinyIconRef | undefined {
-  const exotic = intel.drops.find((d) => d.kind === 'exotic')
-  return exotic ? lootDropIconRef(exotic) : undefined
+  const ref = lootItemIconRef(intel.armorSet.iconItem, 'Armor')
+  return { ...ref, name: intel.armorSet.name }
 }

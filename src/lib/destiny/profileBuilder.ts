@@ -18,6 +18,7 @@ export function emptyPlayerProfile(userId: string): PlayerProfile {
     platform: 'steam',
     raidPoints: 0,
     dungeonPoints: 0,
+    pantheonPoints: 0,
     guardianPoints: 0,
     fullClanPoints: 0,
     verifiedClears: 0,
@@ -50,6 +51,9 @@ export function buildPlayerProfileFromStored(
   const raidPoints = verified.filter((r) => r.type === 'raid').reduce((s, r) => s + (r.pointsAwarded ?? 0), 0)
   const dungeonPoints = verified
     .filter((r) => r.type === 'dungeon')
+    .reduce((s, r) => s + (r.pointsAwarded ?? 0), 0)
+  const pantheonPoints = verified
+    .filter((r) => r.type === 'pantheon')
     .reduce((s, r) => s + (r.pointsAwarded ?? 0), 0)
   const fullClanPoints = verified
     .filter((r) => r.isFullClanTeam)
@@ -118,6 +122,7 @@ export function buildPlayerProfileFromStored(
     displayEmblemHash: stored.displayEmblemHash,
     raidPoints,
     dungeonPoints,
+    pantheonPoints,
     fullClanPoints,
     guardianPoints,
     verifiedClears: verified.length,

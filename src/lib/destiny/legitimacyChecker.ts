@@ -31,8 +31,9 @@ export function evaluateRunLegitimacy(input: LegitimacyInput): AiReview {
     reasons.push('Likely checkpoint start (not from beginning)')
   }
 
-  const minDuration = input.activityType === 'raid' ? 900 : 480
-  const maxDuration = input.activityType === 'raid' ? 7200 : 3600
+  const isPantheon = input.activityType === 'pantheon'
+  const minDuration = isPantheon ? 120 : input.activityType === 'raid' ? 900 : 480
+  const maxDuration = isPantheon ? 3600 : input.activityType === 'raid' ? 7200 : 3600
 
   if (input.durationSeconds < minDuration) {
     score += 40
@@ -44,7 +45,7 @@ export function evaluateRunLegitimacy(input: LegitimacyInput): AiReview {
     reasons.push('Duration within expected range')
   }
 
-  if (input.playerCount < (input.activityType === 'raid' ? 6 : 3)) {
+  if (input.playerCount < (isPantheon ? 3 : input.activityType === 'raid' ? 6 : 3)) {
     score += 25
     reasons.push(`Only ${input.playerCount} players in fireteam`)
   }

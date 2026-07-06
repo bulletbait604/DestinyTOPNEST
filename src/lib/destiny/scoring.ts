@@ -35,8 +35,9 @@ export function calculateRunPoints(input: ScoringInput): ScoringResult {
     return { points: 0, eligible: false, reasons: ['Suspicious score 70+ — blocked until admin approval'] }
   }
 
+  const scoringKind = input.activityType === 'pantheon' ? 'raid' : input.activityType
   const maxRandos =
-    input.activityType === 'raid' ? SCORING.maxRandosRaid : SCORING.maxRandosDungeon
+    scoringKind === 'raid' ? SCORING.maxRandosRaid : SCORING.maxRandosDungeon
   if (input.randoCount > maxRandos) {
     reasons.push(`Rando count ${input.randoCount} exceeds max ${maxRandos} for ${input.activityType}`)
   }

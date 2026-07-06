@@ -419,9 +419,18 @@ function LeaderboardRow({
         <p className={cn('font-semibold text-sm truncate', t.heading)}>{entry.bungieDisplayName}</p>
         {!compact && (
           <p className={cn('text-[11px] mt-0.5 truncate', t.muted)}>
-            {entry.clanTag ? `${entry.clanTag} · ` : ''}
-            {platformIcon(entry.platform)}
-            {entry.powerLevel ? ` · ${entry.powerLevel} PL` : ''}
+            {entry.isSquadEntry ? (
+              <>
+                {entry.squadSize ?? '?'} guardians · {entry.verifiedClears} encounter
+                {entry.verifiedClears === 1 ? '' : 's'}
+              </>
+            ) : (
+              <>
+                {entry.clanTag ? `${entry.clanTag} · ` : ''}
+                {platformIcon(entry.platform)}
+                {entry.powerLevel ? ` · ${entry.powerLevel} PL` : ''}
+              </>
+            )}
           </p>
         )}
       </div>

@@ -6,10 +6,10 @@
 import { writeFileSync } from 'fs'
 import {
   MANIFEST_TABLES,
-  definitionIcon,
   iconOk,
   loadManifestTables,
 } from './lib/manifestClient.mjs'
+import { ITEM_HASH_OVERRIDES } from './loot-icon-overrides.mjs'
 
 const ITEM_NAMES = [
   'Ophidian Aspect',
@@ -65,7 +65,8 @@ const ITEM_NAMES = [
   'Fatebringer',
   'Vision of Confluence',
   'Hezen Vengeance',
-  "Zealot's Robe",
+  'Zealot\'s Robe',
+  'Zealot\'s Reward',
   "Emperor's Courtesy",
   'Reckless Endangerment',
   'One Thousand Voices',
@@ -117,6 +118,8 @@ const ITEM_NAMES = [
   "The Militia's Birthright",
   'The Clever Rat',
   'The Long Goodbye',
+  'Heretic',
+  'Perfect Pitch',
   'IKELOS SMG',
   'IKELOS Shotgun',
   'IKELOS Sniper',
@@ -126,6 +129,40 @@ const ITEM_NAMES = [
   'Outlast',
   "Vesper's Host",
   'Cold Comfort',
+  'Touch of Malice Catalyst',
+  "Zaouli's Bane",
+  'Heretic',
+  "Warlord's Spear",
+  'Thoughtless',
+  "Acacia's Dejection",
+  'Word of Crota',
+  'Abyss Defiant',
+  'Icefall Mantle',
+  'Prime Zealot Cuirass',
+  'Bushido Plate',
+  'Fused Aurum Plate',
+  "Willbreaker's Resolve",
+  'Moonfang-X7 Rig',
+  'Resonant Fury Plate',
+  'Eidolon Pursuant Plate',
+  "Legacy's Oath Plate",
+  'Untethered Edge Plate',
+  'Twofold Crown Plate',
+  'Opulent Duelist Plate',
+  'Reverie Dawn Plate',
+  'Seventh Seraph Plate',
+  "Temptation's Bond",
+  'Deep Explorer Plate',
+  'Mark of the Unassailable',
+  'Tusked Allegiance Plate',
+  'Dark Age Chestrig',
+  'BrayTech Combat Vest',
+  'Perfect Pitch',
+  'Duality',
+  'Xenophage Catalyst',
+  'IKELOS_SMG_v1.0.1',
+  'IKELOS_SG_v1.0.1',
+  'IKELOS_SR_v1.0.1',
 ]
 
 const EMBLEM_HASHES = [29194593, 31953746, 54004489, 54004491, 19962737, 10493725]
@@ -135,29 +172,46 @@ const ITEM_NAME_ALIASES = {
   'void grenade': 'vortex grenade',
   sword: 'falling guillotine',
   'zephyr reward': 'zephyr',
-  'ikelos smg': 'ikeleos submachine gun v1.0.1',
-  'ikeleos smg': 'ikeleos submachine gun v1.0.1',
-  'ikeleos_submachine_gun_v1.0.1.': 'ikeleos submachine gun v1.0.1',
-  'ikeleos smg v1.0.1': 'ikeleos submachine gun v1.0.1',
-  'ikeleos smg': 'ikeleos submachine gun v1.0.1',
+  'ikelos smg': 'ikeleos smg v1.0.1',
+  'ikeleos smg': 'ikeleos smg v1.0.1',
+  'ikeleos_submachine_gun_v1.0.1.': 'ikeleos smg v1.0.1',
+  'ikeleos smg v1.0.1': 'ikeleos smg v1.0.1',
+  'ikeleos smg': 'ikeleos smg v1.0.1',
   'ikeleos shotgun': 'ikeleos shotgun v1.0.1',
   'ikeleos sniper': 'ikeleos sniper v1.0.1',
-  kingslayer: 'kingslayer catalyst',
-  'dark age arsenal': 'dark age arsenal',
-  "vesper's host": 'vespers host',
+  kingslayer: 'touch of malice catalyst',
+  'dark age arsenal': 'warlord\'s spear',
+  "vesper's host": 'icefall mantle',
+  "rufus's fire": 'thoughtless',
+  "omnigul's grieve": 'word of crota',
+  'abyssal defiant': 'abyss defiant',
+  "nimrod's hunter": 'acacia\'s dejection',
+  "zealot's robe": 'prime zealot cuirass',
+  "zaouli's wrath": 'zaouli\'s bane',
+  "zealot's reward": 'zealot\'s reward',
+  ballista: 'heretic',
+  'the clever rat': 'perfect pitch',
+  incursion: 'duality',
+  navigator: 'the navigator',
 }
 
+const CLASS_TARGETS = new Set(['warlock', 'titan', 'hunter'])
+const DAMAGE_TARGETS = new Set(['arc', 'solar', 'void', 'stasis', 'strand', 'prismatic'])
+const PERK_TARGETS = new Set([
+  'nova bomb',
+  'healing rift',
+  'void grenade',
+  'echo of undermining',
+  'echo of instability',
+  'bleak watcher',
+])
+
 const ITEM_OVERRIDES = {
+  ...ITEM_HASH_OVERRIDES,
   supremacy: 686951703,
   'void grenade': 1016030582,
   sword: 243425374,
   'zephyr reward': 3400256755,
-  'ikeleos smg': 1051938194,
-  'ikeleos shotgun': 1051938193,
-  'ikeleos sniper': 1051938195,
-  'ikelos_smg_v1.0.1.': 1051938194,
-  'ikelos_sg_v1.0.1.': 1051938193,
-  'ikelos_sr_v1.0.1.': 1051938195,
 }
 
 function norm(s) {
@@ -173,10 +227,20 @@ function scoreName(displayName, target) {
   const d = norm(displayName)
   const t = resolveTarget(target)
   if (d === t) return 100
-  if (d.startsWith(t + ' ')) return 90
-  if (d.startsWith(t)) return 85
-  if (d.includes(t)) return 70
   return 0
+}
+
+function tablesForTarget(key) {
+  if (CLASS_TARGETS.has(key)) {
+    return [{ defs: classes, entity: MANIFEST_TABLES.classes }]
+  }
+  if (DAMAGE_TARGETS.has(key)) {
+    return [{ defs: damageTypes, entity: MANIFEST_TABLES.damageTypes }]
+  }
+  if (PERK_TARGETS.has(key)) {
+    return [{ defs: perks, entity: MANIFEST_TABLES.perks }]
+  }
+  return [{ defs: inventory, entity: MANIFEST_TABLES.inventory }]
 }
 
 const { tables } = await loadManifestTables([
@@ -202,38 +266,37 @@ const catalog = {}
 const iconPaths = {}
 
 for (const target of ITEM_NAMES) {
-  const overrideHash = ITEM_OVERRIDES[norm(target)]
+  const key = norm(target)
+  const overrideHash = ITEM_OVERRIDES[resolveTarget(target)] ?? ITEM_OVERRIDES[key]
   if (overrideHash) {
-    const def = inventory[String(overrideHash)]
-    const icon = def?.displayProperties?.icon
-    if (icon && (await iconOk(icon))) {
-      const key = norm(target)
-      catalog[key] = {
-        hash: overrideHash,
-        entity: 'DestinyInventoryItemDefinition',
-        iconPath: icon,
-      }
+    let applied = false
+    for (const { defs, entity } of manifestTables) {
+      const def = defs[String(overrideHash)]
+      const icon = def?.displayProperties?.icon
+      if (!icon || icon.includes('missing_icon') || !(await iconOk(icon))) continue
+      catalog[key] = { hash: overrideHash, entity, iconPath: icon }
       iconPaths[key] = icon
       console.log(target, '→ override', def.displayProperties.name, overrideHash, icon)
-      continue
+      applied = true
+      break
     }
+    if (applied) continue
   }
 
   let best = null
-  for (const { defs, entity } of manifestTables) {
+  for (const { defs, entity } of tablesForTarget(key)) {
     for (const [hash, def] of Object.entries(defs)) {
       const name = def?.displayProperties?.name
       const icon = def?.displayProperties?.icon
       if (!name || !icon || icon.includes('missing_icon')) continue
       const score = scoreName(name, target)
-      if (score < 85) continue
+      if (score < 100) continue
       const candidate = { hash: Number(hash), name, icon, score, entity }
       if (!best || candidate.score > best.score) best = candidate
     }
   }
 
   if (best && (await iconOk(best.icon))) {
-    const key = norm(target)
     catalog[key] = { hash: best.hash, entity: best.entity, iconPath: best.icon }
     iconPaths[key] = best.icon
     console.log(target, '→', best.name, best.hash, best.icon)

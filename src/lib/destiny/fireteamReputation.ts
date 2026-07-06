@@ -133,6 +133,7 @@ export function summarizeSeasonStandings(entries: LeaderboardEntry[]) {
 const PRIZE_RANK_LIMIT: Record<LeaderboardCategory, number> = {
   raid: 5,
   dungeon: 5,
+  pantheon: 5,
   top_guardians: 3,
 }
 

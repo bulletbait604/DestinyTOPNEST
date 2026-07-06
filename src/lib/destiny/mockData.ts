@@ -123,6 +123,37 @@ export const MOCK_DUNGEON_TOP10: LeaderboardEntry[] = [
   lbEntry(10, 'SpireSprint', 'dungeon', 110),
 ]
 
+export const MOCK_PANTHEON_TOP10: LeaderboardEntry[] = [
+  lbEntry(1, 'VoidWalker · SolarSlinger · ArcMissile', 'pantheon', 215, {
+    verifiedClears: 12,
+    isSquadEntry: true,
+    squadSize: 3,
+    fastestActivityName: 'Pantheon: Gahlran',
+    fastestClearSeconds: 842,
+  }),
+  lbEntry(2, 'PrismaticPanda · WellOfRadiance · TetherTrickster', 'pantheon', 198, {
+    verifiedClears: 11,
+    isSquadEntry: true,
+    squadSize: 3,
+  }),
+  lbEntry(3, 'BannerLord · StarfireWarlock · SynthoSlayer', 'pantheon', 176, {
+    verifiedClears: 10,
+    isSquadEntry: true,
+    squadSize: 3,
+    platform: 'xbox',
+  }),
+  lbEntry(4, 'DivinityDriver · DeepDiver_D · SpireRunner', 'pantheon', 165, {
+    verifiedClears: 9,
+    isSquadEntry: true,
+    squadSize: 3,
+  }),
+  lbEntry(5, 'VesperVault · WarlordWave · OryxOrbit', 'pantheon', 152, {
+    verifiedClears: 8,
+    isSquadEntry: true,
+    squadSize: 3,
+  }),
+]
+
 export const MOCK_GUARDIANS_TOP3: LeaderboardEntry[] = [
   lbEntry(1, 'VoidWalkerPrime', 'top_guardians', 42, { verifiedClears: 8 }),
   lbEntry(2, 'SolarSlinger99', 'top_guardians', 36, { platform: 'xbox', verifiedClears: 6 }),
@@ -314,8 +345,9 @@ export const MOCK_PROFILE: PlayerProfile = {
   connectedAt: '2026-04-01T12:00:00Z',
   raidPoints: 248,
   dungeonPoints: 86,
-    guardianPoints: 12,
-    fullClanPoints: 64,
+  pantheonPoints: 45,
+  guardianPoints: 12,
+  fullClanPoints: 64,
   verifiedClears: 22,
   reputationScore: 4.7,
   badges: ['Verified Raider', 'Sherpa', 'Full Clan Clear', 'Speed Runner'],
@@ -445,6 +477,7 @@ export function buildOverviewPayload(bungieApiConfigured: boolean): OverviewPayl
   return {
     raidTop10: MOCK_RAID_TOP10,
     dungeonTop10: MOCK_DUNGEON_TOP10,
+    pantheonTop10: MOCK_PANTHEON_TOP10,
     guardiansTop3: MOCK_GUARDIANS_TOP3,
     clanTop5: MOCK_GUARDIANS_TOP3,
     recentRuns: MOCK_RECENT_RUNS,

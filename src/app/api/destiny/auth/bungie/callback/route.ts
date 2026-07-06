@@ -217,14 +217,14 @@ export async function GET(req: NextRequest) {
     return res
   } catch (error) {
     console.error('[destiny/auth/bungie/callback]', error)
-    const detail = error instanceof Error ? error.message : 'exchange_failed'
+    const detail = error instanceof Error ? error.message : ''
     const lower = detail.toLowerCase()
     const message =
       lower.includes('redirect_uri') || lower.includes('redirect uri')
         ? 'redirect_uri_mismatch'
         : lower.includes('mongodb') || lower.includes('mongo')
           ? 'database_unavailable'
-          : detail.slice(0, 180)
+          : 'exchange_failed'
     return redirectAfterOAuth({ bungie: 'error', message }, req, returnPath)
   }
 }

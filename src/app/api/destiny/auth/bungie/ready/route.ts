@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionSecret } from '@/lib/auth/sessionJwt'
+import { destinyStaffHandler } from '@/lib/destiny/apiHandler'
 import {
   bungieOAuthConfigured,
-  bungieOAuthRedirectUriFromRequest,
   destinyApiConfigured,
 } from '@/lib/destiny/env'
 
 export const dynamic = 'force-dynamic'
 
-/** Public readiness probe — no secrets exposed. */
+/** Staff-only deployment readiness — no redirect URIs or infra details exposed publicly. */
 export async function GET(req: NextRequest) {
-  const mongoUri = process.env.MONGODB_URI?.trim()
-
-  return NextResponse.json({
-    bungieOAuthConfigured: bungieOAuthConfigured(),
-    destinyApiConfigured: destinyApiConfigured(),
-    sessionConfigured: Boolean(getSessionSecret()),
-    mongoConfigured: Boolean(mongoUri),
-    redirectUri: bungieOAuthRedirectUriFromRequest(req),
+  return destinyStaffHandler(req, async () => {
+    return NextResponse.json({
+      bungieOAuthConfigured: bungieOAuthConfigured(),
+      destinyApiConfigured: destinyApiConfigured(),
+      sessionConfigured: Boolean(getSessionSecret()),
+      mongoConfigured: Boolean(process.env.MONGODB_URI?.trim()),
+    })
   })
 }

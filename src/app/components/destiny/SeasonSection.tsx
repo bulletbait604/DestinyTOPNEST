@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 const CATEGORY_LABELS: Record<string, string> = {
   raid: 'Raid leaders',
   dungeon: 'Dungeon leaders',
+  pantheon: 'Pantheon squads',
   top_guardians: 'Top Guardians (Commanders)',
 }
 
@@ -63,6 +64,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
   const grouped = {
     raid: hallOfFame.filter((w) => w.category === 'raid'),
     dungeon: hallOfFame.filter((w) => w.category === 'dungeon'),
+    pantheon: hallOfFame.filter((w) => w.category === 'pantheon'),
     top_guardians: hallOfFame.filter((w) => w.category === 'top_guardians'),
   }
 
@@ -107,7 +109,10 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
                   {CATEGORY_LABELS[track.category] ?? track.category}
                 </p>
                 <p className={cn('text-2xl font-semibold tabular-nums mt-1', t.gold)}>#{track.rank}</p>
-                <p className={cn('text-xs mt-1', t.muted)}>{track.points} pts · {track.verifiedClears} clears</p>
+                <p className={cn('text-xs mt-1', t.muted)}>
+                  {track.points} pts ·{' '}
+                  {track.category === 'pantheon' ? `${track.verifiedClears} encounters` : `${track.verifiedClears} clears`}
+                </p>
                 {track.fastestClearSeconds ? (
                   <p className={cn('text-[10px] mt-1', t.caption)}>
                     Best {track.fastestActivityName}: {formatDuration(track.fastestClearSeconds)}
@@ -172,7 +177,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
         </GlassCard>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <GlassCard darkMode={darkMode}>
           <div className="flex items-center gap-2 mb-3">
             <Gift className="w-4 h-4 text-amber-400" />
@@ -195,6 +200,15 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
           </ul>
         </GlassCard>
         <GlassCard darkMode={darkMode}>
+          <SectionTitle title="Pantheon squads" darkMode={darkMode} />
+          <ul className={cn('text-xs space-y-1', t.muted)}>
+            <li>1st squad: {rules.raid.first}</li>
+            <li>2nd squad: {rules.raid.second}</li>
+            <li>3rd–5th squads: {rules.raid.thirdToFifth}</li>
+            <li>Each boss encounter scores like a raid clear</li>
+          </ul>
+        </GlassCard>
+        <GlassCard darkMode={darkMode}>
           <SectionTitle title="Top Guardians (Commanders)" darkMode={darkMode} />
           <ul className={cn('text-xs space-y-1', t.muted)}>
             <li>1st Commander: {rules.topGuardians.first}</li>
@@ -213,6 +227,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
         <ul className={cn('text-xs mt-3 space-y-1 list-disc list-inside', t.muted)}>
           <li>Points only for verified full completions</li>
           <li>2 pts per clan member · 5 pts per rando (raid max 2 randos, dungeon max 1)</li>
+          <li>Pantheon squads: each boss encounter counts as one raid worth of points for the fireteam</li>
           <li>MVP votes: +1 pt for voting, +3 pts for the Guardian you pick (Top Guardians board)</li>
           <li>Checkpoint runs tracked but not scored unless admin approved</li>
           <li>Suspicious runs blocked until review (score 70+)</li>
@@ -229,7 +244,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
           />
         </div>
         {hallOfFame.length ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
             {(Object.entries(grouped) as Array<[keyof typeof grouped, SeasonWinner[]]>).map(
               ([category, winners]) => (
                 <div key={category}>

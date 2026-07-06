@@ -9,7 +9,12 @@ import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import { buildOverviewPayload } from '@/lib/destiny/overviewBuilder'
 import { computeSeasonStandings } from '@/lib/destiny/seasonPrizes'
 import { computeReputationScore } from '@/lib/destiny/reputation'
-import { aggregateGuardianLeaderboard, aggregateLeaderboard } from '@/lib/destiny/leaderboards'
+import {
+  aggregateGuardianLeaderboard,
+  aggregateLeaderboard,
+  aggregatePantheonSquadLeaderboard,
+} from '@/lib/destiny/leaderboards'
+import { squadKeyIncludesMember } from '@/lib/destiny/pantheonActivities'
 import {
   getResearchedMetaBuilds,
   META_BUILD_RESEARCH_DATE,
@@ -106,11 +111,19 @@ export async function getSeasonStandingForUser(userId: string): Promise<Leaderbo
   try {
     const season = await getSeasonData()
     const [runs, usersById, votes] = await Promise.all([loadAllRuns(), loadUsersMap(), loadAllMvpVotes()])
-    return [
+    const user = usersById.get(userId)
+    const individual = [
       ...aggregateLeaderboard(runs, usersById, 'raid', 'season', season),
       ...aggregateLeaderboard(runs, usersById, 'dungeon', 'season', season),
       ...aggregateGuardianLeaderboard(votes, usersById, 'season', season),
     ].filter((entry) => entry.userId === userId)
+    const pantheon =
+      user?.bungieMembershipId != null
+        ? aggregatePantheonSquadLeaderboard(runs, usersById, 'season', season).filter((entry) =>
+            squadKeyIncludesMember(entry.userId, user.bungieMembershipId)
+          )
+        : []
+    return [...individual, ...pantheon]
   } catch {
     return []
   }
@@ -187,6 +200,9 @@ export async function getOverviewData(): Promise<OverviewPayload> {
     const dungeonTop10 = await attachReputationScores(
       aggregateLeaderboard(runs, usersById, 'dungeon', 'season', season)
     )
+    const pantheonTop10 = await attachReputationScores(
+      aggregatePantheonSquadLeaderboard(runs, usersById, 'season', season)
+    )
     const guardiansTop3 = aggregateGuardianLeaderboard(votes, usersById, 'monthly', season, 3)
     const topLoadoutsByClass = rankTopLoadoutsByClass(buildCards, 2)
     const { hallOfFame } = computeSeasonStandings(runs, usersById, season, votes)
@@ -194,6 +210,7 @@ export async function getOverviewData(): Promise<OverviewPayload> {
     return buildOverviewPayload({
       raidTop10,
       dungeonTop10,
+      pantheonTop10,
       guardiansTop3,
       recentRuns,
       lookingForGroup: lobbies,
@@ -207,6 +224,7 @@ export async function getOverviewData(): Promise<OverviewPayload> {
     return buildOverviewPayload({
       raidTop10: [],
       dungeonTop10: [],
+      pantheonTop10: [],
       guardiansTop3: [],
       recentRuns: [],
       lookingForGroup: [],
@@ -254,7 +272,9 @@ export async function getLeaderboardEntries(
     const entries =
       category === 'top_guardians'
         ? aggregateGuardianLeaderboard(votes, usersById, period, season)
-        : aggregateLeaderboard(runs, usersById, category, period, season)
+        : category === 'pantheon'
+          ? aggregatePantheonSquadLeaderboard(runs, usersById, period, season)
+          : aggregateLeaderboard(runs, usersById, category, period, season)
     return attachReputationScores(entries)
   } catch {
     return []

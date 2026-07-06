@@ -3,6 +3,7 @@ import { getMongoDbName } from '@/lib/database'
 import clientPromise from '@/lib/mongodb'
 import { verifyAuth, AuthError, type VerifiedUser } from '@/lib/auth/verifyAuth'
 import { isAllowlistedOwner } from '@/lib/ownerAllowlist'
+import { capOwnerRole } from '@/lib/home/ownerIdentity'
 
 export function isStaffRole(role: string | undefined): boolean {
   return role === 'admin' || role === 'owner'
@@ -25,8 +26,9 @@ export async function verifyStaffUser(req: NextRequest): Promise<VerifiedUser> {
     return user
   }
   const dbRole = await staffRoleFromDb(user.username)
-  if (isStaffRole(dbRole)) {
-    user.role = dbRole as VerifiedUser['role']
+  const effectiveDbRole = dbRole ? capOwnerRole(user.username, dbRole as VerifiedUser['role']) : undefined
+  if (isStaffRole(effectiveDbRole)) {
+    user.role = effectiveDbRole as VerifiedUser['role']
     return user
   }
   throw new AuthError('Admin access required', 403)
@@ -39,8 +41,9 @@ export async function verifyOwnerUser(req: NextRequest): Promise<VerifiedUser> {
     return user
   }
   const dbRole = await staffRoleFromDb(user.username)
-  if (isOwnerActor(dbRole, user.username)) {
-    user.role = dbRole as VerifiedUser['role']
+  const effectiveDbRole = dbRole ? capOwnerRole(user.username, dbRole as VerifiedUser['role']) : undefined
+  if (isOwnerActor(effectiveDbRole, user.username)) {
+    user.role = effectiveDbRole as VerifiedUser['role']
     return user
   }
   throw new AuthError('Owner access required', 403)

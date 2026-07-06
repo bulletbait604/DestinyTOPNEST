@@ -26,6 +26,7 @@ export const HOME_SECTION_ART = {
   raidBoard: ACTIVITY_ICON_PATHS["king's fall"],
   soloBoard: ACTIVITY_ICON_PATHS["vesper's host"],
   dungeonBoard: ACTIVITY_ICON_PATHS['ghosts of the deep'],
+  pantheonBoard: ACTIVITY_ICON_PATHS["crota's end"],
   todayPanel: ACTIVITY_ICON_PATHS['root of nightmares'],
 } as const
 
