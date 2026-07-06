@@ -19,7 +19,13 @@ import {
 import { aggregateBuildIntelligence, verifiedRunIdSet } from '@/lib/destiny/buildIntelligence'
 import { rankTopMetaLoadoutsByClass, rankTrendingMetaBuilds, sortExternalBuildsByConsensus } from '@/lib/destiny/metaBuildConsensus'
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
-import { ACTIVE_SEASON } from '@/lib/destiny/seasonConfig'
+import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
+import {
+  getNextSeasonDefinition,
+  getSeasonDefinitionById,
+  mergeSeasonWithDefinition,
+  seasonDefinitionToSeason,
+} from '@/lib/destiny/seasonCatalog'
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
 import { filterRunsFromTodayPacific } from '@/lib/destiny/runDates'
@@ -321,25 +327,56 @@ export async function getFireteamLobbies(): Promise<FireteamLobby[]> {
 }
 
 export async function getSeasonData(): Promise<Season> {
+  const configured = getConfiguredActiveSeason()
   try {
     await ensureDestinyIndexes()
     const database = await db()
-    const active = await database.collection(DESTINY_COLLECTIONS.seasons).findOne({ status: 'active' })
-    if (active) return active as unknown as Season
-
-    const latest = await database
+    const def = getSeasonDefinitionById(configured.id)
+    const dbConfigured = await database
       .collection(DESTINY_COLLECTIONS.seasons)
-      .findOne({}, { sort: { endDate: -1 } })
-    if (latest) return latest as unknown as Season
+      .findOne({ id: configured.id })
+    const dbActive = await database.collection(DESTINY_COLLECTIONS.seasons).findOne({ status: 'active' })
+
+    if (dbConfigured?.status === 'archived') {
+      return def
+        ? mergeSeasonWithDefinition(dbConfigured as unknown as Season, def)
+        : (dbConfigured as unknown as Season)
+    }
+
+    if (configured.status === 'active') {
+      if (dbActive && dbActive.id !== configured.id) {
+        await database.collection(DESTINY_COLLECTIONS.seasons).updateOne(
+          { id: dbActive.id },
+          { $set: { status: 'archived', updatedAt: new Date().toISOString() } }
+        )
+      }
+      const merged = dbConfigured && def
+        ? mergeSeasonWithDefinition(dbConfigured as unknown as Season, def)
+        : configured
+      const active: Season = { ...merged, status: 'active' }
+      await database.collection(DESTINY_COLLECTIONS.seasons).updateOne(
+        { id: active.id },
+        { $set: { ...active, updatedAt: new Date().toISOString() } },
+        { upsert: true }
+      )
+      return active
+    }
+
+    const resolved = dbConfigured && def
+      ? mergeSeasonWithDefinition(
+          { ...configured, ...(dbConfigured as unknown as Season) },
+          def
+        )
+      : configured
 
     await database.collection(DESTINY_COLLECTIONS.seasons).updateOne(
-      { id: ACTIVE_SEASON.id },
-      { $set: { ...ACTIVE_SEASON, updatedAt: new Date().toISOString() } },
+      { id: resolved.id },
+      { $set: { ...resolved, updatedAt: new Date().toISOString() } },
       { upsert: true }
     )
-    return ACTIVE_SEASON
+    return resolved
   } catch {
-    return ACTIVE_SEASON
+    return configured
   }
 }
 
@@ -365,6 +402,14 @@ export async function finalizeActiveSeason(): Promise<Season> {
   }
 
   await saveSeasonData(archived)
+
+  const nextDef = getNextSeasonDefinition(season.id)
+  if (nextDef) {
+    const next = seasonDefinitionToSeason(nextDef, 'active')
+    await saveSeasonData(next)
+    return next
+  }
+
   return archived
 }
 

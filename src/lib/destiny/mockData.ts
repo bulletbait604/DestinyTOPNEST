@@ -17,8 +17,11 @@ import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 import { getResearchedMetaBuilds } from '@/lib/destiny/externalMetaResearch'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { emblemIconUrlForRank } from '@/lib/destiny/emblemIconPaths'
+import { getSeasonCountdown } from '@/lib/destiny/seasonConfig'
+import { resolveActiveSeasonByDate } from '@/lib/destiny/seasonCatalog'
 
-const SEASON_ID = 'dtn-nest-s1'
+const MOCK_SEASON_BASE = resolveActiveSeasonByDate()
+const SEASON_ID = MOCK_SEASON_BASE.id
 
 function weeklyResetStub(): WeeklyResetInfo {
   const s = getWeeklyResetState()
@@ -63,30 +66,8 @@ function lbEntry(
 }
 
 export const MOCK_SEASON: Season = {
-  id: SEASON_ID,
-  name: 'Nest Season 1 — Monument Era',
-  startDate: '2026-06-09T17:00:00Z',
-  endDate: '2026-06-30T17:00:00Z',
+  ...MOCK_SEASON_BASE,
   status: 'active',
-  prizeRules: {
-    raid: {
-      first: '$50 CAD platform card (Xbox / PlayStation / Steam)',
-      second: '$25 CAD platform card',
-      thirdToFifth: '3D print prize',
-      participation: 'Leaderboard history mention',
-    },
-    dungeon: {
-      first: '$50 CAD platform card',
-      second: '$25 CAD platform card',
-      thirdToFifth: '3D print prize',
-      participation: 'Leaderboard history mention',
-    },
-    topGuardians: {
-      first: 'Commander — $50 CAD platform card',
-      second: 'Commander — $25 CAD platform card',
-      third: 'Commander — 3D print prize',
-    },
-  },
   winners: [
     {
       category: 'raid',
@@ -94,7 +75,7 @@ export const MOCK_SEASON: Season = {
       displayName: 'VoidWalkerPrime',
       clanTag: '[NEST]',
       prize: '$50 CAD Steam card',
-      seasonId: 's25-ascendant',
+      seasonId: SEASON_ID,
     },
   ],
 }
@@ -462,13 +443,8 @@ export const MOCK_ADMIN_QUEUE: AdminReviewRecord[] = MOCK_RECENT_RUNS.filter(
   run,
 }))
 
-export function getSeasonCountdown(): { days: number; hours: number; label: string } {
-  const end = new Date(MOCK_SEASON.endDate).getTime()
-  const now = Date.now()
-  const diff = Math.max(0, end - now)
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  return { days, hours, label: `${days}d ${hours}h until season end` }
+export function mockSeasonCountdown(): { days: number; hours: number; label: string } {
+  return getSeasonCountdown(MOCK_SEASON)
 }
 
 export function buildOverviewPayload(bungieApiConfigured: boolean): OverviewPayload {
@@ -495,7 +471,7 @@ export function buildOverviewPayload(bungieApiConfigured: boolean): OverviewPayl
       resetsIn: weekly.resetsInLabel,
     },
     season: MOCK_SEASON,
-    seasonCountdown: getSeasonCountdown(),
+    seasonCountdown: mockSeasonCountdown(),
     prizeSummary: 'Raid & Dungeon Top 5 win platform cards or 3D prints. Full Clan Team prizes for same-clan clears.',
     lookingForGroup: MOCK_LFG,
     trendingBuilds: rankTrendingMetaBuilds(getResearchedMetaBuilds(), 3),

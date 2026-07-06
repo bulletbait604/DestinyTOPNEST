@@ -83,10 +83,17 @@ export default function PlayerCardCompact({
         compact={!featured}
         hideIdentity={!featured}
         clanLine={clanLine}
+        nameTrail={
+          featured ? (
+            <TrustRankBadge trust={profile.trustRank} darkMode={darkMode} pill />
+          ) : null
+        }
         stats={
           <div className="flex items-end gap-2 shrink-0 flex-wrap justify-end">
             <PowerBadge power={profile.powerLevel} rank={guardianRank} showRankAlways />
-            <TrustRankBadge trust={profile.trustRank} darkMode={darkMode} pill />
+            {!featured ? (
+              <TrustRankBadge trust={profile.trustRank} darkMode={darkMode} pill />
+            ) : null}
           </div>
         }
       >

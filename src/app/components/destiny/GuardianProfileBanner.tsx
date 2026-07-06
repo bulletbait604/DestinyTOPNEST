@@ -7,7 +7,9 @@ interface Props {
   profile: PlayerProfile
   /** Clan line under the username (name + optional tag). */
   clanLine?: string | null
-  /** Extra stats row (GR, PL, T.R.) rendered on the banner. */
+  /** Trust rank or other badge rendered immediately after the display name. */
+  nameTrail?: React.ReactNode
+  /** Extra stats row (GR, PL) rendered on the banner. */
   stats?: React.ReactNode
   /** Character tiles or other content below the identity row. */
   children?: React.ReactNode
@@ -20,6 +22,7 @@ interface Props {
 export default function GuardianProfileBanner({
   profile,
   clanLine,
+  nameTrail,
   stats,
   children,
   compact,
@@ -56,7 +59,10 @@ export default function GuardianProfileBanner({
               <div className="d2-profile-avatar d2-profile-avatar-fallback" />
             )}
             <div className="min-w-0 flex-1">
-              <h2 className="d2-profile-name truncate">{profile.bungieDisplayName}</h2>
+              <div className="d2-profile-name-row">
+                <h2 className="d2-profile-name truncate">{profile.bungieDisplayName}</h2>
+                {nameTrail ? <div className="d2-profile-name-trail shrink-0">{nameTrail}</div> : null}
+              </div>
               {clan ? (
                 <p className="d2-profile-clan-primary truncate">{clan}</p>
               ) : (

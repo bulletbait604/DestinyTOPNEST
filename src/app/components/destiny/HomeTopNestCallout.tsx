@@ -8,15 +8,11 @@ import { cn } from '@/lib/utils'
 
 const RANK_LABELS = ['1st', '2nd', '3rd'] as const
 
-function seasonLabel(): string {
-  const monthYear = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())
-  return `${monthYear.toUpperCase()} SEASON`
-}
-
 /** Top 3 monthly Commanders — sits between the home hero and player card. */
 export default function HomeTopNestCallout({ darkMode }: { darkMode: boolean }) {
   const { data, loading } = useOverviewData()
   const t = getDestinyTheme(darkMode)
+  const seasonLabel = data?.season?.name ?? 'TopNest Season'
   const entries = useMemo(
     () => (data?.guardiansTop3 ?? data?.clanTop5 ?? []).slice(0, 3),
     [data]
@@ -29,7 +25,7 @@ export default function HomeTopNestCallout({ darkMode }: { darkMode: boolean }) 
           <p className="tn-topnest-callout-eyebrow" id="topnest-callout-heading">
             ARE YOU TOPNEST?
           </p>
-          <p className={cn('tn-topnest-callout-sub', t.muted)}>{seasonLabel()}</p>
+          <p className={cn('tn-topnest-callout-sub', t.muted)}>{seasonLabel}</p>
         </div>
 
         {loading && entries.length === 0 ? (

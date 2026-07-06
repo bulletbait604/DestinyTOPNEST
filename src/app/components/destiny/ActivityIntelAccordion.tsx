@@ -5,8 +5,6 @@ import type { FeaturedActivity } from '@/lib/destiny/types'
 import type { ActivityLootDrop, ActivityLootIntel } from '@/lib/destiny/activityLoot'
 import { activityIntel } from '@/lib/destiny/activityIntel'
 import { lootDropIconRef } from '@/lib/destiny/activityLoot'
-import { activityArmorSet } from '@/lib/destiny/activityArmorSets'
-import ActivityArmorSetPanel from '@/app/components/destiny/ActivityArmorSetPanel'
 import { activityWalkthroughLinkTitle, activityWalkthroughUrl } from '@/lib/destiny/activityWalkthroughLinks'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
@@ -35,18 +33,13 @@ function LootDropChip({ drop }: { drop: ActivityLootDrop }) {
   )
 }
 
-function LootSection({ loot, activityName }: { loot: ActivityLootIntel; activityName: string }) {
+function LootSection({ loot }: { loot: ActivityLootIntel }) {
   const exotics = loot.drops.filter((d) => d.kind === 'exotic' || d.kind === 'catalyst')
   const legendaries = loot.drops.filter((d) => d.kind === 'legendary')
-  const armorSet = activityArmorSet(activityName)
 
   return (
     <div className="d2-loot-panel mt-3 space-y-3">
       {loot.tagline ? <p className="d2-loot-tagline">{loot.tagline}</p> : null}
-
-      {armorSet ? (
-        <ActivityArmorSetPanel set={armorSet} />
-      ) : null}
 
       {exotics.length > 0 ? (
         <div>
@@ -121,7 +114,7 @@ function IntelBox({
       </summary>
       <div className="d2-wiki-box-body">
         <p className="d2-wiki-box-summary-text">{intel.summary}</p>
-        {intel.loot ? <LootSection loot={intel.loot} activityName={activity.name} /> : null}
+        {intel.loot ? <LootSection loot={intel.loot} /> : null}
         <ul className="d2-wiki-box-tips">
           {intel.tips.map((tip) => (
             <li key={tip}>{tip}</li>

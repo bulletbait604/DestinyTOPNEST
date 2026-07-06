@@ -1,6 +1,6 @@
 ﻿import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { destinyApiConfigured } from '@/lib/destiny/env'
-import { ACTIVE_SEASON, getSeasonCountdown, PRIZE_SUMMARY } from '@/lib/destiny/seasonConfig'
+import { getConfiguredActiveSeason, getSeasonCountdown, PRIZE_SUMMARY } from '@/lib/destiny/seasonConfig'
 import type { OverviewPayload, PendingRunActions, Season, SeasonWinner } from '@/lib/destiny/types'
 import type { TopMetaLoadoutsByClass } from '@/lib/destiny/metaBuildConsensus'
 import type { TopLoadoutsByClass as TopVerifiedLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
@@ -19,7 +19,7 @@ export function buildOverviewPayload(input: {
   season?: Season
   pendingRunActions?: PendingRunActions | null
 }): OverviewPayload {
-  const season = input.season ?? ACTIVE_SEASON
+  const season = input.season ?? getConfiguredActiveSeason()
   const weekly = getWeeklyResetState()
   const primaryRaid = weekly.featuredRaids[0]
   const primaryDungeon = weekly.featuredDungeons[0]

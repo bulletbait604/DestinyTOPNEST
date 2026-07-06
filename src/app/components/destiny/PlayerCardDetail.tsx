@@ -101,7 +101,12 @@ export default function PlayerCardDetail({
 
   return (
     <GameCard className="w-full overflow-hidden p-0 d2-profile-build-card">
-      <GuardianProfileBanner profile={viewProfile} clanLine={clanLine} compact>
+      <GuardianProfileBanner
+        profile={viewProfile}
+        clanLine={clanLine}
+        compact
+        nameTrail={<TrustRankBadge trust={profile.trustRank} darkMode={darkMode} pill />}
+      >
         {characters.length ? (
           <div className="mt-2.5 space-y-2">
             <div className="flex items-center justify-between gap-2 px-0.5">
@@ -137,7 +142,6 @@ export default function PlayerCardDetail({
             : undefined
         }
       >
-        <TrustRankBadge trust={profile.trustRank} darkMode={darkMode} compact />
         <div className="ml-auto flex items-center gap-2 min-w-0">
           <span className={cn('text-sm font-semibold capitalize truncate', t.body)}>
             {classLabel(viewProfile.characterClass)}

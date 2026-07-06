@@ -178,7 +178,11 @@ Catalog lives in `src/lib/destiny/externalMetaResearch.ts` and syncs to Mongo on
 ## Scoring rules
 
 - Verified full completions only
-- 2 points per clan member, 5 points per rando
-- Raid: max 2 randos; Dungeon: max 1 rando
+- 2 points per clan member, 5 points per Random Fireteam Member (site fireteam finder)
+- Raid: max 2; Dungeon: max 1
 - Full Clan Team category: all members same clan
 - Checkpoints: tracked, not scored unless admin approved
+
+## Nest season calendar
+
+Twelve monthly Nest seasons are defined in `src/lib/destiny/seasonCatalog.ts`. **Season 1 — Season of the Monument Era** begins **July 1, 2026**. The catalog auto-resolves the active season by date; Mongo stores winners and admin finalization state per season id.

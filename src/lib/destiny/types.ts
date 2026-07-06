@@ -442,6 +442,9 @@ export interface PrizeClaim {
 export interface Season {
   id: string
   name: string
+  /** Short theme line from the Nest season catalog. */
+  tagline?: string
+  seasonNumber?: number
   startDate: string
   endDate: string
   status: 'active' | 'upcoming' | 'archived'

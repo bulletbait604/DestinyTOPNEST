@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react'
 import type { FeaturedActivity } from '@/lib/destiny/types'
 import ActivityIntelAccordion from '@/app/components/destiny/ActivityIntelAccordion'
 import HomeLeaderboardCard from '@/app/components/destiny/HomeLeaderboardCard'
-import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import {
   GlassCard,
   ItemIcon,
@@ -14,7 +13,7 @@ import {
   StatusPill,
 } from '@/app/components/destiny/DestinyUi'
 import { cn } from '@/lib/utils'
-import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import PendingVotePrompt from '@/app/components/destiny/PendingVotePrompt'
 import WeeklyActivitySetCard from '@/app/components/destiny/WeeklyActivitySetCard'
@@ -260,127 +259,6 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
           </div>
         </GlassCard>
       )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle
-            title="Recent Verified Runs"
-            subtitle="Today only"
-            iconUrl={featuredRaids[0]?.iconUrl ?? data.featuredRaid.iconUrl}
-            darkMode={darkMode}
-            compact
-          />
-          <div className="space-y-2">
-            {data.recentRuns.length === 0 ? (
-              <p className={cn('text-sm py-2', t.muted)}>
-                No verified clears logged today yet. Sync from Bungie after your next raid or dungeon.
-              </p>
-            ) : (
-              data.recentRuns.map((run) => (
-              <div
-                key={run.id}
-                className="flex flex-wrap items-center justify-between gap-2 py-2 border-b border-white/5 last:border-0"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <ItemExternalLink
-                    item={
-                      run.activityRef
-                        ? { ...run.activityRef, entityType: 'DestinyActivityDefinition' as const }
-                        : undefined
-                    }
-                    name={run.activityName}
-                  >
-                    <ItemIcon item={run.activityRef} name={run.activityName} size={32} />
-                  </ItemExternalLink>
-                  <div>
-                    <ItemLink
-                      item={
-                        run.activityRef
-                          ? { ...run.activityRef, entityType: 'DestinyActivityDefinition' as const }
-                          : undefined
-                      }
-                      name={run.activityName}
-                      className="text-white text-sm font-medium block"
-                    />
-                    <p className={cn('text-xs', t.muted)}>
-                      {run.type} · {formatDuration(run.durationSeconds)} · +{run.pointsAwarded} pts
-                    </p>
-                  </div>
-                </div>
-                <StatusPill
-                  label={run.verificationStatus}
-                  tone={
-                    run.verificationStatus === 'verified'
-                      ? 'green'
-                      : run.verificationStatus === 'flagged'
-                        ? 'red'
-                        : 'gold'
-                  }
-                />
-              </div>
-            ))
-            )}
-          </div>
-        </GlassCard>
-
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle
-            title="Looking for Group"
-            iconUrl={featuredDungeons[0]?.iconUrl ?? data.featuredDungeon.iconUrl}
-            darkMode={darkMode}
-          />
-          <div className="space-y-2">
-            {data.lookingForGroup.map((lobby) => (
-              <div key={lobby.id} className="py-2 border-b border-white/5 last:border-0">
-                <div className="flex items-start gap-2 justify-between">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <ItemExternalLink
-                      item={
-                        lobby.activityRef
-                          ? { ...lobby.activityRef, entityType: 'DestinyActivityDefinition' as const }
-                          : undefined
-                      }
-                      name={lobby.activityName}
-                    >
-                      <ItemIcon item={lobby.activityRef} name={lobby.activityName} size={36} />
-                    </ItemExternalLink>
-                    <div className="min-w-0">
-                      <ItemLink
-                        item={
-                          lobby.activityRef
-                            ? { ...lobby.activityRef, entityType: 'DestinyActivityDefinition' as const }
-                            : undefined
-                        }
-                        name={lobby.activityName}
-                        className="text-white text-sm font-medium block truncate"
-                      />
-                      <p className={cn('text-xs', t.muted)}>
-                        {lobby.hostDisplayName} · {lobby.goal.replace(/_/g, ' ')}
-                      </p>
-                    </div>
-                  </div>
-                  <span className={cn('text-xs shrink-0', t.blue)}>
-                    {lobby.currentPlayers}/{lobby.maxPlayers}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {lobby.tags.slice(0, 4).map((tag) => (
-                    <StatusPill key={tag} label={tag} tone="purple" />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </GlassCard>
-      </div>
-
-      <TopLoadoutsByClass
-        darkMode={darkMode}
-        topByClass={data.topLoadoutsByClass}
-        compact
-        title="Top meta loadouts this season"
-        subtitle="Unmodified best builds from Blueberries, light.gg, togame.io, and D2Foundry (June 2026+)"
-      />
 
       <TopLoadoutsByClass
         darkMode={darkMode}

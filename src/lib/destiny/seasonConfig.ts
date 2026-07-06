@@ -1,35 +1,18 @@
 ﻿import type { Season } from '@/lib/destiny/types'
+import { resolveActiveSeasonByDate } from '@/lib/destiny/seasonCatalog'
 
-/** Operational season config — update dates when Bungie rotates seasons. */
-export const ACTIVE_SEASON: Season = {
-  id: 'dtn-nest-s1',
-  name: 'Nest Season 1 — Monument Era',
-  startDate: '2026-06-09T17:00:00Z',
-  endDate: '2026-07-31T17:00:00Z',
-  status: 'active',
-  prizeRules: {
-    raid: {
-      first: '$50 CAD platform card (Xbox / PlayStation / Steam)',
-      second: '$25 CAD platform card',
-      thirdToFifth: '3D print prize',
-      participation: 'Leaderboard history mention',
-    },
-    dungeon: {
-      first: '$50 CAD platform card',
-      second: '$25 CAD platform card',
-      thirdToFifth: '3D print prize',
-      participation: 'Leaderboard history mention',
-    },
-    topGuardians: {
-      first: 'Commander — $50 CAD platform card',
-      second: 'Commander — $25 CAD platform card',
-      third: 'Commander — 3D print prize',
-    },
-  },
-  winners: [],
+export { DEFAULT_SEASON_PRIZE_RULES, NEST_SEASON_CATALOG } from '@/lib/destiny/seasonCatalog'
+export { resolveActiveSeasonByDate, getNextSeasonDefinition } from '@/lib/destiny/seasonCatalog'
+
+/** @deprecated Use resolveActiveSeasonByDate() for runtime resolution. */
+export const ACTIVE_SEASON: Season = resolveActiveSeasonByDate()
+
+/** Current operational season — resolves from the Nest catalog by date. */
+export function getConfiguredActiveSeason(now = new Date()): Season {
+  return resolveActiveSeasonByDate(now)
 }
 
-export function getSeasonCountdown(season: Season = ACTIVE_SEASON): {
+export function getSeasonCountdown(season: Season = getConfiguredActiveSeason()): {
   days: number
   hours: number
   label: string
