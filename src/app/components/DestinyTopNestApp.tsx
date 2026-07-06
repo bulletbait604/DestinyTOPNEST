@@ -182,10 +182,10 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false }: Props) 
           <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
           <TabShellAlerts darkMode={darkMode} />
           <TabPageHero tab={activeTab} aside={heroAside} />
-          {showTopNestCallout ? <HomeTopNestCallout darkMode={darkMode} /> : null}
           <div className="d2-player-card-featured">
             <PlayerCardShell darkMode={darkMode} size="featured" />
           </div>
+          {showTopNestCallout ? <HomeTopNestCallout darkMode={darkMode} /> : null}
           <div className="min-w-0">{renderPanel()}</div>
         </div>
         </div>
