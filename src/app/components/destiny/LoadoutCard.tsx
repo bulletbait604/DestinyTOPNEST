@@ -3,16 +3,10 @@
 import { Copy } from 'lucide-react'
 import type { BuildSnapshot, DestinyIconRef } from '@/lib/destiny/types'
 import ArmorSetBonusSection from '@/app/components/destiny/ArmorSetBonusSection'
-import ArmorStatMatrix from '@/app/components/destiny/ArmorStatMatrix'
-import BuildSynergyRail from '@/app/components/destiny/BuildSynergyRail'
+import ProfileBuildInspectorBody from '@/app/components/destiny/ProfileBuildInspectorBody'
+import { SubclassBadge, ItemIcon } from '@/app/components/destiny/DestinyUi'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
-import { ItemIcon, SubclassBadge } from '@/app/components/destiny/DestinyUi'
-import WeaponArmoryTable, { buildWeaponRows } from '@/app/components/destiny/WeaponArmoryTable'
-import {
-  abilityRows,
-  buildExoticArmorRow,
-  loadoutCopyText,
-} from '@/lib/destiny/loadoutDisplay'
+import { loadoutCopyText } from '@/lib/destiny/loadoutDisplay'
 import { destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
@@ -44,76 +38,31 @@ export default function LoadoutCard({
   showEquip?: boolean
 }) {
   const t = getDestinyTheme(darkMode)
-  const weaponRows = buildWeaponRows(build)
-  const exoticArmorRows = buildExoticArmorRow(build)
-  const abilityTableRows = abilityRows(build)
   const armorModRefs = uniqueModRefs(build.armorPieces)
 
   return (
-    <div className="d2-panel-inset p-4 rounded-lg space-y-4">
-      <p className="d2-panel-header-title text-[14px]">{title}</p>
+    <div className="d2-panel-inset p-0 rounded-lg overflow-hidden d2-profile-build-card">
+      <div className="px-4 pt-4 pb-2 space-y-3">
+        <p className="d2-panel-header-title text-[14px]">{title}</p>
+        <SubclassBadge
+          classRef={build.classRef}
+          subclassRef={build.subclassRef}
+          characterClass={build.characterClass}
+          subclass={build.subclass}
+          darkMode={darkMode}
+        />
+      </div>
 
-      <BuildSynergyRail build={build} />
+      <ProfileBuildInspectorBody build={build} layout="loadout" />
 
-      <SubclassBadge
-        classRef={build.classRef}
-        subclassRef={build.subclassRef}
-        characterClass={build.characterClass}
-        subclass={build.subclass}
-        darkMode={darkMode}
-      />
-
-      {(build.aspectRefs?.length || build.fragmentRefs?.length) ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {build.aspectRefs?.length ? (
-            <div>
-              <p className={cn('d2-build-section-heading', t.caption)}>Aspects</p>
-              <div className="flex flex-wrap gap-2">
-                {build.aspectRefs.map((aspect) => (
-                  <div key={aspect.name} className="flex items-center gap-1.5 min-w-0">
-                    <ItemExternalLink item={aspect}>
-                      <ItemIcon item={aspect} size={28} />
-                    </ItemExternalLink>
-                    <ItemLink item={aspect} className="d2-build-item-name-lg truncate" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-          {build.fragmentRefs?.length ? (
-            <div>
-              <p className={cn('d2-build-section-heading', t.caption)}>Fragments</p>
-              <div className="flex flex-wrap gap-2">
-                {build.fragmentRefs.map((fragment) => (
-                  <div key={fragment.name} className="flex items-center gap-1.5 min-w-0">
-                    <ItemExternalLink item={fragment}>
-                      <ItemIcon item={fragment} size={24} />
-                    </ItemExternalLink>
-                    <ItemLink item={fragment} className="d2-build-item-name truncate" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
+      {build.armorSetBonuses?.length ? (
+        <div className="px-4 pb-2">
+          <ArmorSetBonusSection groups={build.armorSetBonuses} darkMode={darkMode} />
         </div>
       ) : null}
 
-      {abilityTableRows.length > 0 ? (
-        <WeaponArmoryTable rows={abilityTableRows} title="Abilities" />
-      ) : null}
-
-      {weaponRows.length > 0 ? <WeaponArmoryTable rows={weaponRows} title="Weapons" /> : null}
-
-      {exoticArmorRows.length > 0 ? (
-        <WeaponArmoryTable rows={exoticArmorRows} title="Exotic armor" />
-      ) : null}
-
-      {build.armorSetBonuses?.length ? (
-        <ArmorSetBonusSection groups={build.armorSetBonuses} darkMode={darkMode} />
-      ) : null}
-
       {armorModRefs.length > 0 ? (
-        <div>
+        <div className="px-4 pb-3">
           <p className={cn('d2-build-section-heading', t.caption)}>Armor mods</p>
           <div className="flex flex-wrap gap-2">
             {armorModRefs.map((mod) => (
@@ -127,7 +76,7 @@ export default function LoadoutCard({
           </div>
         </div>
       ) : build.armorMods.length > 0 ? (
-        <div>
+        <div className="px-4 pb-3">
           <p className={cn('d2-build-section-heading', t.caption)}>Armor mods</p>
           <div className="flex flex-wrap gap-1.5">
             {build.armorMods.map((mod) => (
@@ -139,14 +88,7 @@ export default function LoadoutCard({
         </div>
       ) : null}
 
-      {Object.keys(build.stats).length > 0 ? (
-        <div>
-          <p className={cn('d2-build-section-heading', t.caption)}>Total stats</p>
-          <ArmorStatMatrix stats={build.stats} compact />
-        </div>
-      ) : null}
-
-      <div className="flex flex-wrap gap-2 pt-1 border-t border-white/[0.06]">
+      <div className="flex flex-wrap gap-2 px-4 py-3 border-t border-white/[0.06]">
         <button
           type="button"
           className={destinySecondaryBtn(darkMode)}
