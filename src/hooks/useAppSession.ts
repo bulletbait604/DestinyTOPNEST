@@ -18,12 +18,12 @@ export function useAppSession() {
   const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<AppUser | null> => {
     try {
       const res = await fetch('/api/auth/session', { credentials: 'include', cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
-        setUser({
+        const nextUser: AppUser = {
           id: data.id,
           username: data.username,
           displayName: data.displayName ?? data.username,
@@ -31,12 +31,15 @@ export function useAppSession() {
           isStaff: Boolean(data.isStaff),
           bungieLinked: data.bungieLinked,
           bungieTokenHealthy: data.bungieTokenHealthy,
-        })
-      } else {
-        setUser(null)
+        }
+        setUser(nextUser)
+        return nextUser
       }
+      setUser(null)
+      return null
     } catch {
       setUser(null)
+      return null
     } finally {
       setLoading(false)
     }

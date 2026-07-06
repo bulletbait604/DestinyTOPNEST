@@ -73,11 +73,11 @@ All logged-in users can access Top Nest data APIs. Admin review remains staff-on
 **Redirect URL** — set **both** on Vercel and in the Bungie developer portal (must match exactly):
 
 ```
-BUNGIE_OAUTH_REDIRECT_URI=https://your-domain.vercel.app/api/destiny/auth/bungie/callback
-NEXT_PUBLIC_BASE_URL=https://your-domain.vercel.app
+BUNGIE_OAUTH_REDIRECT_URI=https://topnest.app/api/destiny/auth/bungie/callback
+NEXT_PUBLIC_BASE_URL=https://topnest.app
 ```
 
-Replace `your-domain` with your production hostname (for example `destinytopnest.vercel.app` once deployed).
+Production runs at **https://topnest.app** — use that hostname in Vercel env vars and the Bungie developer portal (must match exactly).
 
 In Bungie portal → your app → OAuth → Redirect URL, paste the same callback URL. No trailing slash. Must be `https://`.
 

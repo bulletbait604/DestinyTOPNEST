@@ -18,7 +18,11 @@ import {
   getDestinyUserBySiteUserId,
   upsertDestinyUser,
 } from '@/lib/destiny/destinyUserStore'
-import { bungieOAuthRedirectUriFromRequest, TOPNEST_PRODUCTION_ORIGIN } from '@/lib/destiny/env'
+import {
+  bungieOAuthRedirectUriFromRequest,
+  requestPublicOrigin,
+  TOPNEST_PRODUCTION_ORIGIN,
+} from '@/lib/destiny/env'
 import { defaultBungieReturnPath } from '@/lib/routing/tabUrl'
 import { sessionCookieSecure } from '@/lib/sessionCookie'
 
@@ -26,9 +30,21 @@ export const dynamic = 'force-dynamic'
 
 const LOGIN_FLOW_USER = 'login'
 
+/** Keep post-OAuth redirect on the same host that set the session cookie. */
 function redirectBase(req: NextRequest): string {
+  const requestOrigin = requestPublicOrigin(req)
+  if (requestOrigin) return requestOrigin
+
   const base = process.env.NEXT_PUBLIC_BASE_URL?.trim()
-  if (base) return base.replace(/\/$/, '')
+  if (base) {
+    try {
+      const normalized = base.startsWith('http') ? base : `https://${base}`
+      return new URL(normalized).origin
+    } catch {
+      /* fall through */
+    }
+  }
+
   if (process.env.VERCEL_ENV === 'production') return TOPNEST_PRODUCTION_ORIGIN
   try {
     return new URL(req.url).origin
@@ -54,7 +70,7 @@ function redirectAfterOAuth(
   res.cookies.set('bungieOAuthState', '', {
     httpOnly: true,
     secure,
-    sameSite: secure ? 'none' : 'lax',
+    sameSite: 'lax',
     path: '/',
     maxAge: 0,
   })

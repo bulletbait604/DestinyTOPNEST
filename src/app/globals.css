@@ -2488,6 +2488,75 @@ a { color: inherit; text-decoration: none; }
     isolation: isolate;
   }
 
+  /* Login — split Tower (left) + Deep Stone Crypt (right) */
+  .d2-login-split-shell {
+    overflow: hidden;
+  }
+
+  .d2-login-split-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 0;
+    width: 50%;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(6, 8, 14, 0.28) 0%, rgba(10, 12, 18, 0.58) 45%, rgba(8, 10, 16, 0.78) 100%),
+      var(--d2-split-image, none);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
+  .d2-login-split-panel-left {
+    left: 0;
+    background-position: 42% center;
+  }
+
+  .d2-login-split-panel-right {
+    right: 0;
+    background-position: 58% center;
+  }
+
+  .d2-login-split-seam {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    z-index: 0;
+    width: 3px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(195, 160, 25, 0.55) 18%,
+      rgba(115, 210, 255, 0.45) 50%,
+      rgba(195, 160, 25, 0.55) 82%,
+      transparent 100%
+    );
+    box-shadow:
+      -12px 0 32px rgba(0, 0, 0, 0.45),
+      12px 0 32px rgba(0, 0, 0, 0.45);
+  }
+
+  @media (max-width: 640px) {
+    .d2-login-split-panel {
+      width: 100%;
+      opacity: 0.72;
+    }
+
+    .d2-login-split-panel-left {
+      clip-path: inset(0 50% 0 0);
+      opacity: 1;
+    }
+
+    .d2-login-split-panel-right {
+      clip-path: inset(0 0 0 50%);
+      opacity: 1;
+    }
+  }
+
   .d2-site-backdrop {
     position: fixed;
     inset: 0;
@@ -2545,11 +2614,20 @@ a { color: inherit; text-decoration: none; }
   }
 
   /* Video-game title screen — logo crest dominates; login dock attached below */
-  .d2-login-backdrop .d2-site-backdrop::after {
+  .d2-login-backdrop .d2-site-backdrop::after,
+  .d2-login-backdrop .d2-login-split-panel-left::after {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(ellipse 70% 55% at 50% 42%, transparent 0%, rgba(0, 0, 0, 0.72) 100%);
+    pointer-events: none;
+  }
+
+  .d2-login-backdrop .d2-login-split-panel-right::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 55% at 50% 42%, transparent 0%, rgba(0, 0, 0, 0.68) 100%);
     pointer-events: none;
   }
 

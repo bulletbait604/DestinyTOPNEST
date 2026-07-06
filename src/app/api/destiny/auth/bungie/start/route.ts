@@ -3,7 +3,11 @@ import { verifyAuth, AuthError } from '@/lib/auth/verifyAuth'
 import { safeReturnPath } from '@/lib/auth/safeReturnPath'
 import { buildBungieAuthorizeUrl } from '@/lib/destiny/bungieOAuth'
 import { createBungieOAuthState } from '@/lib/destiny/bungieOAuthState'
-import { bungieOAuthConfigured, bungieOAuthRedirectUriFromRequest } from '@/lib/destiny/env'
+import {
+  bungieOAuthConfigured,
+  bungieOAuthRedirectUriFromRequest,
+  requestPublicOrigin,
+} from '@/lib/destiny/env'
 import { getSessionSecret } from '@/lib/auth/sessionJwt'
 import { sessionCookieSecure } from '@/lib/sessionCookie'
 
@@ -16,11 +20,7 @@ function startError(message: string, status = 503): NextResponse {
 }
 
 function requestOrigin(req: NextRequest): string {
-  try {
-    return new URL(req.url).origin
-  } catch {
-    return 'http://localhost:3000'
-  }
+  return requestPublicOrigin(req) ?? 'http://localhost:3000'
 }
 
 export async function GET(req: NextRequest) {
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
     res.cookies.set('bungieOAuthState', state, {
       httpOnly: true,
       secure,
-      sameSite: secure ? 'none' : 'lax',
+      sameSite: 'lax',
       path: '/',
       maxAge: 600,
     })

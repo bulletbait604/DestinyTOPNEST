@@ -25,7 +25,17 @@ export default function HomePage() {
 
     if (bungie === 'linked') {
       stripUrlParams(['bungie', 'message'])
-      void refresh()
+      void (async () => {
+        setLoginPending(true)
+        setLoginError(null)
+        const signedIn = await refresh()
+        setLoginPending(false)
+        if (!signedIn) {
+          setLoginError(
+            'Bungie sign-in succeeded but your session could not be saved. Allow cookies for this site and try again.'
+          )
+        }
+      })()
       return
     }
 
@@ -34,6 +44,7 @@ export default function HomePage() {
       setLoginError(
         msg ? bungieOAuthErrorMessage(msg) : 'Bungie sign-in failed. Try again.'
       )
+      setLoginPending(false)
       stripUrlParams(['bungie', 'message'])
     }
   }, [mounted, user, refresh])

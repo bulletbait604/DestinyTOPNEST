@@ -23,7 +23,7 @@ npm install
 3. Register a Bungie application at [bungie.net](https://www.bungie.net/en/Application) with redirect:
 
 ```
-https://YOUR_DOMAIN/api/destiny/auth/bungie/callback
+https://topnest.app/api/destiny/auth/bungie/callback
 ```
 
 4. Run locally:

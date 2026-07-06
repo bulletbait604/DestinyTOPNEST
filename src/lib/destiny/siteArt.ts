@@ -2,6 +2,10 @@ import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 
 /** Bungie CDN backdrop art — community, fireteams, and Guardians' Oath themes. */
 export const SITE_BACKDROP_PATHS = {
+  /** Tower social space — left login panel. */
+  loginLeft: '/img/destiny_content/pgcr/tower.jpg',
+  /** Deep Stone Crypt raid — right login panel. */
+  loginRight: '/img/destiny_content/pgcr/europa-raid-deep-stone-crypt.jpg',
   /** Dares of Eternity — bright, celebratory community activity. */
   login: '/img/destiny_content/pgcr/30th-anniversary-dares-of-eternity.jpg',
   /** Garden of Salvation — six-Guardian raid fireteam. */
@@ -11,6 +15,8 @@ export const SITE_BACKDROP_PATHS = {
 } as const
 
 export const SITE_BACKGROUNDS = {
+  loginLeft: buildBungieIconUrl(SITE_BACKDROP_PATHS.loginLeft) ?? '',
+  loginRight: buildBungieIconUrl(SITE_BACKDROP_PATHS.loginRight) ?? '',
   login: buildBungieIconUrl(SITE_BACKDROP_PATHS.login) ?? '',
   hub: buildBungieIconUrl(SITE_BACKDROP_PATHS.hub) ?? '',
   banner: buildBungieIconUrl(SITE_BACKDROP_PATHS.banner) ?? '',
