@@ -3,6 +3,7 @@
  * Weapon hashes resolve via manifest (Phase 4 build intelligence).
  */
 
+import { resolveInventoryBucketHash } from '@/lib/destiny/guardianBuild'
 import { resolveInventoryItem } from '@/lib/destiny/manifest'
 import type {
   BuildSnapshot,
@@ -47,6 +48,14 @@ const CLASS_FROM_HASH: Record<number, DestinyCharacterClass> = {
   2271682572: 'warlock',
 }
 
+const WEAPON_BUCKETS: Record<number, 'kinetic' | 'energy' | 'power'> = {
+  1498876634: 'kinetic',
+  2465295065: 'energy',
+  953998645: 'power',
+}
+
+const ARMOR_BUCKETS = new Set([14239492, 3551918588, 20886954, 1585787867, 2280036563])
+
 function parseClass(entry: PgcrEntry): DestinyCharacterClass {
   const classHash = entry.player?.classHash
   if (classHash && CLASS_FROM_HASH[classHash]) return CLASS_FROM_HASH[classHash]
@@ -55,36 +64,58 @@ function parseClass(entry: PgcrEntry): DestinyCharacterClass {
   return 'hunter'
 }
 
-function bucketWeaponNames(
+async function bucketPgcrWeapons(
   weapons: Array<{ name: string; tier?: string; hash: number }>
-): {
+): Promise<{
   kinetic: string
   energy: string
   power: string
   exoticWeapon?: string
   exoticArmor: string
-} {
+}> {
   let kinetic = 'Unknown kinetic'
   let energy = 'Unknown energy'
   let power = 'Unknown power'
   let exoticWeapon: string | undefined
   let exoticArmor = 'Unknown exotic'
 
-  const exotics = weapons.filter((w) => w.tier?.toLowerCase() === 'exotic')
-  if (exotics.length) {
-    exoticWeapon = exotics[0]?.name
-    if (exotics.length > 1) exoticArmor = exotics[1]?.name
+  const weaponOnly: typeof weapons = []
+
+  for (const weapon of weapons) {
+    const bucket = await resolveInventoryBucketHash(weapon.hash)
+    const isExotic = weapon.tier?.toLowerCase() === 'exotic'
+
+    if (bucket && ARMOR_BUCKETS.has(bucket)) {
+      if (isExotic) exoticArmor = weapon.name
+      continue
+    }
+
+    weaponOnly.push(weapon)
+
+    const slot = bucket ? WEAPON_BUCKETS[bucket] : undefined
+    if (slot === 'kinetic') kinetic = weapon.name
+    else if (slot === 'energy') energy = weapon.name
+    else if (slot === 'power') power = weapon.name
+    else if (isExotic && !exoticWeapon) exoticWeapon = weapon.name
   }
 
-  const nonExotic = weapons.filter((w) => w.tier?.toLowerCase() !== 'exotic')
-  if (nonExotic[0]) kinetic = nonExotic[0].name
-  if (nonExotic[1]) energy = nonExotic[1].name
-  if (nonExotic[2]) power = nonExotic[2].name
+  const bucketed =
+    kinetic !== 'Unknown kinetic' || energy !== 'Unknown energy' || power !== 'Unknown power'
 
-  if (weapons.length === 3 && !exoticWeapon) {
-    kinetic = weapons[0]?.name ?? kinetic
-    energy = weapons[1]?.name ?? energy
-    power = weapons[2]?.name ?? power
+  if (!bucketed && weaponOnly.length) {
+    const exotics = weaponOnly.filter((w) => w.tier?.toLowerCase() === 'exotic')
+    if (exotics[0]) exoticWeapon = exotics[0].name
+
+    const legendaries = weaponOnly.filter((w) => w.tier?.toLowerCase() !== 'exotic')
+    if (legendaries[0]) kinetic = legendaries[0].name
+    if (legendaries[1]) energy = legendaries[1].name
+    if (legendaries[2]) power = legendaries[2].name
+
+    if (weaponOnly.length === 3 && !exoticWeapon) {
+      kinetic = weaponOnly[0]?.name ?? kinetic
+      energy = weaponOnly[1]?.name ?? energy
+      power = weaponOnly[2]?.name ?? power
+    }
   }
 
   return { kinetic, energy, power, exoticWeapon, exoticArmor }
@@ -129,7 +160,7 @@ export async function extractBuildFromPgcr(
 
   if (!resolved.length) return null
 
-  const slots = bucketWeaponNames(resolved)
+  const slots = await bucketPgcrWeapons(resolved)
   const characterClass = parseClass(entry)
   const deaths = entry.values?.deaths ?? 0
 
@@ -147,11 +178,11 @@ export async function extractBuildFromPgcr(
     runId: run.id,
     userId: run.ownerUserId ?? '',
     characterClass,
-    subclass: characterClass === 'warlock' ? 'Void' : characterClass === 'titan' ? 'Arc' : 'Solar',
+    subclass: 'Unknown',
     super: 'Unknown',
     aspects: [],
     fragments: [],
-    abilities: [],
+    abilities: ['—', '—', '—', '—', '—'],
     exoticArmor: slots.exoticArmor,
     exoticWeapon: slots.exoticWeapon,
     kineticWeapon: slots.kinetic,

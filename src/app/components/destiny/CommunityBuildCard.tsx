@@ -23,13 +23,21 @@ export default function CommunityBuildCard({
   const t = getDestinyTheme(darkMode)
 
   const weaponRows = [
-    ...(build.exoticWeaponRef || build.exoticWeapon
-      ? [{ slot: 'Exo W', item: build.exoticWeaponRef, fallback: build.exoticWeapon }]
-      : []),
-    { slot: 'W1', item: build.weaponRefs?.[0], fallback: build.weapons[0] },
-    { slot: 'W2', item: build.weaponRefs?.[1], fallback: build.weapons[1] },
-    { slot: 'W3', item: build.weaponRefs?.[2], fallback: build.weapons[2] },
-  ].filter((row) => row.fallback || row.item)
+    { slot: 'Kin', item: build.weaponRefs?.[0], fallback: build.weapons[0] },
+    { slot: 'Eng', item: build.weaponRefs?.[1], fallback: build.weapons[1] },
+    { slot: 'Pow', item: build.weaponRefs?.[2], fallback: build.weapons[2] },
+  ].filter((row) => (row.fallback && row.fallback !== 'Unknown kinetic' && row.fallback !== 'Unknown energy' && row.fallback !== 'Unknown power') || row.item)
+
+  const exoticListed = build.exoticWeapon &&
+    weaponRows.some((row) => row.fallback?.toLowerCase() === build.exoticWeapon?.toLowerCase())
+
+  if ((build.exoticWeaponRef || build.exoticWeapon) && !exoticListed) {
+    weaponRows.unshift({
+      slot: 'Exo W',
+      item: build.exoticWeaponRef,
+      fallback: build.exoticWeapon ?? 'Exotic weapon',
+    })
+  }
 
   const armorRows = build.exoticArmor
     ? [{ slot: 'Exo', item: build.exoticArmorRef, fallback: build.exoticArmor }]

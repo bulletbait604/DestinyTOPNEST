@@ -6,6 +6,12 @@ import { itemExternalLinkTitle, itemExternalUrl } from '@/lib/destiny/itemExtern
 import { ItemExternalLink } from '@/app/components/destiny/ItemLink'
 import { D2_ARMOR_STAT_COLORS, type ArmorStatKey } from '@/lib/destiny/armorStats'
 import { getDestinyTheme, tierGlowClass } from '@/app/components/destiny/destinyTheme'
+import ItemHoverTooltip, {
+  TooltipLink,
+  TooltipName,
+  TooltipSlot,
+  TooltipTier,
+} from '@/app/components/destiny/ItemHoverTooltip'
 import { cn } from '@/lib/utils'
 
 async function fetchManifestIcon(item?: DestinyIconRef, name?: string): Promise<string | undefined> {
@@ -166,17 +172,21 @@ export function IconTooltip({
   if (!displayName && !slotLabel) return <>{children}</>
 
   return (
-    <div className="d2-tooltip-wrap w-full">
+    <ItemHoverTooltip
+      className="w-full"
+      content={
+        <>
+          {slotLabel ? <TooltipSlot>{slotLabel}</TooltipSlot> : null}
+          {displayName ? <TooltipName>{displayName}</TooltipName> : null}
+          {tier ? <TooltipTier>{tier}</TooltipTier> : null}
+          {externalUrl ? (
+            <TooltipLink>{itemExternalLinkTitle(item, fallback ?? name)}</TooltipLink>
+          ) : null}
+        </>
+      }
+    >
       {children}
-      <div className="d2-tooltip" role="tooltip">
-        {slotLabel ? <p className="d2-tooltip-slot">{slotLabel}</p> : null}
-        {displayName ? <p className="d2-tooltip-name">{displayName}</p> : null}
-        {tier ? <p className="d2-tooltip-tier">{tier}</p> : null}
-        {externalUrl ? (
-          <p className="d2-tooltip-link">{itemExternalLinkTitle(item, fallback ?? name)}</p>
-        ) : null}
-      </div>
-    </div>
+    </ItemHoverTooltip>
   )
 }
 

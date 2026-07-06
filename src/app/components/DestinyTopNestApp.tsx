@@ -26,6 +26,7 @@ import HomeTopNestCallout from '@/app/components/destiny/HomeTopNestCallout'
 import HomeSoloPreview from '@/app/components/destiny/HomeSoloPreview'
 import LeaderboardRulesSection from '@/app/components/destiny/LeaderboardRulesSection'
 import RunSyncToast from '@/app/components/destiny/RunSyncToast'
+import NewcomerWelcomeModal from '@/app/components/destiny/NewcomerWelcomeModal'
 import { ProfileDataProvider, useProfileData } from '@/contexts/ProfileDataContext'
 import { OverviewDataProvider } from '@/contexts/OverviewDataContext'
 import { useActiveCharacterSelect } from '@/hooks/useActiveCharacterSelect'
@@ -38,6 +39,7 @@ interface Props {
   darkMode: boolean
   isAdmin?: boolean
   isOwner?: boolean
+  userId?: string
 }
 
 function resolveProfileView(tab: DestinyTopNestTab): ProfileView {
@@ -79,7 +81,7 @@ function ProfilePlayerBanner({
   )
 }
 
-export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner = false }: Props) {
+export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner = false, userId }: Props) {
   const [activeTab, setActiveTab] = useState<DestinyTopNestTab>('overview')
   const [profileView, setProfileView] = useState<ProfileView>('guardian')
   const [loadoutSection, setLoadoutSection] = useState<LoadoutSection | undefined>()
@@ -222,6 +224,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner =
   return (
     <OverviewDataProvider>
       <ProfileDataProvider>
+        {userId ? <NewcomerWelcomeModal darkMode={darkMode} userId={userId} /> : null}
         <div className={cn('rounded-xl overflow-hidden ring-1 ring-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.45)]', theme.shell)}>
         <RunSyncToast darkMode={darkMode} />
         <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4 space-y-4">

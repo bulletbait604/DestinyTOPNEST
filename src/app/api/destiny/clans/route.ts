@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
         onlineFriends: [],
         activeLobby: null,
         bungieFireteamId: null,
+        friendGroups: [],
       })),
     ])
     if (!clan) {
@@ -39,9 +40,7 @@ export async function GET(req: NextRequest) {
 
     const enriched = await enrichClan({
       ...clan,
-      onlineMembers: social.onlineClanMembers.length
-        ? social.onlineClanMembers
-        : clan.onlineMembers,
+      onlineMembers: social.onlineClanMembers,
     })
 
     return NextResponse.json({
@@ -49,6 +48,7 @@ export async function GET(req: NextRequest) {
       onlineFriends: social.onlineFriends,
       activeLobby: social.activeLobby,
       bungieFireteamId: social.bungieFireteamId,
+      friendGroups: social.friendGroups ?? [],
     })
   })
 }

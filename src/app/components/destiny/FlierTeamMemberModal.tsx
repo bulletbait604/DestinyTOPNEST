@@ -4,17 +4,10 @@ import { useEffect, useState } from 'react'
 import { Loader2, X } from 'lucide-react'
 import type { PlayerProfile } from '@/lib/destiny/types'
 import { profileViewForCharacter } from '@/lib/destiny/activeCharacter'
-import { buildArmorRows } from '@/lib/destiny/loadoutDisplay'
-import { buildWeaponRows } from '@/app/components/destiny/WeaponArmoryTable'
-import FlierTeamHoverArmoryTable from '@/app/components/destiny/FlierTeamHoverArmoryTable'
+import ProfileBuildInspectorBody from '@/app/components/destiny/ProfileBuildInspectorBody'
 import GuardianProfileBanner from '@/app/components/destiny/GuardianProfileBanner'
-import ArmorStatMatrix from '@/app/components/destiny/ArmorStatMatrix'
-import {
-  AbilityChip,
-  BuildSection,
-  GameCard,
-} from '@/app/components/destiny/destinyGameUi'
-import { getDestinyTheme, subclassGlow } from '@/app/components/destiny/destinyTheme'
+import { GameCard } from '@/app/components/destiny/destinyGameUi'
+import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
 function trustDisplayValue(trust?: PlayerProfile['trustRank']): string {
@@ -99,10 +92,6 @@ export default function FlierTeamMemberModal({
     ? profileViewForCharacter(profile, profile.activeCharacterId)
     : profile
 
-  const elementGlow = subclassGlow(loadout?.subclass)
-  const weaponRows = loadout ? buildWeaponRows(loadout) : []
-  const armorRows = loadout ? buildArmorRows(loadout) : []
-
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div
@@ -136,36 +125,7 @@ export default function FlierTeamMemberModal({
               </p>
             ) : (
               <div className="d2-profile-build-body px-2 pb-4">
-                {Object.keys(loadout.stats).length > 0 && (
-                  <BuildSection label="Stats" className="d2-profile-build-panel">
-                    <ArmorStatMatrix stats={loadout.stats} loadout />
-                  </BuildSection>
-                )}
-                <BuildSection label="Weapons" className="d2-profile-build-panel">
-                  <FlierTeamHoverArmoryTable rows={weaponRows} title="Weapons" iconSize={44} />
-                </BuildSection>
-                <BuildSection label="Armor" className="d2-profile-build-panel">
-                  <FlierTeamHoverArmoryTable rows={armorRows} title="Armor" iconSize={44} />
-                </BuildSection>
-                <BuildSection label="Abilities" className="d2-profile-build-panel">
-                  <div className="d2-ability-grid d2-ability-grid-profile px-2 pb-2">
-                    {[
-                      { slot: 'Super', ref: loadout.superRef, fb: loadout.super },
-                      { slot: 'Class', ref: loadout.classAbilityRef, fb: loadout.abilities?.[1] },
-                      { slot: 'Grenade', ref: loadout.grenadeRef, fb: loadout.abilities?.[4] },
-                      { slot: 'Melee', ref: loadout.meleeRef, fb: loadout.abilities?.[3] },
-                    ].map(({ slot, ref, fb }) => (
-                      <AbilityChip
-                        key={slot}
-                        item={ref}
-                        fallback={fb}
-                        slotLabel={slot}
-                        glow={elementGlow}
-                        size={44}
-                      />
-                    ))}
-                  </div>
-                </BuildSection>
+                <ProfileBuildInspectorBody build={loadout} showSynergy={false} />
               </div>
             )}
           </GameCard>

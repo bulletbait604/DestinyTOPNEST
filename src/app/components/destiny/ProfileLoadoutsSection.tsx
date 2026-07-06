@@ -1,7 +1,7 @@
 ﻿'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { Hammer } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Hammer, RefreshCw } from 'lucide-react'
 import type {
   CharacterSummary,
   DestinyCharacterClass,
@@ -14,16 +14,17 @@ import {
 } from '@/app/components/destiny/DestinyUi'
 import { CharacterTileRow } from '@/app/components/destiny/CharacterTile'
 import LoadoutCard from '@/app/components/destiny/LoadoutCard'
+import SavedLoadoutIconPicker from '@/app/components/destiny/SavedLoadoutIconPicker'
 import CommunityBuildCard from '@/app/components/destiny/CommunityBuildCard'
 import ExternalMetaBuildCard from '@/app/components/destiny/ExternalMetaBuildCard'
 import SuggestedLoadoutsSection from '@/app/components/destiny/SuggestedLoadoutsSection'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import { rankTopMetaLoadoutsByClass } from '@/lib/destiny/metaBuildConsensus'
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
-import {
-  rankRecommendedLoadoutsForClass,
+import { rankRecommendedLoadoutsForClass,
   recommendedLoadoutsSummary,
 } from '@/lib/destiny/recommendedBuildOptimizer'
+import { buildLoadoutPickerEntries, type LoadoutPickerEntry } from '@/lib/destiny/loadoutArchetype'
 import { destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { useBungieLink } from '@/hooks/useBungieLink'
 import { useProfileData } from '@/contexts/ProfileDataContext'
@@ -51,6 +52,9 @@ export default function ProfileLoadoutsSection({
   switchingCharacter = false,
 }: Props) {
   const [section, setSection] = useState<LoadoutSection>(initialSection)
+  const [selectedLoadoutId, setSelectedLoadoutId] = useState<string | null>(null)
+  const [refreshingLoadouts, setRefreshingLoadouts] = useState(false)
+  const prevCharacterRef = useRef<string | undefined>()
   const {
     loadoutsByCharacter,
     builds,
@@ -81,10 +85,45 @@ export default function ProfileLoadoutsSection({
   useEffect(() => {
     if (!bungie.linked) return
     if (section !== 'builder') {
-      void ensureLoadouts(activeCharacterId)
+      const characterChanged = prevCharacterRef.current !== activeCharacterId
+      prevCharacterRef.current = activeCharacterId
+      void ensureLoadouts(activeCharacterId, { force: characterChanged })
       void ensureBuilds()
     }
   }, [activeCharacterId, bungie.linked, ensureLoadouts, ensureBuilds, section])
+
+  const loadoutEntries = useMemo(
+    () => buildLoadoutPickerEntries(loadouts?.current, loadouts?.saved),
+    [loadouts]
+  )
+
+  const selectedEntry = useMemo(() => {
+    if (!loadoutEntries.length) return null
+    return loadoutEntries.find((e) => e.id === selectedLoadoutId) ?? loadoutEntries[0]
+  }, [loadoutEntries, selectedLoadoutId])
+
+  useEffect(() => {
+    if (!loadoutEntries.length) {
+      setSelectedLoadoutId(null)
+      return
+    }
+    if (!selectedLoadoutId || !loadoutEntries.some((e) => e.id === selectedLoadoutId)) {
+      setSelectedLoadoutId(loadoutEntries[0].id)
+    }
+  }, [loadoutEntries, selectedLoadoutId])
+
+  const handleRefreshLoadouts = async () => {
+    setRefreshingLoadouts(true)
+    try {
+      await ensureLoadouts(activeCharacterId, { force: true })
+    } finally {
+      setRefreshingLoadouts(false)
+    }
+  }
+
+  const handleSelectLoadout = (entry: LoadoutPickerEntry) => {
+    setSelectedLoadoutId(entry.id)
+  }
 
   const topMetaByClass = useMemo(() => rankTopMetaLoadoutsByClass(externalBuilds, 5), [externalBuilds])
   const topVerifiedByClass = useMemo(
@@ -141,51 +180,63 @@ export default function ProfileLoadoutsSection({
             </GlassCard>
           ) : null}
 
-          {loadouts?.equipMessage && !loadouts.current && (
-            <p className={cn('text-sm leading-relaxed', t.muted)}>{loadouts.equipMessage}</p>
-          )}
-
           <GlassCard darkMode={darkMode}>
-            <SectionTitle title="Currently equipped" subtitle="Live from your Bungie account" darkMode={darkMode} />
-            {loadouts?.current ? (
-              <LoadoutCard build={loadouts.current} darkMode={darkMode} title="Active guardian" />
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+              <SectionTitle
+                title="In-game loadouts"
+                subtitle="Tap an icon to inspect gear — live from your Bungie account"
+                darkMode={darkMode}
+              />
+              <button
+                type="button"
+                disabled={refreshingLoadouts || loadoutsLoading}
+                onClick={() => void handleRefreshLoadouts()}
+                className={cn(destinySecondaryBtn(darkMode), 'text-xs py-1.5')}
+              >
+                <RefreshCw className={cn('w-3.5 h-3.5', refreshingLoadouts && 'animate-spin')} />
+                Refresh
+              </button>
+            </div>
+
+            {loadouts?.equipMessage && !loadoutEntries.length ? (
+              <p className={cn('text-sm leading-relaxed mb-4', t.muted)}>{loadouts.equipMessage}</p>
+            ) : null}
+
+            {loadoutEntries.length ? (
+              <>
+                <SavedLoadoutIconPicker
+                  current={loadouts?.current}
+                  saved={loadouts?.saved}
+                  selectedId={selectedLoadoutId}
+                  onSelect={handleSelectLoadout}
+                  darkMode={darkMode}
+                />
+                {selectedEntry ? (
+                  <div className="mt-5">
+                    {selectedEntry.build.loadoutIncomplete ? (
+                      <p className={cn('text-xs mb-3', t.muted)}>
+                        Some gear could not be resolved from Bungie
+                        {selectedEntry.build.missingLoadoutSlots != null
+                          ? ` (${selectedEntry.build.missingLoadoutSlots} empty slot${selectedEntry.build.missingLoadoutSlots === 1 ? '' : 's'})`
+                          : ''}
+                        . Open Destiny 2 and re-save this loadout if details look wrong.
+                      </p>
+                    ) : null}
+                    <LoadoutCard
+                      build={selectedEntry.build}
+                      darkMode={darkMode}
+                      title={selectedEntry.title}
+                    />
+                  </div>
+                ) : null}
+              </>
             ) : (
               <EmptyBlock
                 darkMode={darkMode}
-                message="No live loadout"
-                hint="Reconnect Bungie to pull your current gear."
+                message="No loadouts found"
+                hint="Reconnect Bungie or save loadouts in Destiny 2 (orbit menu) and tap Refresh."
               />
             )}
-          </GlassCard>
-
-          <GlassCard darkMode={darkMode}>
-            <SectionTitle title="Saved loadouts" subtitle="In-game loadout slots from your Bungie account" darkMode={darkMode} />
-            {loadouts?.saved?.length ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {loadouts.saved.map((b, i) => (
-                  <LoadoutCard
-                    key={b.id + i}
-                    build={b}
-                    darkMode={darkMode}
-                    title={b.loadoutName ?? `Saved ${i + 1}`}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyBlock
-                darkMode={darkMode}
-                message="No in-game saved loadouts"
-                hint="Save loadouts in Destiny 2 (orbit or social space) and they will appear here."
-              />
-            )}
-            <button
-              type="button"
-              disabled
-              className={cn(destinySecondaryBtn(darkMode), 'mt-4 opacity-50 cursor-not-allowed')}
-              title="Save from current gear — coming soon"
-            >
-              Save current loadout
-            </button>
           </GlassCard>
 
           {loadouts?.favorites?.length ? (
@@ -255,7 +306,7 @@ export default function ProfileLoadoutsSection({
           <GlassCard darkMode={darkMode}>
             <SectionTitle
               title="Verified PGCR builds"
-              subtitle="From synced Top Nest run data — separate from external meta research"
+              subtitle="Weapons and exotic armor from synced clears — subclass is not available in PGCR data"
               darkMode={darkMode}
             />
             {verifiedBuilds.length ? (

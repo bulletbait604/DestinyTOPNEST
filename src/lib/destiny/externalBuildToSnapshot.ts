@@ -1,5 +1,6 @@
 import type { ArmorPiece, ArmorSlotLabel, BuildSnapshot, ExternalBuildSource } from '@/lib/destiny/types'
 import { buildExternalArmorRows } from '@/lib/destiny/loadoutDisplay'
+import { assignMetaWeaponSlots } from '@/lib/destiny/metaWeaponSlots'
 
 function armorPiecesFromExternal(build: ExternalBuildSource): ArmorPiece[] {
   return buildExternalArmorRows(build).map((row) => ({
@@ -27,10 +28,7 @@ function rowSlotToArmorSlot(slot: string): ArmorSlotLabel {
 
 /** Convert a researched meta build into a BuildSnapshot for the shared loadout inspector. */
 export function externalBuildToSnapshot(build: ExternalBuildSource): BuildSnapshot {
-  const weapons = build.weapons ?? []
-  const kinetic = weapons[0] ?? '—'
-  const energy = weapons[1] ?? '—'
-  const power = build.exoticWeapon && weapons.length < 3 ? build.exoticWeapon : weapons[2] ?? '—'
+  const slots = assignMetaWeaponSlots(build)
 
   return {
     id: build.id,
@@ -43,11 +41,11 @@ export function externalBuildToSnapshot(build: ExternalBuildSource): BuildSnapsh
     fragments: build.fragments ?? [],
     abilities: ['—', '—', '—', '—', '—'],
     exoticArmor: build.exoticArmor ?? '—',
-    exoticWeapon: build.exoticWeapon,
+    exoticWeapon: slots.exoticWeapon,
     armorPieces: armorPiecesFromExternal(build),
-    kineticWeapon: kinetic,
-    energyWeapon: energy,
-    powerWeapon: power,
+    kineticWeapon: slots.kinetic,
+    energyWeapon: slots.energy,
+    powerWeapon: slots.power,
     armorMods: build.armorMods ?? [],
     artifactPerks: [],
     stats: {},
@@ -62,9 +60,9 @@ export function externalBuildToSnapshot(build: ExternalBuildSource): BuildSnapsh
     subclassRef: build.subclassRef,
     exoticArmorRef: build.exoticArmorRef,
     exoticWeaponRef: build.exoticWeaponRef,
-    kineticWeaponRef: build.weaponRefs?.[0],
-    energyWeaponRef: build.weaponRefs?.[1],
-    powerWeaponRef: build.weaponRefs?.[2] ?? build.exoticWeaponRef,
+    kineticWeaponRef: slots.kineticRef,
+    energyWeaponRef: slots.energyRef,
+    powerWeaponRef: slots.powerRef,
     aspectRefs: build.aspectRefs,
     fragmentRefs: build.fragmentRefs,
     loadoutSource: 'meta',

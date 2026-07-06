@@ -5,12 +5,13 @@
 import { getCharacterLoadoutProfile } from '@/lib/destiny/bungieClient'
 import {
   buildSnapshotFromItemEntries,
+  resolveInventoryBucketHash,
   type BuildProfileComponents,
   type ProfileItemEntry,
 } from '@/lib/destiny/guardianBuild'
-import { filterDisplayableSavedLoadouts } from '@/lib/destiny/loadoutCompleteness'
+import { tagLoadoutCompleteness } from '@/lib/destiny/loadoutCompleteness'
 import { resolveDefinition } from '@/lib/destiny/manifest'
-import type { BuildSnapshot, DestinyCharacterClass } from '@/lib/destiny/types'
+import type { BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
 
 const CLASS_MAP: Record<number, DestinyCharacterClass> = {
   0: 'titan',
@@ -25,13 +26,15 @@ type LoadoutProfile = {
   characterEquipment?: { data?: Record<string, { items?: ProfileItem[] }> }
   characterInventories?: { data?: Record<string, { items?: ProfileItem[] }> }
   profileInventories?: { data?: Record<string, { items?: ProfileItem[] }> }
+  profileInventory?: { data?: { items?: ProfileItem[] } }
   characterLoadouts?: {
     data?: Record<
       string,
       {
         loadouts?: Array<{
+          colorHash?: number
           nameHash?: number
-          items?: Array<{ itemInstanceId?: string; itemHash?: number }>
+          items?: Array<{ itemInstanceId?: string; itemHash?: number; bucketHash?: number }>
         }>
       }
     >
@@ -57,25 +60,42 @@ function indexAllProfileItems(profile: LoadoutProfile): Map<string, ProfileItem>
   for (const bucket of Object.values(profile.profileInventories?.data ?? {})) {
     addItems(bucket.items)
   }
+  addItems(profile.profileInventory?.data?.items)
 
   return map
 }
 
 async function resolveLoadoutName(nameHash?: number, index?: number): Promise<string> {
-  if (!nameHash) return `Saved loadout ${(index ?? 0) + 1}`
+  if (!nameHash) return `Loadout ${(index ?? 0) + 1}`
   try {
     const def = await resolveDefinition('DestinyLoadoutNameDefinition', nameHash, 'Loadout')
     if (def.name && def.name !== 'Loadout') return def.name
   } catch {
     /* fallback */
   }
-  return `Saved loadout ${(index ?? 0) + 1}`
+  return `Loadout ${(index ?? 0) + 1}`
 }
 
-function resolveLoadoutEntries(
-  items: Array<{ itemInstanceId?: string; itemHash?: number }>,
+async function resolveLoadoutColor(colorHash?: number): Promise<DestinyIconRef | undefined> {
+  if (!colorHash) return undefined
+  try {
+    const def = await resolveDefinition('DestinyLoadoutColorDefinition', colorHash, 'Loadout')
+    if (!def.iconUrl) return undefined
+    return {
+      name: def.name,
+      hash: def.hash,
+      iconUrl: def.iconUrl,
+      entityType: 'DestinyLoadoutColorDefinition',
+    }
+  } catch {
+    return undefined
+  }
+}
+
+async function resolveLoadoutEntries(
+  items: Array<{ itemInstanceId?: string; itemHash?: number; bucketHash?: number }>,
   itemIndex: Map<string, ProfileItem>
-): ProfileItemEntry[] {
+): Promise<ProfileItemEntry[]> {
   const entries: ProfileItemEntry[] = []
 
   for (const entry of items) {
@@ -83,14 +103,61 @@ function resolveLoadoutEntries(
     const itemHash = indexed?.itemHash ?? entry.itemHash
     if (!itemHash) continue
 
+    let bucketHash = indexed?.bucketHash ?? entry.bucketHash
+    if (!bucketHash) {
+      bucketHash = await resolveInventoryBucketHash(itemHash)
+    }
+
     entries.push({
       itemHash,
-      bucketHash: indexed?.bucketHash,
+      bucketHash,
       itemInstanceId: entry.itemInstanceId ?? indexed?.itemInstanceId,
     })
   }
 
   return entries
+}
+
+function emptySavedLoadoutSnapshot(input: {
+  characterClass: DestinyCharacterClass
+  userId: string
+  id: string
+  name: string
+  loadoutIndex: number
+  loadoutColorRef?: DestinyIconRef
+}): BuildSnapshot {
+  return tagLoadoutCompleteness({
+    id: input.id,
+    runId: '',
+    userId: input.userId,
+    characterClass: input.characterClass,
+    subclass: '—',
+    super: '—',
+    aspects: [],
+    fragments: [],
+    abilities: [],
+    exoticArmor: '—',
+    armorPieces: [],
+    kineticWeapon: '—',
+    energyWeapon: '—',
+    powerWeapon: '—',
+    armorMods: [],
+    artifactPerks: [],
+    stats: {},
+    activityId: 0,
+    activityName: input.name,
+    difficulty: 'normal',
+    completedAt: new Date().toISOString(),
+    durationSeconds: 0,
+    deaths: 0,
+    fireteamComposition: 'solo',
+    loadoutName: input.name,
+    loadoutIndex: input.loadoutIndex,
+    loadoutSource: 'saved',
+    loadoutColorRef: input.loadoutColorRef,
+    loadoutIncomplete: true,
+    missingLoadoutSlots: 9,
+  })
 }
 
 export async function fetchSavedLoadouts(
@@ -114,11 +181,25 @@ export async function fetchSavedLoadouts(
 
   for (let i = 0; i < loadouts.length; i++) {
     const loadout = loadouts[i]
+    const name = await resolveLoadoutName(loadout?.nameHash, i)
+    const loadoutColorRef = await resolveLoadoutColor(loadout?.colorHash)
     const items = loadout?.items ?? []
-    if (!items.length) continue
 
-    const name = await resolveLoadoutName(loadout.nameHash, i)
-    const entries = resolveLoadoutEntries(items, itemIndex)
+    if (!items.length) {
+      snapshots.push(
+        emptySavedLoadoutSnapshot({
+          characterClass,
+          userId,
+          id: `saved-${characterId}-${i}`,
+          name,
+          loadoutIndex: i,
+          loadoutColorRef,
+        })
+      )
+      continue
+    }
+
+    const entries = await resolveLoadoutEntries(items, itemIndex)
     const snapshot = await buildSnapshotFromItemEntries(entries, {
       itemComponents: profile.itemComponents,
       characterClass,
@@ -128,10 +209,29 @@ export async function fetchSavedLoadouts(
       loadoutName: name,
       loadoutIndex: i,
       loadoutSource: 'saved',
+      allowPartial: true,
     })
 
-    if (snapshot) snapshots.push(snapshot)
+    if (snapshot) {
+      snapshots.push(
+        tagLoadoutCompleteness({
+          ...snapshot,
+          loadoutColorRef,
+        })
+      )
+    } else {
+      snapshots.push(
+        emptySavedLoadoutSnapshot({
+          characterClass,
+          userId,
+          id: `saved-${characterId}-${i}`,
+          name,
+          loadoutIndex: i,
+          loadoutColorRef,
+        })
+      )
+    }
   }
 
-  return filterDisplayableSavedLoadouts(snapshots)
+  return snapshots
 }

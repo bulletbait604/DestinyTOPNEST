@@ -360,6 +360,17 @@ export interface OnlineSocialMember {
   emblemUrl?: string
   isOnline: boolean
   inDestiny?: boolean
+  /** Live D2 activity from Bungie CharacterActivities, when profile is visible. */
+  currentActivity?: string
+}
+
+/** Clan members or friends detected playing together right now. */
+export interface SocialFriendGroup {
+  id: string
+  label: string
+  source: 'topnest_lobby' | 'bungie_fireteam' | 'clan_friends'
+  activityName?: string
+  members: OnlineSocialMember[]
 }
 
 export interface SocialPresencePayload {
@@ -368,6 +379,7 @@ export interface SocialPresencePayload {
   activeLobby: ActiveFireteamLobbySummary | null
   /** Open Bungie.net fireteam listing for in-game platform invites, when available. */
   bungieFireteamId?: string | null
+  friendGroups?: SocialFriendGroup[]
 }
 
 export interface ReputationReview {
@@ -483,6 +495,12 @@ export interface BuildSnapshot {
   loadoutName?: string
   loadoutIndex?: number
   loadoutSource?: 'equipped' | 'saved' | 'meta'
+  /** Bungie loadout color icon (in-game slot diamond). */
+  loadoutColorRef?: DestinyIconRef
+  /** True when gear could not be fully resolved from Bungie. */
+  loadoutIncomplete?: boolean
+  /** Empty core slots (subclass, weapons, armor). */
+  missingLoadoutSlots?: number
   /** Internal aggregation key (Phase 4). */
   buildSignature?: string
   verificationStatus?: VerificationStatus
@@ -594,6 +612,8 @@ export type AdminActivityKind =
   | 'leaderboard_adjust'
   | 'loot_icons_rebuild'
   | 'meta_builds_sync'
+  | 'fireteam_room_delete'
+  | 'fireteam_rooms_clear'
 
 export interface AdminActivityEntry {
   id: string

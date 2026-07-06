@@ -23,7 +23,7 @@ export default function LoadoutCard({
   showEquip?: boolean
 }) {
   return (
-    <div className="d2-panel-inset p-0 rounded-lg overflow-hidden d2-profile-build-card">
+    <div className="d2-panel-inset p-0 rounded-lg overflow-visible d2-profile-build-card">
       <div className="px-4 pt-4 pb-2 space-y-3">
         <p className="d2-panel-header-title text-[14px]">{title}</p>
         <SubclassBadge

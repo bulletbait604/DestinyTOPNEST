@@ -69,9 +69,15 @@ export default function MetaBuildApplyPanel({
     return ARMOR_SLOTS.filter((slot) => armorSelections[slot]).length
   }, [armorSelections])
 
+  const classMismatch = build.class !== characterClass
+
   async function applyLoadout() {
     if (!characterId) {
       setError('Select an active character on the Guardian tab first.')
+      return
+    }
+    if (classMismatch) {
+      setError(`This build is for ${build.class}s. Switch to a ${build.class} guardian first.`)
       return
     }
     setApplying(true)
@@ -154,6 +160,10 @@ export default function MetaBuildApplyPanel({
 
       {!characterId ? (
         <p className={cn('text-xs', t.muted)}>Link Bungie and select a character to enable armor matching.</p>
+      ) : classMismatch ? (
+        <p className={cn('text-xs text-amber-200/90')}>
+          Active guardian is a {characterClass}. Switch characters to apply this {build.class} build.
+        </p>
       ) : null}
 
       {error ? <p className="text-xs text-red-300/90">{error}</p> : null}
@@ -167,7 +177,7 @@ export default function MetaBuildApplyPanel({
         <button
           type="button"
           className={cn(destinyPrimaryBtn(darkMode), 'inline-flex items-center gap-1.5')}
-          disabled={applying || !characterId}
+          disabled={applying || !characterId || classMismatch}
           onClick={() => void applyLoadout()}
         >
           {applying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}

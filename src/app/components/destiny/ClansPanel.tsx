@@ -1,11 +1,12 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Gamepad2, Users } from 'lucide-react'
+import { Gamepad2, Users, UsersRound } from 'lucide-react'
 import type {
   ActiveFireteamLobbySummary,
   ClanProfile,
   OnlineSocialMember,
+  SocialFriendGroup,
 } from '@/lib/destiny/types'
 import { GlassCard, ItemIcon, LoadingBlock, SectionTitle, StatusPill } from '@/app/components/destiny/DestinyUi'
 import { destinyGhostBtn, destinySecondaryBtn, formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -43,9 +44,15 @@ function OnlineMemberRow({
         )}
         <div className="min-w-0">
           <p className="text-white truncate">{member.bungieName ?? member.displayName}</p>
-          {member.inDestiny && (
+          {member.currentActivity ? (
+            <p className={cn('text-[11px] text-sky-300/90 truncate')} title={member.currentActivity}>
+              {member.currentActivity}
+            </p>
+          ) : member.inDestiny ? (
             <p className={cn('text-[11px]', t.muted)}>In Destiny 2</p>
-          )}
+          ) : member.isOnline ? (
+            <p className={cn('text-[11px]', t.muted)}>Online on Bungie.net</p>
+          ) : null}
         </div>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
@@ -86,9 +93,101 @@ function OnlineMemberRow({
   )
 }
 
+function OnlineMemberList({
+  members,
+  emptyMessage,
+  darkMode,
+  appInviteEnabled,
+  gameInviteEnabled,
+  invitingKey,
+  onInvite,
+}: {
+  members: OnlineSocialMember[]
+  emptyMessage: string
+  darkMode: boolean
+  appInviteEnabled: boolean
+  gameInviteEnabled: boolean
+  invitingKey: string | null
+  onInvite: (member: OnlineSocialMember, channel: InviteChannel) => void
+}) {
+  const t = getDestinyTheme(darkMode)
+
+  if (!members.length) {
+    return <p className={cn('text-sm', t.muted)}>{emptyMessage}</p>
+  }
+
+  return (
+    <div className="tn-clan-online-list tn-clan-online-list-scroll">
+      {members.map((member) => (
+        <OnlineMemberRow
+          key={member.membershipId}
+          member={member}
+          darkMode={darkMode}
+          appInviteEnabled={appInviteEnabled}
+          gameInviteEnabled={gameInviteEnabled}
+          invitingKey={invitingKey}
+          onInvite={onInvite}
+        />
+      ))}
+    </div>
+  )
+}
+
+function FriendsGroupCard({
+  group,
+  darkMode,
+  appInviteEnabled,
+  gameInviteEnabled,
+  invitingKey,
+  onInvite,
+}: {
+  group: SocialFriendGroup
+  darkMode: boolean
+  appInviteEnabled: boolean
+  gameInviteEnabled: boolean
+  invitingKey: string | null
+  onInvite: (member: OnlineSocialMember, channel: InviteChannel) => void
+}) {
+  const t = getDestinyTheme(darkMode)
+  const sourceLabel =
+    group.source === 'topnest_lobby'
+      ? 'Top Nest FlierTeam'
+      : group.source === 'bungie_fireteam'
+        ? 'Bungie.net fireteam'
+        : 'Clan + friends'
+
+  return (
+    <div className="tn-friends-group-card">
+      <div className="tn-friends-group-head">
+        <UsersRound className="w-4 h-4 text-violet-300 shrink-0" />
+        <div className="min-w-0">
+          <p className="tn-friends-group-title">{group.label}</p>
+          <p className={cn('text-[11px] mt-0.5', t.muted)}>
+            {group.members.length} together · {sourceLabel}
+          </p>
+        </div>
+      </div>
+      <div className="tn-friends-group-members tn-clan-online-list-scroll">
+        {group.members.map((member) => (
+          <OnlineMemberRow
+            key={`${group.id}-${member.membershipId}`}
+            member={member}
+            darkMode={darkMode}
+            appInviteEnabled={appInviteEnabled}
+            gameInviteEnabled={gameInviteEnabled}
+            invitingKey={invitingKey}
+            onInvite={onInvite}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
   const [clan, setClan] = useState<ClanProfile | null>(null)
   const [onlineFriends, setOnlineFriends] = useState<OnlineSocialMember[]>([])
+  const [friendGroups, setFriendGroups] = useState<SocialFriendGroup[]>([])
   const [activeLobby, setActiveLobby] = useState<ActiveFireteamLobbySummary | null>(null)
   const [bungieFireteamId, setBungieFireteamId] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -100,11 +199,12 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/destiny/clans', { credentials: 'include' })
+      const res = await fetch('/api/destiny/clans', { credentials: 'include', cache: 'no-store' })
       if (res.ok) {
         const json = await res.json()
         setClan(json.clan ?? null)
         setOnlineFriends(json.onlineFriends ?? [])
+        setFriendGroups(json.friendGroups ?? [])
         setActiveLobby(json.activeLobby ?? null)
         setBungieFireteamId(json.bungieFireteamId ?? null)
         setMessage(json.message ?? null)
@@ -214,47 +314,53 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
         </div>
       </GlassCard>
 
+      {friendGroups.length > 0 ? (
+        <GlassCard darkMode={darkMode} className="tn-friends-groups-panel">
+          <SectionTitle title="Friends Groups" darkMode={darkMode} />
+          <p className={cn('text-sm mb-3', t.muted)}>
+            Clanmates and friends spotted together right now — in FlierTeam rooms or Bungie fireteams.
+          </p>
+          <div className="space-y-3">
+            {friendGroups.map((group) => (
+              <FriendsGroupCard
+                key={group.id}
+                group={group}
+                darkMode={darkMode}
+                appInviteEnabled={appInviteEnabled}
+                gameInviteEnabled={bungieFireteamId != null}
+                invitingKey={invitingKey}
+                onInvite={sendInvite}
+              />
+            ))}
+          </div>
+        </GlassCard>
+      ) : null}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <GlassCard darkMode={darkMode}>
           <SectionTitle title={`Online clan members (${onlineClanMembers.length})`} darkMode={darkMode} />
-          {onlineClanMembers.length === 0 ? (
-            <p className={cn('text-sm', t.muted)}>No clan members online right now.</p>
-          ) : (
-            <div>
-              {onlineClanMembers.map((member) => (
-                <OnlineMemberRow
-                  key={member.membershipId}
-                  member={member}
-                  darkMode={darkMode}
-                  appInviteEnabled={appInviteEnabled}
-                  gameInviteEnabled={bungieFireteamId != null}
-                  invitingKey={invitingKey}
-                  onInvite={sendInvite}
-                />
-              ))}
-            </div>
-          )}
+          <OnlineMemberList
+            members={onlineClanMembers}
+            emptyMessage="No clan members online right now."
+            darkMode={darkMode}
+            appInviteEnabled={appInviteEnabled}
+            gameInviteEnabled={bungieFireteamId != null}
+            invitingKey={invitingKey}
+            onInvite={sendInvite}
+          />
         </GlassCard>
 
         <GlassCard darkMode={darkMode}>
           <SectionTitle title={`Online friends (${onlineFriends.length})`} darkMode={darkMode} />
-          {onlineFriends.length === 0 ? (
-            <p className={cn('text-sm', t.muted)}>No Bungie friends online right now.</p>
-          ) : (
-            <div>
-              {onlineFriends.map((member) => (
-                <OnlineMemberRow
-                  key={member.membershipId}
-                  member={member}
-                  darkMode={darkMode}
-                  appInviteEnabled={appInviteEnabled}
-                  gameInviteEnabled={bungieFireteamId != null}
-                  invitingKey={invitingKey}
-                  onInvite={sendInvite}
-                />
-              ))}
-            </div>
-          )}
+          <OnlineMemberList
+            members={onlineFriends}
+            emptyMessage="No Bungie friends online right now."
+            darkMode={darkMode}
+            appInviteEnabled={appInviteEnabled}
+            gameInviteEnabled={bungieFireteamId != null}
+            invitingKey={invitingKey}
+            onInvite={sendInvite}
+          />
         </GlassCard>
       </div>
 

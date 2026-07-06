@@ -25,6 +25,28 @@ export async function getDestinyUserBySiteUserId(userId: string): Promise<Stored
   }
 }
 
+export async function getDestinyUsersBySiteUserIds(
+  userIds: string[]
+): Promise<Map<string, StoredDestinyUser>> {
+  const unique = Array.from(new Set(userIds.map((id) => id.trim().toLowerCase()).filter(Boolean)))
+  if (!unique.length) return new Map()
+
+  try {
+    const rows = (await (await db())
+      .collection(DESTINY_COLLECTIONS.users)
+      .find({ userId: { $in: unique } })
+      .toArray()) as unknown as StoredDestinyUser[]
+
+    const map = new Map<string, StoredDestinyUser>()
+    for (const row of rows) {
+      if (row.userId) map.set(row.userId.toLowerCase(), row)
+    }
+    return map
+  } catch {
+    return new Map()
+  }
+}
+
 export async function getDestinyUserByBungieMembershipId(
   membershipId: string
 ): Promise<StoredDestinyUser | null> {

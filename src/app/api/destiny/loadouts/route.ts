@@ -5,7 +5,7 @@ import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { getDestinyUserBySiteUserId, getValidAccessToken } from '@/lib/destiny/destinyUserStore'
 import { enrichLoadoutsResponse } from '@/lib/destiny/enrich'
 import { fetchAllCharactersPresentation } from '@/lib/destiny/guardianPresentation'
-import { fetchLiveLoadout, fetchSavedLoadoutsForCharacter, refreshGuardianFromBungie } from '@/lib/destiny/liveBungieData'
+import { fetchLiveLoadout, fetchSavedLoadoutsForCharacter } from '@/lib/destiny/liveBungieData'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,9 +25,6 @@ export async function GET(req: NextRequest) {
         linked: false,
       })
     }
-
-    stored = await refreshGuardianFromBungie(stored)
-    stored = (await getDestinyUserBySiteUserId(siteUserId)) ?? stored
 
     const accessToken = await getValidAccessToken(stored)
     const membershipType = stored.destinyMembershipType

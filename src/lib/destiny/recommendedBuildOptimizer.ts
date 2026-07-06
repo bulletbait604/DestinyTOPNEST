@@ -53,8 +53,14 @@ function scoreVerified(build: BuildIntelligenceCard): number {
   return Math.round(build.usageRatePercent * 2 + build.successRatePercent - build.deathRatePercent * 0.5)
 }
 
-function verifiedKey(build: BuildIntelligenceCard): string {
-  return `${build.characterClass}:${build.subclass.toLowerCase()}:${(build.exoticArmor ?? '').toLowerCase()}`
+function verifiedConsensusKey(build: BuildIntelligenceCard): string {
+  const exoticArmor =
+    build.exoticArmor && build.exoticArmor !== 'Unknown exotic' ? build.exoticArmor : 'none'
+  return buildConsensusKey({
+    class: build.characterClass,
+    subclass: build.subclass === 'Unknown' ? 'unknown' : build.subclass,
+    exoticArmor,
+  })
 }
 
 function mergeWeapons(meta: ExternalBuildSource, verified?: BuildIntelligenceCard): string[] {
@@ -115,8 +121,10 @@ function findBestVerifiedMatch(
     const score = scoreVerified(build)
     if (score <= 0) continue
 
-    const sameIdentity = verifiedKey(build) === key
-    const sameSubclass = build.subclass.toLowerCase() === meta.subclass.toLowerCase()
+    const sameIdentity = verifiedConsensusKey(build) === key
+    const sameSubclass =
+      build.subclass !== 'Unknown' &&
+      build.subclass.toLowerCase() === meta.subclass.toLowerCase()
     if (!sameIdentity && !sameSubclass) continue
 
     if (!best || score > best.score) best = { build, score }

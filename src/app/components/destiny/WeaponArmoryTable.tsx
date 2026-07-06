@@ -151,11 +151,22 @@ export function buildWeaponRows(build: {
   ]
 
   if (build.exoticWeaponRef || build.exoticWeapon) {
-    rows.push({
-      slot: 'Exo W',
-      item: build.exoticWeaponRef,
-      fallback: build.exoticWeapon ?? 'Exotic weapon',
-    })
+    const duplicate = rows.some(
+      (row) =>
+        (build.exoticWeaponRef?.hash &&
+          row.item?.hash &&
+          build.exoticWeaponRef.hash === row.item.hash) ||
+        (build.exoticWeapon &&
+          row.fallback &&
+          build.exoticWeapon.toLowerCase() === row.fallback.toLowerCase())
+    )
+    if (!duplicate) {
+      rows.push({
+        slot: 'Exo W',
+        item: build.exoticWeaponRef,
+        fallback: build.exoticWeapon ?? 'Exotic weapon',
+      })
+    }
   }
 
   return rows.filter((row) => (row.fallback && row.fallback !== '—') || row.item?.name)

@@ -63,10 +63,16 @@ export function aggregateBuildIntelligence(
       const deathRate = totalDeaths / clears
       const successRate = group.snapshots.filter((b) => (b.deaths ?? 0) <= 3).length / clears
 
-      const exoticLabel = first.exoticArmor !== 'Unknown exotic' ? first.exoticArmor : first.exoticWeapon
+      const exoticLabel =
+        first.exoticArmor !== 'Unknown exotic'
+          ? first.exoticArmor
+          : first.exoticWeapon && first.exoticWeapon !== 'Unknown power'
+            ? first.exoticWeapon
+            : undefined
+      const subclassLabel = first.subclass === 'Unknown' ? first.characterClass : first.subclass
       const buildName = exoticLabel
-        ? `${first.subclass} ${first.characterClass} · ${exoticLabel}`
-        : `${first.subclass} ${first.characterClass} build`
+        ? `${subclassLabel} ${first.characterClass} · ${exoticLabel}`
+        : `${subclassLabel} ${first.characterClass} build`
 
       return {
         id: `bi-${group.signature.replace(/[^a-z0-9]+/gi, '-').slice(0, 48)}`,

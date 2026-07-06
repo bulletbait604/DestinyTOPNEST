@@ -309,6 +309,7 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
         if (res.ok) {
           const json = await res.json()
           setFullProfile((json?.profile ?? null) as PlayerProfile | null)
+          await ensureLoadoutsRef.current(characterId, { force: true })
         } else {
           await ensureFullProfileRef.current(characterId, { force: true })
         }

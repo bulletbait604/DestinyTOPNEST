@@ -5,6 +5,7 @@
 import { getCharacterLoadoutProfile } from '@/lib/destiny/bungieClient'
 import { resolveInventoryItem } from '@/lib/destiny/manifest'
 import { catalogLookup } from '@/lib/destiny/itemsCatalog'
+import { assignMetaWeaponSlots } from '@/lib/destiny/metaWeaponSlots'
 import { resolveItemHash } from '@/lib/destiny/itemExternalLinks'
 import type { ArmorSlotLabel, DestinyCharacterClass, DestinyIconRef, ExternalBuildSource } from '@/lib/destiny/types'
 
@@ -145,27 +146,35 @@ export async function buildMetaInventoryPlan(
     })
   }
 
-  const weapons = build.weapons ?? []
-  const slots: InventoryItemMatch[] = []
+  const weaponAssignment = assignMetaWeaponSlots(build)
+  const inventorySlots: InventoryItemMatch[] = []
 
   const weaponSlots: Array<{ slot: 'kinetic' | 'energy' | 'power'; label: string; hash?: number }> = [
-    { slot: 'kinetic', label: weapons[0] ?? 'Kinetic', hash: hashForName(weapons[0], build.weaponRefs?.[0]) },
-    { slot: 'energy', label: weapons[1] ?? 'Energy', hash: hashForName(weapons[1], build.weaponRefs?.[1]) },
+    {
+      slot: 'kinetic',
+      label: weaponAssignment.kinetic,
+      hash: hashForName(weaponAssignment.kinetic, weaponAssignment.kineticRef),
+    },
+    {
+      slot: 'energy',
+      label: weaponAssignment.energy,
+      hash: hashForName(weaponAssignment.energy, weaponAssignment.energyRef),
+    },
     {
       slot: 'power',
-      label: build.exoticWeapon ?? weapons[2] ?? 'Power',
-      hash: hashForName(build.exoticWeapon ?? weapons[2], build.exoticWeaponRef ?? build.weaponRefs?.[2]),
+      label: weaponAssignment.power,
+      hash: hashForName(weaponAssignment.power, weaponAssignment.powerRef),
     },
   ]
 
   for (const w of weaponSlots) {
     const meta = findMatchMeta(allItems, w.hash)
-    slots.push({ slot: w.slot, label: w.label, itemHash: w.hash, ...meta })
+    inventorySlots.push({ slot: w.slot, label: w.label, itemHash: w.hash, ...meta })
   }
 
   if (build.exoticArmor) {
     const hash = hashForName(build.exoticArmor, build.exoticArmorRef)
-    slots.push({
+    inventorySlots.push({
       slot: 'exotic_armor',
       label: build.exoticArmor,
       itemHash: hash,
@@ -178,7 +187,7 @@ export async function buildMetaInventoryPlan(
     const selectedName = armorSelections[slot] ?? build.legendaryArmor?.[slot]
     if (!selectedName) continue
     const hash = hashForName(selectedName, build.legendaryArmorRefs?.[slot])
-    slots.push({
+    inventorySlots.push({
       slot,
       label: selectedName,
       itemHash: hash,
@@ -186,13 +195,13 @@ export async function buildMetaInventoryPlan(
     })
   }
 
-  const readyCount = slots.filter((s) => s.matched && s.itemInstanceId).length
+  const readyCount = inventorySlots.filter((s) => s.matched && s.itemInstanceId).length
   return {
     characterId,
     characterClass,
-    items: slots,
+    items: inventorySlots,
     readyCount,
-    totalCount: slots.length,
+    totalCount: inventorySlots.length,
   }
 }
 

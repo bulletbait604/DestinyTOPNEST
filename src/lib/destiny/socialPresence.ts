@@ -9,6 +9,8 @@ import {
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 import { getValidAccessToken, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { getUserActiveLobby } from '@/lib/destiny/fireteamLobbyService'
+import { enrichOnlineSocialLists } from '@/lib/destiny/socialActivityPresence'
+import { buildSocialFriendGroups } from '@/lib/destiny/socialFriendGroups'
 import type { OnlineSocialMember, SocialPresencePayload } from '@/lib/destiny/types'
 
 const EMPTY: SocialPresencePayload = {
@@ -16,6 +18,7 @@ const EMPTY: SocialPresencePayload = {
   onlineFriends: [],
   activeLobby: null,
   bungieFireteamId: null,
+  friendGroups: [],
 }
 
 function formatBungieName(
@@ -57,8 +60,29 @@ function mapClanMember(
     membershipType: member.destinyUserInfo?.membershipType,
     emblemUrl: buildBungieIconUrl(info.iconPath),
     isOnline: true,
-    inDestiny: true,
+    // Clan roster only reports Bungie.net online — not active D2 session.
+    inDestiny: false,
   }
+}
+
+function sortOnlineMembers(members: OnlineSocialMember[]): OnlineSocialMember[] {
+  return [...members].sort((a, b) => {
+    const aDestiny = a.inDestiny ? 0 : 1
+    const bDestiny = b.inDestiny ? 0 : 1
+    if (aDestiny !== bDestiny) return aDestiny - bDestiny
+    return (a.bungieName ?? a.displayName).localeCompare(b.bungieName ?? b.displayName)
+  })
+}
+
+function dedupeMembers(members: OnlineSocialMember[]): OnlineSocialMember[] {
+  const map = new Map<string, OnlineSocialMember>()
+  for (const member of members) {
+    const existing = map.get(member.membershipId)
+    if (!existing || (member.inDestiny && !existing.inDestiny)) {
+      map.set(member.membershipId, member)
+    }
+  }
+  return Array.from(map.values())
 }
 
 function mapFriend(friend: BungieFriendRow): OnlineSocialMember | null {
@@ -106,15 +130,21 @@ export async function fetchSocialPresence(
     getUserActiveLobby(stored.userId),
   ])
 
-  const onlineFriends = (friendsRes.friends ?? [])
-    .map(mapFriend)
-    .filter((row): row is OnlineSocialMember => row != null)
-    .sort((a, b) => a.displayName.localeCompare(b.displayName))
+  const onlineFriends = sortOnlineMembers(
+    dedupeMembers(
+      (friendsRes.friends ?? [])
+        .map(mapFriend)
+        .filter((row): row is OnlineSocialMember => row != null)
+    )
+  )
 
-  const onlineClanMembers = (clanMembersRes.results ?? [])
-    .map((member) => mapClanMember(member, selfId))
-    .filter((row): row is OnlineSocialMember => row != null)
-    .sort((a, b) => a.displayName.localeCompare(b.displayName))
+  const onlineClanMembers = sortOnlineMembers(
+    dedupeMembers(
+      (clanMembersRes.results ?? [])
+        .map((member) => mapClanMember(member, selfId))
+        .filter((row): row is OnlineSocialMember => row != null)
+    )
+  )
 
   let bungieFireteamId: string | null = null
   if (clanId && stored.destinyMembershipType != null) {
@@ -129,10 +159,23 @@ export async function fetchSocialPresence(
     }
   }
 
-  return {
-    onlineClanMembers,
+  const withActivity = await enrichOnlineSocialLists(
     onlineFriends,
+    onlineClanMembers,
+    accessToken
+  ).catch(() => ({ onlineFriends, onlineClanMembers }))
+
+  return {
+    onlineClanMembers: withActivity.onlineClanMembers,
+    onlineFriends: withActivity.onlineFriends,
     activeLobby,
     bungieFireteamId,
+    friendGroups: await buildSocialFriendGroups({
+      clanId,
+      destinyMembershipType: stored.destinyMembershipType,
+      accessToken,
+      onlineClanMembers: withActivity.onlineClanMembers,
+      onlineFriends: withActivity.onlineFriends,
+    }).catch(() => []),
   }
 }

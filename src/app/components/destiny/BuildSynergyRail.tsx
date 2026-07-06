@@ -34,7 +34,7 @@ function synergyLabel(build: BuildSnapshot): string {
   if (isPrismatic) return 'PRISMATIC'
   if (score >= 2) return 'High synergy'
   if (score === 1) return 'Partial synergy'
-  if (subElement) return 'PRISMATIC'
+  if (subElement) return 'Mixed elements'
   return 'Build overview'
 }
 

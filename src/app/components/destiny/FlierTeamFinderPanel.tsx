@@ -86,9 +86,9 @@ function RoomCard({
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
-  const isHost = lobby.hostUserId === myUserId
+  const isHost = lobby.hostUserId?.toLowerCase() === myUserId?.toLowerCase()
   const inRoom =
-    isHost || lobby.memberRoster?.some((m) => m.userId === myUserId)
+    isHost || lobby.memberRoster?.some((m) => m.userId?.toLowerCase() === myUserId?.toLowerCase())
   const full = isFull(lobby)
   const members: FlierTeamLobbyMember[] = [
     {

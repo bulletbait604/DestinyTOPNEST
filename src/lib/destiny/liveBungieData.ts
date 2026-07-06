@@ -10,6 +10,7 @@ import { resolveActiveCharacterId } from '@/lib/destiny/activeCharacter'
 import { fetchGuardianBungieStats } from '@/lib/destiny/guardianBungieStats'
 import { fetchCharacterBuild } from '@/lib/destiny/guardianBuild'
 import { fetchSavedLoadouts } from '@/lib/destiny/guardianSavedLoadouts'
+import { tagLoadoutCompleteness } from '@/lib/destiny/loadoutCompleteness'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { getValidAccessToken, upsertDestinyUser } from '@/lib/destiny/destinyUserStore'
 import type {
@@ -83,7 +84,7 @@ export async function fetchLiveLoadout(
       targetCharacterId
     )
     if (!build) return null
-    return { ...build, loadoutSource: 'equipped' as const }
+    return tagLoadoutCompleteness({ ...build, loadoutSource: 'equipped' as const })
   } catch {
     return null
   }
@@ -167,29 +168,6 @@ async function fetchClanById(clanId: string, stored: StoredDestinyUser): Promise
         }
       }) ?? []
 
-    const onlineMembers =
-      membersData.results
-        ?.filter((m) => m.isOnline)
-        .map((m) => {
-          const info = m.destinyUserInfo ?? m.bungieNetUserInfo
-          if (!info?.membershipId) return null
-          const displayName =
-            m.destinyUserInfo?.LastSeenDisplayName ?? info.displayName ?? 'Member'
-          return {
-            displayName,
-            bungieName:
-              info.bungieGlobalDisplayName && info.bungieGlobalDisplayNameCode != null
-                ? `${info.bungieGlobalDisplayName}#${String(info.bungieGlobalDisplayNameCode).padStart(4, '0')}`
-                : displayName,
-            membershipId: String(info.membershipId),
-            membershipType: m.destinyUserInfo?.membershipType,
-            emblemUrl: buildBungieIconUrl(info.iconPath),
-            isOnline: true,
-            inDestiny: true,
-          }
-        })
-        .filter((row): row is NonNullable<typeof row> => row != null) ?? []
-
     return {
       id: clanId,
       name: clanData.detail?.name ?? stored.clanName ?? 'Clan',
@@ -202,7 +180,7 @@ async function fetchClanById(clanId: string, stored: StoredDestinyUser): Promise
       avgRaidClearSeconds: 0,
       avgDungeonClearSeconds: 0,
       topMembers,
-      onlineMembers,
+      onlineMembers: [],
       achievements: [],
     }
   } catch {

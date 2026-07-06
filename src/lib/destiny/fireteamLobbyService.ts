@@ -24,6 +24,15 @@ async function db() {
   return client.db(getMongoDbName())
 }
 
+function normalizeSiteUserId(userId: string): string {
+  return userId.trim().toLowerCase()
+}
+
+function isSameSiteUser(a: string | undefined, b: string | undefined): boolean {
+  if (!a || !b) return false
+  return normalizeSiteUserId(a) === normalizeSiteUserId(b)
+}
+
 function lobbyId(): string {
   return `flier-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
@@ -46,11 +55,21 @@ export async function getUserActiveLobby(
   userId: string
 ): Promise<ActiveFireteamLobbySummary | null> {
   try {
+    const normalizedId = normalizeSiteUserId(userId)
     const database = await db()
-    const row = (await database.collection(DESTINY_COLLECTIONS.fireteamLobbies).findOne({
-      status: { $in: ['open', 'full'] },
-      $or: [{ hostUserId: userId }, { memberUserIds: userId }, { 'memberRoster.userId': userId }],
-    })) as FireteamLobby | null
+    const rows = (await database
+      .collection(DESTINY_COLLECTIONS.fireteamLobbies)
+      .find({ status: { $in: ['open', 'full'] } })
+      .sort({ updatedAt: -1 })
+      .limit(100)
+      .toArray()) as unknown as FireteamLobby[]
+
+    const row = rows.find(
+      (lobby) =>
+        isSameSiteUser(lobby.hostUserId, normalizedId) ||
+        lobby.memberUserIds?.some((id) => isSameSiteUser(id, normalizedId)) ||
+        lobby.memberRoster?.some((m) => isSameSiteUser(m.userId, normalizedId))
+    )
 
     if (!row) return null
 
@@ -60,7 +79,7 @@ export async function getUserActiveLobby(
         ? `${row.activityName} · ${row.encounterName}`
         : row.activityName,
       hostDisplayName: row.hostDisplayName,
-      isHost: row.hostUserId === userId,
+      isHost: isSameSiteUser(row.hostUserId, normalizedId),
     }
   } catch {
     return null
@@ -130,7 +149,7 @@ export async function createFlierTeamRoom(
   const now = new Date().toISOString()
   const lobby: FireteamLobby = syncLobbyCounts({
     id: lobbyId(),
-    hostUserId: input.host.userId,
+    hostUserId: normalizeSiteUserId(input.host.userId),
     hostDisplayName: input.host.bungieDisplayName || input.host.userId,
     hostEmblemUrl: input.host.emblemUrl,
     hostClass: input.host.characterClass,
@@ -168,7 +187,7 @@ export async function createFlierTeamRoom(
 
 function memberFromStored(user: StoredDestinyUser): FlierTeamLobbyMember {
   return {
-    userId: user.userId,
+    userId: normalizeSiteUserId(user.userId),
     displayName: user.bungieDisplayName || user.userId,
     bungieMembershipId: user.bungieMembershipId,
     destinyMembershipType: user.destinyMembershipType,
@@ -186,7 +205,9 @@ export async function joinFlierTeamRoom(
 ): Promise<{ ok: true; lobby: FireteamLobby } | { ok: false; error: string }> {
   const lobby = await getLobbyById(lobbyId)
   if (!lobby) return { ok: false, error: 'Room not found or closed.' }
-  if (lobby.hostUserId === user.userId) return { ok: false, error: 'You are already the host.' }
+  if (isSameSiteUser(lobby.hostUserId, user.userId)) {
+    return { ok: false, error: 'You are already the host.' }
+  }
   if (lobby.joinMode === 'apply') {
     return { ok: false, error: 'This room requires an application. Use Apply instead.' }
   }
@@ -197,7 +218,7 @@ export async function joinFlierTeamRoom(
   }
 
   const roster = lobby.memberRoster ?? []
-  if (roster.some((m) => m.userId === user.userId)) {
+  if (roster.some((m) => isSameSiteUser(m.userId, user.userId))) {
     return { ok: true, lobby }
   }
 
@@ -238,17 +259,17 @@ export async function applyToFlierTeamRoom(
   if (lobby.joinMode !== 'apply') {
     return { ok: false, error: 'This room accepts instant joins.' }
   }
-  if (lobby.hostUserId === user.userId) {
+  if (isSameSiteUser(lobby.hostUserId, user.userId)) {
     return { ok: false, error: 'You cannot apply to your own room.' }
   }
 
   const pending = lobby.pendingApplications ?? []
-  if (pending.some((a) => a.userId === user.userId)) {
+  if (pending.some((a) => isSameSiteUser(a.userId, user.userId))) {
     return { ok: false, error: 'Application already pending.' }
   }
 
   const application: FlierTeamApplication = {
-    userId: user.userId,
+    userId: normalizeSiteUserId(user.userId),
     displayName: user.bungieDisplayName || user.userId,
     emblemUrl: user.emblemUrl,
     message: message?.trim() || undefined,
@@ -275,12 +296,12 @@ export async function approveFlierTeamApplication(
 ): Promise<{ ok: true; lobby: FireteamLobby } | { ok: false; error: string }> {
   const lobby = await getLobbyById(lobbyId)
   if (!lobby) return { ok: false, error: 'Room not found.' }
-  if (lobby.hostUserId !== hostUserId) {
+  if (!isSameSiteUser(lobby.hostUserId, hostUserId)) {
     return { ok: false, error: 'Only the host can approve applications.' }
   }
 
   const pending = lobby.pendingApplications ?? []
-  const application = pending.find((a) => a.userId === applicantUserId)
+  const application = pending.find((a) => isSameSiteUser(a.userId, applicantUserId))
   if (!application) return { ok: false, error: 'Application not found.' }
 
   if (memberCount(lobby) >= lobby.maxPlayers) {
@@ -299,7 +320,7 @@ export async function approveFlierTeamApplication(
   const updated = syncLobbyCounts({
     ...lobby,
     memberRoster: [...(lobby.memberRoster ?? []), member],
-    pendingApplications: pending.filter((a) => a.userId !== applicantUserId),
+    pendingApplications: pending.filter((a) => !isSameSiteUser(a.userId, applicantUserId)),
     updatedAt: new Date().toISOString(),
   })
 
@@ -330,7 +351,7 @@ export async function leaveFlierTeamRoom(
 
   const database = await db()
 
-  if (lobby.hostUserId === userId) {
+  if (isSameSiteUser(lobby.hostUserId, userId)) {
     await database.collection(DESTINY_COLLECTIONS.fireteamLobbies).updateOne(
       { id: lobbyId },
       { $set: { status: 'closed', updatedAt: new Date().toISOString() } }
@@ -340,7 +361,7 @@ export async function leaveFlierTeamRoom(
 
   const updated = syncLobbyCounts({
     ...lobby,
-    memberRoster: (lobby.memberRoster ?? []).filter((m) => m.userId !== userId),
+    memberRoster: (lobby.memberRoster ?? []).filter((m) => !isSameSiteUser(m.userId, userId)),
     updatedAt: new Date().toISOString(),
   })
 
@@ -373,7 +394,7 @@ export async function deleteFlierTeamRoom(
     if (!lobby) {
       return { ok: false, error: 'Room not found.' }
     }
-    if (lobby.hostUserId !== userId) {
+    if (!isSameSiteUser(lobby.hostUserId, userId)) {
       return { ok: false, error: 'Only the host can delete this room.' }
     }
 
@@ -381,6 +402,51 @@ export async function deleteFlierTeamRoom(
     return { ok: true }
   } catch {
     return { ok: false, error: 'Could not delete room.' }
+  }
+}
+
+export async function listAllFlierTeamRooms(limit = 100): Promise<FireteamLobby[]> {
+  try {
+    const database = await db()
+    const rows = await database
+      .collection(DESTINY_COLLECTIONS.fireteamLobbies)
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .toArray()
+    return rows as unknown as FireteamLobby[]
+  } catch {
+    return []
+  }
+}
+
+export async function deleteFlierTeamRoomAsAdmin(
+  lobbyId: string
+): Promise<{ ok: true; hostUserId?: string } | { ok: false; error: string }> {
+  try {
+    const database = await db()
+    const lobby = (await database
+      .collection(DESTINY_COLLECTIONS.fireteamLobbies)
+      .findOne({ id: lobbyId })) as FireteamLobby | null
+
+    if (!lobby) {
+      return { ok: false, error: 'Room not found.' }
+    }
+
+    await database.collection(DESTINY_COLLECTIONS.fireteamLobbies).deleteOne({ id: lobbyId })
+    return { ok: true, hostUserId: lobby.hostUserId }
+  } catch {
+    return { ok: false, error: 'Could not delete room.' }
+  }
+}
+
+export async function clearAllFlierTeamRooms(): Promise<{ ok: true; deletedCount: number } | { ok: false; error: string }> {
+  try {
+    const database = await db()
+    const result = await database.collection(DESTINY_COLLECTIONS.fireteamLobbies).deleteMany({})
+    return { ok: true, deletedCount: result.deletedCount ?? 0 }
+  } catch {
+    return { ok: false, error: 'Could not clear FlierTeam rooms.' }
   }
 }
 

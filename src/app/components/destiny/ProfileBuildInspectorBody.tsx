@@ -9,8 +9,10 @@ import {
 } from '@/app/components/destiny/destinyGameUi'
 import ArmorStatMatrix from '@/app/components/destiny/ArmorStatMatrix'
 import BuildSynergyRail from '@/app/components/destiny/BuildSynergyRail'
-import WeaponArmoryTable, { buildWeaponRows } from '@/app/components/destiny/WeaponArmoryTable'
+import LoadoutHoverArmoryTable from '@/app/components/destiny/LoadoutHoverArmoryTable'
+import { buildWeaponRows } from '@/app/components/destiny/WeaponArmoryTable'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
+import { IconTooltip } from '@/app/components/destiny/destinyGameUi'
 import { subclassGlow } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
@@ -55,9 +57,11 @@ function ModSlotCell({
   return (
     <div className="d2-mod-cell">
       <span className="d2-mod-kind">{kind}</span>
-      <ItemExternalLink item={item}>
-        <GlowIcon item={item} size={40} glow={glow} className="rounded-lg mx-auto" />
-      </ItemExternalLink>
+      <IconTooltip slotLabel={kind} name={item.name} tier={item.tierLabel} item={item}>
+        <ItemExternalLink item={item}>
+          <GlowIcon item={item} size={40} glow={glow} className="rounded-lg mx-auto" />
+        </ItemExternalLink>
+      </IconTooltip>
       <ItemLink item={item} className="d2-mod-name line-clamp-2 block" />
     </div>
   )
@@ -111,7 +115,7 @@ function WeaponsPanel({ rows }: { rows: ReturnType<typeof buildWeaponRows> }) {
   if (!rows.length) return null
   return (
     <BuildSection label="Weapons" className="d2-profile-build-panel">
-      <WeaponArmoryTable rows={rows} title="Weapons" iconSize={44} />
+      <LoadoutHoverArmoryTable rows={rows} title="Weapons" iconSize={44} />
     </BuildSection>
   )
 }
@@ -120,7 +124,7 @@ function ArmorPanel({ rows }: { rows: ReturnType<typeof buildArmorRows> }) {
   if (!rows.length) return null
   return (
     <BuildSection label="Armor" className="d2-profile-build-panel d2-profile-armor-panel">
-      <WeaponArmoryTable rows={rows} title="Armor" iconSize={44} />
+      <LoadoutHoverArmoryTable rows={rows} title="Armor" iconSize={44} />
     </BuildSection>
   )
 }

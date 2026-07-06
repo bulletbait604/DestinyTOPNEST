@@ -194,8 +194,26 @@ export async function getClan(clanId: string) {
 }
 
 /** Clan members. */
-export async function getClanMembers(clanId: string) {
-  return bungieFetch(`/GroupV2/${clanId}/Members/`)
+export async function getClanMembers(clanId: string, page = 1) {
+  return bungieFetch<{ results?: ClanMemberPresenceRow[]; hasMore?: boolean }>(
+    `/GroupV2/${clanId}/Members/${page}/`
+  )
+}
+
+/** Fetch every clan member page (50 per page) for accurate online presence. */
+export async function getAllClanMembersWithPresence(clanId: string): Promise<ClanMemberPresenceRow[]> {
+  const all: ClanMemberPresenceRow[] = []
+  let page = 1
+  let hasMore = true
+
+  while (hasMore && page <= 40) {
+    const res = await getClanMembers(clanId, page)
+    all.push(...(res.results ?? []))
+    hasMore = Boolean(res.hasMore)
+    page += 1
+  }
+
+  return all
 }
 
 /** Groups/clans a member belongs to. filter=0 all, groupType=1 clan. */
@@ -397,9 +415,8 @@ export async function getBungieFriends(accessToken: string) {
 }
 
 export async function getClanMembersWithPresence(clanId: string) {
-  return bungieFetch<{ results?: ClanMemberPresenceRow[]; hasMore?: boolean }>(
-    `/GroupV2/${clanId}/Members/`
-  )
+  const results = await getAllClanMembersWithPresence(clanId)
+  return { results, hasMore: false }
 }
 
 export async function getMyClanFireteams(
@@ -412,6 +429,54 @@ export async function getMyClanFireteams(
   return bungieFetch<{
     results?: Array<{ fireteamId?: string | number; id?: string | number; isClosed?: boolean }>
   }>(`/Fireteam/Clan/${groupId}/My/${platform}/${includeClosed}/${page}/`, { accessToken })
+}
+
+export interface BungieFireteamSummaryRow {
+  fireteamId?: string | number
+  title?: string
+  ownerMembershipId?: string | number
+  playerSlotCount?: number
+  availablePlayerSlotCount?: number
+  activityType?: number
+}
+
+export interface BungieFireteamMemberRow {
+  destinyUserInfo?: {
+    membershipId?: string | number
+    membershipType?: number
+    displayName?: string
+    iconPath?: string
+    bungieGlobalDisplayName?: string
+    bungieGlobalDisplayNameCode?: number
+  }
+}
+
+export async function getAvailableClanFireteams(
+  groupId: string,
+  platform: number,
+  accessToken: string,
+  page = 0
+) {
+  // activityType 0 = all, dateRange 1 = today, slotFilter 0 = any, publicOnly 0 = all
+  return bungieFetch<{
+    results?: BungieFireteamSummaryRow[]
+    hasMore?: boolean
+  }>(
+    `/Fireteam/Clan/${groupId}/Available/${platform}/0/1/0/0/${page}/`,
+    { accessToken }
+  )
+}
+
+export async function getClanFireteam(
+  groupId: string,
+  fireteamId: string,
+  accessToken: string
+) {
+  return bungieFetch<{
+    summary?: BungieFireteamSummaryRow
+    members?: BungieFireteamMemberRow[]
+    alternates?: BungieFireteamMemberRow[]
+  }>(`/Fireteam/Clan/${groupId}/Summary/${fireteamId}/`, { accessToken })
 }
 
 /**

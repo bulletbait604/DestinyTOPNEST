@@ -50,6 +50,15 @@ export function shouldDisplaySavedLoadout(build: BuildSnapshot, maxMissing = 5):
   return weapons >= 2 && armor >= 3 && isFilled(build.subclass)
 }
 
+export function tagLoadoutCompleteness(build: BuildSnapshot): BuildSnapshot {
+  const missing = countMissingLoadoutSlots(build)
+  return {
+    ...build,
+    missingLoadoutSlots: missing,
+    loadoutIncomplete: missing > 0,
+  }
+}
+
 export function filterDisplayableSavedLoadouts(builds: BuildSnapshot[]): BuildSnapshot[] {
   return builds.filter((build) => shouldDisplaySavedLoadout(build))
 }

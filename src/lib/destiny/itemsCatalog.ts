@@ -15,6 +15,7 @@ export type ManifestEntityType =
   | 'DestinyPlugSetDefinition'
   | 'DestinyPresentationNodeDefinition'
   | 'DestinyLoadoutNameDefinition'
+  | 'DestinyLoadoutColorDefinition'
 
 const MANIFEST_ENTITY_TYPES: ManifestEntityType[] = [
   'DestinyInventoryItemDefinition',
@@ -28,6 +29,7 @@ const MANIFEST_ENTITY_TYPES: ManifestEntityType[] = [
   'DestinyPlugSetDefinition',
   'DestinyPresentationNodeDefinition',
   'DestinyLoadoutNameDefinition',
+  'DestinyLoadoutColorDefinition',
 ]
 
 export function isManifestEntityType(value: string | null | undefined): value is ManifestEntityType {

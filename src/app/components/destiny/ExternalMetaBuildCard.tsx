@@ -67,7 +67,7 @@ export default function ExternalMetaBuildCard({
   }
 
   return (
-    <div className="d2-panel-inset p-0 rounded-lg overflow-hidden d2-profile-build-card">
+    <div className="d2-panel-inset p-0 rounded-lg overflow-visible d2-profile-build-card">
       <div className="px-4 pt-4 pb-2 space-y-2">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">

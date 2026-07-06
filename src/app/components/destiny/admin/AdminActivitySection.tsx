@@ -20,6 +20,8 @@ const KIND_LABELS: Record<AdminActivityEntry['kind'], string> = {
   leaderboard_adjust: 'Leaderboard',
   loot_icons_rebuild: 'Loot icons',
   meta_builds_sync: 'Meta builds',
+  fireteam_room_delete: 'FlierTeam delete',
+  fireteam_rooms_clear: 'FlierTeam clear',
 }
 
 const KIND_TONE: Record<AdminActivityEntry['kind'], 'red' | 'gold' | 'purple' | 'green' | 'blue' | 'neutral'> = {
@@ -35,6 +37,8 @@ const KIND_TONE: Record<AdminActivityEntry['kind'], 'red' | 'gold' | 'purple' | 
   leaderboard_adjust: 'gold',
   loot_icons_rebuild: 'blue',
   meta_builds_sync: 'purple',
+  fireteam_room_delete: 'red',
+  fireteam_rooms_clear: 'red',
 }
 
 function formatWhen(iso: string): string {

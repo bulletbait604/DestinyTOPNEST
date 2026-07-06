@@ -80,20 +80,28 @@ export function writeCachedSummaryProfile(profile: PlayerProfile): void {
   writeEntry(KEYS.summary, profile)
 }
 
+interface LoadoutsCacheStore {
+  savedAtByCharacter: Record<string, number>
+  data: Record<string, LoadoutsCacheData>
+}
+
 export function readCachedLoadouts(
   characterId: string
 ): { data: LoadoutsCacheData; savedAt: number } | null {
-  const all = readEntry<Record<string, LoadoutsCacheData>>(KEYS.loadouts)
-  const row = all?.data[characterId]
-  if (!all || !row) return null
-  return { data: row, savedAt: all.savedAt }
+  const all = readEntry<LoadoutsCacheStore>(KEYS.loadouts)
+  const row = all?.data.data[characterId]
+  const savedAt = all?.data.savedAtByCharacter?.[characterId]
+  if (!all || !row || savedAt == null) return null
+  return { data: row, savedAt }
 }
 
 export function writeCachedLoadouts(characterId: string, data: LoadoutsCacheData): void {
-  const existing = readEntry<Record<string, LoadoutsCacheData>>(KEYS.loadouts)
-  const map = existing?.data ?? {}
+  const existing = readEntry<LoadoutsCacheStore>(KEYS.loadouts)
+  const map = existing?.data.data ?? {}
+  const savedAtByCharacter = existing?.data.savedAtByCharacter ?? {}
   map[characterId] = data
-  writeEntry(KEYS.loadouts, map)
+  savedAtByCharacter[characterId] = Date.now()
+  writeEntry(KEYS.loadouts, { data: map, savedAtByCharacter })
 }
 
 export function readCachedBuilds(): { data: BuildsCacheData; savedAt: number } | null {

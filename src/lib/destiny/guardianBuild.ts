@@ -2,7 +2,7 @@
  * Parse live character build from Bungie (subclass, aspects, fragments, abilities, armor stats).
  */
 
-import { getCharacterLoadout } from '@/lib/destiny/bungieClient'
+import { getCharacterLoadout, getDestinyEntityDefinition } from '@/lib/destiny/bungieClient'
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 import { resolveInventoryItem, resolveDefinition, type ManifestDefinitionInfo } from '@/lib/destiny/manifest'
 import type { ArmorPiece, ArmorSlotLabel, BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
@@ -71,7 +71,7 @@ async function resolveArmorMods(
   const mods: DestinyIconRef[] = []
 
   for (const socket of sockets) {
-    if (!socket.plugHash || socket.isEnabled === false) continue
+    if (!socket.plugHash || socket.isEnabled === false || socket.isVisible === false) continue
     const info = await resolveInventoryItem(socket.plugHash, 'Mod')
     if (!isArmorModPlug(info)) continue
     mods.push(iconRefFromInfo(info))
@@ -92,7 +92,7 @@ async function resolveWeaponPerks(
   const perks: DestinyIconRef[] = []
 
   for (const socket of sockets) {
-    if (!socket.plugHash || socket.isEnabled === false) continue
+    if (!socket.plugHash || socket.isEnabled === false || socket.isVisible === false) continue
     const info = await resolveInventoryItem(socket.plugHash, 'Perk')
     if (!isWeaponPerkPlug(info)) continue
     perks.push(iconRefFromInfo(info))
@@ -190,6 +190,25 @@ function bucketForWeaponSlot(slot: 'kinetic' | 'energy' | 'power'): number | und
   return entry ? Number(entry[0]) : undefined
 }
 
+const inventoryBucketCache = new Map<number, number>()
+
+/** Resolve equip bucket from manifest when Bungie item entries omit bucketHash. */
+export async function resolveInventoryBucketHash(itemHash: number): Promise<number | undefined> {
+  const cached = inventoryBucketCache.get(itemHash)
+  if (cached) return cached
+
+  try {
+    const def = (await getDestinyEntityDefinition('DestinyInventoryItemDefinition', itemHash)) as {
+      inventory?: { bucketTypeHash?: number }
+    }
+    const bucket = def?.inventory?.bucketTypeHash
+    if (bucket) inventoryBucketCache.set(itemHash, bucket)
+    return bucket
+  } catch {
+    return undefined
+  }
+}
+
 export type ProfileItemEntry = {
   itemHash?: number
   bucketHash?: number
@@ -218,6 +237,7 @@ export async function buildSnapshotFromItemEntries(
     loadoutName?: string
     loadoutIndex?: number
     loadoutSource?: BuildSnapshot['loadoutSource']
+    allowPartial?: boolean
   }
 ): Promise<BuildSnapshot | null> {
   const weapons: Record<string, string> = {}
@@ -251,6 +271,10 @@ export async function buildSnapshotFromItemEntries(
     let bucket = item.bucketHash
 
     if (!bucket) {
+      bucket = await resolveInventoryBucketHash(item.itemHash)
+    }
+
+    if (!bucket) {
       if (isSubclassItem(itemInfo)) {
         bucket = SUBCLASS_BUCKET
       } else {
@@ -258,10 +282,7 @@ export async function buildSnapshotFromItemEntries(
         if (armorSlot) bucket = bucketForArmorSlot(armorSlot)
         else {
           const weaponSlot = inferWeaponSlot(itemInfo, weaponFilled)
-          if (weaponSlot) {
-            bucket = bucketForWeaponSlot(weaponSlot)
-            weaponFilled[weaponSlot] = true
-          }
+          if (weaponSlot) bucket = bucketForWeaponSlot(weaponSlot)
         }
       }
     }
@@ -278,7 +299,7 @@ export async function buildSnapshotFromItemEntries(
 
       const socketRow = socketsData?.[item.itemInstanceId ?? '']
       for (const socket of socketRow?.sockets ?? []) {
-        if (!socket.plugHash) continue
+        if (!socket.plugHash || socket.isEnabled === false || socket.isVisible === false) continue
         const { ref: plugRef, category } = await resolvePlug(socket.plugHash)
         if (category === 'aspect') {
           const clean = plugRef.name.replace(/ aspect$/i, '')
@@ -341,7 +362,7 @@ export async function buildSnapshotFromItemEntries(
   }
 
   if (!Object.keys(weapons).length && !armorPieces.length && subclass === 'Subclass') {
-    return null
+    if (!options.allowPartial) return null
   }
 
   const slotOrder: ArmorSlotLabel[] = ['helmet', 'gauntlets', 'chest', 'legs', 'class']
@@ -374,7 +395,7 @@ export async function buildSnapshotFromItemEntries(
     super: superAbility,
     aspects: aspects.slice(0, 2),
     fragments: fragments.slice(0, 5),
-    abilities: [superAbility, classAbility, jump, melee, grenade].filter((a) => a !== '—'),
+    abilities: [superAbility, classAbility, jump, melee, grenade],
     exoticArmor,
     exoticWeapon,
     armorPieces,
