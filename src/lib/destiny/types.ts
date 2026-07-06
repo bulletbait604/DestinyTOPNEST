@@ -109,6 +109,23 @@ export interface WeeklyResetInfo {
   pantheon?: string
   pantheonIconUrl?: string
   resetTimeLabel: string
+  /** Server-resolved loot icons for featured activities, keyed by activity name. */
+  lootByActivity?: Record<string, WeeklyActivityLootSnapshot>
+}
+
+/** Pre-resolved loot intel for a featured activity during a weekly reset. */
+export interface WeeklyActivityLootSnapshot {
+  tagline?: string
+  armorSet: { name: string; note?: string; iconItem: string }
+  armorSetIconRef?: DestinyIconRef
+  drops: WeeklyActivityLootDrop[]
+}
+
+export interface WeeklyActivityLootDrop {
+  name: string
+  kind: 'exotic' | 'catalyst' | 'legendary'
+  note?: string
+  iconRef: DestinyIconRef
 }
 
 export interface ResolvedEmblem {
@@ -303,7 +320,9 @@ export type VibesLabel = 'quiet' | 'loud' | 'good' | 'ego' | 'sherpa'
 export interface TrustReview {
   id: string
   reviewerId: string
-  reviewedUserId: string
+  /** Set when the reviewed player is linked on Top Nest. */
+  reviewedUserId?: string
+  reviewedMembershipId: string
   runId: string
   /** 1 = knew nothing · 5 = knew the entire run */
   knowledge: 1 | 2 | 3 | 4 | 5
@@ -403,7 +422,7 @@ export interface SeasonPrizeRules {
   topGuardians: { first: string; second: string; third: string }
 }
 
-/** Fireteam MVP vote — voter earns 1 pt, selected Guardian earns 3 pts toward Top Guardians. */
+/** Fireteam MVP vote — one pick per run; Top Guardians ranks by MVP crowns received. */
 export interface MvpVote {
   id: string
   runId: string
@@ -501,6 +520,7 @@ export type AdminActivityKind =
   | 'prize_claim'
   | 'season_finalize'
   | 'leaderboard_adjust'
+  | 'loot_icons_rebuild'
 
 export interface AdminActivityEntry {
   id: string

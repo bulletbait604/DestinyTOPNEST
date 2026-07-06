@@ -92,6 +92,7 @@ async function ensureDestinyIndexesOnce(): Promise<void> {
   await database
     .collection(DESTINY_COLLECTIONS.leaderboardAdjustments)
     .createIndex({ category: 1, period: 1, seasonId: 1, entryKey: 1 }, { unique: true })
+  await database.collection(DESTINY_COLLECTIONS.weeklyLootIcons).createIndex({ builtAt: -1 })
 }
 
 export async function loadAllMvpVotes(): Promise<MvpVote[]> {
@@ -563,12 +564,18 @@ export async function saveReputationReview(review: ReputationReview): Promise<vo
   )
 }
 
-export async function getTrustReviewsForUser(userId: string): Promise<TrustReview[]> {
+export async function getTrustReviewsForUser(
+  userId: string,
+  membershipId?: string
+): Promise<TrustReview[]> {
   try {
     const database = await db()
+    const filter = membershipId
+      ? { $or: [{ reviewedUserId: userId }, { reviewedMembershipId: membershipId }] }
+      : { reviewedUserId: userId }
     const rows = await database
       .collection(DESTINY_COLLECTIONS.trustReviews)
-      .find({ reviewedUserId: userId })
+      .find(filter)
       .sort({ createdAt: -1 })
       .limit(100)
       .toArray()
@@ -595,15 +602,15 @@ export async function getTrustReviewsByReviewer(reviewerId: string): Promise<Tru
 
 export async function findTrustReview(
   reviewerId: string,
-  reviewedUserId: string,
-  runId: string
+  runId: string,
+  reviewedMembershipId: string
 ): Promise<TrustReview | null> {
   try {
     const database = await db()
     const row = await database.collection(DESTINY_COLLECTIONS.trustReviews).findOne({
       reviewerId,
-      reviewedUserId,
       runId,
+      reviewedMembershipId,
     })
     return row as TrustReview | null
   } catch {

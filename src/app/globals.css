@@ -582,6 +582,8 @@ a { color: inherit; text-decoration: none; }
     gap: 0.35rem;
     align-self: center;
     width: 100%;
+    max-width: 158px;
+    justify-self: start;
     margin: 0;
     padding: 0.55rem 0.65rem;
     border-radius: 10px;
@@ -631,6 +633,7 @@ a { color: inherit; text-decoration: none; }
   @media (max-width: 767px) {
     .tn-home-hero-mvp-callout {
       order: 0;
+      max-width: none;
     }
 
     .tn-home-hero-has-mvp-callout .tn-home-hero-logo-panel {
@@ -867,6 +870,12 @@ a { color: inherit; text-decoration: none; }
       grid-template-columns: minmax(92px, 112px) 1fr;
       padding: calc(0.9rem * 0.6) calc(1.05rem * 0.6) calc(1rem * 0.6);
       gap: calc(1rem * 0.6);
+    }
+
+    .tn-home-hero-compact.tn-home-hero-has-mvp-callout .tn-home-hero-grid,
+    .tn-home-hero-compact.tn-home-hero-has-mvp-callout .tn-home-hero-grid-brand {
+      grid-template-columns: minmax(92px, 112px) minmax(118px, 158px) minmax(0, 1fr);
+      align-items: center;
     }
   }
 

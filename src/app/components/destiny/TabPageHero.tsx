@@ -70,9 +70,8 @@ function HeroMvpCallout({ compact }: { compact?: boolean }) {
       className={cn('tn-home-hero-mvp-callout', compact && 'tn-home-hero-mvp-callout-compact')}
       onClick={() => navigateProfileSection('activities')}
     >
-      <span className="tn-home-hero-mvp-callout-kicker">Profile · Previous Activities</span>
       <span className="tn-home-hero-mvp-callout-text">
-        Vote run MVPs and rank Fireteam Finder randos in Unranked Runs (private Knowledge + Vibes).
+        Vote run MVP&apos;s and rank your fireteam members in Unranked Runs in the Profile Tab.
       </span>
     </button>
   )

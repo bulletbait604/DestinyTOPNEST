@@ -267,18 +267,21 @@ function tierForKind(kind: LootRarity): string {
   return 'Legendary'
 }
 
-function resolveLootCatalogName(name: string): string {
+export function resolveLootCatalogName(name: string): string {
   const key = name.trim().toLowerCase()
   return LOOT_ICON_ALIASES[key] ?? key
 }
 
+export function lootDropLookupName(drop: ActivityLootDrop): string {
+  if (drop.kind === 'catalyst' && drop.name.trim().toLowerCase() === 'xenophage') {
+    return 'xenophage catalyst'
+  }
+  return resolveLootCatalogName(drop.name)
+}
+
 /** Build an icon ref for a weekly loot drop (catalog + manifest fallback in UI). */
 export function lootDropIconRef(drop: ActivityLootDrop): DestinyIconRef {
-  const aliasKey =
-    drop.kind === 'catalyst' && drop.name.trim().toLowerCase() === 'xenophage'
-      ? 'xenophage catalyst'
-      : resolveLootCatalogName(drop.name)
-  const catalogKey = aliasKey
+  const catalogKey = lootDropLookupName(drop)
   const catalog = catalogLookup(catalogKey) ?? catalogLookup(drop.name)
   const iconPath = catalog?.iconPath ?? itemIconPathFallback(catalogKey) ?? itemIconPathFallback(drop.name)
 

@@ -11,8 +11,9 @@ import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { userParticipatedInRun, usersByMembershipMap } from '@/lib/destiny/fireteamReputation'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
-export const MVP_VOTER_POINTS = 1
-export const MVP_SELECTED_POINTS = 3
+export const MVP_VOTER_POINTS = 0
+/** MVP selection no longer awards leaderboard points — Top Guardians ranks by crowns received. */
+export const MVP_SELECTED_POINTS = 0
 export const COMMANDER_RANK_LIMIT = 3
 
 function periodStart(period: LeaderboardPeriod, season: Season): Date | null {
@@ -60,22 +61,18 @@ export function aggregateGuardianLeaderboard(
   for (const vote of votes) {
     if (!voteMatchesPeriod(vote, period, season)) continue
 
-    const voterRow = agg.get(vote.voterId) ?? { userId: vote.voterId, points: 0, mvpReceived: 0 }
-    voterRow.points += MVP_VOTER_POINTS
-    agg.set(vote.voterId, voterRow)
-
     const selectedRow = agg.get(vote.selectedUserId) ?? {
       userId: vote.selectedUserId,
       points: 0,
       mvpReceived: 0,
     }
-    selectedRow.points += MVP_SELECTED_POINTS
     selectedRow.mvpReceived += 1
+    selectedRow.points = selectedRow.mvpReceived
     agg.set(vote.selectedUserId, selectedRow)
   }
 
   return Array.from(agg.values())
-    .sort((a, b) => b.points - a.points || b.mvpReceived - a.mvpReceived)
+    .sort((a, b) => b.mvpReceived - a.mvpReceived || b.points - a.points)
     .slice(0, limit)
     .map((row, index) => {
       const user = usersById.get(row.userId)
@@ -103,13 +100,12 @@ export function guardianPointsForUser(
   period: LeaderboardPeriod,
   season: Season
 ): number {
-  let total = 0
+  let mvpCrowns = 0
   for (const vote of votes) {
     if (!voteMatchesPeriod(vote, period, season)) continue
-    if (vote.voterId === userId) total += MVP_VOTER_POINTS
-    if (vote.selectedUserId === userId) total += MVP_SELECTED_POINTS
+    if (vote.selectedUserId === userId) mvpCrowns += 1
   }
-  return total
+  return mvpCrowns
 }
 
 export function buildActivityRunsForVote(

@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronDown } from 'lucide-react'
-import type { FeaturedActivity } from '@/lib/destiny/types'
+import type { FeaturedActivity, WeeklyActivityLootSnapshot } from '@/lib/destiny/types'
 import { activityArmorSet } from '@/lib/destiny/activityArmorSets'
 import { activityIntel } from '@/lib/destiny/activityIntel'
 import { ActivityIntelSections } from '@/app/components/destiny/ActivityIntelSections'
@@ -17,10 +17,11 @@ interface Props {
   kind: 'raid' | 'dungeon' | 'pantheon'
   resetsIn?: string
   darkMode: boolean
+  lootIntel?: WeeklyActivityLootSnapshot | null
 }
 
 /** Home rotation tile — activity header, armor set, and expandable loot intel. */
-export default function WeeklyActivitySetCard({ label, activity, kind, resetsIn, darkMode }: Props) {
+export default function WeeklyActivitySetCard({ label, activity, kind, resetsIn, darkMode, lootIntel }: Props) {
   const t = getDestinyTheme(darkMode)
   const armorSet = activityArmorSet(activity.name) ?? (kind === 'pantheon' ? activityArmorSet('Pantheon') : null)
   const walkthrough = activityWalkthroughUrl(activity.name)
@@ -74,6 +75,7 @@ export default function WeeklyActivitySetCard({ label, activity, kind, resetsIn,
               resetsIn={resetsIn}
               armorSet={armorSet}
               darkMode={darkMode}
+              lootIntel={lootIntel}
             />
           ) : armorSet ? (
             <div className="tn-weekly-activity-intel-body">

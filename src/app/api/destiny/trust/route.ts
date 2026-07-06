@@ -85,15 +85,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ reviews: written })
     }
 
-    const reviews = await getTrustReviewsForUser(target)
-    const trustRank = computeTrustRank(reviews)
-
-    if (target === userId) {
-      return NextResponse.json({ trustRank, userId: target })
-    }
-
+    const stored = await getDestinyUserBySiteUserId(target)
+    const reviews = await getTrustReviewsForUser(target, stored?.bungieMembershipId)
     return NextResponse.json({
-      trustRank,
+      trustRank: computeTrustRank(reviews),
       userId: target,
     })
   })
@@ -108,23 +103,23 @@ export async function POST(req: NextRequest) {
       reviewedBungieMembershipId?: string
     }
 
-    let reviewedUserId = body.reviewedUserId?.toLowerCase()
-    if (!reviewedUserId && body.reviewedBungieMembershipId) {
-      const linked = await getDestinyUserByBungieMembershipId(body.reviewedBungieMembershipId)
-      reviewedUserId = linked?.userId
-    }
-
-    if (!reviewedUserId) {
-      return NextResponse.json(
-        { error: 'reviewedUserId required — rando must be linked on Top Nest' },
-        { status: 400 }
-      )
-    }
-    if (reviewedUserId === reviewerId) {
-      return NextResponse.json({ error: 'Cannot rank yourself' }, { status: 400 })
+    const reviewedMembershipId =
+      body.reviewedMembershipId ?? body.reviewedBungieMembershipId?.trim()
+    if (!reviewedMembershipId) {
+      return NextResponse.json({ error: 'reviewedMembershipId required' }, { status: 400 })
     }
     if (!body.runId) {
       return NextResponse.json({ error: 'runId required' }, { status: 400 })
+    }
+
+    let reviewedUserId = body.reviewedUserId?.toLowerCase()
+    if (!reviewedUserId) {
+      const linked = await getDestinyUserByBungieMembershipId(reviewedMembershipId)
+      reviewedUserId = linked?.userId
+    }
+
+    if (reviewedUserId === reviewerId) {
+      return NextResponse.json({ error: 'Cannot rank yourself' }, { status: 400 })
     }
 
     const vibes = parseVibesLabel(body.vibes)
@@ -144,7 +139,7 @@ export async function POST(req: NextRequest) {
     const validation = validateReviewSubmission(
       reviewerId,
       stored?.bungieMembershipId,
-      reviewedUserId,
+      reviewedMembershipId,
       body.runId,
       runs,
       usersByMembershipMap(Array.from(usersById.values()))
@@ -153,7 +148,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 })
     }
 
-    const existing = await findTrustReview(reviewerId, reviewedUserId, body.runId)
+    const existing = await findTrustReview(reviewerId, body.runId, reviewedMembershipId)
     if (existing) {
       return NextResponse.json({ error: 'You already ranked this player for this run' }, { status: 409 })
     }
@@ -161,14 +156,17 @@ export async function POST(req: NextRequest) {
     const compositeScore = computeCompositeTrustScore(knowledge, vibes)
 
     const review: TrustReview = {
-      id: `trust-${reviewerId}-${reviewedUserId}-${body.runId}`,
+      id: `trust-${reviewerId}-${body.runId}-${reviewedMembershipId}`,
       reviewerId,
-      reviewedUserId,
+      reviewedMembershipId,
       runId: body.runId,
       knowledge,
       vibes,
       compositeScore,
       createdAt: new Date().toISOString(),
+    }
+    if (reviewedUserId) {
+      review.reviewedUserId = reviewedUserId
     }
 
     await saveTrustReview(review)

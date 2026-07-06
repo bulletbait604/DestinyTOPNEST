@@ -44,7 +44,7 @@ export default function PendingVotePrompt({ darkMode, pending, onGoToActivities,
         <p className={cn('text-sm leading-relaxed mb-4', t.body)}>
           You have verified activities that still need your input. Head to{' '}
           <span className="text-amber-200 font-medium">Previous Activities</span> to pick MVPs and
-          rank randos under Unranked Runs (Knowledge + Vibes stay private).
+          rank every fireteam member under Unranked Runs (Knowledge + Vibes stay private).
         </p>
 
         <ul className="space-y-2 mb-5">

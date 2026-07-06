@@ -17,4 +17,5 @@ export const DESTINY_COLLECTIONS = {
   mvpVotes: 'destiny_mvp_votes',
   adminActivity: 'destiny_admin_activity',
   leaderboardAdjustments: 'destiny_leaderboard_adjustments',
+  weeklyLootIcons: 'destiny_weekly_loot_icons',
 } as const

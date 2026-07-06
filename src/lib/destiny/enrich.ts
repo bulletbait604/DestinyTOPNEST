@@ -28,6 +28,7 @@ import {
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
 import { activityIconUrlForName, pantheonActivityIconUrl } from '@/lib/destiny/activityIconPaths'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
+import { getOrBuildWeeklyLootIcons } from '@/lib/destiny/weeklyLootIcons'
 import { resolveArmorSetBonusesFromPieces } from '@/lib/destiny/armorSetBonuses'
 
 function activityIconUrl(name: string, resolved?: { iconUrl?: string }): string | undefined {
@@ -211,6 +212,23 @@ export async function buildWeeklyResetInfo(): Promise<WeeklyResetInfo> {
     Promise.all(state.featuredDungeons.map((d) => resolveActivity(d.name))),
   ])
 
+  const featuredRaids = state.featuredRaids.map((r, i) => ({
+    ...r,
+    hash: raidIcons[i]?.hash ?? activityCatalogLookup(r.name)?.hash,
+    iconUrl: activityIconUrl(r.name, raidIcons[i]),
+  }))
+  const featuredDungeons = state.featuredDungeons.map((d, i) => ({
+    ...d,
+    hash: dungeonIcons[i]?.hash ?? activityCatalogLookup(d.name)?.hash,
+    iconUrl: activityIconUrl(d.name, dungeonIcons[i]),
+  }))
+
+  const activityNames = [
+    ...featuredRaids.map((r) => r.name),
+    ...featuredDungeons.map((d) => d.name),
+  ]
+  const lootByActivity = await getOrBuildWeeklyLootIcons(state.weekStart, state.resetAt, activityNames)
+
   return {
     resetAt: state.resetAt,
     nextResetAt: state.nextResetAt,
@@ -220,16 +238,9 @@ export async function buildWeeklyResetInfo(): Promise<WeeklyResetInfo> {
     pantheon: state.pantheon,
     pantheonIconUrl: pantheonActivityIconUrl(state.pantheon),
     resetTimeLabel: state.resetTimeLabel,
-    featuredRaids: state.featuredRaids.map((r, i) => ({
-      ...r,
-      hash: raidIcons[i]?.hash ?? activityCatalogLookup(r.name)?.hash,
-      iconUrl: activityIconUrl(r.name, raidIcons[i]),
-    })),
-    featuredDungeons: state.featuredDungeons.map((d, i) => ({
-      ...d,
-      hash: dungeonIcons[i]?.hash ?? activityCatalogLookup(d.name)?.hash,
-      iconUrl: activityIconUrl(d.name, dungeonIcons[i]),
-    })),
+    featuredRaids,
+    featuredDungeons,
+    lootByActivity,
   }
 }
 

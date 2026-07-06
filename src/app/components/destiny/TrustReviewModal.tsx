@@ -11,7 +11,7 @@ interface Props {
   runId: string
   activityName: string
   displayName: string
-  siteUserId: string
+  siteUserId?: string
   membershipId: string
   onClose: () => void
   onSubmitted: () => void

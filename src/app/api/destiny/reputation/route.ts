@@ -86,10 +86,16 @@ export async function POST(req: NextRequest) {
     ])
     const membershipMap = usersByMembershipMap(Array.from(usersById.values()))
 
+    const linkedUser = Array.from(membershipMap.values()).find((user) => user.userId === reviewedUserId)
+    const resolvedMembershipId = body.reviewedBungieMembershipId ?? linkedUser?.bungieMembershipId
+    if (!resolvedMembershipId) {
+      return NextResponse.json({ error: 'Could not resolve teammate membership' }, { status: 400 })
+    }
+
     const validation = validateReviewSubmission(
       reviewerId,
       stored?.bungieMembershipId,
-      reviewedUserId,
+      resolvedMembershipId,
       body.runId,
       runs,
       membershipMap

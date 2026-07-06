@@ -70,7 +70,7 @@ export default function UnrankedRunsSection({ darkMode }: Props) {
         <Users className="w-4 h-4 text-violet-400/80" />
         <SectionTitle
           title="Unranked Runs"
-          subtitle="Rate fireteam randos on Knowledge + Vibes. Individual votes stay private — only Trust Rank shows."
+          subtitle="Rate every fireteam member on Knowledge + Vibes. Individual votes stay private — only Trust Rank shows."
           darkMode={darkMode}
         />
       </div>
@@ -164,7 +164,7 @@ export default function UnrankedRunsSection({ darkMode }: Props) {
                               </p>
                               <p className={cn('text-[11px] capitalize', t.muted)}>
                                 {teammate.characterClass ?? 'guardian'}
-                                {!teammate.siteUserId && !teammate.isSelf ? ' · not on Top Nest' : ''}
+                                {!teammate.siteUserId && !teammate.isSelf ? ' · not on Top Nest yet' : ''}
                               </p>
                             </div>
                             {teammate.isSelf ? (
@@ -178,7 +178,7 @@ export default function UnrankedRunsSection({ darkMode }: Props) {
                             )}
                           </div>
 
-                          {teammate.canReview && !teammate.alreadyReviewed && teammate.siteUserId ? (
+                          {teammate.canReview && !teammate.alreadyReviewed ? (
                             <TrustReviewVoteForm
                               darkMode={darkMode}
                               runId={run.runId}

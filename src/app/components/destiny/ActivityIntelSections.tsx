@@ -1,7 +1,7 @@
 'use client'
 
 import { Sparkles } from 'lucide-react'
-import type { FeaturedActivity } from '@/lib/destiny/types'
+import type { FeaturedActivity, WeeklyActivityLootSnapshot } from '@/lib/destiny/types'
 import type { ActivityLootDrop, ActivityLootIntel } from '@/lib/destiny/activityLoot'
 import type { ActivityArmorSet } from '@/lib/destiny/activityArmorSets'
 import { activityIntel } from '@/lib/destiny/activityIntel'
@@ -17,8 +17,12 @@ function lootChipClass(kind: ActivityLootDrop['kind']) {
   return 'd2-loot-chip-legendary'
 }
 
-function LootDropChip({ drop }: { drop: ActivityLootDrop }) {
-  const iconRef = lootDropIconRef(drop)
+function LootDropChip({
+  drop,
+}: {
+  drop: ActivityLootDrop | WeeklyActivityLootSnapshot['drops'][number]
+}) {
+  const iconRef = 'iconRef' in drop ? drop.iconRef : lootDropIconRef(drop)
 
   return (
     <div className={cn('d2-loot-chip', lootChipClass(drop.kind))}>
@@ -36,7 +40,7 @@ function LootDropChip({ drop }: { drop: ActivityLootDrop }) {
   )
 }
 
-export function ActivityLootSection({ loot }: { loot: ActivityLootIntel }) {
+export function ActivityLootSection({ loot }: { loot: WeeklyActivityLootSnapshot | ActivityLootIntel }) {
   const exotics = loot.drops.filter((d) => d.kind === 'exotic' || d.kind === 'catalyst')
   const legendaries = loot.drops.filter((d) => d.kind === 'legendary')
 
@@ -78,13 +82,17 @@ export function ActivityIntelSections({
   resetsIn,
   armorSet,
   darkMode = true,
+  lootIntel,
 }: {
   activity: FeaturedActivity
   resetsIn?: string
   armorSet?: ActivityArmorSet | null
   darkMode?: boolean
+  /** Pre-resolved loot icons from weekly Mongo snapshot (preferred over client lookup). */
+  lootIntel?: WeeklyActivityLootSnapshot | null
 }) {
   const intel = activityIntel({ ...activity, resetsIn: activity.resetsIn ?? resetsIn })
+  const loot = lootIntel ?? intel.loot
 
   return (
     <div className="tn-weekly-activity-intel-body">
@@ -94,7 +102,7 @@ export function ActivityIntelSections({
         </div>
       ) : null}
       <p className="d2-wiki-box-summary-text">{intel.summary}</p>
-      {intel.loot ? <ActivityLootSection loot={intel.loot} /> : null}
+      {loot ? <ActivityLootSection loot={loot} /> : null}
       <ul className="d2-wiki-box-tips">
         {intel.tips.map((tip) => (
           <li key={tip}>{tip}</li>

@@ -11,7 +11,7 @@ export const LEADERBOARD_RULES_BULLETS = [
   'Points only for verified full completions',
   '2 pts per clan member · 5 pts per Random Fireteam Member (found through site fireteam finder) (raid max 2, dungeon max 1)',
   'Pantheon squads: each boss encounter counts as one raid worth of points for the fireteam',
-  'MVP votes: +1 pt for voting, +3 pts for the Guardian you pick (Top Guardians board)',
+  'MVP votes: pick one MVP per verified run in Previous Activities (Top Guardians ranked by MVP crowns)',
   'Checkpoint runs tracked but not scored unless admin approved',
   'Suspicious runs blocked until review (score 70+)',
 ] as const

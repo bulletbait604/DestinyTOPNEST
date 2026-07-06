@@ -82,7 +82,7 @@ export default function ProfilePanel({
     { label: 'Raid pts', value: profile.raidPoints },
     { label: 'Dungeon pts', value: profile.dungeonPoints },
     { label: 'Pantheon pts', value: profile.pantheonPoints ?? 0 },
-    { label: 'Guardian pts', value: profile.guardianPoints ?? profile.fullClanPoints ?? 0 },
+    { label: 'MVP crowns', value: profile.guardianPoints ?? 0 },
     { label: 'Verified clears', value: profile.verifiedClears },
   ]
 

@@ -26,7 +26,7 @@ const BOARDS: {
     category: 'top_guardians',
     title: 'Commanders / Sherpas',
     defaultPeriod: 'monthly',
-    footnote: 'Top Guardians crowned from MVP votes each month.',
+    footnote: 'Top Guardians crowned from MVP votes received each month.',
   },
 ]
 

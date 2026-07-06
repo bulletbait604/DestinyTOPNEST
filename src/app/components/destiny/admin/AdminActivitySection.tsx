@@ -18,6 +18,7 @@ const KIND_LABELS: Record<AdminActivityEntry['kind'], string> = {
   prize_claim: 'Prize claim',
   season_finalize: 'Season',
   leaderboard_adjust: 'Leaderboard',
+  loot_icons_rebuild: 'Loot icons',
 }
 
 const KIND_TONE: Record<AdminActivityEntry['kind'], 'red' | 'gold' | 'purple' | 'green' | 'blue' | 'neutral'> = {
@@ -31,6 +32,7 @@ const KIND_TONE: Record<AdminActivityEntry['kind'], 'red' | 'gold' | 'purple' | 
   prize_claim: 'purple',
   season_finalize: 'gold',
   leaderboard_adjust: 'gold',
+  loot_icons_rebuild: 'blue',
 }
 
 function formatWhen(iso: string): string {

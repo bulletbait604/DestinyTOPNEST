@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import type { FeaturedActivity } from '@/lib/destiny/types'
+import type { FeaturedActivity, WeeklyActivityLootSnapshot } from '@/lib/destiny/types'
 import HomeLeaderboardCard from '@/app/components/destiny/HomeLeaderboardCard'
 import {
   GlassCard,
@@ -35,7 +35,8 @@ function rotationActivityCards(
   pantheonName: string | undefined,
   pantheonIconUrl: string | undefined,
   resetsIn: string,
-  darkMode: boolean
+  darkMode: boolean,
+  lootByActivity?: Record<string, WeeklyActivityLootSnapshot>
 ) {
   const cards: {
     label: string
@@ -70,6 +71,7 @@ function rotationActivityCards(
         kind={c.kind}
         resetsIn={resetsIn}
         darkMode={darkMode}
+        lootIntel={lootByActivity?.[c.activity.name]}
       />
     ))
 }
@@ -213,7 +215,8 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
               data.weeklyReset.pantheon,
               data.weeklyReset.pantheonIconUrl,
               resetsInLabel,
-              darkMode
+              darkMode,
+              data.weeklyReset.lootByActivity
             )}
           </div>
         </div>

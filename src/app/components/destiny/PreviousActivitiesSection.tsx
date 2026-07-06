@@ -149,7 +149,7 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
                 {expanded ? (
                   <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-2">
                     <p className={cn('text-xs uppercase tracking-wide', t.caption)}>
-                      Fireteam — select your MVP (+3 pts for them, +1 pt for you)
+                      Fireteam — pick one MVP for this run
                     </p>
                     {run.guardians.map((guardian) => (
                       <div

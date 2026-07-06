@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       vote,
-      message: `MVP recorded — you earned ${MVP_VOTER_POINTS} pt, ${validation.member.displayName} earned ${MVP_SELECTED_POINTS} pts.`,
+      message: `${validation.member.displayName} is your MVP for this run.`,
     })
   })
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Check, Gift, Loader2, Trophy, X } from 'lucide-react'
+import { Check, Gift, ImageIcon, Loader2, Trophy, X } from 'lucide-react'
 import type { PrizeClaim, SeasonWinner } from '@/lib/destiny/types'
 import { GlassCard, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -20,14 +20,34 @@ export default function AdminSeasonSection({
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<string | null>(null)
   const [finalizing, setFinalizing] = useState(false)
+  const [lootStatus, setLootStatus] = useState<{
+    weekLabel?: string
+    builtAt?: string
+    activityCount?: number
+    dropCount?: number
+    missingIconCount?: number
+    featuredActivities?: string[]
+  } | null>(null)
+  const [rebuildingLoot, setRebuildingLoot] = useState(false)
   const t = getDestinyTheme(darkMode)
+
+  const loadLootStatus = useCallback(async () => {
+    const res = await fetch('/api/destiny/admin/loot-icons', { credentials: 'include' })
+    if (res.ok) {
+      const json = await res.json()
+      setLootStatus(json)
+    }
+  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/destiny/admin/season', { credentials: 'include' })
-      if (res.ok) {
-        const json = await res.json()
+      const [seasonRes] = await Promise.all([
+        fetch('/api/destiny/admin/season', { credentials: 'include' }),
+        loadLootStatus(),
+      ])
+      if (seasonRes.ok) {
+        const json = await seasonRes.json()
         setPendingClaims(json.pendingClaims ?? [])
         setHallPreview(json.hallOfFamePreview ?? [])
         setCanFinalize(Boolean(json.canFinalize))
@@ -35,7 +55,7 @@ export default function AdminSeasonSection({
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [loadLootStatus])
 
   useEffect(() => {
     void load()
@@ -54,6 +74,25 @@ export default function AdminSeasonSection({
       onAction?.()
     } finally {
       setFinalizing(false)
+    }
+  }
+
+  async function rebuildLootIcons() {
+    setRebuildingLoot(true)
+    try {
+      const res = await fetch('/api/destiny/admin/loot-icons', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'rebuild' }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setLootStatus(json)
+      }
+      onAction?.()
+    } finally {
+      setRebuildingLoot(false)
     }
   }
 
@@ -112,6 +151,50 @@ export default function AdminSeasonSection({
             ))}
           </div>
         )}
+      </GlassCard>
+
+      <GlassCard darkMode={darkMode}>
+        <div className="flex items-center gap-2 mb-2">
+          <ImageIcon className="w-5 h-5 text-sky-400" />
+          <SectionTitle
+            title="Weekly loot icons"
+            subtitle="Rebuild home-page drop icons from the Bungie manifest"
+            darkMode={darkMode}
+          />
+        </div>
+        {lootStatus ? (
+          <div className="space-y-2">
+            <p className={cn('text-xs', t.muted)}>
+              {lootStatus.weekLabel ?? 'Current week'}
+              {lootStatus.builtAt
+                ? ` · Last built ${new Date(lootStatus.builtAt).toLocaleString()}`
+                : ' · Not built yet'}
+            </p>
+            <p className={cn('text-xs', t.body)}>
+              {lootStatus.activityCount ?? 0} activities · {lootStatus.dropCount ?? 0} drops
+              {(lootStatus.missingIconCount ?? 0) > 0 ? (
+                <span className="text-amber-300"> · {lootStatus.missingIconCount} missing icons</span>
+              ) : null}
+            </p>
+            {lootStatus.featuredActivities?.length ? (
+              <p className={cn('text-xs', t.muted)}>{lootStatus.featuredActivities.join(' · ')}</p>
+            ) : null}
+          </div>
+        ) : (
+          <p className={t.muted}>No snapshot loaded for this reset week.</p>
+        )}
+        <button
+          type="button"
+          disabled={rebuildingLoot}
+          onClick={() => void rebuildLootIcons()}
+          className={cn(
+            'mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium',
+            'bg-sky-400/20 text-sky-100 ring-1 ring-sky-400/30'
+          )}
+        >
+          {rebuildingLoot ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          Rebuild loot icons
+        </button>
       </GlassCard>
 
       <GlassCard darkMode={darkMode}>

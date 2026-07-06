@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 interface Props {
   darkMode: boolean
   runId: string
-  siteUserId: string
+  siteUserId?: string
   membershipId: string
   displayName: string
   compact?: boolean
@@ -46,7 +46,7 @@ export default function TrustReviewVoteForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           reviewedUserId: siteUserId,
-          reviewedBungieMembershipId: membershipId,
+          reviewedMembershipId: membershipId,
           runId,
           knowledge,
           vibes,

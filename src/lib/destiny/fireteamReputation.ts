@@ -35,16 +35,24 @@ export function userParticipatedInRun(
   return run.teamMembers.some((m) => m.membershipId === reviewerMembershipId)
 }
 
+export function trustReviewKey(runId: string, membershipId: string): string {
+  return `${runId}:${membershipId}`
+}
+
 /** Verified runs where the reviewer can rate linked Top Nest teammates (Phase 5). */
 export function buildReviewableRuns(
   reviewerId: string,
   reviewerMembershipId: string | undefined,
   runs: RunRecord[],
   usersByMembershipId: Map<string, StoredDestinyUser>,
-  reviewsByReviewer: Array<{ runId?: string; reviewedUserId: string }>
+  reviewsByReviewer: Array<{ runId?: string; reviewedUserId?: string; reviewedMembershipId?: string }>
 ): ReviewableRun[] {
   const reviewedKeys = new Set(
-    reviewsByReviewer.map((r) => `${r.runId ?? ''}:${r.reviewedUserId}`)
+    reviewsByReviewer.map((r) =>
+      r.reviewedMembershipId
+        ? trustReviewKey(r.runId ?? '', r.reviewedMembershipId)
+        : `${r.runId ?? ''}:${r.reviewedUserId ?? ''}`
+    )
   )
 
   const results: ReviewableRun[] = []
@@ -89,10 +97,14 @@ export function buildUnrankedRuns(
   reviewerMembershipId: string | undefined,
   runs: RunRecord[],
   usersByMembershipId: Map<string, StoredDestinyUser>,
-  reviewsByReviewer: Array<{ runId?: string; reviewedUserId: string }>
+  reviewsByReviewer: Array<{ runId?: string; reviewedUserId?: string; reviewedMembershipId?: string }>
 ): UnrankedRun[] {
   const reviewedKeys = new Set(
-    reviewsByReviewer.map((r) => `${r.runId ?? ''}:${r.reviewedUserId}`)
+    reviewsByReviewer.map((r) =>
+      r.reviewedMembershipId
+        ? trustReviewKey(r.runId ?? '', r.reviewedMembershipId)
+        : `${r.runId ?? ''}:${r.reviewedUserId ?? ''}`
+    )
   )
 
   const results: UnrankedRun[] = []
@@ -105,9 +117,9 @@ export function buildUnrankedRuns(
       const isSelf = member.membershipId === reviewerMembershipId
       const linked = usersByMembershipId.get(member.membershipId)
       const siteUserId = linked?.userId
-      const canReview = Boolean(!isSelf && siteUserId && siteUserId !== reviewerId)
+      const canReview = !isSelf
       const alreadyReviewed = canReview
-        ? reviewedKeys.has(`${run.id}:${siteUserId}`)
+        ? reviewedKeys.has(trustReviewKey(run.id, member.membershipId))
         : false
 
       return {
@@ -146,13 +158,17 @@ export function buildUnrankedRuns(
 export function validateReviewSubmission(
   reviewerId: string,
   reviewerMembershipId: string | undefined,
-  reviewedUserId: string,
+  reviewedMembershipId: string,
   runId: string | undefined,
   runs: RunRecord[],
-  usersByMembershipId: Map<string, StoredDestinyUser>
-): { ok: true } | { ok: false; error: string } {
+  _usersByMembershipId: Map<string, StoredDestinyUser>
+): { ok: true; member: RunRecord['teamMembers'][number] } | { ok: false; error: string } {
   if (!runId) {
     return { ok: false, error: 'runId required for fireteam reviews' }
+  }
+
+  if (reviewedMembershipId === reviewerMembershipId) {
+    return { ok: false, error: 'Cannot review yourself' }
   }
 
   const run = runs.find((r) => r.id === runId)
@@ -166,15 +182,12 @@ export function validateReviewSubmission(
     return { ok: false, error: 'You must have been on this fireteam to submit a review' }
   }
 
-  const onFireteam = run.teamMembers.some((m) => {
-    const linked = usersByMembershipId.get(m.membershipId)
-    return linked?.userId === reviewedUserId
-  })
-  if (!onFireteam) {
+  const member = run.teamMembers.find((m) => m.membershipId === reviewedMembershipId)
+  if (!member) {
     return { ok: false, error: 'Reviewed player was not on this fireteam' }
   }
 
-  return { ok: true }
+  return { ok: true, member }
 }
 
 export function usersByMembershipMap(users: StoredDestinyUser[]): Map<string, StoredDestinyUser> {
