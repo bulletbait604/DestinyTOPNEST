@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
 import type { ManifestEntityType } from '@/lib/destiny/itemsCatalog'
+import { isManifestEntityType } from '@/lib/destiny/itemsCatalog'
 import { enrichIconRef, resolveActivity, resolveByName, resolveManifestHash } from '@/lib/destiny/manifest'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +22,12 @@ export async function GET(req: NextRequest) {
     const params = req.nextUrl.searchParams
     const name = sanitizeName(params.get('name'))
     const hashRaw = params.get('hash')
-    const entity = params.get('entity') as ManifestEntityType | null
+    const entityParam = params.get('entity')
+    const entity = isManifestEntityType(entityParam) ? entityParam : null
+
+    if (entityParam && !entity) {
+      return NextResponse.json({ error: 'Invalid entity type' }, { status: 400 })
+    }
 
     try {
       if (hashRaw && entity) {

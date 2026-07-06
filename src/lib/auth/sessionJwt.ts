@@ -1,4 +1,5 @@
 ﻿import crypto from 'crypto'
+import { timingSafeEqualString } from '@/lib/auth/cryptoCompare'
 
 function base64urlEncode(buf: Buffer): string {
   return buf.toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
@@ -34,7 +35,7 @@ export function verifySessionJwt(
   const expected = base64urlEncode(
     crypto.createHmac('sha256', secret).update(`${headerB64}.${bodyB64}`).digest()
   )
-  if (expected !== sig) return null
+  if (!timingSafeEqualString(expected, sig)) return null
   const padded = bodyB64.replace(/-/g, '+').replace(/_/g, '/')
   const padLen = (4 - (padded.length % 4)) % 4
   const bodyJson = Buffer.from(padded + '='.repeat(padLen), 'base64').toString('utf8')

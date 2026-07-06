@@ -90,11 +90,12 @@ export async function signSessionCookieForUser(
   if (!secret) return false
 
   const normalized = siteUserId.toLowerCase()
+  const cappedRole = capOwnerRole(normalized, role)
   const jwt = signSessionJwt(
     {
       sub: normalized,
       name: displayName,
-      role,
+      role: cappedRole,
       provider: 'bungie',
     },
     secret,

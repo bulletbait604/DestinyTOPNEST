@@ -110,6 +110,10 @@ export function bungieOAuthRedirectUriFromRequest(req?: NextRequest): string {
     return normalizeBungieRedirectUri(`${canonicalOrigin}${BUNGIE_OAUTH_CALLBACK_PATH}`)
   }
 
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+    return normalizeBungieRedirectUri(`${TOPNEST_PRODUCTION_ORIGIN}${BUNGIE_OAUTH_CALLBACK_PATH}`)
+  }
+
   const requestOrigin = requestPublicOrigin(req)
   if (requestOrigin) {
     return normalizeBungieRedirectUri(`${requestOrigin}${BUNGIE_OAUTH_CALLBACK_PATH}`)

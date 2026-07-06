@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
         message: `Synced ${result.synced} run(s) · ${result.builds} build(s) captured.`,
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Sync failed'
-      return NextResponse.json({ error: message }, { status: 502 })
+      console.error('[destiny/runs/sync]', error)
+      return NextResponse.json({ error: 'Run sync failed. Try again in a few minutes.' }, { status: 502 })
     }
   })
 }

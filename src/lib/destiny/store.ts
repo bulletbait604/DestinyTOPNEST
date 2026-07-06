@@ -26,6 +26,7 @@ import { ACTIVE_SEASON } from '@/lib/destiny/seasonConfig'
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
 import { filterRunsFromTodayPacific } from '@/lib/destiny/runDates'
+import type { AdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
 import type {
   AdminReviewRecord,
   BuildIntelligenceCard,
@@ -648,7 +649,7 @@ export async function queueAdminReview(record: AdminReviewRecord): Promise<void>
 
 export async function resolveAdminReview(
   reviewId: string,
-  decision: string,
+  decision: AdminReviewDecision,
   adminId: string,
   notes?: string
 ): Promise<boolean> {
@@ -661,7 +662,11 @@ export async function resolveAdminReview(
   if (!review) return false
 
   const status =
-    decision === 'approve' ? 'approved' : decision === 'reject' ? 'rejected' : 'approved'
+    decision === 'reject'
+      ? 'rejected'
+      : decision === 'approve' || decision === 'checkpoint_non_scoring'
+        ? 'approved'
+        : 'rejected'
 
   await database.collection(DESTINY_COLLECTIONS.adminReviews).updateOne(
     { id: reviewId },
@@ -679,11 +684,11 @@ export async function resolveAdminReview(
 
   if (review.runId) {
     const verificationStatus =
-      decision === 'approve'
-        ? 'verified'
-        : decision === 'reject'
-          ? 'rejected'
-          : 'verified'
+      decision === 'reject'
+        ? 'rejected'
+        : decision === 'approve' || decision === 'checkpoint_non_scoring'
+          ? 'verified'
+          : 'rejected'
 
     const pointsUpdate =
       decision === 'approve' && review.run

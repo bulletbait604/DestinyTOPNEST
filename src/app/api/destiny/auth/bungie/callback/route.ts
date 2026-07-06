@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth, AuthError } from '@/lib/auth/verifyAuth'
+import { safeReturnPath } from '@/lib/auth/safeReturnPath'
 import { ensureSiteUserRecord, signSessionCookieForUser } from '@/lib/auth/issueSession'
 import { getSessionSecret } from '@/lib/auth/sessionJwt'
 import {
@@ -41,10 +42,7 @@ function redirectAfterOAuth(
   req: NextRequest,
   returnPath?: string
 ): NextResponse {
-  const safeReturn =
-    returnPath && returnPath.startsWith('/') && !returnPath.startsWith('//')
-      ? returnPath
-      : defaultBungieReturnPath()
+  const safeReturn = safeReturnPath(returnPath, redirectBase(req), defaultBungieReturnPath())
 
   const target = new URL(safeReturn, redirectBase(req))
   for (const [k, v] of Object.entries(params)) {
@@ -126,7 +124,7 @@ export async function GET(req: NextRequest) {
       return redirectAfterOAuth({ bungie: 'error', message: 'invalid_state' }, req, returnPath)
     }
 
-    returnPath = stateRecord.returnPath
+    returnPath = safeReturnPath(stateRecord.returnPath, redirectBase(req), defaultBungieReturnPath())
 
     const redirectUri =
       stateRecord.redirectUri ||

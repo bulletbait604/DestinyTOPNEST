@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import { timingSafeEqualString } from '@/lib/auth/cryptoCompare'
 import { getSessionSecret } from '@/lib/auth/sessionJwt'
 
 export interface BungieOAuthStatePayload {
@@ -52,7 +53,7 @@ export function verifySignedBungieOAuthState(token: string): BungieOAuthStatePay
 
   const [data, sig] = parts
   const expected = base64urlEncode(crypto.createHmac('sha256', secret).update(data).digest())
-  if (expected !== sig) return null
+  if (!timingSafeEqualString(expected, sig)) return null
 
   try {
     const payload = JSON.parse(base64urlDecode(data).toString('utf8')) as BungieOAuthStatePayload

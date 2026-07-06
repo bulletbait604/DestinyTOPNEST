@@ -15,6 +15,10 @@ export function middleware(request: NextRequest) {
     response.headers.set('Cache-Control', 'no-store')
   }
 
+  if (request.nextUrl.protocol === 'https:') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  }
+
   // Allow Bungie CDN assets; keep default-src tight for API + app shell.
   response.headers.set(
     'Content-Security-Policy',

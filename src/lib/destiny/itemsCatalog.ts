@@ -15,6 +15,24 @@ export type ManifestEntityType =
   | 'DestinyPlugSetDefinition'
   | 'DestinyPresentationNodeDefinition'
 
+const MANIFEST_ENTITY_TYPES: ManifestEntityType[] = [
+  'DestinyInventoryItemDefinition',
+  'DestinyActivityDefinition',
+  'DestinyActivityModeDefinition',
+  'DestinySandboxPerkDefinition',
+  'DestinyClassDefinition',
+  'DestinyDamageTypeDefinition',
+  'DestinyStatDefinition',
+  'DestinyEquipableItemSetDefinition',
+  'DestinyPlugSetDefinition',
+  'DestinyPresentationNodeDefinition',
+]
+
+export function isManifestEntityType(value: string | null | undefined): value is ManifestEntityType {
+  if (!value) return false
+  return MANIFEST_ENTITY_TYPES.includes(value as ManifestEntityType)
+}
+
 export interface CatalogEntry {
   hash: number
   entity: ManifestEntityType

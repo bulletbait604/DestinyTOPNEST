@@ -1,9 +1,9 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth, AuthError } from '@/lib/auth/verifyAuth'
+import { safeReturnPath } from '@/lib/auth/safeReturnPath'
 import { buildBungieAuthorizeUrl } from '@/lib/destiny/bungieOAuth'
 import { createBungieOAuthState } from '@/lib/destiny/bungieOAuthState'
 import { bungieOAuthConfigured, bungieOAuthRedirectUriFromRequest } from '@/lib/destiny/env'
-import { defaultBungieReturnPath } from '@/lib/routing/tabUrl'
 import { getSessionSecret } from '@/lib/auth/sessionJwt'
 import { sessionCookieSecure } from '@/lib/sessionCookie'
 
@@ -11,34 +11,32 @@ export const dynamic = 'force-dynamic'
 
 const LOGIN_FLOW_USER = 'login'
 
-function startError(req: NextRequest, message: string, status = 503): NextResponse {
-  return NextResponse.json(
-    {
-      error: message,
-      redirectUri: bungieOAuthRedirectUriFromRequest(req),
-    },
-    { status }
-  )
+function startError(message: string, status = 503): NextResponse {
+  return NextResponse.json({ error: message }, { status })
+}
+
+function requestOrigin(req: NextRequest): string {
+  try {
+    return new URL(req.url).origin
+  } catch {
+    return 'http://localhost:3000'
+  }
 }
 
 export async function GET(req: NextRequest) {
   if (!bungieOAuthConfigured()) {
     return startError(
-      req,
       'Bungie OAuth is not configured. Set DESTINY_API, BUNGIE_OAUTH_CLIENT_ID, and BUNGIE_OAUTH_CLIENT_SECRET on Vercel.'
     )
   }
 
   if (!getSessionSecret()) {
-    return startError(req, 'SESSION_SECRET (or JWT_SECRET) is not configured on the server.')
+    return startError('SESSION_SECRET (or JWT_SECRET) is not configured on the server.')
   }
 
   const redirectUri = bungieOAuthRedirectUriFromRequest(req)
   const returnParam = req.nextUrl.searchParams.get('return')
-  const returnPath =
-    returnParam && returnParam.startsWith('/') && !returnParam.startsWith('//')
-      ? returnParam
-      : defaultBungieReturnPath()
+  const returnPath = safeReturnPath(returnParam, requestOrigin(req))
 
   let userId = LOGIN_FLOW_USER
   try {
@@ -47,7 +45,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     if (!(error instanceof AuthError)) {
       console.error('[destiny/auth/bungie/start]', error)
-      return startError(req, 'Failed to start Bungie authorization', 500)
+      return startError('Failed to start Bungie authorization', 500)
     }
   }
 
@@ -74,12 +72,8 @@ export async function GET(req: NextRequest) {
     console.error('[destiny/auth/bungie/start]', error)
     const detail = error instanceof Error ? error.message : 'unknown'
     if (detail.includes('SESSION_SECRET')) {
-      return startError(req, detail)
+      return startError('Session signing is not configured on the server.')
     }
-    return startError(req, 'Failed to start Bungie authorization', 500)
+    return startError('Failed to start Bungie authorization', 500)
   }
-}
-
-export async function HEAD(req: NextRequest) {
-  return NextResponse.json({ redirectUri: bungieOAuthRedirectUriFromRequest(req) })
 }

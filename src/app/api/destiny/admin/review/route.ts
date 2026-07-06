@@ -1,6 +1,8 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyStaffHandler } from '@/lib/destiny/apiHandler'
+import type { AdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
+import { isAdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
 import { getAdminReviewQueue, resolveAdminReview } from '@/lib/destiny/store'
 
 export const dynamic = 'force-dynamic'
@@ -24,10 +26,16 @@ export async function POST(req: NextRequest) {
     if (!reviewId || !decision) {
       return NextResponse.json({ error: 'reviewId and decision required' }, { status: 400 })
     }
+    if (!isAdminReviewDecision(decision)) {
+      return NextResponse.json(
+        { error: 'Invalid decision. Use approve, reject, or checkpoint_non_scoring.' },
+        { status: 400 }
+      )
+    }
 
     const ok = await resolveAdminReview(
       reviewId,
-      decision,
+      decision as AdminReviewDecision,
       authUser.username.toLowerCase(),
       notes
     )

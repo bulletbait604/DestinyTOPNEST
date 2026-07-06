@@ -4,7 +4,7 @@ import {
   getDestinyUserBySiteUserId,
   getValidAccessToken,
 } from '@/lib/destiny/destinyUserStore'
-import { bungieOAuthConfigured, bungieOAuthRedirectUriFromRequest } from '@/lib/destiny/env'
+import { bungieOAuthConfigured } from '@/lib/destiny/env'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +30,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       configured: bungieOAuthConfigured(),
-      redirectUri: bungieOAuthRedirectUriFromRequest(req),
       linked,
       tokenHealthy,
       needsReconnect: linked && !tokenHealthy,

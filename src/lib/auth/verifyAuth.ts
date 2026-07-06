@@ -83,7 +83,7 @@ async function verifyToken(token: string): Promise<VerifiedUser | null> {
       id: payload.sub,
       username,
       displayName,
-      role: ((payload.role as UserRole) || 'free') as UserRole,
+      role: 'free',
       email: typeof payload.email === 'string' ? payload.email : undefined,
       provider,
     }
@@ -137,11 +137,7 @@ export async function verifyAuth(req: NextRequest): Promise<VerifiedUser> {
     }
   }
 
-  if (dbUser.role) {
-    user.role = capOwnerRole(user.username, dbUser.role as UserRole)
-  } else if (user.role === 'owner' && !isAllowlistedOwner(user.username)) {
-    user.role = 'admin'
-  }
+  user.role = capOwnerRole(user.username, (dbUser.role as UserRole) ?? 'free')
 
   if (typeof dbUser.bungieDisplayName === 'string' && dbUser.bungieDisplayName.trim()) {
     user.displayName = dbUser.bungieDisplayName
