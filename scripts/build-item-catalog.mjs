@@ -179,6 +179,20 @@ const ITEM_NAMES = [
   'IKELOS_SMG_v1.0.1',
   'IKELOS_SG_v1.0.1',
   'IKELOS_SR_v1.0.1',
+  // Warlord's Ruin
+  'Buried Bloodline',
+  'Indebted Kindness',
+  'Vengeful Whisper',
+  'Dragoncult Sickle',
+  // Vesper's Host
+  'Ice Breaker',
+  'VS Chill Inhibitor',
+  'VS Gravitic Arrest',
+  'VS Pyroelectric Propellant',
+  // Salvation's Edge / Crown / Vow
+  'Euphony',
+  'Collective Obligation',
+  'Optative',
 ]
 
 const EMBLEM_HASHES = [29194593, 31953746, 54004489, 54004491, 19962737, 10493725]

@@ -12,6 +12,7 @@
     "catalog:items": "node scripts/build-item-catalog.mjs",
     "catalog:activities": "node scripts/build-activity-icon-paths.mjs",
     "catalog:all": "node scripts/build-activity-icon-paths.mjs && node scripts/build-item-catalog.mjs",
+    "catalog:audit-loot": "node scripts/audit-activity-loot-icons.mjs",
     "manifest:download": "node scripts/download-manifest-sqlite.mjs",
     "migrate:from-sdhq": "node scripts/migrate-from-sdhq.mjs",
     "poster:export": "node scripts/export-poster.mjs",

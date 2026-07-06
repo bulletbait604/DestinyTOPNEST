@@ -1,0 +1,61 @@
+/**
+ * Bungie inventory hashes for weekly loot UI items.
+ * Keep in sync with scripts/loot-icon-overrides.mjs — regenerate icons via:
+ *   node scripts/build-item-catalog.mjs
+ */
+export const LOOT_ICON_HASH_OVERRIDES: Record<string, number> = {
+  kingslayer: 1557274655,
+  'touch of malice catalyst': 1557274655,
+  "zaouli's wrath": 431721920,
+  "zaouli's bane": 431721920,
+  ballista: 2136808079,
+  heretic: 2136808079,
+  'the clever rat': 2191451996,
+  'perfect pitch': 2191451996,
+  incursion: 3460576091,
+  duality: 3460576091,
+  'dark age arsenal': 1715740932,
+  "warlord's spear": 1715740932,
+  "vesper's host": 1220605797,
+  'icefall mantle': 1220605797,
+  "rufus's fire": 3153641810,
+  thoughtless: 3153641810,
+  "omnigul's grieve": 120706239,
+  'word of crota': 120706239,
+  'abyssal defiant': 457816674,
+  'abyss defiant': 457816674,
+  "nimrod's hunter": 184990290,
+  "acacia's dejection": 184990290,
+  "zealot's robe": 503192607,
+  "zealot's reward": 820827267,
+  'prime zealot cuirass': 503192607,
+  'reckless endangerment': 1569384609,
+  'xenophage catalyst': 2113691818,
+  navigator: 1441805468,
+  'the navigator': 1441805468,
+  'ikelos smg v1.0.1': 1723472487,
+  'ikelos shotgun v1.0.1': 1887808042,
+  'ikelos sniper v1.0.1': 847450546,
+  'ikelos_smg_v1.0.1.': 1723472487,
+  'ikelos_sg_v1.0.1.': 1887808042,
+  'ikelos_sr_v1.0.1.': 847450546,
+  'ikelos smg v1.0.1.': 1723472487,
+  'ikelos sg v1.0.1.': 1887808042,
+  'ikelos sr v1.0.1.': 847450546,
+  'buried bloodline': 3886719505,
+  'indebted kindness': 3381450498,
+  'vengeful whisper': 839344841,
+  'dragoncult sickle': 3668817296,
+  'ice breaker': 1111334348,
+  'vs chill inhibitor': 1762785662,
+  'vs gravitic arrest': 93061497,
+  'vs pyroelectric propellant': 4232480042,
+  euphony: 3284383335,
+  'collective obligation': 3505113722,
+  optative: 2817683783,
+  "calus's selected": 2817683783,
+}
+
+export function lootIconHashOverride(name: string): number | undefined {
+  return LOOT_ICON_HASH_OVERRIDES[name.trim().toLowerCase()]
+}

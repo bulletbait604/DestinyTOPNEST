@@ -62,7 +62,7 @@ export const ITEM_CATALOG: Record<string, CatalogEntry> = {
   'divinity': { hash: 4103414242, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/c6aa03536fd68b5fca5ad6b83ea0cf1e.jpg' },
   'wish-keeper': { hash: 682995262, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/6b47d872840188bc913d6307fa537c3c.jpg' },
   'cataclysmic': { hash: 517759838, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/a180748fde0e20e450b841663c388833.jpg' },
-  'calus\'s selected': { hash: 1422712818, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/56622ba132760e617d902977aadf41f7.jpg' },
+  'calus\'s selected': { hash: 2817683783, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/5a61698581ee51effba22757fa672038.jpg' },
   'null composure': { hash: 182589170, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/8c750beedde6de756d0b194f262e3372.jpg' },
   'stormchaser': { hash: 206914820, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/0b3c602c10a80fcc5c688f6298e53fc6.jpg' },
   'submission': { hash: 73105274, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/4d596b18d607700aca914f348fa188f6.jpg' },
@@ -196,6 +196,17 @@ export const ITEM_CATALOG: Record<string, CatalogEntry> = {
   'ikelos_smg_v1.0.1': { hash: 1723472487, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/fcb5c23bfb9ce953eae54a812aea6dcb.jpg' },
   'ikelos_sg_v1.0.1': { hash: 1887808042, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/cba43299108f3b5fc2d599b6ec81b3ec.jpg' },
   'ikelos_sr_v1.0.1': { hash: 847450546, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/79ab4d855d6dc199cec89af1480c14f9.jpg' },
+  'buried bloodline': { hash: 3886719505, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/fcae8edcd35227d35fca0a108d831840.jpg' },
+  'indebted kindness': { hash: 3381450498, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/352833d18ac3305cae2b0e026de06554.jpg' },
+  'vengeful whisper': { hash: 839344841, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/6e6730467f11f156beace778dc748bce.jpg' },
+  'dragoncult sickle': { hash: 3668817296, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/827efcc482b67373c1d854670fe861f5.jpg' },
+  'ice breaker': { hash: 1111334348, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/5f3f44c8ec720f4ece9a8903ae29df60.jpg' },
+  'vs chill inhibitor': { hash: 1762785662, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/6c1d34f6dcca37c6b4b8dde37f4c94ba.jpg' },
+  'vs gravitic arrest': { hash: 93061497, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/9eb673deb4b6c88634f99d69a1e4f6ff.jpg' },
+  'vs pyroelectric propellant': { hash: 4232480042, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/564561966f9448d71662e3d9905cc1c4.jpg' },
+  'euphony': { hash: 3284383335, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/fe16110003f0cc75145eed012458a667.jpg' },
+  'collective obligation': { hash: 3505113722, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/238ab90ba2f858ebb8a5a1797a13fdd4.jpg' },
+  'optative': { hash: 2817683783, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/5a61698581ee51effba22757fa672038.jpg' },
 }
 
 export function catalogLookup(name: string): CatalogEntry | undefined {

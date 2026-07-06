@@ -4,6 +4,7 @@ import { activityArmorSet, armorSetIconRef, armorSetLootMeta } from '@/lib/desti
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 import { catalogLookup } from '@/lib/destiny/itemsCatalog'
 import { itemIconPathFallback } from '@/lib/destiny/itemIconPaths'
+import { lootIconHashOverride } from '@/lib/destiny/lootIconHashOverrides'
 import type { DestinyIconRef } from '@/lib/destiny/types'
 
 export type LootRarity = 'exotic' | 'catalyst' | 'legendary'
@@ -282,12 +283,13 @@ export function lootDropLookupName(drop: ActivityLootDrop): string {
 /** Build an icon ref for a weekly loot drop (catalog + manifest fallback in UI). */
 export function lootDropIconRef(drop: ActivityLootDrop): DestinyIconRef {
   const catalogKey = lootDropLookupName(drop)
+  const hashOverride = lootIconHashOverride(catalogKey) ?? lootIconHashOverride(drop.name)
   const catalog = catalogLookup(catalogKey) ?? catalogLookup(drop.name)
   const iconPath = catalog?.iconPath ?? itemIconPathFallback(catalogKey) ?? itemIconPathFallback(drop.name)
 
   return {
     name: drop.name,
-    hash: catalog?.hash,
+    hash: hashOverride ?? catalog?.hash,
     iconUrl: iconPath ? buildBungieIconUrl(iconPath) : undefined,
     tierLabel: tierForKind(drop.kind),
     entityType: catalog?.entity ?? 'DestinyInventoryItemDefinition',

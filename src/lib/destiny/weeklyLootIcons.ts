@@ -13,7 +13,8 @@ import {
   type ActivityLootDrop,
 } from '@/lib/destiny/activityLoot'
 import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
-import { resolveByName } from '@/lib/destiny/manifest'
+import { resolveByName, resolveManifestHash } from '@/lib/destiny/manifest'
+import { lootIconHashOverride } from '@/lib/destiny/lootIconHashOverrides'
 import type { DestinyIconRef, WeeklyActivityLootSnapshot } from '@/lib/destiny/types'
 
 interface WeeklyLootIconsDoc {
@@ -53,11 +54,23 @@ function mergeIconRef(displayName: string, staticRef: DestinyIconRef, resolved: 
 
 async function resolveLootDropIconRef(drop: ActivityLootDrop): Promise<DestinyIconRef> {
   const staticRef = lootDropIconRef(drop)
+  const catalogKey = lootDropLookupName(drop)
+  const hashOverride = lootIconHashOverride(catalogKey) ?? lootIconHashOverride(drop.name)
+
+  if (hashOverride) {
+    const resolved = await resolveManifestHash(
+      'DestinyInventoryItemDefinition',
+      hashOverride,
+      drop.name
+    )
+    return mergeIconRef(drop.name, staticRef, { ...resolved, name: drop.name })
+  }
+
   if (staticRef.hash && isUsableIconUrl(staticRef.iconUrl)) {
     return { ...staticRef, name: drop.name }
   }
 
-  const lookupName = lootDropLookupName(drop)
+  const lookupName = catalogKey
   const resolved = await resolveByName(lookupName, 'DestinyInventoryItemDefinition')
   return mergeIconRef(drop.name, staticRef, resolved)
 }

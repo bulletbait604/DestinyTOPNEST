@@ -75,4 +75,19 @@ export const ITEM_HASH_OVERRIDES = {
   'crushing plate (coda)': 688405494,
   "techeun's regalia plate": 950387978,
   "apostate's blade plate": 404887494,
+  // Warlord's Ruin dungeon
+  'buried bloodline': 3886719505,
+  'indebted kindness': 3381450498,
+  'vengeful whisper': 839344841,
+  'dragoncult sickle': 3668817296,
+  // Vesper's Host dungeon
+  'ice breaker': 1111334348,
+  'vs chill inhibitor': 1762785662,
+  'vs gravitic arrest': 93061497,
+  'vs pyroelectric propellant': 4232480042,
+  // Salvation's Edge / Vow / Crown
+  euphony: 3284383335,
+  'collective obligation': 3505113722,
+  optative: 2817683783,
+  "calus's selected": 2817683783,
 }
