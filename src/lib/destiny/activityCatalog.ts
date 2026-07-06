@@ -8,6 +8,7 @@ import { ACTIVITY_ICON_PATHS, normalizeActivityKey } from '@/lib/destiny/activit
 
 /** Activity name → manifest hash (DestinyActivityDefinition). */
 export const ACTIVITY_CATALOG: Record<string, CatalogEntry & { iconPath?: string }> = {
+  pantheon: { hash: 107319834, entity: 'DestinyActivityDefinition', iconPath: '/img/destiny_content/pgcr/raid_crotas_end.jpg' },
   'garden of salvation': { hash: 1042180643, entity: 'DestinyActivityDefinition', iconPath: '/img/destiny_content/pgcr/raid_garden_of_salvation.jpg' },
   'king\'s fall': { hash: 1063970578, entity: 'DestinyActivityDefinition', iconPath: '/img/destiny_content/pgcr/raid_kings_fall.jpg' },
   'root of nightmares': { hash: 2381413764, entity: 'DestinyActivityDefinition', iconPath: '/img/destiny_content/pgcr/raid_root_of_nightmares.jpg' },

@@ -20,7 +20,7 @@ export const TAB_PAGE_COPY: Record<
   leaderboards: {
     title: 'Leaderboards',
     description:
-      'Verified full clears, seasonal rankings, monthly commanders, prizes, and the hall of fame — all in one place.',
+      'Verified full clears, seasonal rankings, monthly commanders, and the hall of fame — all in one place.',
   },
   profile: {
     title: 'Profile',

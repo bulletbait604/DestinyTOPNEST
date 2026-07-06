@@ -6,6 +6,7 @@ const ARMOR_SLOT_LABEL: Record<ArmorSlotLabel, string> = {
   gauntlets: 'Arms',
   chest: 'Chest',
   legs: 'Legs',
+  class: 'Class',
 }
 
 export function armorSlotLabel(slot: ArmorSlotLabel): string {

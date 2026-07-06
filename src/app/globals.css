@@ -85,10 +85,10 @@ a { color: inherit; text-decoration: none; }
     overflow: hidden;
     border-bottom: 1px solid color-mix(in srgb, var(--tn-bronze) 30%, transparent);
     background:
-      linear-gradient(180deg, rgba(22, 26, 36, 0.94) 0%, rgba(14, 16, 22, 0.9) 100%),
+      linear-gradient(180deg, rgba(22, 26, 36, 0.72) 0%, rgba(14, 16, 22, 0.78) 100%),
       radial-gradient(ellipse 60% 80% at 0% 50%, var(--tn-arc-glow) 0%, transparent 55%),
       radial-gradient(ellipse 60% 80% at 100% 50%, var(--d2-void-glow) 0%, transparent 50%),
-      url('/backgrounds/raid-banner.jpg');
+      var(--tn-brand-banner-art, url('https://www.bungie.net/img/destiny_content/pgcr/europa-raid-deep-stone-crypt.jpg'));
     background-size: cover;
     background-position: center 35%;
   }
@@ -486,20 +486,51 @@ a { color: inherit; text-decoration: none; }
     border: 1px solid color-mix(in srgb, var(--tn-bronze) 35%, transparent);
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
     background:
-      linear-gradient(135deg, rgba(10, 12, 18, 0.82) 0%, rgba(14, 18, 28, 0.68) 50%, rgba(8, 10, 14, 0.88) 100%),
+      linear-gradient(135deg, rgba(10, 12, 18, 0.58) 0%, rgba(14, 18, 28, 0.42) 50%, rgba(8, 10, 14, 0.62) 100%),
       var(--tn-home-hero-art);
     background-size: cover;
-    background-position: center 22%;
+    background-position: center 28%;
   }
 
   .tn-home-hero-overlay {
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse 70% 90% at 15% 50%, var(--tn-arc-glow) 0%, transparent 55%),
-      radial-gradient(ellipse 60% 80% at 85% 40%, var(--tn-solar-glow) 0%, transparent 50%),
-      linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.55) 100%);
+      radial-gradient(ellipse 70% 90% at 15% 50%, color-mix(in srgb, var(--tn-arc) 28%, transparent) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 80% at 85% 40%, color-mix(in srgb, var(--tn-solar) 22%, transparent) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.38) 100%);
     pointer-events: none;
+  }
+
+  .tn-hero-prize-sticker {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #fff8e7;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.92) 0%, rgba(180, 83, 9, 0.88) 100%);
+    border: 1px solid rgba(252, 211, 77, 0.65);
+    box-shadow:
+      0 0 22px rgba(245, 158, 11, 0.35),
+      0 4px 14px rgba(0, 0, 0, 0.45);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  }
+
+  @media (min-width: 640px) {
+    .tn-hero-prize-sticker {
+      top: 1rem;
+      right: 1.25rem;
+      font-size: 11px;
+      padding: 0.4rem 0.9rem;
+    }
   }
 
   .tn-home-hero-grid {
@@ -881,7 +912,7 @@ a { color: inherit; text-decoration: none; }
     position: relative;
     min-height: 88px;
     background:
-      linear-gradient(180deg, rgba(6, 8, 12, 0.35) 0%, rgba(6, 8, 12, 0.82) 100%),
+      linear-gradient(180deg, rgba(6, 8, 12, 0.18) 0%, rgba(6, 8, 12, 0.62) 100%),
       var(--tn-home-lb-art);
     background-size: cover;
     background-position: center 35%;
@@ -951,7 +982,7 @@ a { color: inherit; text-decoration: none; }
     position: absolute;
     inset: 0;
     background:
-      linear-gradient(120deg, rgba(8, 10, 16, 0.92) 0%, rgba(8, 10, 16, 0.78) 45%, rgba(8, 10, 16, 0.9) 100%),
+      linear-gradient(120deg, rgba(8, 10, 16, 0.78) 0%, rgba(8, 10, 16, 0.58) 45%, rgba(8, 10, 16, 0.72) 100%),
       var(--tn-home-today-art);
     background-size: cover;
     background-position: center 40%;
@@ -2310,7 +2341,7 @@ a { color: inherit; text-decoration: none; }
   .d2-synergy-gold { border-left: 3px solid #c3a019; }
 
   .d2-site-shell {
-    --d2-bg-image: url('/backgrounds/hub-nebula.jpg');
+    --d2-bg-image: url('https://www.bungie.net/img/destiny_content/pgcr/raid_garden_of_salvation.jpg');
     position: relative;
     isolation: isolate;
   }
@@ -2321,12 +2352,12 @@ a { color: inherit; text-decoration: none; }
     z-index: 0;
     pointer-events: none;
     background:
-      linear-gradient(180deg, rgba(6, 8, 14, 0.55) 0%, rgba(10, 12, 18, 0.88) 42%, rgba(8, 10, 16, 0.96) 100%),
-      radial-gradient(ellipse 90% 55% at 12% 0%, rgba(115, 210, 255, 0.18) 0%, transparent 58%),
-      radial-gradient(ellipse 75% 50% at 88% 8%, rgba(255, 213, 128, 0.14) 0%, transparent 52%),
-      radial-gradient(ellipse 65% 45% at 78% 92%, rgba(142, 116, 158, 0.12) 0%, transparent 48%),
-      radial-gradient(ellipse 55% 40% at 8% 78%, rgba(53, 227, 102, 0.1) 0%, transparent 45%),
-      radial-gradient(ellipse 45% 35% at 50% 50%, rgba(77, 136, 255, 0.06) 0%, transparent 50%),
+      linear-gradient(180deg, rgba(6, 8, 14, 0.32) 0%, rgba(10, 12, 18, 0.62) 42%, rgba(8, 10, 16, 0.82) 100%),
+      radial-gradient(ellipse 90% 55% at 12% 0%, rgba(115, 210, 255, 0.24) 0%, transparent 58%),
+      radial-gradient(ellipse 75% 50% at 88% 8%, rgba(255, 213, 128, 0.2) 0%, transparent 52%),
+      radial-gradient(ellipse 65% 45% at 78% 92%, rgba(142, 116, 158, 0.16) 0%, transparent 48%),
+      radial-gradient(ellipse 55% 40% at 8% 78%, rgba(53, 227, 102, 0.14) 0%, transparent 45%),
+      radial-gradient(ellipse 45% 35% at 50% 50%, rgba(77, 136, 255, 0.1) 0%, transparent 50%),
       var(--d2-bg-image, none);
     background-size: cover;
     background-position: center;

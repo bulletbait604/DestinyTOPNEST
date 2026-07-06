@@ -3,7 +3,7 @@
 import { Copy, ExternalLink } from 'lucide-react'
 import type { ExternalBuildSource } from '@/lib/destiny/types'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
-import { ItemIcon, StatusPill, SubclassBadge } from '@/app/components/destiny/DestinyUi'
+import { ActivityBadge, ItemIcon, StatusPill, SubclassBadge } from '@/app/components/destiny/DestinyUi'
 import WeaponArmoryTable from '@/app/components/destiny/WeaponArmoryTable'
 import { buildExternalArmorRows } from '@/lib/destiny/loadoutDisplay'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -138,13 +138,26 @@ export default function ExternalMetaBuildCard({
       {weapons.length > 0 ? <WeaponArmoryTable rows={weapons} title="Weapons" showHeader={!compact} /> : null}
       {armor.length > 0 ? <WeaponArmoryTable rows={armor} title="Armor" showHeader={!compact} /> : null}
 
-      {build.armorMods?.length ? (
-        <div className="flex flex-wrap gap-1.5">
-          {build.armorMods.map((mod) => (
-            <span key={mod} className="text-[11px] px-2 py-0.5 rounded-md bg-white/[0.06] text-white/75">
-              {mod}
-            </span>
-          ))}
+      {(build.armorModRefs?.length || build.armorMods?.length) ? (
+        <div>
+          <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Armor mods</p>
+          <div className="flex flex-wrap gap-2">
+            {build.armorModRefs?.map((mod) => (
+              <div key={mod.hash ?? mod.name} className="flex items-center gap-1.5 max-w-[150px]">
+                <ItemExternalLink item={mod}>
+                  <ItemIcon item={mod} size={22} />
+                </ItemExternalLink>
+                <span className="text-[11px] text-white/75 truncate">{mod.name}</span>
+              </div>
+            ))}
+            {!build.armorModRefs?.length &&
+              build.armorMods?.map((name) => (
+                <div key={name} className="flex items-center gap-1.5 max-w-[150px]">
+                  <ItemIcon name={name} size={22} />
+                  <span className="text-[11px] text-white/75 truncate">{name}</span>
+                </div>
+              ))}
+          </div>
         </div>
       ) : null}
 
@@ -153,7 +166,11 @@ export default function ExternalMetaBuildCard({
       ) : null}
 
       {!compact && build.activityFocus ? (
-        <p className={cn('text-xs', t.gold)}>{build.activityFocus}</p>
+        build.activityRef ? (
+          <ActivityBadge activityRef={build.activityRef} name={build.activityFocus} darkMode={darkMode} size={32} />
+        ) : (
+          <p className={cn('text-xs', t.gold)}>{build.activityFocus}</p>
+        )
       ) : null}
 
       {!compact && (

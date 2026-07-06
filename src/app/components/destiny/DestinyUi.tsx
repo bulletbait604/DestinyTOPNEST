@@ -344,7 +344,7 @@ export function SegmentedControl<T extends string>({
   darkMode,
   label,
 }: {
-  options: { value: T; label: string }[]
+  options: { value: T; label: string; iconUrl?: string }[]
   value: T
   onChange: (v: T) => void
   darkMode: boolean
@@ -360,8 +360,9 @@ export function SegmentedControl<T extends string>({
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={destinyChip(value === opt.value, darkMode)}
+            className={cn(destinyChip(value === opt.value, darkMode), opt.iconUrl && 'inline-flex items-center gap-1.5')}
           >
+            {opt.iconUrl ? <ItemIcon iconUrl={opt.iconUrl} name={opt.label} size={18} /> : null}
             {opt.label}
           </button>
         ))}
@@ -447,6 +448,12 @@ function LeaderboardRow({
       <div className="text-right shrink-0">
         <p className="d2-stat-card-value text-base">{entry.points}</p>
         <p className={cn('text-[9px] uppercase tracking-wide', t.caption)}>pts</p>
+        {!compact && entry.fastestActivityRef?.iconUrl && entry.fastestActivityName ? (
+          <div className="flex items-center justify-end gap-1 mt-1">
+            <ItemIcon item={entry.fastestActivityRef} name={entry.fastestActivityName} size={18} />
+            <span className={cn('text-[9px] truncate max-w-[72px]', t.muted)}>{entry.fastestActivityName}</span>
+          </div>
+        ) : null}
         {!compact && entry.reputationScore != null && entry.reputationScore > 0 && (
           <p className={cn('text-[10px] mt-0.5', t.muted)}>
             â˜… {entry.reputationScore.toFixed(1)}

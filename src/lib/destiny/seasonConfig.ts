@@ -45,6 +45,5 @@ export function getSeasonCountdown(season: Season = ACTIVE_SEASON): {
 export const PRIZE_SUMMARY =
   'Raid, Dungeon & Pantheon Top 5 win platform cards or 3D prints. Top 3 monthly Commanders earn prizes from MVP votes.'
 
-/** Home leaderboard header callouts. */
-export const HOME_SEASON_PRIZE_POOL = '$200+ Prize pool'
-export const HOME_MONTHLY_PRIZES = 'Monthly Prizes'
+/** Hero title-panel prize sticker (leaderboards & home). */
+export const HERO_PRIZE_POOL_STICKER = '$250+ Prize Pool'

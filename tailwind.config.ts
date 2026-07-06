@@ -36,9 +36,9 @@ const config: Config = {
         },
       },
       backgroundImage: {
-        'd2-login': "url('/backgrounds/login-tower.jpg')",
-        'd2-hub': "url('/backgrounds/hub-nebula.jpg')",
-        'd2-banner': "url('/backgrounds/raid-banner.jpg')",
+        'd2-login': "url('https://www.bungie.net/img/destiny_content/pgcr/30th-anniversary-dares-of-eternity.jpg')",
+        'd2-hub': "url('https://www.bungie.net/img/destiny_content/pgcr/raid_garden_of_salvation.jpg')",
+        'd2-banner': "url('https://www.bungie.net/img/destiny_content/pgcr/europa-raid-deep-stone-crypt.jpg')",
       },
     },
   },

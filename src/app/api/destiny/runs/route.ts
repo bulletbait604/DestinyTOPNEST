@@ -3,6 +3,7 @@ import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
 import { buildActivityRunsForVote } from '@/lib/destiny/mvpVoting'
+import { enrichActivityRunsForVote } from '@/lib/destiny/enrich'
 import {
   getMvpVotesByReviewer,
   getRunsForParticipant,
@@ -24,12 +25,14 @@ export async function GET(req: NextRequest) {
     ])
 
     const votesByRun = new Map(votes.map((vote) => [vote.runId, vote]))
-    const activities = buildActivityRunsForVote(
-      userId,
-      stored?.bungieMembershipId,
-      runs,
-      Array.from(usersById.values()),
-      votesByRun
+    const activities = await enrichActivityRunsForVote(
+      buildActivityRunsForVote(
+        userId,
+        stored?.bungieMembershipId,
+        runs,
+        Array.from(usersById.values()),
+        votesByRun
+      )
     )
 
     return NextResponse.json({ activities })

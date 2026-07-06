@@ -6,8 +6,10 @@ import type { ActivityRunForVote } from '@/lib/destiny/types'
 import {
   EmptyBlock,
   GlassCard,
+  ItemIcon,
   StatusPill,
 } from '@/app/components/destiny/DestinyUi'
+import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { destinyPrimaryBtn, formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { useBungieLink } from '@/hooks/useBungieLink'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
@@ -107,8 +109,26 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
                   <ChevronDown
                     className={cn('w-4 h-4 shrink-0 text-white/50 transition-transform', expanded && 'rotate-180')}
                   />
+                  <ItemExternalLink
+                    item={
+                      run.activityRef
+                        ? { ...run.activityRef, entityType: 'DestinyActivityDefinition' as const }
+                        : undefined
+                    }
+                    name={run.activityName}
+                  >
+                    <ItemIcon item={run.activityRef} name={run.activityName} size={40} />
+                  </ItemExternalLink>
                   <div className="min-w-0 flex-1">
-                    <p className={cn('text-sm font-semibold truncate', t.heading)}>{run.activityName}</p>
+                    <ItemLink
+                      item={
+                        run.activityRef
+                          ? { ...run.activityRef, entityType: 'DestinyActivityDefinition' as const }
+                          : undefined
+                      }
+                      name={run.activityName}
+                      className={cn('text-sm font-semibold truncate block', t.heading)}
+                    />
                     <p className={cn('text-xs mt-0.5', t.muted)}>
                       {new Date(run.completedAt).toLocaleDateString()} · {formatDuration(run.durationSeconds)} ·{' '}
                       {run.type}

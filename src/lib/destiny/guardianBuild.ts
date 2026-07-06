@@ -26,6 +26,7 @@ const ARMOR_BUCKETS: Record<number, ArmorSlotLabel> = {
   3551918588: 'gauntlets',
   20886954: 'chest',
   1585787867: 'legs',
+  2280036563: 'class',
 }
 
 type PlugCategory = 'super' | 'class' | 'jump' | 'melee' | 'grenade' | 'aspect' | 'fragment' | 'other'
@@ -259,7 +260,7 @@ export async function fetchCharacterBuild(
       }
     } else if (ARMOR_BUCKETS[bucket]) {
       const slot = ARMOR_BUCKETS[bucket]
-      if (isExotic) {
+      if (isExotic && slot !== 'class') {
         exoticArmor = name
         exoticArmorRef = ref
       }
@@ -284,7 +285,7 @@ export async function fetchCharacterBuild(
     }
   }
 
-  const slotOrder: ArmorSlotLabel[] = ['helmet', 'gauntlets', 'chest', 'legs']
+  const slotOrder: ArmorSlotLabel[] = ['helmet', 'gauntlets', 'chest', 'legs', 'class']
   armorPieces.sort((a, b) => slotOrder.indexOf(a.slot) - slotOrder.indexOf(b.slot))
 
   const socketData = profile.itemComponents?.sockets?.data

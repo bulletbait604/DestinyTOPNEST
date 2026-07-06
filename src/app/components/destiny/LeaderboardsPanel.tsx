@@ -6,10 +6,12 @@ import {
   GlassCard,
   LeaderboardTable,
   LoadingBlock,
+  SectionTitle,
   SegmentedControl,
 } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import SeasonSection from '@/app/components/destiny/SeasonSection'
+import { leaderboardCategoryIconUrl } from '@/lib/destiny/activityIconPaths'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { cn } from '@/lib/utils'
 
@@ -20,11 +22,11 @@ const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
   { value: 'all_time', label: 'All time' },
 ]
 
-const CATEGORIES: { value: LeaderboardCategory; label: string }[] = [
+const CATEGORIES: { value: LeaderboardCategory; label: string; iconUrl?: string }[] = [
   { value: 'raid', label: 'Raids' },
   { value: 'dungeon', label: 'Dungeons' },
-  { value: 'pantheon', label: 'Pantheon squads' },
-  { value: 'top_guardians', label: 'Top Guardians' },
+  { value: 'pantheon', label: 'Pantheon squads', iconUrl: leaderboardCategoryIconUrl('pantheon') },
+  { value: 'top_guardians', label: 'Top Guardians', iconUrl: leaderboardCategoryIconUrl('top_guardians') },
 ]
 
 export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
@@ -72,6 +74,9 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {entries.slice(0, 3).map((entry) => (
               <div key={entry.userId} className="d2-panel-inset rounded-lg px-3 py-2 text-center">
+                {entry.emblemUrl ? (
+                  <img src={entry.emblemUrl} alt="" className="w-10 h-10 mx-auto mb-1 rounded-sm ring-1 ring-white/10" />
+                ) : null}
                 <p className={cn('text-[10px] uppercase tracking-wide', t.caption)}>#{entry.rank} Commander</p>
                 <p className={cn('text-sm font-bold truncate', t.heading)}>{entry.bungieDisplayName}</p>
                 <p className={cn('text-xs tabular-nums', t.gold)}>{entry.points} pts</p>
@@ -82,6 +87,13 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
       ) : null}
 
       <GlassCard darkMode={darkMode}>
+        <SectionTitle
+          title={CATEGORIES.find((c) => c.value === category)?.label ?? 'Leaderboard'}
+          subtitle={`${PERIODS.find((p) => p.value === period)?.label ?? period} rankings`}
+          iconUrl={leaderboardCategoryIconUrl(category)}
+          darkMode={darkMode}
+          compact
+        />
         <div className="space-y-5 mb-6">
           <SegmentedControl
             label="Time period"

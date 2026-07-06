@@ -2,13 +2,23 @@ import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import { ACTIVITY_ICON_PATHS } from '@/lib/destiny/activityIconPaths'
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 
-/** Bungie PGCR / activity art for main nav tabs — adds color without extra assets. */
+/** Community & fireteam themed Bungie art (Guardians' Oath emblem, raid PGCRs). */
+export const COMMUNITY_ART = {
+  /** Guardians' Oath emblem — Guardians united under the Light. */
+  guardiansOath: '/common/destiny2_content/icons/cadea54a317eb0c131a9b93925422370.jpg',
+  guardiansOathIcon: '/common/destiny2_content/icons/524388229145e86a3dc6bf79d8a641f4.jpg',
+  fireteamRaid: '/img/destiny_content/pgcr/raid_garden_of_salvation.jpg',
+  fireteamDSC: '/img/destiny_content/pgcr/europa-raid-deep-stone-crypt.jpg',
+  communityDares: '/img/destiny_content/pgcr/30th-anniversary-dares-of-eternity.jpg',
+} as const
+
+/** Bungie PGCR / activity art for main nav tabs. */
 export const NAV_TAB_ART: Partial<Record<DestinyTopNestTab, string>> = {
-  overview: ACTIVITY_ICON_PATHS['vault of glass'],
-  leaderboards: ACTIVITY_ICON_PATHS["king's fall"],
+  overview: COMMUNITY_ART.guardiansOath,
+  leaderboards: COMMUNITY_ART.fireteamRaid,
   profile: ACTIVITY_ICON_PATHS.duality,
-  fireteam: ACTIVITY_ICON_PATHS['ghosts of the deep'],
-  clans: ACTIVITY_ICON_PATHS['vault of glass'],
+  fireteam: COMMUNITY_ART.fireteamDSC,
+  clans: COMMUNITY_ART.communityDares,
   loadouts: ACTIVITY_ICON_PATHS['root of nightmares'],
   builds: ACTIVITY_ICON_PATHS['deep stone crypt'],
   season: ACTIVITY_ICON_PATHS["crota's end"],
@@ -22,14 +32,19 @@ export function navTabArtUrl(tab: DestinyTopNestTab): string | undefined {
 
 /** Home section hero/backdrop art. */
 export const HOME_SECTION_ART = {
-  hero: ACTIVITY_ICON_PATHS['vault of glass'],
+  hero: COMMUNITY_ART.guardiansOath,
   raidBoard: ACTIVITY_ICON_PATHS["king's fall"],
-  soloBoard: ACTIVITY_ICON_PATHS["vesper's host"],
+  soloBoard: COMMUNITY_ART.communityDares,
   dungeonBoard: ACTIVITY_ICON_PATHS['ghosts of the deep'],
-  pantheonBoard: ACTIVITY_ICON_PATHS["crota's end"],
-  todayPanel: ACTIVITY_ICON_PATHS['root of nightmares'],
+  pantheonBoard: ACTIVITY_ICON_PATHS.pantheon,
+  todayPanel: COMMUNITY_ART.fireteamRaid,
 } as const
 
 export function homeSectionArtUrl(key: keyof typeof HOME_SECTION_ART): string {
   return buildBungieIconUrl(HOME_SECTION_ART[key]) ?? ''
+}
+
+/** Solo / monthly Commanders leaderboard tile icon. */
+export function soloLeaderboardIconUrl(): string {
+  return buildBungieIconUrl(COMMUNITY_ART.guardiansOathIcon) ?? ''
 }

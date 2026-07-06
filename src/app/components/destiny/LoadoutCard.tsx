@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { Copy } from 'lucide-react'
-import type { BuildSnapshot } from '@/lib/destiny/types'
+import type { BuildSnapshot, DestinyIconRef } from '@/lib/destiny/types'
 import ArmorStatMatrix from '@/app/components/destiny/ArmorStatMatrix'
 import BuildSynergyRail from '@/app/components/destiny/BuildSynergyRail'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
@@ -16,6 +16,20 @@ import { destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/d
 import { cn } from '@/lib/utils'
 
 export { loadoutCopyText }
+
+function uniqueModRefs(pieces: BuildSnapshot['armorPieces']): DestinyIconRef[] {
+  const seen = new Set<string>()
+  const mods: DestinyIconRef[] = []
+  for (const piece of pieces ?? []) {
+    for (const mod of piece.mods ?? []) {
+      const key = mod.hash ? String(mod.hash) : mod.name
+      if (seen.has(key)) continue
+      seen.add(key)
+      mods.push(mod)
+    }
+  }
+  return mods
+}
 
 export default function LoadoutCard({
   build,
@@ -32,6 +46,7 @@ export default function LoadoutCard({
   const weaponRows = buildWeaponRows(build)
   const armorRows = buildArmorRows(build)
   const abilityTableRows = abilityRows(build)
+  const armorModRefs = uniqueModRefs(build.armorPieces)
 
   return (
     <div className="d2-panel-inset p-4 rounded-lg space-y-4">
@@ -90,7 +105,21 @@ export default function LoadoutCard({
 
       {armorRows.length > 0 ? <WeaponArmoryTable rows={armorRows} title="Armor" /> : null}
 
-      {build.armorMods.length > 0 ? (
+      {armorModRefs.length > 0 ? (
+        <div>
+          <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Armor mods</p>
+          <div className="flex flex-wrap gap-2">
+            {armorModRefs.map((mod) => (
+              <div key={mod.hash ?? mod.name} className="flex items-center gap-1.5 max-w-[160px]">
+                <ItemExternalLink item={mod}>
+                  <ItemIcon item={mod} size={24} />
+                </ItemExternalLink>
+                <ItemLink item={mod} className="text-[11px] truncate" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : build.armorMods.length > 0 ? (
         <div>
           <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Armor mods</p>
           <div className="flex flex-wrap gap-1.5">

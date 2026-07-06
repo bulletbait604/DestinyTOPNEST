@@ -1,12 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Gift, Clock, Trophy, Target } from 'lucide-react'
+import { Clock, Trophy, Target } from 'lucide-react'
 import type { LeaderboardEntry, PrizeClaim, Season, SeasonWinner, WeeklyResetInfo } from '@/lib/destiny/types'
 import type { UserPrizeTrackEntry } from '@/lib/destiny/seasonPrizes'
 import SeasonPrizeClaimSection from '@/app/components/destiny/SeasonPrizeClaimSection'
-import { ActivityBadge, GlassCard, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
+import { ActivityBadge, GlassCard, ItemIcon, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import { leaderboardCategoryIconUrl } from '@/lib/destiny/activityIconPaths'
 import { cn } from '@/lib/utils'
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -60,7 +61,6 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
   if (loading) return <LoadingBlock darkMode={darkMode} label="Loading season…" />
   if (!season) return null
 
-  const rules = season.prizeRules
   const grouped = {
     raid: hallOfFame.filter((w) => w.category === 'raid'),
     dungeon: hallOfFame.filter((w) => w.category === 'dungeon'),
@@ -71,8 +71,8 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
   return (
     <div className="space-y-4 pt-2 border-t border-white/[0.08]">
       <SectionTitle
-        title="Season & prizes"
-        subtitle="Hold top ranks at season end to win rewards"
+        title="Season standings"
+        subtitle="Verified clears and MVP votes decide who leads each board"
         darkMode={darkMode}
       />
 
@@ -100,14 +100,21 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
         <GlassCard darkMode={darkMode}>
           <div className="flex items-center gap-2 mb-3">
             <Target className="w-4 h-4 text-amber-400" />
-            <SectionTitle title="Your prize track" subtitle="Hold these ranks at season end to win" darkMode={darkMode} />
+            <SectionTitle title="Your standings" subtitle="Current ranks across active boards" darkMode={darkMode} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {prizeTrack.map((track) => (
               <div key={track.category} className="rounded-xl ring-1 ring-white/10 bg-white/[0.03] p-3">
-                <p className={cn('text-xs uppercase tracking-wide', t.caption)}>
-                  {CATEGORY_LABELS[track.category] ?? track.category}
-                </p>
+                <div className="flex items-center gap-2 mb-1">
+                  <ItemIcon
+                    iconUrl={leaderboardCategoryIconUrl(track.category)}
+                    name={CATEGORY_LABELS[track.category] ?? track.category}
+                    size={28}
+                  />
+                  <p className={cn('text-xs uppercase tracking-wide', t.caption)}>
+                    {CATEGORY_LABELS[track.category] ?? track.category}
+                  </p>
+                </div>
                 <p className={cn('text-2xl font-semibold tabular-nums mt-1', t.gold)}>#{track.rank}</p>
                 <p className={cn('text-xs mt-1', t.muted)}>
                   {track.points} pts ·{' '}
@@ -118,7 +125,6 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
                     Best {track.fastestActivityName}: {formatDuration(track.fastestClearSeconds)}
                   </p>
                 ) : null}
-                <p className={cn('text-xs mt-2 text-amber-200/80')}>{track.prizeIfHeld}</p>
               </div>
             ))}
           </div>
@@ -159,9 +165,19 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
           <SectionTitle
             title="This Week's Featured Activities"
             subtitle={`${weeklyReset.weekLabel} · ${weeklyReset.resetTimeLabel}`}
+            iconUrl={weeklyReset.featuredRaids[0]?.iconUrl}
             darkMode={darkMode}
           />
           <p className={cn('text-xs mb-3', t.blue)}>Reset in {weeklyReset.resetsInLabel}</p>
+          {weeklyReset.pantheon ? (
+            <div className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-white/[0.03] ring-1 ring-white/10">
+              <ItemIcon iconUrl={weeklyReset.pantheonIconUrl} name="Pantheon" size={32} />
+              <div>
+                <p className={cn('text-[10px] uppercase tracking-wide', t.caption)}>Pantheon</p>
+                <p className="text-sm text-white">{weeklyReset.pantheon}</p>
+              </div>
+            </div>
+          ) : null}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               {weeklyReset.featuredRaids.map((r) => (
@@ -176,50 +192,6 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
           </div>
         </GlassCard>
       )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <GlassCard darkMode={darkMode}>
-          <div className="flex items-center gap-2 mb-3">
-            <Gift className="w-4 h-4 text-amber-400" />
-            <SectionTitle title="Raid prizes" darkMode={darkMode} />
-          </div>
-          <ul className={cn('text-xs space-y-1', t.muted)}>
-            <li>1st: {rules.raid.first}</li>
-            <li>2nd: {rules.raid.second}</li>
-            <li>3rd–5th: {rules.raid.thirdToFifth}</li>
-            <li>All: {rules.raid.participation}</li>
-          </ul>
-        </GlassCard>
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Dungeon prizes" darkMode={darkMode} />
-          <ul className={cn('text-xs space-y-1', t.muted)}>
-            <li>1st: {rules.dungeon.first}</li>
-            <li>2nd: {rules.dungeon.second}</li>
-            <li>3rd–5th: {rules.dungeon.thirdToFifth}</li>
-            <li>All: {rules.dungeon.participation}</li>
-          </ul>
-        </GlassCard>
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Pantheon squads" darkMode={darkMode} />
-          <ul className={cn('text-xs space-y-1', t.muted)}>
-            <li>1st squad: {rules.raid.first}</li>
-            <li>2nd squad: {rules.raid.second}</li>
-            <li>3rd–5th squads: {rules.raid.thirdToFifth}</li>
-            <li>Each boss encounter scores like a raid clear</li>
-          </ul>
-        </GlassCard>
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Top Guardians (Commanders)" darkMode={darkMode} />
-          <ul className={cn('text-xs space-y-1', t.muted)}>
-            <li>1st Commander: {rules.topGuardians.first}</li>
-            <li>2nd Commander: {rules.topGuardians.second}</li>
-            <li>3rd Commander: {rules.topGuardians.third}</li>
-          </ul>
-          <p className={cn('text-[11px] mt-2', t.caption)}>
-            Earn points by voting MVP in Previous Activities (+1 you, +3 them).
-          </p>
-        </GlassCard>
-      </div>
 
       <GlassCard darkMode={darkMode}>
         <SectionTitle title="Eligibility & rules" darkMode={darkMode} />
@@ -239,7 +211,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
           <Trophy className="w-4 h-4 text-amber-400" />
           <SectionTitle
             title="Hall of Fame"
-            subtitle="Current season leaders — final prizes lock at season end"
+            subtitle="Current season leaders — ranks lock at season end"
             darkMode={darkMode}
           />
         </div>
@@ -248,16 +220,25 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
             {(Object.entries(grouped) as Array<[keyof typeof grouped, SeasonWinner[]]>).map(
               ([category, winners]) => (
                 <div key={category}>
-                  <p className={cn('text-xs font-semibold mb-2', t.gold)}>
-                    {CATEGORY_LABELS[category] ?? category}
-                  </p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <ItemIcon
+                      iconUrl={leaderboardCategoryIconUrl(category)}
+                      name={CATEGORY_LABELS[category] ?? category}
+                      size={22}
+                    />
+                    <p className={cn('text-xs font-semibold', t.gold)}>
+                      {CATEGORY_LABELS[category] ?? category}
+                    </p>
+                  </div>
                   {winners.length ? (
                     winners.map((w, i) => (
-                      <div key={i} className="py-2 border-b border-white/5 flex justify-between gap-2">
-                        <span className="text-white text-sm">
+                      <div key={i} className="py-2 border-b border-white/5 flex items-center gap-2">
+                        {w.emblemUrl ? (
+                          <ItemIcon iconUrl={w.emblemUrl} name={w.displayName} size={28} className="rounded-sm shrink-0" />
+                        ) : null}
+                        <span className="text-white text-sm truncate">
                           #{w.rank} {w.displayName} {w.clanTag}
                         </span>
-                        <span className={cn('text-xs shrink-0', t.gold)}>{w.prize}</span>
                       </div>
                     ))
                   ) : (

@@ -82,6 +82,7 @@ function toWinners(
     clanTag: entry.clanTag,
     prize: prizeForRank(category, entry.rank, season.prizeRules),
     seasonId: season.id,
+    emblemUrl: entry.emblemUrl,
   }))
 }
 

@@ -4,7 +4,7 @@ import type { ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 
 export type DestinyPlatform = 'steam' | 'xbox' | 'playstation' | 'epic' | 'stadia'
 export type DestinyCharacterClass = 'titan' | 'hunter' | 'warlock'
-export type ArmorSlotLabel = 'helmet' | 'gauntlets' | 'chest' | 'legs'
+export type ArmorSlotLabel = 'helmet' | 'gauntlets' | 'chest' | 'legs' | 'class'
 
 export interface ArmorPiece {
   slot: ArmorSlotLabel
@@ -91,6 +91,7 @@ export interface WeeklyResetInfo {
   featuredRaids: FeaturedActivity[]
   featuredDungeons: FeaturedActivity[]
   pantheon?: string
+  pantheonIconUrl?: string
   resetTimeLabel: string
 }
 
@@ -378,6 +379,7 @@ export interface ActivityRunGuardian {
 export interface ActivityRunForVote {
   runId: string
   activityName: string
+  activityRef?: DestinyIconRef
   type: ActivityType
   completedAt: string
   durationSeconds: number
@@ -397,6 +399,7 @@ export interface SeasonWinner {
   clanTag?: string
   prize: string
   seasonId: string
+  emblemUrl?: string
 }
 
 export interface PrizeClaim {
@@ -566,6 +569,7 @@ export interface ExternalBuildSource {
   aspects?: string[]
   fragments?: string[]
   armorMods?: string[]
+  armorModRefs?: DestinyIconRef[]
   activityFocus?: string
   excelsIn?: string
   summary?: string

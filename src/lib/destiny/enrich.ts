@@ -3,6 +3,7 @@
  */
 
 import type {
+  ActivityRunForVote,
   BuildIntelligenceCard,
   BuildSnapshot,
   ClanProfile,
@@ -25,7 +26,7 @@ import {
   type DestinyIconRef,
 } from '@/lib/destiny/manifest'
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
-import { activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
+import { activityIconUrlForName, pantheonActivityIconUrl } from '@/lib/destiny/activityIconPaths'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
 function activityIconUrl(name: string, resolved?: { iconUrl?: string }): string | undefined {
@@ -95,27 +96,27 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
             enrichOrResolve(
               aspect,
               build.aspects[index] ?? aspect.name,
-              'DestinySandboxPerkDefinition'
+              'DestinyInventoryItemDefinition'
             ).then((r) => r ?? aspect)
           )
         )
-      : Promise.all(build.aspects.map((a) => resolveByName(a, 'DestinySandboxPerkDefinition'))),
+      : Promise.all(build.aspects.map((a) => resolveByName(a, 'DestinyInventoryItemDefinition'))),
     build.fragmentRefs?.length
       ? Promise.all(
           build.fragmentRefs.map((fragment, index) =>
             enrichOrResolve(
               fragment,
               build.fragments[index] ?? fragment.name,
-              'DestinySandboxPerkDefinition'
+              'DestinyInventoryItemDefinition'
             ).then((r) => r ?? fragment)
           )
         )
-      : Promise.all(build.fragments.map((f) => resolveByName(f, 'DestinySandboxPerkDefinition'))),
-    enrichOrResolve(build.superRef, build.super !== '—' ? build.super : undefined, 'DestinySandboxPerkDefinition'),
-    enrichOrResolve(build.classAbilityRef, build.abilities[1]),
-    enrichOrResolve(build.jumpRef, build.abilities[2]),
-    enrichOrResolve(build.meleeRef, build.abilities[3], 'DestinySandboxPerkDefinition'),
-    enrichOrResolve(build.grenadeRef, build.abilities[4]),
+      : Promise.all(build.fragments.map((f) => resolveByName(f, 'DestinyInventoryItemDefinition'))),
+    enrichOrResolve(build.superRef, build.super !== '—' ? build.super : undefined, 'DestinyInventoryItemDefinition'),
+    enrichOrResolve(build.classAbilityRef, build.abilities[1], 'DestinyInventoryItemDefinition'),
+    enrichOrResolve(build.jumpRef, build.abilities[2], 'DestinyInventoryItemDefinition'),
+    enrichOrResolve(build.meleeRef, build.abilities[3], 'DestinyInventoryItemDefinition'),
+    enrichOrResolve(build.grenadeRef, build.abilities[4], 'DestinyInventoryItemDefinition'),
     build.armorPieces?.length
       ? Promise.all(
           build.armorPieces.map(async (piece) => {
@@ -211,6 +212,7 @@ export async function buildWeeklyResetInfo(): Promise<WeeklyResetInfo> {
     resetsInLabel: state.resetsInLabel,
     resetsInMs: state.resetsInMs,
     pantheon: state.pantheon,
+    pantheonIconUrl: pantheonActivityIconUrl(state.pantheon),
     resetTimeLabel: state.resetTimeLabel,
     featuredRaids: state.featuredRaids.map((r, i) => ({
       ...r,
@@ -354,6 +356,7 @@ export async function enrichExternalBuild(build: ExternalBuildSource): Promise<E
     aspectRefs,
     fragmentRefs,
     legendaryArmorRefs,
+    armorModRefs,
   ] = await Promise.all([
     resolveClassIcon(build.class),
     resolveSubclass(build.subclass),
@@ -362,10 +365,10 @@ export async function enrichExternalBuild(build: ExternalBuildSource): Promise<E
     Promise.all((build.weapons ?? []).map((w) => resolveByName(w))),
     build.activityFocus ? resolveActivity(build.activityFocus) : Promise.resolve(undefined),
     build.aspects?.length
-      ? Promise.all(build.aspects.map((a) => resolveByName(a, 'DestinySandboxPerkDefinition')))
+      ? Promise.all(build.aspects.map((a) => resolveByName(a, 'DestinyInventoryItemDefinition')))
       : Promise.resolve(undefined),
     build.fragments?.length
-      ? Promise.all(build.fragments.map((f) => resolveByName(f, 'DestinySandboxPerkDefinition')))
+      ? Promise.all(build.fragments.map((f) => resolveByName(f, 'DestinyInventoryItemDefinition')))
       : Promise.resolve(undefined),
     build.legendaryArmor
       ? Promise.all(
@@ -383,6 +386,9 @@ export async function enrichExternalBuild(build: ExternalBuildSource): Promise<E
           return Object.keys(refs).length ? refs : undefined
         })
       : Promise.resolve(undefined),
+    build.armorMods?.length
+      ? Promise.all(build.armorMods.map((mod) => resolveByName(mod, 'DestinyInventoryItemDefinition')))
+      : Promise.resolve(undefined),
   ])
 
   return {
@@ -396,6 +402,7 @@ export async function enrichExternalBuild(build: ExternalBuildSource): Promise<E
     aspectRefs,
     fragmentRefs,
     legendaryArmorRefs,
+    armorModRefs,
   }
 }
 
@@ -415,6 +422,19 @@ export async function enrichBuildsResponse(data: {
 
 export async function enrichLobbies(lobbies: FireteamLobby[]): Promise<FireteamLobby[]> {
   return Promise.all(lobbies.map(enrichLobby))
+}
+
+export async function enrichLeaderboardEntries(entries: LeaderboardEntry[]): Promise<LeaderboardEntry[]> {
+  return Promise.all(entries.map(enrichLeaderboardEntry))
+}
+
+export async function enrichActivityRunsForVote(runs: ActivityRunForVote[]): Promise<ActivityRunForVote[]> {
+  return Promise.all(
+    runs.map(async (run) => ({
+      ...run,
+      activityRef: await resolveActivityRef(run.activityName),
+    }))
+  )
 }
 
 export type { DestinyIconRef }

@@ -18,8 +18,8 @@ import { cn } from '@/lib/utils'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import PendingVotePrompt from '@/app/components/destiny/PendingVotePrompt'
-import { homeSectionArtUrl } from '@/lib/destiny/navArt'
-import { HOME_MONTHLY_PRIZES, HOME_SEASON_PRIZE_POOL } from '@/lib/destiny/seasonConfig'
+import { homeSectionArtUrl, soloLeaderboardIconUrl } from '@/lib/destiny/navArt'
+import { leaderboardCategoryIconUrl } from '@/lib/destiny/activityIconPaths'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 
 function countdownParts(ms: number) {
@@ -160,7 +160,6 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
         <HomeLeaderboardCard
           title="Raid"
           subtitle="Top raiders this season"
-          prizeLabel={HOME_SEASON_PRIZE_POOL}
           artUrl={homeSectionArtUrl('raidBoard')}
           iconUrl={featuredRaids[0]?.iconUrl ?? data.featuredRaid.iconUrl}
           entries={data.raidTop10}
@@ -169,7 +168,6 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
         <HomeLeaderboardCard
           title="Dungeon"
           subtitle="Top delvers this season"
-          prizeLabel={HOME_SEASON_PRIZE_POOL}
           artUrl={homeSectionArtUrl('dungeonBoard')}
           iconUrl={featuredDungeons[0]?.iconUrl ?? data.featuredDungeon.iconUrl}
           entries={data.dungeonTop10}
@@ -178,16 +176,16 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
         <HomeLeaderboardCard
           title="Pantheon"
           subtitle="Boss encounters = raid points"
-          prizeLabel={HOME_SEASON_PRIZE_POOL}
           artUrl={homeSectionArtUrl('pantheonBoard')}
+          iconUrl={data.weeklyReset.pantheonIconUrl ?? leaderboardCategoryIconUrl('pantheon')}
           entries={data.pantheonTop10}
           darkMode={darkMode}
         />
         <HomeLeaderboardCard
           title="Solo"
           subtitle="Monthly Commanders"
-          prizeLabel={HOME_MONTHLY_PRIZES}
           artUrl={homeSectionArtUrl('soloBoard')}
+          iconUrl={soloLeaderboardIconUrl()}
           entries={soloEntries}
           darkMode={darkMode}
         />
@@ -206,11 +204,6 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
               <SectionTitle
                 title="Today in Destiny"
                 subtitle={data.weeklyReset.weekLabel}
-                trail={
-                  <span className="d2-panel-prizes-tag">
-                    Prizes for top teams and individuals
-                  </span>
-                }
                 darkMode={darkMode}
                 compact
               />
@@ -222,12 +215,13 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
                 <StatusPill label={data.weeklyReset.resetTimeLabel} tone="neutral" />
               </div>
               {data.weeklyReset.pantheon && (
-                <p className={cn('text-xs mb-1 italic', t.purple)}>Pantheon: {data.weeklyReset.pantheon}</p>
+                <div className="flex items-center gap-2 mb-1">
+                  {data.weeklyReset.pantheonIconUrl ? (
+                    <ItemIcon iconUrl={data.weeklyReset.pantheonIconUrl} name="Pantheon" size={28} />
+                  ) : null}
+                  <p className={cn('text-xs italic', t.purple)}>Pantheon: {data.weeklyReset.pantheon}</p>
+                </div>
               )}
-              <p className={cn('text-[11px]', t.muted)}>
-                Season prizes on the Leaderboards tab ·{' '}
-                {data.prizeSummary.length > 72 ? 'Top 5 earn rewards at season end' : data.prizeSummary}
-              </p>
             </div>
             <ResetCountdown
               {...countdownParts(data.weeklyReset.resetsInMs)}
@@ -247,18 +241,31 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
         <GlassCard darkMode={darkMode}>
           <SectionTitle
             title="Season Hall of Fame preview"
-            subtitle="Current leaders — see Leaderboards for prizes and your track"
+            subtitle="Current leaders — see Leaderboards for full standings"
+            iconUrl={leaderboardCategoryIconUrl('raid')}
             darkMode={darkMode}
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
             {data.hallOfFamePreview.slice(0, 6).map((winner, i) => (
               <div
                 key={`${winner.category}-${winner.rank}-${i}`}
-                className="d2-panel-inset px-3 py-2 rounded-lg flex justify-between gap-2"
+                className="d2-panel-inset px-3 py-2 rounded-lg flex items-center justify-between gap-2"
               >
-                <span className={cn('text-sm', t.body)}>
-                  #{winner.rank} {winner.displayName} {winner.clanTag}
-                </span>
+                <div className="flex items-center gap-2 min-w-0">
+                  {winner.emblemUrl ? (
+                    <ItemIcon iconUrl={winner.emblemUrl} name={winner.displayName} size={32} className="rounded-sm shrink-0" />
+                  ) : (
+                    <ItemIcon
+                      iconUrl={leaderboardCategoryIconUrl(winner.category)}
+                      name={winner.category}
+                      size={28}
+                      className="shrink-0"
+                    />
+                  )}
+                  <span className={cn('text-sm truncate', t.body)}>
+                    #{winner.rank} {winner.displayName} {winner.clanTag}
+                  </span>
+                </div>
                 <span className={cn('text-[10px] uppercase shrink-0', t.caption)}>
                   {winner.category.replace(/_/g, ' ')}
                 </span>
@@ -270,7 +277,13 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Recent Verified Runs" subtitle="Today only" darkMode={darkMode} compact />
+          <SectionTitle
+            title="Recent Verified Runs"
+            subtitle="Today only"
+            iconUrl={featuredRaids[0]?.iconUrl ?? data.featuredRaid.iconUrl}
+            darkMode={darkMode}
+            compact
+          />
           <div className="space-y-2">
             {data.recentRuns.length === 0 ? (
               <p className={cn('text-sm py-2', t.muted)}>
@@ -325,19 +338,45 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
         </GlassCard>
 
         <GlassCard darkMode={darkMode}>
-          <SectionTitle title="Looking for Group" darkMode={darkMode} />
+          <SectionTitle
+            title="Looking for Group"
+            iconUrl={featuredDungeons[0]?.iconUrl ?? data.featuredDungeon.iconUrl}
+            darkMode={darkMode}
+          />
           <div className="space-y-2">
             {data.lookingForGroup.map((lobby) => (
               <div key={lobby.id} className="py-2 border-b border-white/5 last:border-0">
-                <div className="flex justify-between gap-2">
-                  <p className="text-white text-sm font-medium">{lobby.activityName}</p>
-                  <span className={cn('text-xs', t.blue)}>
+                <div className="flex items-start gap-2 justify-between">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <ItemExternalLink
+                      item={
+                        lobby.activityRef
+                          ? { ...lobby.activityRef, entityType: 'DestinyActivityDefinition' as const }
+                          : undefined
+                      }
+                      name={lobby.activityName}
+                    >
+                      <ItemIcon item={lobby.activityRef} name={lobby.activityName} size={36} />
+                    </ItemExternalLink>
+                    <div className="min-w-0">
+                      <ItemLink
+                        item={
+                          lobby.activityRef
+                            ? { ...lobby.activityRef, entityType: 'DestinyActivityDefinition' as const }
+                            : undefined
+                        }
+                        name={lobby.activityName}
+                        className="text-white text-sm font-medium block truncate"
+                      />
+                      <p className={cn('text-xs', t.muted)}>
+                        {lobby.hostDisplayName} · {lobby.goal.replace(/_/g, ' ')}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={cn('text-xs shrink-0', t.blue)}>
                     {lobby.currentPlayers}/{lobby.maxPlayers}
                   </span>
                 </div>
-                <p className={cn('text-xs', t.muted)}>
-                  {lobby.hostDisplayName} · {lobby.goal.replace(/_/g, ' ')}
-                </p>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {lobby.tags.slice(0, 4).map((tag) => (
                     <StatusPill key={tag} label={tag} tone="purple" />

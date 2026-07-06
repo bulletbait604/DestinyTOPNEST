@@ -156,7 +156,7 @@ export async function getCharacterLoadout(
   accessToken?: string
 ) {
   return bungieFetch(
-    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=200,205,304,305`,
+    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=200,205,300,304,305`,
     { accessToken }
   )
 }
