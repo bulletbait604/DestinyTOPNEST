@@ -33,7 +33,7 @@ export default function HomeSoloPreview({ darkMode }: { darkMode: boolean }) {
   return (
     <aside className="tn-home-solo-preview tn-home-hero-side-panel">
       <p className="tn-home-solo-label">Solo Leaderboard</p>
-      <LeaderboardTable entries={entries.slice(0, 3)} darkMode={darkMode} compact />
+      <LeaderboardTable entries={entries.slice(0, 3)} darkMode={darkMode} compact heroCompact />
     </aside>
   )
 }

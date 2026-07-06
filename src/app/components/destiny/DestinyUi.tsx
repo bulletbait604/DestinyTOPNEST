@@ -5,6 +5,7 @@ import { activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
 import { classIconUrlForClass } from '@/lib/destiny/classIconPaths'
 import { cn } from '@/lib/utils'
 import type { DestinyIconRef, LeaderboardEntry } from '@/lib/destiny/types'
+import { activityWalkthroughLinkTitle, activityWalkthroughUrl } from '@/lib/destiny/activityWalkthroughLinks'
 import { TopNestLogoMark } from '@/app/components/destiny/TopNestBrandBanner'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import {
@@ -260,20 +261,38 @@ export function StatCard({
   value,
   sub,
   iconUrl,
+  activityName,
   darkMode,
 }: {
   label: string
   value: React.ReactNode
   sub?: string
   iconUrl?: string
+  /** When set, the activity icon links to a YouTube walkthrough. */
+  activityName?: string
   darkMode: boolean
 }) {
   const t = getDestinyTheme(darkMode)
+  const walkthrough = activityName ? activityWalkthroughUrl(activityName) : null
+  const iconLabel = typeof value === 'string' ? value : label
+
   return (
     <div className="d2-stat-card">
       {iconUrl ? (
         <div className="mb-2">
-          <ItemIcon iconUrl={iconUrl} name={typeof value === 'string' ? value : label} size={44} />
+          {walkthrough ? (
+            <a
+              href={walkthrough.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={activityWalkthroughLinkTitle(activityName!)}
+              className="d2-stat-card-icon-link inline-block rounded-lg transition-transform hover:scale-105"
+            >
+              <ItemIcon iconUrl={iconUrl} name={iconLabel} size={44} />
+            </a>
+          ) : (
+            <ItemIcon iconUrl={iconUrl} name={iconLabel} size={44} />
+          )}
         </div>
       ) : null}
       <p className="d2-stat-card-label">{label}</p>
@@ -403,31 +422,42 @@ export function EmptyBlock({
 function LeaderboardRow({
   entry,
   compact,
+  heroCompact,
   darkMode,
 }: {
   entry: LeaderboardEntry
   compact?: boolean
+  heroCompact?: boolean
   darkMode: boolean
 }) {
   const t = getDestinyTheme(darkMode)
+  const emblemSize = heroCompact ? 26 : 40
 
   return (
-    <div className="d2-leaderboard-row">
+    <div className={cn('d2-leaderboard-row', heroCompact && 'd2-leaderboard-row-hero')}>
       <span
         className={cn(
           'd2-leaderboard-rank',
+          heroCompact && 'd2-leaderboard-rank-hero',
           entry.rank <= 3 ? 'd2-leaderboard-rank-top' : t.caption
         )}
       >
         {entry.rank}
       </span>
       {entry.emblemUrl ? (
-        <ItemIcon iconUrl={entry.emblemUrl} name={entry.bungieDisplayName} size={40} />
+        <ItemIcon iconUrl={entry.emblemUrl} name={entry.bungieDisplayName} size={emblemSize} />
       ) : (
-        <div className="w-10 h-10 rounded-sm bg-black/40 shrink-0 ring-1 ring-white/10" />
+        <div
+          className={cn(
+            'rounded-sm bg-black/40 shrink-0 ring-1 ring-white/10',
+            heroCompact ? 'w-[26px] h-[26px]' : 'w-10 h-10'
+          )}
+        />
       )}
       <div className="flex-1 min-w-0">
-        <p className={cn('font-semibold text-sm truncate', t.heading)}>{entry.bungieDisplayName}</p>
+        <p className={cn('font-semibold truncate', heroCompact ? 'text-xs' : 'text-sm', t.heading)}>
+          {entry.bungieDisplayName}
+        </p>
         {!compact && (
           <p className={cn('text-[11px] mt-0.5 truncate', t.muted)}>
             {entry.isSquadEntry ? (
@@ -445,9 +475,9 @@ function LeaderboardRow({
           </p>
         )}
       </div>
-      <div className="text-right shrink-0">
-        <p className="d2-stat-card-value text-base">{entry.points}</p>
-        <p className={cn('text-[9px] uppercase tracking-wide', t.caption)}>pts</p>
+      <div className={cn('text-right shrink-0', heroCompact && 'leading-none')}>
+        <p className={cn('d2-stat-card-value', heroCompact ? 'text-sm' : 'text-base')}>{entry.points}</p>
+        <p className={cn('uppercase tracking-wide', heroCompact ? 'text-[10px]' : 'text-[9px]', t.caption)}>pts</p>
         {!compact && entry.fastestActivityRef?.iconUrl && entry.fastestActivityName ? (
           <div className="flex items-center justify-end gap-1 mt-1">
             <ItemIcon item={entry.fastestActivityRef} name={entry.fastestActivityName} size={18} />
@@ -456,7 +486,7 @@ function LeaderboardRow({
         ) : null}
         {!compact && entry.reputationScore != null && entry.reputationScore > 0 && (
           <p className={cn('text-[10px] mt-0.5', t.muted)}>
-            â˜… {entry.reputationScore.toFixed(1)}
+            ★ {entry.reputationScore.toFixed(1)}
             {entry.reputationReviewCount ? ` (${entry.reputationReviewCount})` : ''}
           </p>
         )}
@@ -469,10 +499,12 @@ export function LeaderboardTable({
   entries,
   darkMode,
   compact,
+  heroCompact,
 }: {
   entries: LeaderboardEntry[]
   darkMode: boolean
   compact?: boolean
+  heroCompact?: boolean
 }) {
   if (!entries.length) {
     return (
@@ -487,7 +519,13 @@ export function LeaderboardTable({
   return (
     <div className="-mx-1">
       {entries.map((e) => (
-        <LeaderboardRow key={`${e.userId}-${e.rank}`} entry={e} compact={compact} darkMode={darkMode} />
+        <LeaderboardRow
+          key={`${e.userId}-${e.rank}`}
+          entry={e}
+          compact={compact}
+          heroCompact={heroCompact}
+          darkMode={darkMode}
+        />
       ))}
     </div>
   )

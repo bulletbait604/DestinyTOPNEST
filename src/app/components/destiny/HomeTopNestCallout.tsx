@@ -9,8 +9,9 @@ import { cn } from '@/lib/utils'
 
 const RANK_LABELS = ['1st', '2nd', '3rd'] as const
 
-function monthLabel(): string {
-  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())
+function seasonLabel(): string {
+  const monthYear = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())
+  return `${monthYear.toUpperCase()} SEASON`
 }
 
 /** Top 3 monthly Commanders — sits between the home hero and player card. */
@@ -48,8 +49,7 @@ export default function HomeTopNestCallout({ darkMode }: { darkMode: boolean }) 
           <p className="tn-topnest-callout-eyebrow" id="topnest-callout-heading">
             ARE YOU TOPNEST?
           </p>
-          <h2 className="tn-topnest-callout-title">TOP NEST</h2>
-          <p className={cn('tn-topnest-callout-sub', t.muted)}>{monthLabel()} so far</p>
+          <p className={cn('tn-topnest-callout-sub', t.muted)}>{seasonLabel()}</p>
         </div>
 
         {loading ? (

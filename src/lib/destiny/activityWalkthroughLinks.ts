@@ -57,16 +57,18 @@ export const ACTIVITY_WALKTHROUGH_URLS: Record<string, ActivityWalkthrough> = {
     duration: '~20 min',
   },
   'spire of the watcher': {
-    url: 'https://www.youtube.com/results?search_query=destiny+2+spire+of+the+watcher+dungeon+guide+complete',
-    label: 'Spire of the Watcher — YouTube walkthrough',
+    url: 'https://www.youtube.com/watch?v=zz8kKQoymYE',
+    label: 'Spire of the Watcher — complete dungeon guide',
+    duration: '~22 min',
   },
   'ghosts of the deep': {
     url: 'https://www.youtube.com/results?search_query=destiny+2+ghosts+of+the+deep+dungeon+guide+complete',
     label: 'Ghosts of the Deep — YouTube walkthrough',
   },
   duality: {
-    url: 'https://www.youtube.com/results?search_query=destiny+2+duality+dungeon+guide+complete',
-    label: 'Duality — YouTube walkthrough',
+    url: 'https://www.youtube.com/watch?v=KW1e6__AFT8',
+    label: 'Duality — dungeon walkthrough',
+    duration: '~35 min',
   },
   'shattered throne': {
     url: 'https://www.youtube.com/results?search_query=destiny+2+shattered+throne+dungeon+guide+complete',

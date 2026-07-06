@@ -53,6 +53,7 @@ function rotationStatCards(
         label={c.label}
         value={c.activity.name}
         iconUrl={c.activity.iconUrl}
+        activityName={c.activity.name}
         sub={`${c.kind === 'raid' ? 'Raid' : 'Dungeon'} · Resets ${resetsIn}`}
       />
     ))

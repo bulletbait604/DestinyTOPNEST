@@ -5,6 +5,7 @@ import type { FeaturedActivity } from '@/lib/destiny/types'
 import type { ActivityLootDrop, ActivityLootIntel } from '@/lib/destiny/activityLoot'
 import { activityIntel } from '@/lib/destiny/activityIntel'
 import { lootArmorSetIconRef, lootDropIconRef } from '@/lib/destiny/activityLoot'
+import { activityWalkthroughLinkTitle, activityWalkthroughUrl } from '@/lib/destiny/activityWalkthroughLinks'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
 import { cn } from '@/lib/utils'
@@ -92,21 +93,31 @@ function IntelBox({
   kind: 'raid' | 'dungeon'
 }) {
   const intel = activityIntel(activity)
+  const walkthrough = activityWalkthroughUrl(activity.name)
 
   return (
     <details className="d2-wiki-box group" open>
       <summary className="d2-wiki-box-summary list-none cursor-pointer">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <ItemIcon
-            item={{
-              name: activity.name,
-              hash: activity.hash,
-              iconUrl: activity.iconUrl,
-              entityType: 'DestinyActivityDefinition',
-            }}
-            name={activity.name}
-            size={44}
-          />
+          <a
+            href={walkthrough.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={activityWalkthroughLinkTitle(activity.name)}
+            className="shrink-0 rounded-lg transition-transform hover:scale-105"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ItemIcon
+              item={{
+                name: activity.name,
+                hash: activity.hash,
+                iconUrl: activity.iconUrl,
+                entityType: 'DestinyActivityDefinition',
+              }}
+              name={activity.name}
+              size={44}
+            />
+          </a>
           <div className="min-w-0 flex-1">
             <p className="d2-wiki-box-title truncate">{activity.name}</p>
             <p className="d2-wiki-box-meta">
