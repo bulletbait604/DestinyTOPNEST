@@ -572,6 +572,10 @@ export interface ExternalBuildSource {
   publishedAt?: string
   lastChecked: string
   approved: boolean
+  /** Where this build belongs in suggestion lists — activity/specialist builds are excluded from default picks. */
+  suggestionScope?: 'general' | 'activity' | 'specialist'
+  /** Lower = higher priority within a class (1 = top general pick). */
+  suggestionRank?: number
   classRef?: DestinyIconRef
   subclassRef?: DestinyIconRef
   exoticArmorRef?: DestinyIconRef

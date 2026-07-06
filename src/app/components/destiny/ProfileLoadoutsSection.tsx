@@ -109,7 +109,7 @@ export default function ProfileLoadoutsSection({
 
   const topByClass = rankTopLoadoutsByClass(verifiedBuilds, 5)
   const suggestedPicks = useMemo(
-    () => rankSuggestedLoadoutsForClass(activeClass, externalBuilds, verifiedBuilds, 6),
+    () => rankSuggestedLoadoutsForClass(activeClass, externalBuilds, verifiedBuilds, 4),
     [activeClass, externalBuilds, verifiedBuilds]
   )
   const suggestedSummary = useMemo(

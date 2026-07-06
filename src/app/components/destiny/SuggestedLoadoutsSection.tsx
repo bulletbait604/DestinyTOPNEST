@@ -27,7 +27,7 @@ export default function SuggestedLoadoutsSection({
     <GlassCard darkMode={darkMode}>
       <SectionTitle
         title={`Suggested ${label} loadouts`}
-        subtitle="Ranked from amalgamated build sites + verified Top Nest clears"
+        subtitle="Top curated general PvE picks for this class"
         darkMode={darkMode}
       />
       <p className={cn('text-sm mb-4 leading-relaxed', t.muted)}>{summary}</p>
