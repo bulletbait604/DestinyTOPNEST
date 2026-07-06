@@ -86,6 +86,18 @@ export async function deleteDestinyUser(userId: string): Promise<void> {
   await (await db()).collection(DESTINY_COLLECTIONS.users).deleteOne({ userId })
 }
 
+/** Unlink Bungie OAuth tokens but keep the guardian profile and run history. */
+export async function clearBungieOAuth(userId: string): Promise<void> {
+  const database = await db()
+  await database.collection(DESTINY_COLLECTIONS.users).updateOne(
+    { userId },
+    {
+      $unset: { oauth: '' },
+      $set: { updatedAt: new Date().toISOString() },
+    }
+  )
+}
+
 export async function getValidAccessToken(stored: StoredDestinyUser): Promise<string | null> {
   if (!stored.oauth?.accessToken) return null
 

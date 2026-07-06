@@ -1,28 +1,15 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth, AuthError, createAuthErrorResponse } from '@/lib/auth/verifyAuth'
-import { deleteDestinyUser, getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
-import { sessionCookieSecure } from '@/lib/sessionCookie'
+import { clearBungieOAuth } from '@/lib/destiny/destinyUserStore'
 
 export const dynamic = 'force-dynamic'
 
+/** Unlink Bungie OAuth — site login cookie is preserved so you stay signed in. */
 export async function POST(req: NextRequest) {
   try {
     const user = await verifyAuth(req)
-    const stored = await getDestinyUserBySiteUserId(user.username.toLowerCase())
-    if (stored) {
-      await deleteDestinyUser(user.username.toLowerCase())
-    }
-
-    const res = NextResponse.json({ ok: true, loggedOut: true })
-    const secure = sessionCookieSecure(req)
-    res.cookies.set('session', '', {
-      httpOnly: true,
-      secure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 0,
-    })
-    return res
+    await clearBungieOAuth(user.username.toLowerCase())
+    return NextResponse.json({ ok: true, unlinked: true })
   } catch (error) {
     if (error instanceof AuthError) return createAuthErrorResponse(error)
     return NextResponse.json({ error: 'Failed to disconnect Bungie account' }, { status: 500 })

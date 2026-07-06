@@ -107,7 +107,7 @@ export function useBungieLink(options?: { returnPath?: string }) {
       sessionStorage.removeItem(SYNC_AT_STORAGE_KEY)
       setLastSyncedAt(null)
       await load()
-      window.location.replace('/')
+      setLinkMessage('Bungie unlinked. Sign in with Bungie again when you want to sync runs.')
     } finally {
       setDisconnecting(false)
     }

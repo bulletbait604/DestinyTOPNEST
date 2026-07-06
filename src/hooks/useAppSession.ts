@@ -8,6 +8,8 @@ export interface AppUser {
   username: string
   displayName: string
   role: string
+  bungieLinked?: boolean
+  bungieTokenHealthy?: boolean
 }
 
 export function useAppSession() {
@@ -25,6 +27,8 @@ export function useAppSession() {
           username: data.username,
           displayName: data.displayName ?? data.username,
           role: data.role,
+          bungieLinked: data.bungieLinked,
+          bungieTokenHealthy: data.bungieTokenHealthy,
         })
       } else {
         setUser(null)
@@ -40,6 +44,29 @@ export function useAppSession() {
     setMounted(true)
     void refresh()
   }, [refresh])
+
+  useEffect(() => {
+    if (!user) return
+
+    const extendSession = () => {
+      void refresh()
+    }
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') extendSession()
+    }
+
+    window.addEventListener('focus', extendSession)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    const interval = window.setInterval(extendSession, 60 * 60 * 1000)
+
+    return () => {
+      window.removeEventListener('focus', extendSession)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.clearInterval(interval)
+    }
+  }, [user, refresh])
 
   const login = useCallback(() => {
     startBungieLogin('/')

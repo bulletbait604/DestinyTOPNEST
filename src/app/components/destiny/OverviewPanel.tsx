@@ -141,9 +141,11 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
       ) : null}
 
       <div className="space-y-5 sm:space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div>
+        <h2 className="d2-panel-header-title text-center text-base sm:text-lg mb-4">Leaderboard</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <HomeLeaderboardCard
-          title="Raid Leaderboard"
+          title="Raid"
           subtitle="Top raiders this season"
           prizeLabel={HOME_SEASON_PRIZE_POOL}
           artUrl={homeSectionArtUrl('raidBoard')}
@@ -152,7 +154,7 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
           darkMode={darkMode}
         />
         <HomeLeaderboardCard
-          title="Dungeon Leaderboard"
+          title="Dungeon"
           subtitle="Top delvers this season"
           prizeLabel={HOME_SEASON_PRIZE_POOL}
           artUrl={homeSectionArtUrl('dungeonBoard')}
@@ -161,7 +163,7 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
           darkMode={darkMode}
         />
         <HomeLeaderboardCard
-          title="Pantheon Squads"
+          title="Pantheon"
           subtitle="Boss encounters = raid points"
           prizeLabel={HOME_SEASON_PRIZE_POOL}
           artUrl={homeSectionArtUrl('pantheonBoard')}
@@ -169,13 +171,14 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
           darkMode={darkMode}
         />
         <HomeLeaderboardCard
-          title="Solo Leaderboard"
+          title="Solo"
           subtitle="Monthly Commanders"
           prizeLabel={HOME_MONTHLY_PRIZES}
           artUrl={homeSectionArtUrl('soloBoard')}
           entries={soloEntries}
           darkMode={darkMode}
         />
+        </div>
       </div>
 
       <GlassCard

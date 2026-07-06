@@ -2,11 +2,10 @@
 import { getMongoDbName } from '@/lib/database'
 import clientPromise from '@/lib/mongodb'
 import { getSessionSecret, signSessionJwt } from '@/lib/auth/sessionJwt'
-import type { UserRole } from '@/lib/auth/verifyAuth'
+import { SESSION_MAX_AGE_SEC } from '@/lib/auth/sessionConfig'
+import type { VerifiedUser, UserRole } from '@/lib/auth/verifyAuth'
 import { capOwnerRole } from '@/lib/home/ownerIdentity'
-import { sessionCookieSecure } from '@/lib/sessionCookie'
-
-const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 30
+import { getSessionCookieOptions } from '@/lib/sessionCookie'
 
 /** Issue a Bungie-backed session JWT after OAuth login or reconnect. */
 export async function attachSessionCookie(
@@ -35,15 +34,18 @@ export async function attachSessionCookie(
     SESSION_MAX_AGE_SEC
   )
 
-  res.cookies.set('session', jwt, {
-    httpOnly: true,
-    secure: sessionCookieSecure(req),
-    sameSite: 'lax',
-    path: '/',
-    maxAge: SESSION_MAX_AGE_SEC,
-  })
+  res.cookies.set('session', jwt, getSessionCookieOptions(req))
 
   return true
+}
+
+/** Extend the sliding session window — call on session checks so users stay signed in. */
+export async function refreshSessionCookie(
+  user: VerifiedUser,
+  req: NextRequest,
+  res: NextResponse
+): Promise<boolean> {
+  return signSessionCookieForUser(user.username, user.displayName, user.role, req, res)
 }
 
 export async function ensureSiteUserRecord(
@@ -102,13 +104,7 @@ export async function signSessionCookieForUser(
     SESSION_MAX_AGE_SEC
   )
 
-  res.cookies.set('session', jwt, {
-    httpOnly: true,
-    secure: sessionCookieSecure(req),
-    sameSite: 'lax',
-    path: '/',
-    maxAge: SESSION_MAX_AGE_SEC,
-  })
+  res.cookies.set('session', jwt, getSessionCookieOptions(req))
 
   return true
 }
