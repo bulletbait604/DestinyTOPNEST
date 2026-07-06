@@ -8,7 +8,7 @@ import { soloLeaderboardIconUrl } from '@/lib/destiny/navArt'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { cn } from '@/lib/utils'
 
-const SOLO_PREVIEW_SLOTS = 5
+const SOLO_PREVIEW_SLOTS = 3
 
 function buildSoloSlots(entries: LeaderboardEntry[], slots = SOLO_PREVIEW_SLOTS) {
   const byRank = new Map(entries.map((entry) => [entry.rank, entry]))
@@ -62,7 +62,7 @@ function SoloPreviewRow({
   )
 }
 
-/** Solo top-5 preview beside the home hero title — empty slots show rank only. */
+/** Solo top-3 preview beside the home hero title — empty slots show rank only. */
 export default function HomeSoloPreview({ darkMode }: { darkMode: boolean }) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
 

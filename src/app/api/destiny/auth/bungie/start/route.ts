@@ -9,6 +9,10 @@ import {
   requestPublicOrigin,
 } from '@/lib/destiny/env'
 import { getSessionSecret } from '@/lib/auth/sessionJwt'
+import {
+  BUNGIE_FORCE_REAUTH_COOKIE,
+  consumeBungieForceReauth,
+} from '@/lib/auth/sessionCookies'
 import { sessionCookieSecure } from '@/lib/sessionCookie'
 
 export const dynamic = 'force-dynamic'
@@ -50,16 +54,21 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const forceReauth = req.cookies.get(BUNGIE_FORCE_REAUTH_COOKIE)?.value === '1'
+
     const state = await createBungieOAuthState({
       userId,
       redirectUri,
       returnPath,
     })
 
-    const url = buildBungieAuthorizeUrl(state, redirectUri)
+    const url = buildBungieAuthorizeUrl(state, redirectUri, { reauth: forceReauth })
     const secure = sessionCookieSecure(req)
 
     const res = NextResponse.redirect(url)
+    if (forceReauth) {
+      consumeBungieForceReauth(req, res)
+    }
     res.cookies.set('bungieOAuthState', state, {
       httpOnly: true,
       secure,

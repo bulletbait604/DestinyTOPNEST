@@ -81,7 +81,11 @@ async function bungieOAuthFetch<T>(url: string, init: RequestInit): Promise<T> {
   return body.Response
 }
 
-export function buildBungieAuthorizeUrl(state: string, redirectUri?: string): string {
+export function buildBungieAuthorizeUrl(
+  state: string,
+  redirectUri?: string,
+  options?: { reauth?: boolean }
+): string {
   const clientId = bungieOAuthClientId()
   const resolvedRedirect = redirectUri || bungieOAuthRedirectUri()
   if (!clientId) throw new Error('BUNGIE_OAUTH_CLIENT_ID is not configured')
@@ -92,6 +96,10 @@ export function buildBungieAuthorizeUrl(state: string, redirectUri?: string): st
     redirect_uri: resolvedRedirect,
     state,
   })
+
+  if (options?.reauth) {
+    params.set('reauth', 'true')
+  }
 
   return `${BUNGIE_OAUTH_AUTHORIZE_URL}?${params.toString()}`
 }

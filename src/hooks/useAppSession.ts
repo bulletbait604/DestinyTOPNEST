@@ -78,8 +78,9 @@ export function useAppSession() {
   }, [])
 
   const logout = useCallback(async () => {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include', cache: 'no-store' })
     setUser(null)
+    setLoading(false)
     window.location.replace('/')
   }, [])
 
