@@ -50,7 +50,7 @@ export default function LoadoutCard({
 
   return (
     <div className="d2-panel-inset p-4 rounded-lg space-y-4">
-      <p className="d2-panel-header-title text-[10px]">{title}</p>
+      <p className="d2-panel-header-title text-[14px]">{title}</p>
 
       <BuildSynergyRail build={build} />
 
@@ -66,14 +66,14 @@ export default function LoadoutCard({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {build.aspectRefs?.length ? (
             <div>
-              <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Aspects</p>
+              <p className={cn('d2-build-section-heading', t.caption)}>Aspects</p>
               <div className="flex flex-wrap gap-2">
                 {build.aspectRefs.map((aspect) => (
                   <div key={aspect.name} className="flex items-center gap-1.5 min-w-0">
                     <ItemExternalLink item={aspect}>
                       <ItemIcon item={aspect} size={28} />
                     </ItemExternalLink>
-                    <ItemLink item={aspect} className="text-xs truncate" />
+                    <ItemLink item={aspect} className="d2-build-item-name-lg truncate" />
                   </div>
                 ))}
               </div>
@@ -81,14 +81,14 @@ export default function LoadoutCard({
           ) : null}
           {build.fragmentRefs?.length ? (
             <div>
-              <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Fragments</p>
+              <p className={cn('d2-build-section-heading', t.caption)}>Fragments</p>
               <div className="flex flex-wrap gap-2">
                 {build.fragmentRefs.map((fragment) => (
                   <div key={fragment.name} className="flex items-center gap-1.5 min-w-0">
                     <ItemExternalLink item={fragment}>
                       <ItemIcon item={fragment} size={24} />
                     </ItemExternalLink>
-                    <ItemLink item={fragment} className="text-[11px] truncate" />
+                    <ItemLink item={fragment} className="d2-build-item-name truncate" />
                   </div>
                 ))}
               </div>
@@ -107,24 +107,24 @@ export default function LoadoutCard({
 
       {armorModRefs.length > 0 ? (
         <div>
-          <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Armor mods</p>
+          <p className={cn('d2-build-section-heading', t.caption)}>Armor mods</p>
           <div className="flex flex-wrap gap-2">
             {armorModRefs.map((mod) => (
               <div key={mod.hash ?? mod.name} className="flex items-center gap-1.5 max-w-[160px]">
                 <ItemExternalLink item={mod}>
                   <ItemIcon item={mod} size={24} />
                 </ItemExternalLink>
-                <ItemLink item={mod} className="text-[11px] truncate" />
+                <ItemLink item={mod} className="d2-build-item-name truncate" />
               </div>
             ))}
           </div>
         </div>
       ) : build.armorMods.length > 0 ? (
         <div>
-          <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Armor mods</p>
+          <p className={cn('d2-build-section-heading', t.caption)}>Armor mods</p>
           <div className="flex flex-wrap gap-1.5">
             {build.armorMods.map((mod) => (
-              <span key={mod} className="text-[11px] px-2 py-0.5 rounded-md bg-white/[0.06] text-white/75">
+              <span key={mod} className="d2-build-item-name px-2 py-0.5 rounded-md bg-white/[0.06] text-white/75">
                 {mod}
               </span>
             ))}
@@ -134,7 +134,7 @@ export default function LoadoutCard({
 
       {Object.keys(build.stats).length > 0 ? (
         <div>
-          <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Total stats</p>
+          <p className={cn('d2-build-section-heading', t.caption)}>Total stats</p>
           <ArmorStatMatrix stats={build.stats} compact />
         </div>
       ) : null}

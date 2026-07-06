@@ -57,7 +57,7 @@ export default function CommunityBuildCard({
       ) : null}
       {!compact && (
         <>
-          <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 text-base">
             <span className={t.gold}>{build.usageRatePercent}% usage</span>
             <span className={t.blue}>{build.successRatePercent}% success</span>
             <span className={t.muted}>Avg {formatDuration(build.averageClearSeconds)}</span>

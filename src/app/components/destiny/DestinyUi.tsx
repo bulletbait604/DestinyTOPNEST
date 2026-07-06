@@ -140,7 +140,7 @@ export function GearStrip({
           <ItemExternalLink item={item}>
             <ItemIcon item={item} size={size} />
           </ItemExternalLink>
-          <ItemLink item={item} className={cn('text-[9px] text-center line-clamp-2 leading-snug', t.caption)} />
+          <ItemLink item={item} className={cn('text-[13px] text-center line-clamp-2 leading-snug', t.caption)} />
         </div>
       ))}
     </div>
@@ -166,7 +166,7 @@ export function SubclassBadge({
       <ItemIcon item={classRef} name={characterClass} size={36} square={false} />
       <ItemIcon item={subclassRef} name={subclass} size={32} />
       <span className={cn('text-sm font-semibold', t.body)}>
-        <span className={cn('uppercase tracking-wide text-[11px]', t.gold)}>{subclass}</span>
+        <span className={cn('uppercase tracking-wide text-[15px]', t.gold)}>{subclass}</span>
         <span className={cn('mx-1.5 text-white/25')}>·</span>
         <span className="capitalize">{characterClass}</span>
       </span>

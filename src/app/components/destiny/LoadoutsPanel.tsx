@@ -53,7 +53,7 @@ function LoadoutCard({
         darkMode={darkMode}
       />
       <div className="mt-3">
-        <p className={cn('text-xs mb-2', t.muted)}>Exotic armor</p>
+        <p className={cn('text-base mb-2', t.muted)}>Exotic armor</p>
         <div className="flex items-center gap-2">
           <ItemExternalLink item={build.exoticArmorRef} name={build.exoticArmor}>
             <ItemIcon item={build.exoticArmorRef} name={build.exoticArmor} size={44} />
@@ -62,7 +62,7 @@ function LoadoutCard({
         </div>
       </div>
       <div className="mt-3">
-        <p className={cn('text-xs mb-2', t.muted)}>Weapons</p>
+        <p className={cn('text-base mb-2', t.muted)}>Weapons</p>
         <GearStrip
           darkMode={darkMode}
           items={[

@@ -91,10 +91,10 @@ export default function GuardianHeroCard({ profile, darkMode, linked = true }: P
                     key={stat.id}
                     className="rounded-xl bg-black/30 backdrop-blur-sm ring-1 ring-white/10 px-3 py-2"
                   >
-                    <p className="text-[10px] uppercase tracking-wide text-white/45">{stat.label}</p>
+                    <p className="text-[14px] uppercase tracking-wide text-white/45">{stat.label}</p>
                     <p className="text-lg font-semibold tabular-nums text-amber-200/95">{stat.value}</p>
                     {stat.detail ? (
-                      <p className="text-[10px] text-white/40 truncate mt-0.5">{stat.detail}</p>
+                      <p className="text-[14px] text-white/40 truncate mt-0.5">{stat.detail}</p>
                     ) : null}
                   </div>
                 ))}

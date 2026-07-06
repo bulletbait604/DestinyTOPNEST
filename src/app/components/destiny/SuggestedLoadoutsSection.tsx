@@ -44,22 +44,22 @@ export default function SuggestedLoadoutsSection({
               <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-b border-white/[0.06] bg-white/[0.03]">
                 <div className="min-w-0">
                   <p className={cn('text-sm font-semibold', t.heading)}>{pick.title}</p>
-                  <p className={cn('text-xs', t.muted)}>
+                  <p className={cn('text-base', t.muted)}>
                     {pick.sourceLabel} · {pick.subclass}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusPill label="Optimized" tone="purple" />
-                  <span className={cn('text-[10px] uppercase tracking-wide', t.gold)}>{pick.scoreLabel}</span>
+                  <span className={cn('text-[14px] uppercase tracking-wide', t.gold)}>{pick.scoreLabel}</span>
                 </div>
               </div>
               <div className="p-4">
                 <ExternalMetaBuildCard build={pick.build} darkMode={darkMode} compact />
                 {pick.summary ? (
-                  <p className={cn('text-xs mt-3 leading-relaxed', t.muted)}>{pick.summary}</p>
+                  <p className={cn('text-base mt-3 leading-relaxed', t.muted)}>{pick.summary}</p>
                 ) : null}
                 {pick.optimizationNotes.length ? (
-                  <ul className={cn('text-xs mt-2 space-y-1 list-disc list-inside', t.muted)}>
+                  <ul className={cn('text-base mt-2 space-y-1 list-disc list-inside', t.muted)}>
                     {pick.optimizationNotes.map((note) => (
                       <li key={note}>{note}</li>
                     ))}

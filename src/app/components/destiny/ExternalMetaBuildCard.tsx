@@ -83,24 +83,24 @@ export default function ExternalMetaBuildCard({
 
       {build.aspectRefs?.length ? (
         <div>
-          <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Aspects</p>
+          <p className={cn('d2-build-section-heading', t.caption)}>Aspects</p>
           <div className="flex flex-wrap gap-2">
             {build.aspectRefs.map((aspect) => (
               <div key={aspect.name} className="flex items-center gap-1.5">
                 <ItemExternalLink item={aspect}>
                   <ItemIcon item={aspect} size={24} />
                 </ItemExternalLink>
-                <ItemLink item={aspect} className="text-xs" />
+                <ItemLink item={aspect} className="d2-build-item-name-lg" />
               </div>
             ))}
           </div>
         </div>
       ) : build.aspects?.length ? (
         <div>
-          <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Aspects</p>
+          <p className={cn('d2-build-section-heading', t.caption)}>Aspects</p>
           <div className="flex flex-wrap gap-1.5">
             {build.aspects.map((aspect) => (
-              <span key={aspect} className="text-[11px] px-2 py-0.5 rounded-md bg-white/[0.06] text-white/75">
+              <span key={aspect} className="d2-build-item-name px-2 py-0.5 rounded-md bg-white/[0.06] text-white/75">
                 {aspect}
               </span>
             ))}
@@ -110,24 +110,24 @@ export default function ExternalMetaBuildCard({
 
       {build.fragmentRefs?.length ? (
         <div>
-          <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Fragments</p>
+          <p className={cn('d2-build-section-heading', t.caption)}>Fragments</p>
           <div className="flex flex-wrap gap-2">
             {build.fragmentRefs.map((fragment) => (
               <div key={fragment.name} className="flex items-center gap-1.5">
                 <ItemExternalLink item={fragment}>
                   <ItemIcon item={fragment} size={22} />
                 </ItemExternalLink>
-                <ItemLink item={fragment} className="text-[11px]" />
+                <ItemLink item={fragment} className="d2-build-item-name" />
               </div>
             ))}
           </div>
         </div>
       ) : build.fragments?.length ? (
         <div>
-          <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Fragments</p>
+          <p className={cn('d2-build-section-heading', t.caption)}>Fragments</p>
           <div className="flex flex-wrap gap-1.5">
             {build.fragments.map((fragment) => (
-              <span key={fragment} className="text-[11px] px-2 py-0.5 rounded-md bg-white/[0.06] text-white/75">
+              <span key={fragment} className="d2-build-item-name px-2 py-0.5 rounded-md bg-white/[0.06] text-white/75">
                 {fragment}
               </span>
             ))}
@@ -140,21 +140,21 @@ export default function ExternalMetaBuildCard({
 
       {(build.armorModRefs?.length || build.armorMods?.length) ? (
         <div>
-          <p className={cn('text-[9px] font-bold uppercase tracking-wider mb-2', t.caption)}>Armor mods</p>
+          <p className={cn('d2-build-section-heading', t.caption)}>Armor mods</p>
           <div className="flex flex-wrap gap-2">
             {build.armorModRefs?.map((mod) => (
               <div key={mod.hash ?? mod.name} className="flex items-center gap-1.5 max-w-[150px]">
                 <ItemExternalLink item={mod}>
                   <ItemIcon item={mod} size={22} />
                 </ItemExternalLink>
-                <span className="text-[11px] text-white/75 truncate">{mod.name}</span>
+                <span className="d2-build-item-name text-white/75 truncate">{mod.name}</span>
               </div>
             ))}
             {!build.armorModRefs?.length &&
               build.armorMods?.map((name) => (
                 <div key={name} className="flex items-center gap-1.5 max-w-[150px]">
                   <ItemIcon name={name} size={22} />
-                  <span className="text-[11px] text-white/75 truncate">{name}</span>
+                  <span className="d2-build-item-name text-white/75 truncate">{name}</span>
                 </div>
               ))}
           </div>
@@ -162,7 +162,7 @@ export default function ExternalMetaBuildCard({
       ) : null}
 
       {!compact && build.summary ? (
-        <p className={cn('text-xs leading-relaxed', t.muted)}>{build.summary}</p>
+        <p className={cn('text-base leading-relaxed', t.muted)}>{build.summary}</p>
       ) : null}
 
       {!compact && build.activityFocus ? (
