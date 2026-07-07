@@ -33,7 +33,7 @@ import {
 } from '@/lib/destiny/seasonCatalog'
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
-import { recentRunsFrom } from '@/lib/destiny/runDates'
+import { recentRunsFrom, nestLaunchMongoFilter } from '@/lib/destiny/runDates'
 import type { AdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
 import { logAdminActivity } from '@/lib/destiny/adminActivityLog'
 import type {
@@ -114,7 +114,7 @@ async function loadAllRuns(): Promise<RunRecord[]> {
   const database = await db()
   return (await database
     .collection(DESTINY_COLLECTIONS.runRecords)
-    .find({})
+    .find(nestLaunchMongoFilter())
     .sort({ completedAt: -1 })
     .limit(500)
     .toArray()) as unknown as RunRecord[]
@@ -169,7 +169,7 @@ export async function getRunsForUser(userId: string, limit = 25): Promise<RunRec
     const database = await db()
     const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
-      .find({ ownerUserId: userId })
+      .find({ ownerUserId: userId, ...nestLaunchMongoFilter() })
       .sort({ completedAt: -1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
@@ -193,7 +193,7 @@ export async function getRunsForParticipant(
     }
     const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
-      .find({ $or: or })
+      .find({ $or: or, ...nestLaunchMongoFilter() })
       .sort({ completedAt: -1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
@@ -490,7 +490,7 @@ export async function getAdminRunsList(query: AdminRunsListQuery = {}): Promise<
     const database = await db()
     const limit = Math.min(Math.max(query.limit ?? 40, 1), 100)
     const offset = Math.max(query.offset ?? 0, 0)
-    const filter: Record<string, unknown> = {}
+    const filter: Record<string, unknown> = { ...nestLaunchMongoFilter() }
 
     if (query.status && query.status !== 'all') {
       filter.verificationStatus = query.status

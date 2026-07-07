@@ -9,6 +9,7 @@ import {
   getRunsForUser,
   getTrustReviewsForUser,
 } from '@/lib/destiny/store'
+import { nestLaunchMongoFilter } from '@/lib/destiny/runDates'
 import type { AdminUserDetail, AdminUserSummary } from '@/lib/destiny/types'
 
 function escapeRegex(value: string): string {
@@ -31,10 +32,12 @@ async function runCountsForUser(userId: string): Promise<{ verified: number; fla
     database.collection(DESTINY_COLLECTIONS.runRecords).countDocuments({
       ownerUserId: userId,
       verificationStatus: 'verified',
+      ...nestLaunchMongoFilter(),
     }),
     database.collection(DESTINY_COLLECTIONS.runRecords).countDocuments({
       ownerUserId: userId,
       verificationStatus: 'flagged',
+      ...nestLaunchMongoFilter(),
     }),
   ])
   return { verified, flagged }

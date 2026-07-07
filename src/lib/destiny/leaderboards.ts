@@ -10,6 +10,7 @@ import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { aggregateGuardianLeaderboard } from '@/lib/destiny/mvpVoting'
 import { squadKeyFromMembers, squadLabelFromNames } from '@/lib/destiny/pantheonActivities'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
+import { isRunAtOrAfterNestLaunch, nestLaunchUtcMs } from '@/lib/destiny/runDates'
 
 interface UserAgg {
   userId: string
@@ -49,14 +50,17 @@ function periodStart(period: LeaderboardPeriod, season: Season): Date | null {
 }
 
 function runMatchesPeriod(run: RunRecord, period: LeaderboardPeriod, season: Season): boolean {
+  if (!isRunAtOrAfterNestLaunch(run.completedAt)) return false
   const start = periodStart(period, season)
   if (!start) return true
   if (period === 'season') {
+    const seasonStartMs = Math.max(start.getTime(), nestLaunchUtcMs())
     const end = new Date(season.endDate).getTime()
     const t = new Date(run.completedAt).getTime()
-    return t >= start.getTime() && t <= end
+    return t >= seasonStartMs && t <= end
   }
-  return new Date(run.completedAt).getTime() >= start.getTime()
+  const effectiveStart = Math.max(start.getTime(), nestLaunchUtcMs())
+  return new Date(run.completedAt).getTime() >= effectiveStart
 }
 
 function runMatchesCategory(run: RunRecord, category: LeaderboardCategory): boolean {
