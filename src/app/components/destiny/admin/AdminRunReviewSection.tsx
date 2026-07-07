@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Check, ChevronLeft, ChevronRight, Search, ShieldAlert, X } from 'lucide-react'
+import { coerceStatNumber } from '@/lib/destiny/pgcrStats'
 import type { AdminReviewRecord, RunRecord } from '@/lib/destiny/types'
 import { GlassCard, LoadingBlock, SectionTitle, StatusPill } from '@/app/components/destiny/DestinyUi'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -68,8 +69,11 @@ function RunReviewCard({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <StatusPill label={run.type} tone="purple" />
-          <StatusPill label={run.verificationStatus} tone={verificationTone(run.verificationStatus)} />
+          <StatusPill label={run.type ?? 'unknown'} tone="purple" />
+          <StatusPill
+            label={run.verificationStatus ?? 'unknown'}
+            tone={verificationTone(run.verificationStatus)}
+          />
           {suspiciousScore != null ? (
             <StatusPill
               label={`Suspicious ${suspiciousScore}`}
@@ -96,11 +100,11 @@ function RunReviewCard({
               {run.teamMembers.map((member) => (
                 <tr key={member.membershipId} className="text-white/90">
                   <td className="pr-3 py-1">{member.displayName}</td>
-                  <td className="pr-3 py-1">{member.kills}</td>
-                  <td className="pr-3 py-1">{member.deaths}</td>
-                  <td className="pr-3 py-1">{member.assists}</td>
-                  <td className="pr-3 py-1">{member.score}</td>
-                  <td className="py-1">{member.powerLevel || '—'}</td>
+                  <td className="pr-3 py-1">{coerceStatNumber(member.kills)}</td>
+                  <td className="pr-3 py-1">{coerceStatNumber(member.deaths)}</td>
+                  <td className="pr-3 py-1">{coerceStatNumber(member.assists)}</td>
+                  <td className="pr-3 py-1">{coerceStatNumber(member.score)}</td>
+                  <td className="py-1">{coerceStatNumber(member.powerLevel) || '—'}</td>
                 </tr>
               ))}
             </tbody>

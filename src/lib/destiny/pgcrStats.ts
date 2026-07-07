@@ -1,10 +1,43 @@
 /** Parse Bungie PGCR / activity-history stat blocks ({ basic: { value } }). */
 
+import type { RunRecord, RunTeamMember } from '@/lib/destiny/types'
+
 export interface BungieStatBlock {
   basic?: { value?: number; displayValue?: string }
 }
 
 export type BungieValueMap = Record<string, BungieStatBlock | number | undefined>
+
+/** Coerce a stored stat field to a plain number (handles legacy object shapes). */
+export function coerceStatNumber(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (value && typeof value === 'object') {
+    const block = value as BungieStatBlock
+    if (typeof block.basic?.value === 'number') return block.basic.value
+  }
+  return 0
+}
+
+export function normalizeRunTeamMember(member: RunTeamMember): RunTeamMember {
+  return {
+    ...member,
+    kills: coerceStatNumber(member.kills),
+    deaths: coerceStatNumber(member.deaths),
+    assists: coerceStatNumber(member.assists),
+    score: coerceStatNumber(member.score),
+    powerLevel: coerceStatNumber(member.powerLevel),
+  }
+}
+
+export function normalizeRunRecord(run: RunRecord): RunRecord {
+  return {
+    ...run,
+    durationSeconds: coerceStatNumber(run.durationSeconds),
+    pointsAwarded: coerceStatNumber(run.pointsAwarded),
+    suspiciousScore: coerceStatNumber(run.suspiciousScore),
+    teamMembers: (run.teamMembers ?? []).map(normalizeRunTeamMember),
+  }
+}
 
 export function pgcrStatValue(
   values: BungieValueMap | undefined,

@@ -21,6 +21,7 @@ import { isValidMetaBuild } from '@/lib/destiny/metaBuildClassRules'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { aggregateBuildIntelligence, verifiedRunIdSet } from '@/lib/destiny/buildIntelligence'
 import { calculateRunPoints } from '@/lib/destiny/scoring'
+import { normalizeRunRecord } from '@/lib/destiny/pgcrStats'
 import { rankTopMetaLoadoutsByClass, rankTrendingMetaBuilds, sortExternalBuildsByConsensus } from '@/lib/destiny/metaBuildConsensus'
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
@@ -461,7 +462,10 @@ export async function getAdminReviewQueue(): Promise<AdminReviewRecord[]> {
       .sort({ suspiciousScore: -1 })
       .limit(50)
       .toArray()
-    return rows as unknown as AdminReviewRecord[]
+    return rows.map((row) => {
+      const review = row as unknown as AdminReviewRecord
+      return review.run ? { ...review, run: normalizeRunRecord(review.run) } : review
+    })
   } catch {
     return []
   }
@@ -509,7 +513,7 @@ export async function getAdminRunsList(query: AdminRunsListQuery = {}): Promise<
       collection.countDocuments(filter),
     ])
 
-    return { runs: runs as unknown as RunRecord[], total }
+    return { runs: (runs as unknown as RunRecord[]).map(normalizeRunRecord), total }
   } catch {
     return { runs: [], total: 0 }
   }
