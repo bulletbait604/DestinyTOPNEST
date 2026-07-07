@@ -125,7 +125,9 @@ export async function fetchSocialPresence(
   const [friendsRes, clanMembersRes, activeLobby] = await Promise.all([
     getBungieFriends(accessToken).catch(() => ({ friends: [] as BungieFriendRow[] })),
     clanId
-      ? getClanMembersWithPresence(clanId).catch(() => ({ results: [] as ClanMemberPresenceRow[] }))
+      ? getClanMembersWithPresence(clanId, accessToken).catch(() => ({
+          results: [] as ClanMemberPresenceRow[],
+        }))
       : Promise.resolve({ results: [] as ClanMemberPresenceRow[] }),
     getUserActiveLobby(stored.userId),
   ])

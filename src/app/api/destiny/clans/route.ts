@@ -20,20 +20,23 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    const [clan, social] = await Promise.all([
-      fetchLiveClan(stored),
-      fetchSocialPresence(stored).catch(() => ({
-        onlineClanMembers: [],
-        onlineFriends: [],
-        activeLobby: null,
-        bungieFireteamId: null,
-        friendGroups: [],
-      })),
-    ])
+    const clan = await fetchLiveClan(stored)
+    const refreshed = (await getDestinyUserBySiteUserId(authUser.username.toLowerCase())) ?? stored
+    const social = await fetchSocialPresence(refreshed).catch(() => ({
+      onlineClanMembers: [],
+      onlineFriends: [],
+      activeLobby: null,
+      bungieFireteamId: null,
+      friendGroups: [],
+    }))
+
     if (!clan) {
+      const hint = refreshed.clanName
+        ? `Could not refresh ${refreshed.clanTag ? `${refreshed.clanTag} ` : ''}${refreshed.clanName} from Bungie.`
+        : 'No clan found for your linked Bungie account.'
       return NextResponse.json({
         clan: null,
-        message: 'No clan found for your linked Bungie account.',
+        message: hint,
         ...social,
       })
     }

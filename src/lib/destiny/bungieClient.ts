@@ -191,25 +191,29 @@ export async function getPostGameCarnageReport(activityId: string, accessToken?:
 }
 
 /** Clan info. */
-export async function getClan(clanId: string) {
-  return bungieFetch(`/GroupV2/${clanId}/`)
+export async function getClan(clanId: string, accessToken?: string) {
+  return bungieFetch(`/GroupV2/${clanId}/`, { accessToken })
 }
 
 /** Clan members. */
-export async function getClanMembers(clanId: string, page = 1) {
+export async function getClanMembers(clanId: string, page = 1, accessToken?: string) {
   return bungieFetch<{ results?: ClanMemberPresenceRow[]; hasMore?: boolean }>(
-    `/GroupV2/${clanId}/Members/${page}/`
+    `/GroupV2/${clanId}/Members/${page}/`,
+    { accessToken }
   )
 }
 
 /** Fetch every clan member page (50 per page) for accurate online presence. */
-export async function getAllClanMembersWithPresence(clanId: string): Promise<ClanMemberPresenceRow[]> {
+export async function getAllClanMembersWithPresence(
+  clanId: string,
+  accessToken?: string
+): Promise<ClanMemberPresenceRow[]> {
   const all: ClanMemberPresenceRow[] = []
   let page = 1
   let hasMore = true
 
   while (hasMore && page <= 40) {
-    const res = await getClanMembers(clanId, page)
+    const res = await getClanMembers(clanId, page, accessToken)
     all.push(...(res.results ?? []))
     hasMore = Boolean(res.hasMore)
     page += 1
@@ -219,16 +223,22 @@ export async function getAllClanMembersWithPresence(clanId: string): Promise<Cla
 }
 
 /** Groups/clans a member belongs to. filter=0 all, groupType=1 clan. */
-export async function getGroupsForMember(membershipType: number, membershipId: string) {
+export async function getGroupsForMember(
+  membershipType: number,
+  membershipId: string,
+  accessToken?: string
+) {
   return bungieFetch<{
     results?: Array<{
       group?: {
-        groupId?: string
+        groupId?: string | number
+        groupType?: number
         name?: string
+        memberCount?: number
         clanInfo?: { clanCallsign?: string }
       }
     }>
-  }>(`/GroupV2/User/${membershipType}/${membershipId}/0/1/`)
+  }>(`/GroupV2/User/${membershipType}/${membershipId}/0/1/`, { accessToken })
 }
 
 /** Fireteam / group roster for an activity instance (when available). */
@@ -401,8 +411,8 @@ export async function getBungieFriends(accessToken: string) {
   return bungieFetch<{ friends?: BungieFriendRow[] }>('/Social/Friends/', { accessToken })
 }
 
-export async function getClanMembersWithPresence(clanId: string) {
-  const results = await getAllClanMembersWithPresence(clanId)
+export async function getClanMembersWithPresence(clanId: string, accessToken?: string) {
+  const results = await getAllClanMembersWithPresence(clanId, accessToken)
   return { results, hasMore: false }
 }
 

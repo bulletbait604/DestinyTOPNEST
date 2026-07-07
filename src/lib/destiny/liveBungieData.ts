@@ -113,50 +113,126 @@ export async function fetchSavedLoadoutsForCharacter(
   }
 }
 
+const BUNGIE_NET_MEMBERSHIP_TYPE = 254
+
+type DiscoveredClan = {
+  clanId: string
+  name?: string
+  tag?: string
+}
+
+async function discoverClanForUser(
+  stored: StoredDestinyUser,
+  accessToken?: string
+): Promise<DiscoveredClan | null> {
+  const attempts: Array<[number, string]> = []
+  if (stored.destinyMembershipType != null && stored.bungieMembershipId) {
+    attempts.push([stored.destinyMembershipType, stored.bungieMembershipId])
+  }
+  if (stored.bungieNetMembershipId) {
+    attempts.push([BUNGIE_NET_MEMBERSHIP_TYPE, stored.bungieNetMembershipId])
+  }
+
+  for (const [membershipType, membershipId] of attempts) {
+    try {
+      const groups = await getGroupsForMember(membershipType, membershipId, accessToken)
+      const clanGroup =
+        groups.results?.find((row) => row.group?.groupType === 1)?.group ??
+        groups.results?.[0]?.group
+      if (!clanGroup?.groupId) continue
+
+      const tag = clanGroup.clanInfo?.clanCallsign
+        ? `[${clanGroup.clanInfo.clanCallsign}]`
+        : undefined
+
+      return {
+        clanId: String(clanGroup.groupId),
+        name: clanGroup.name,
+        tag,
+      }
+    } catch {
+      /* try next membership identity */
+    }
+  }
+
+  return null
+}
+
 export async function fetchLiveClan(stored: StoredDestinyUser): Promise<ClanProfile | null> {
   const membershipType = stored.destinyMembershipType
   const membershipId = stored.bungieMembershipId
   if (!membershipType || !membershipId) return null
 
+  const accessToken = (await getValidAccessToken(stored).catch(() => null)) ?? undefined
+
   if (stored.clanId) {
-    return fetchClanById(stored.clanId, stored)
+    const cached = await fetchClanById(stored.clanId, stored, accessToken)
+    if (cached) return cached
   }
 
-  try {
-    const groups = await getGroupsForMember(membershipType, membershipId)
-    const clan = groups.results?.[0]?.group
-    if (!clan?.groupId) return null
-
-    await upsertDestinyUser(stored.userId, {
-      clanId: clan.groupId,
-      clanName: clan.name,
-      clanTag: clan.clanInfo?.clanCallsign ? `[${clan.clanInfo.clanCallsign}]` : undefined,
-    })
-
-    return fetchClanById(clan.groupId, stored)
-  } catch {
+  const discovered = await discoverClanForUser(stored, accessToken)
+  if (!discovered) {
+    if (stored.clanId) {
+      await upsertDestinyUser(stored.userId, {
+        clanId: '',
+        clanName: '',
+        clanTag: '',
+      }).catch(() => null)
+    }
     return null
   }
+
+  await upsertDestinyUser(stored.userId, {
+    clanId: discovered.clanId,
+    clanName: discovered.name,
+    clanTag: discovered.tag,
+  })
+
+  return fetchClanById(discovered.clanId, stored, accessToken)
 }
 
-async function fetchClanById(clanId: string, stored: StoredDestinyUser): Promise<ClanProfile | null> {
+async function fetchClanById(
+  clanId: string,
+  stored: StoredDestinyUser,
+  accessToken?: string
+): Promise<ClanProfile | null> {
   try {
-    const [clanData, membersData] = await Promise.all([
-      getClan(clanId) as Promise<{
-        detail?: { name?: string; motto?: string; memberCount?: number }
-        clanInfo?: { clanCallsign?: string; clanBannerData?: { emblemPath?: string } }
-      }>,
-      getClanMembersWithPresence(clanId) as Promise<{
-        results?: ClanMemberPresenceRow[]
-      }>,
-    ])
+    const clanData = (await getClan(clanId, accessToken)) as {
+      detail?: {
+        name?: string
+        motto?: string
+        memberCount?: number
+        bannerPath?: string
+        avatarPath?: string
+        clanInfo?: {
+          clanCallsign?: string
+          clanBannerData?: { emblemPath?: string }
+        }
+      }
+    }
 
-    const tag = clanData.clanInfo?.clanCallsign ? `[${clanData.clanInfo.clanCallsign}]` : stored.clanTag ?? ''
-    const emblemPath = clanData.clanInfo?.clanBannerData?.emblemPath
-    const emblemUrl = emblemPath ? `https://www.bungie.net${emblemPath}` : undefined
+    const detail = clanData.detail
+    if (!detail?.name && !stored.clanName) return null
+
+    let memberRows: ClanMemberPresenceRow[] = []
+    try {
+      const membersData = await getClanMembersWithPresence(clanId, accessToken)
+      memberRows = membersData.results ?? []
+    } catch {
+      /* roster is optional — clan header should still load */
+    }
+
+    const tag = detail?.clanInfo?.clanCallsign
+      ? `[${detail.clanInfo.clanCallsign}]`
+      : stored.clanTag ?? ''
+    const emblemPath =
+      detail?.clanInfo?.clanBannerData?.emblemPath ??
+      detail?.bannerPath ??
+      detail?.avatarPath
+    const emblemUrl = emblemPath ? buildBungieIconUrl(emblemPath) : undefined
 
     const topMembers =
-      membersData.results?.slice(0, 5).map((m) => {
+      memberRows.slice(0, 5).map((m) => {
         const info = m.destinyUserInfo ?? m.bungieNetUserInfo
         return {
           displayName:
@@ -170,10 +246,10 @@ async function fetchClanById(clanId: string, stored: StoredDestinyUser): Promise
 
     return {
       id: clanId,
-      name: clanData.detail?.name ?? stored.clanName ?? 'Clan',
+      name: detail?.name ?? stored.clanName ?? 'Clan',
       tag,
       emblemUrl,
-      memberCount: clanData.detail?.memberCount ?? topMembers.length,
+      memberCount: detail?.memberCount ?? memberRows.length,
       points: 0,
       fullClanClears: 0,
       recruitmentOpen: false,

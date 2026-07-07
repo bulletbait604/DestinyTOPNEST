@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Gamepad2, Users, UsersRound } from 'lucide-react'
+import { Gamepad2, RefreshCw, Users, UsersRound } from 'lucide-react'
 import type {
   ActiveFireteamLobbySummary,
   ClanProfile,
@@ -193,11 +193,13 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
   const [message, setMessage] = useState<string | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [invitingKey, setInvitingKey] = useState<string | null>(null)
   const t = getDestinyTheme(darkMode)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true)
+    else setRefreshing(true)
     try {
       const res = await fetch('/api/destiny/clans', { credentials: 'include', cache: 'no-store' })
       if (res.ok) {
@@ -210,7 +212,8 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
         setMessage(json.message ?? null)
       }
     } finally {
-      setLoading(false)
+      if (!opts?.silent) setLoading(false)
+      setRefreshing(false)
     }
   }, [])
 
@@ -263,7 +266,18 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
   if (!clan) {
     return (
       <GlassCard darkMode={darkMode}>
-        <p className={t.muted}>{message ?? 'No clan data. Reconnect Bungie if your session expired.'}</p>
+        <p className={cn('text-sm leading-relaxed', t.muted)}>
+          {message ?? 'No clan data. Reconnect Bungie if your session expired.'}
+        </p>
+        <button
+          type="button"
+          disabled={refreshing}
+          onClick={() => void load({ silent: true })}
+          className={cn(destinySecondaryBtn(darkMode), 'mt-4 text-xs py-1.5')}
+        >
+          <RefreshCw className={cn('w-3.5 h-3.5', refreshing && 'animate-spin')} />
+          Refresh clan
+        </button>
       </GlassCard>
     )
   }
