@@ -21,7 +21,8 @@ import SuggestedLoadoutsSection from '@/app/components/destiny/SuggestedLoadouts
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import { rankTopMetaLoadoutsByClass } from '@/lib/destiny/metaBuildConsensus'
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
-import { rankRecommendedLoadoutsForClass,
+import {
+  rankRecommendedLoadoutsForClass,
   recommendedLoadoutsSummary,
 } from '@/lib/destiny/recommendedBuildOptimizer'
 import { buildLoadoutPickerEntries, type LoadoutPickerEntry } from '@/lib/destiny/loadoutArchetype'
@@ -144,10 +145,12 @@ export default function ProfileLoadoutsSection({
     () => rankTopLoadoutsByClass(verifiedBuilds, 5),
     [verifiedBuilds]
   )
-  const recommendedPicks = useMemo(
-    () => rankRecommendedLoadoutsForClass(activeClass, externalBuilds, verifiedBuilds, 4),
-    [activeClass, externalBuilds, verifiedBuilds]
-  )
+  const recommendedPicks = useMemo(() => {
+    const fromApi = builds?.recommendedByClass?.[activeClass]
+    if (fromApi?.length) return fromApi
+    if (!externalBuilds.length) return []
+    return rankRecommendedLoadoutsForClass(activeClass, externalBuilds, verifiedBuilds, 4)
+  }, [activeClass, builds?.recommendedByClass, externalBuilds, verifiedBuilds])
   const recommendedSummary = useMemo(
     () => recommendedLoadoutsSummary(activeClass, recommendedPicks),
     [activeClass, recommendedPicks]

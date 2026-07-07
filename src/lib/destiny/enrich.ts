@@ -7,6 +7,7 @@ import type {
   BuildIntelligenceCard,
   BuildSnapshot,
   ClanProfile,
+  DestinyCharacterClass,
   ExternalBuildSource,
   FireteamLobby,
   LeaderboardEntry,
@@ -15,6 +16,10 @@ import type {
   RunRecord,
   WeeklyResetInfo,
 } from '@/lib/destiny/types'
+import {
+  rankRecommendedLoadoutsForClass,
+  type RankedRecommendedLoadout,
+} from '@/lib/destiny/recommendedBuildOptimizer'
 import type { ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 import {
   enrichIconRef,
@@ -137,6 +142,18 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     ? await resolveArmorSetBonusesFromPieces(armorPieces)
     : build.armorSetBonuses
 
+  const armorModRefs = build.armorModRefs?.length
+    ? build.armorModRefs
+    : build.armorMods?.length
+      ? await Promise.all(
+          build.armorMods.map(async (mod) => {
+            const fromItem = await resolveByName(mod, 'DestinyInventoryItemDefinition')
+            if (fromItem?.iconUrl) return fromItem
+            return resolveByName(mod, 'DestinySandboxPerkDefinition')
+          })
+        )
+      : undefined
+
   return {
     ...build,
     classRef,
@@ -158,6 +175,7 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     grenadeRef,
     armorPieces,
     armorSetBonuses,
+    armorModRefs,
   }
 }
 
@@ -452,6 +470,27 @@ export async function enrichExternalBuild(build: ExternalBuildSource): Promise<E
   }
 }
 
+async function enrichRankedRecommendedLoadout(
+  pick: RankedRecommendedLoadout
+): Promise<RankedRecommendedLoadout> {
+  return { ...pick, build: await enrichExternalBuild(pick.build) }
+}
+
+export async function enrichRecommendedByClass(
+  verifiedBuilds: BuildIntelligenceCard[],
+  externalBuilds: ExternalBuildSource[]
+): Promise<Record<DestinyCharacterClass, RankedRecommendedLoadout[]>> {
+  const classes: DestinyCharacterClass[] = ['titan', 'hunter', 'warlock']
+  const entries = await Promise.all(
+    classes.map(async (characterClass) => {
+      const picks = rankRecommendedLoadoutsForClass(characterClass, externalBuilds, verifiedBuilds, 4)
+      const enriched = await Promise.all(picks.map(enrichRankedRecommendedLoadout))
+      return [characterClass, enriched] as const
+    })
+  )
+  return Object.fromEntries(entries) as Record<DestinyCharacterClass, RankedRecommendedLoadout[]>
+}
+
 export async function enrichBuildsResponse(data: {
   verifiedBuilds: BuildIntelligenceCard[]
   externalBuilds: ExternalBuildSource[]
@@ -463,7 +502,8 @@ export async function enrichBuildsResponse(data: {
     Promise.all(data.verifiedBuilds.map(enrichBuildCard)),
     Promise.all(data.externalBuilds.map(enrichExternalBuild)),
   ])
-  return { ...data, verifiedBuilds, externalBuilds }
+  const recommendedByClass = await enrichRecommendedByClass(verifiedBuilds, externalBuilds)
+  return { ...data, verifiedBuilds, externalBuilds, recommendedByClass }
 }
 
 export async function enrichLobbies(lobbies: FireteamLobby[]): Promise<FireteamLobby[]> {

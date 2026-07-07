@@ -25,6 +25,11 @@ function refsMatch(a?: DestinyIconRef, b?: DestinyIconRef): boolean {
   return namesMatch(a?.name, b?.name)
 }
 
+function refForWeaponName(name: string, refs?: DestinyIconRef[]): DestinyIconRef | undefined {
+  if (!name || name === '—' || !refs?.length) return undefined
+  return refs.find((ref) => namesMatch(ref.name, name))
+}
+
 /** Meta builds list exotic separately from the 3-weapon row — dedupe before display/apply. */
 export function assignMetaWeaponSlots(build: ExternalBuildSource): MetaWeaponSlotAssignment {
   const weapons = (build.weapons ?? []).map((w) => w.trim()).filter(Boolean)
@@ -39,9 +44,9 @@ export function assignMetaWeaponSlots(build: ExternalBuildSource): MetaWeaponSlo
     power = exotic
   }
 
-  const kineticRef = build.weaponRefs?.[0]
-  const energyRef = build.weaponRefs?.[1]
-  let powerRef = build.weaponRefs?.[2]
+  const kineticRef = refForWeaponName(kinetic, build.weaponRefs) ?? build.weaponRefs?.[0]
+  const energyRef = refForWeaponName(energy, build.weaponRefs) ?? build.weaponRefs?.[1]
+  let powerRef = refForWeaponName(power, build.weaponRefs) ?? build.weaponRefs?.[2]
 
   if (exotic && !exoticInWeapons && !powerRef && build.exoticWeaponRef) {
     powerRef = build.exoticWeaponRef

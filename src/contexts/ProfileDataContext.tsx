@@ -330,7 +330,13 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
 
   const ensureBuilds = useCallback(
     async (opts?: FetchOptions): Promise<BuildsCacheData | null> => {
-      if (!opts?.force && builds && isCacheFresh(buildsSavedAt.current)) {
+      if (
+        !opts?.force &&
+        builds &&
+        isCacheFresh(buildsSavedAt.current) &&
+        builds.recommendedByClass &&
+        Object.keys(builds.recommendedByClass).length > 0
+      ) {
         return builds
       }
 
@@ -350,6 +356,7 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
             verifiedBuilds: json.verifiedBuilds ?? [],
             externalBuilds: json.externalBuilds ?? [],
             metaResearchSummary: json.metaResearchSummary ?? '',
+            recommendedByClass: json.recommendedByClass ?? {},
           }
           setBuilds(data)
           writeCachedBuilds(data, fullProfileRef.current?.userId)

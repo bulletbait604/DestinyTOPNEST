@@ -1,4 +1,10 @@
-import type { BuildIntelligenceCard, ExternalBuildSource, PlayerProfile } from '@/lib/destiny/types'
+import type {
+  BuildIntelligenceCard,
+  DestinyCharacterClass,
+  ExternalBuildSource,
+  PlayerProfile,
+} from '@/lib/destiny/types'
+import type { RankedRecommendedLoadout } from '@/lib/destiny/recommendedBuildOptimizer'
 
 export const PROFILE_CACHE_TTL_MS = 15 * 60 * 1000
 
@@ -29,6 +35,7 @@ export interface BuildsCacheData {
   verifiedBuilds: BuildIntelligenceCard[]
   externalBuilds: ExternalBuildSource[]
   metaResearchSummary: string
+  recommendedByClass?: Partial<Record<DestinyCharacterClass, RankedRecommendedLoadout[]>>
 }
 
 /** Prefer localStorage so profile/build cache survives tab close and redeploys (Mongo remains source of truth). */

@@ -180,6 +180,10 @@ function optimizeBuild(
     weapons,
     armorMods,
     legendaryArmor: legendaryArmorForMetaBuild(meta),
+    // Weapons, mods, and legendary armor may differ from the source meta build — drop stale icon refs.
+    weaponRefs: undefined,
+    legendaryArmorRefs: undefined,
+    armorModRefs: undefined,
     summary: [
       meta.summary,
       verified
