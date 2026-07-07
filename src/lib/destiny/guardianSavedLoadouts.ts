@@ -47,7 +47,7 @@ function indexAllProfileItems(profile: LoadoutProfile): Map<string, ProfileItem>
 
   const addItems = (items?: ProfileItem[]) => {
     for (const item of items ?? []) {
-      if (item.itemInstanceId) map.set(item.itemInstanceId, item)
+      if (item.itemInstanceId) map.set(String(item.itemInstanceId), item)
     }
   }
 
@@ -63,6 +63,23 @@ function indexAllProfileItems(profile: LoadoutProfile): Map<string, ProfileItem>
   addItems(profile.profileInventory?.data?.items)
 
   return map
+}
+
+function loadoutsForCharacter(
+  profile: LoadoutProfile,
+  characterId: string
+): Array<{
+  colorHash?: number
+  nameHash?: number
+  items?: Array<{ itemInstanceId?: string; itemHash?: number; bucketHash?: number }>
+}> {
+  const data = profile.characterLoadouts?.data ?? {}
+  const direct = data[characterId]?.loadouts
+  if (direct) return direct
+
+  const normalized = String(characterId)
+  const matchedKey = Object.keys(data).find((key) => String(key) === normalized)
+  return matchedKey ? (data[matchedKey]?.loadouts ?? []) : []
 }
 
 async function resolveLoadoutName(nameHash?: number, index?: number): Promise<string> {
@@ -99,7 +116,9 @@ async function resolveLoadoutEntries(
   const entries: ProfileItemEntry[] = []
 
   for (const entry of items) {
-    const indexed = entry.itemInstanceId ? itemIndex.get(entry.itemInstanceId) : undefined
+    const indexed = entry.itemInstanceId
+      ? itemIndex.get(String(entry.itemInstanceId))
+      : undefined
     const itemHash = indexed?.itemHash ?? entry.itemHash
     if (!itemHash) continue
 
@@ -173,10 +192,14 @@ export async function fetchSavedLoadouts(
     accessToken
   )) as LoadoutProfile
 
-  const classType = profile.characters?.data?.[characterId]?.classType ?? 1
+  const chars = profile.characters?.data ?? {}
+  const charRow =
+    chars[characterId] ??
+    Object.entries(chars).find(([id]) => String(id) === String(characterId))?.[1]
+  const classType = charRow?.classType ?? 1
   const characterClass = CLASS_MAP[classType] ?? 'hunter'
   const itemIndex = indexAllProfileItems(profile)
-  const loadouts = profile.characterLoadouts?.data?.[characterId]?.loadouts ?? []
+  const loadouts = loadoutsForCharacter(profile, characterId)
   const snapshots: BuildSnapshot[] = []
 
   for (let i = 0; i < loadouts.length; i++) {

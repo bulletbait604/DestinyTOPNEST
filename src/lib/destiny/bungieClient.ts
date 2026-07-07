@@ -5,6 +5,9 @@
  */
 
 import { BUNGIE_API_BASE, DESTINY_MANIFEST_PATH, destinyApiKey } from '@/lib/destiny/env'
+import JSONbig from 'json-bigint'
+
+const parseBungieJson = JSONbig({ storeAsString: true })
 
 export class BungieApiError extends Error {
   constructor(
@@ -53,7 +56,8 @@ async function bungieFetch<T>(
     throw new BungieApiError(`Bungie HTTP ${res.status}`, res.status)
   }
 
-  const body = (await res.json()) as BungieEnvelope<T>
+  const raw = await res.text()
+  const body = parseBungieJson.parse(raw) as BungieEnvelope<T>
   if (body.ErrorCode !== 1) {
     throw new BungieApiError(body.Message || body.ErrorStatus, 502, body.ErrorCode)
   }
@@ -148,14 +152,14 @@ export async function getPlayerProfile(
   )
 }
 
-/** Character equipment + inventories + in-game saved loadouts. */
+/** Character equipment, character inventories, vault, and in-game saved loadouts. */
 export async function getCharacterLoadoutProfile(
   membershipType: number,
   membershipId: string,
   accessToken?: string
 ) {
   return bungieFetch(
-    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=200,205,102,206,300,304,305`,
+    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=200,201,205,102,206,300,304,305`,
     { accessToken }
   )
 }

@@ -198,7 +198,11 @@ export default function ProfileLoadoutsSection({
             <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
               <SectionTitle
                 title="In-game loadouts"
-                subtitle="Tap an icon to inspect gear — live from your Bungie account"
+                subtitle={
+                  loadoutEntries.length
+                    ? `${loadoutEntries.length} loadout${loadoutEntries.length === 1 ? '' : 's'} from Bungie for this guardian — tap an icon to inspect`
+                    : 'Tap Refresh after saving loadouts in Destiny 2 (orbit menu)'
+                }
                 darkMode={darkMode}
               />
               <button

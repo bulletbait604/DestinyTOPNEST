@@ -248,7 +248,7 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      if (!opts?.force && cached && isCacheFresh(savedAt) && cached.current) {
+      if (!opts?.force && cached && isCacheFresh(savedAt) && cached.current && cached.saved.length > 0) {
         return cached
       }
 
