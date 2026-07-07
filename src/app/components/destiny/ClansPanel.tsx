@@ -8,7 +8,7 @@ import type {
   OnlineSocialMember,
   SocialFriendGroup,
 } from '@/lib/destiny/types'
-import { GlassCard, ItemIcon, LoadingBlock, SectionTitle, StatusPill } from '@/app/components/destiny/DestinyUi'
+import { EmptyBlock, GlassCard, ItemIcon, LoadingBlock, SectionTitle, StatusPill } from '@/app/components/destiny/DestinyUi'
 import { destinyGhostBtn, destinySecondaryBtn, formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
@@ -418,35 +418,45 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
 
       <GlassCard darkMode={darkMode} className="tn-clan-online-panel">
         <SectionTitle
-          title={`Clan roster (${clan.topMembers.length})`}
+          title={`Clan roster (${clan.topMembers.length}${clan.memberCount ? ` of ${clan.memberCount}` : ''})`}
           subtitle="Full member list from Bungie — scroll when your clan is large."
           darkMode={darkMode}
         />
-        <div className="tn-clan-online-list-shell">
-          <div className="tn-clan-online-list tn-clan-online-list-scroll">
-            {clan.topMembers.map((m) => (
-              <div
-                key={m.displayName}
-                className="flex items-center justify-between py-2 border-b border-white/5 last:border-0"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span
-                    className={cn(
-                      'w-2 h-2 rounded-full shrink-0',
-                      m.isOnline ? 'bg-emerald-400' : 'bg-white/20'
+        {!clan.topMembers.length ? (
+          <EmptyBlock
+            darkMode={darkMode}
+            message="Clan roster could not be loaded"
+            hint="Reconnect Bungie and refresh this tab. Your clan header can load even when Bungie withholds the member roster."
+          />
+        ) : (
+          <div className="tn-clan-online-list-shell">
+            <div className="tn-clan-online-list tn-clan-online-list-scroll">
+              {clan.topMembers.map((m) => (
+                <div
+                  key={m.membershipId}
+                  className="flex items-center justify-between py-2 border-b border-white/5 last:border-0"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className={cn(
+                        'w-2 h-2 rounded-full shrink-0',
+                        m.isOnline ? 'bg-emerald-400' : 'bg-white/20'
+                      )}
+                      title={m.isOnline ? 'Online' : 'Offline'}
+                    />
+                    {m.emblemUrl ? (
+                      <ItemIcon iconUrl={m.emblemUrl} name={m.displayName} size={28} className="rounded-full" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-purple-900/50 shrink-0" />
                     )}
-                    title={m.isOnline ? 'Online' : 'Offline'}
-                  />
-                  {m.emblemUrl && (
-                    <ItemIcon iconUrl={m.emblemUrl} name={m.displayName} size={28} className="rounded-full" />
-                  )}
-                  <span className="text-white truncate">{m.displayName}</span>
+                    <span className="text-white truncate">{m.bungieName ?? m.displayName}</span>
+                  </div>
+                  {m.points > 0 ? <span className={cn('text-sm', t.gold)}>{m.points} pts</span> : null}
                 </div>
-                {m.points > 0 ? <span className={cn('text-sm', t.gold)}>{m.points} pts</span> : null}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </GlassCard>
     </div>
   )

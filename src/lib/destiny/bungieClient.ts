@@ -199,13 +199,34 @@ export async function getClan(clanId: string, accessToken?: string) {
   return bungieFetch(`/GroupV2/${clanId}/`, { accessToken })
 }
 
-/** Clan members (50 per page). */
+/** Clan members (50 per page). Bungie expects currentpage as a query param, not a path segment. */
 export async function getClanMembers(clanId: string, page = 1, accessToken?: string) {
-  return bungieFetch<{
+  type ClanMembersPage = {
     results?: ClanMemberPresenceRow[]
     hasMore?: boolean
     totalResults?: number
-  }>(`/GroupV2/${clanId}/Members/${page}/`, { accessToken })
+  }
+
+  const attempts = [
+    `/GroupV2/${clanId}/Members/?currentpage=${page}`,
+    `/GroupV2/${clanId}/Members/?currentPage=${page}`,
+    `/GroupV2/${clanId}/Members/${page}/`,
+  ]
+
+  let lastError: unknown
+  for (const path of attempts) {
+    try {
+      const res = await bungieFetch<ClanMembersPage>(path, { accessToken })
+      if (page === 1 || (res.results?.length ?? 0) > 0) {
+        return res
+      }
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  if (lastError instanceof Error) throw lastError
+  return { results: [], hasMore: false, totalResults: 0 }
 }
 
 /** Fetch every clan member page for accurate online presence across large rosters. */

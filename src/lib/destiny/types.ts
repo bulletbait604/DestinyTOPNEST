@@ -803,7 +803,14 @@ export interface ClanProfile {
   recruitmentOpen: boolean
   avgRaidClearSeconds: number
   avgDungeonClearSeconds: number
-  topMembers: { displayName: string; points: number; emblemUrl?: string; isOnline?: boolean }[]
+  topMembers: {
+    membershipId: string
+    displayName: string
+    bungieName?: string
+    points: number
+    emblemUrl?: string
+    isOnline?: boolean
+  }[]
   achievements: string[]
   /** Clan members currently online (populated from live Bungie data). */
   onlineMembers?: OnlineSocialMember[]

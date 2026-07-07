@@ -5,6 +5,7 @@
   type ClanMemberPresenceRow,
 } from '@/lib/destiny/bungieClient'
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
+import { buildClanRosterFromMemberRows } from '@/lib/destiny/clanRoster'
 import { fetchAllCharactersPresentation, fetchGuardianPresentation } from '@/lib/destiny/guardianPresentation'
 import { resolveActiveCharacterId } from '@/lib/destiny/activeCharacter'
 import { fetchGuardianBungieStats } from '@/lib/destiny/guardianBungieStats'
@@ -167,7 +168,9 @@ export async function fetchLiveClan(stored: StoredDestinyUser): Promise<ClanProf
 
   if (stored.clanId) {
     const cached = await fetchClanById(stored.clanId, stored, accessToken)
-    if (cached) return cached
+    if (cached && (cached.topMembers.length > 0 || (cached.memberCount ?? 0) === 0)) {
+      return cached
+    }
   }
 
   const discovered = await discoverClanForUser(stored, accessToken)
@@ -231,18 +234,7 @@ async function fetchClanById(
       detail?.avatarPath
     const emblemUrl = emblemPath ? buildBungieIconUrl(emblemPath) : undefined
 
-    const topMembers = memberRows.map((m) => {
-      const info = m.destinyUserInfo ?? m.bungieNetUserInfo
-      return {
-        displayName:
-          m.destinyUserInfo?.LastSeenDisplayName ??
-          info?.displayName ??
-          'Member',
-        points: 0,
-        emblemUrl: buildBungieIconUrl(info?.iconPath),
-        isOnline: Boolean(m.isOnline),
-      }
-    })
+    const topMembers = buildClanRosterFromMemberRows(memberRows)
 
     return {
       id: clanId,
