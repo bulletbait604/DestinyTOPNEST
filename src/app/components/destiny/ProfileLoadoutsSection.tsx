@@ -62,6 +62,8 @@ export default function ProfileLoadoutsSection({
     buildsLoading,
     ensureLoadouts,
     ensureBuilds,
+    fullProfile,
+    ensureFullProfile,
   } = useProfileData()
   const bungie = useBungieLink()
   const t = getDestinyTheme(darkMode)
@@ -87,14 +89,26 @@ export default function ProfileLoadoutsSection({
     if (section !== 'builder') {
       const characterChanged = prevCharacterRef.current !== activeCharacterId
       prevCharacterRef.current = activeCharacterId
+      void ensureFullProfile(activeCharacterId)
       void ensureLoadouts(activeCharacterId, { force: characterChanged })
       void ensureBuilds()
     }
-  }, [activeCharacterId, bungie.linked, ensureLoadouts, ensureBuilds, section])
+  }, [activeCharacterId, bungie.linked, ensureLoadouts, ensureBuilds, ensureFullProfile, section])
+
+  const currentLoadout = useMemo(() => {
+    if (loadouts?.current) return loadouts.current
+    if (
+      fullProfile?.activeCharacterId === activeCharacterId &&
+      fullProfile?.currentLoadout
+    ) {
+      return fullProfile.currentLoadout
+    }
+    return null
+  }, [loadouts?.current, fullProfile, activeCharacterId])
 
   const loadoutEntries = useMemo(
-    () => buildLoadoutPickerEntries(loadouts?.current, loadouts?.saved),
-    [loadouts]
+    () => buildLoadoutPickerEntries(currentLoadout, loadouts?.saved),
+    [currentLoadout, loadouts?.saved]
   )
 
   const selectedEntry = useMemo(() => {
@@ -205,7 +219,7 @@ export default function ProfileLoadoutsSection({
             {loadoutEntries.length ? (
               <>
                 <SavedLoadoutIconPicker
-                  current={loadouts?.current}
+                  current={currentLoadout}
                   saved={loadouts?.saved}
                   selectedId={selectedLoadoutId}
                   onSelect={handleSelectLoadout}

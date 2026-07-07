@@ -358,6 +358,74 @@ export async function buildSnapshotFromItemEntries(
           stats[label] = (stats[label] ?? 0) + (val.value ?? 0)
         }
       }
+    } else if (bucket === SUBCLASS_BUCKET || isSubclassItem(itemInfo)) {
+      subclass = name
+      subclassRef = ref
+
+      const socketRow = socketsData?.[item.itemInstanceId ?? '']
+      for (const socket of socketRow?.sockets ?? []) {
+        if (!socket.plugHash || socket.isEnabled === false || socket.isVisible === false) continue
+        const { ref: plugRef, category } = await resolvePlug(socket.plugHash)
+        if (category === 'aspect') {
+          const clean = plugRef.name.replace(/ aspect$/i, '')
+          aspects.push(clean)
+          aspectRefs.push({ ...plugRef, name: clean })
+        } else if (category === 'fragment') {
+          const clean = plugRef.name.replace(/ fragment$/i, '')
+          fragments.push(clean)
+          fragmentRefs.push({ ...plugRef, name: clean })
+        } else if (category !== 'other' && !plugsByCategory[category]) {
+          plugsByCategory[category] = plugRef
+        }
+      }
+    } else {
+      const armorSlot = inferArmorSlot(itemInfo)
+      if (armorSlot) {
+        if (isExotic && armorSlot !== 'class') {
+          exoticArmor = name
+          exoticArmorRef = ref
+        }
+        const pieceMods = await resolveArmorMods(item.itemInstanceId, socketsData)
+        for (const mod of pieceMods) {
+          if (!armorModNames.includes(mod.name)) armorModNames.push(mod.name)
+        }
+        armorPieces.push({
+          slot: armorSlot,
+          name,
+          ref,
+          mods: pieceMods,
+          isExotic,
+          itemHash: item.itemHash,
+        })
+        const statRow = statsData?.[item.itemInstanceId ?? '']
+        if (statRow?.stats) {
+          for (const [hash, val] of Object.entries(statRow.stats)) {
+            const label = ARMOR_STAT_HASH_LABEL[Number(hash)] ?? hash
+            stats[label] = (stats[label] ?? 0) + (val.value ?? 0)
+          }
+        }
+      } else {
+        const weaponSlot = inferWeaponSlot(itemInfo, weaponFilled)
+        if (!weaponSlot) continue
+        weapons[weaponSlot] = name
+        weaponFilled[weaponSlot] = true
+        if (weaponSlot === 'kinetic') {
+          kineticWeaponRef = ref
+          kineticInstanceId = item.itemInstanceId
+        }
+        if (weaponSlot === 'energy') {
+          energyWeaponRef = ref
+          energyInstanceId = item.itemInstanceId
+        }
+        if (weaponSlot === 'power') {
+          powerWeaponRef = ref
+          powerInstanceId = item.itemInstanceId
+        }
+        if (isExotic) {
+          exoticWeapon = name
+          exoticWeaponRef = ref
+        }
+      }
     }
   }
 
@@ -481,7 +549,10 @@ export async function fetchCharacterBuild(
     characterClass,
     userId,
     id: `live-${characterId}`,
-    activityName: 'Current build',
+    activityName: 'Currently equipped',
+    loadoutName: 'Currently equipped',
+    loadoutSource: 'equipped',
+    allowPartial: true,
   })
 }
 
