@@ -293,6 +293,16 @@ const ITEM_NAME_ALIASES = {
   'the clever rat': 'perfect pitch',
   incursion: 'duality',
   navigator: 'the navigator',
+  bleakwatch: 'bleak watcher',
+  "winter's resilience": "winter's shroud",
+  gyrfalcon: "gyrfalcon's hauberk",
+  'melas penoplia': 'melas panoplia',
+  lament: 'the lament',
+  'waveframe trace rifle': 'null composure',
+  'touch of devour': 'feed the void',
+  dynamism: 'innervation',
+  'lightning storm': 'touch of thunder',
+  'shock absorber': 'electrostatic mind',
 }
 
 const CLASS_TARGETS = new Set(['warlock', 'titan', 'hunter'])
@@ -416,10 +426,16 @@ for (const hash of EMBLEM_HASHES) {
 }
 
 const iconPathsOut = `/** Verified Bungie icon paths for catalog items (HTTP-checked). */
+import { itemNameLookupCandidates } from '@/lib/destiny/itemNameAliases'
+
 export const ITEM_ICON_PATHS: Record<string, string> = ${JSON.stringify(iconPaths, null, 2)}
 
 export function itemIconPathFallback(name: string): string | undefined {
-  return ITEM_ICON_PATHS[name.trim().toLowerCase()]
+  for (const key of itemNameLookupCandidates(name)) {
+    const path = ITEM_ICON_PATHS[key]
+    if (path) return path
+  }
+  return undefined
 }
 `
 
@@ -460,6 +476,7 @@ export type ManifestEntityType =
   | 'DestinyPlugSetDefinition'
   | 'DestinyPresentationNodeDefinition'
   | 'DestinyLoadoutNameDefinition'
+  | 'DestinyLoadoutColorDefinition'
 
 const MANIFEST_ENTITY_TYPES: ManifestEntityType[] = [
   'DestinyInventoryItemDefinition',
@@ -473,6 +490,7 @@ const MANIFEST_ENTITY_TYPES: ManifestEntityType[] = [
   'DestinyPlugSetDefinition',
   'DestinyPresentationNodeDefinition',
   'DestinyLoadoutNameDefinition',
+  'DestinyLoadoutColorDefinition',
 ]
 
 export function isManifestEntityType(value: string | null | undefined): value is ManifestEntityType {
@@ -487,6 +505,7 @@ export interface CatalogEntry {
 }
 
 import { ITEM_ICON_PATHS } from '@/lib/destiny/itemIconPaths'
+import { itemNameLookupCandidates } from '@/lib/destiny/itemNameAliases'
 
 /** Name → hash catalog (case-insensitive lookup in resolver). */
 export const ITEM_CATALOG: Record<string, CatalogEntry> = {
@@ -498,11 +517,13 @@ ${Object.entries(catalog)
 }
 
 export function catalogLookup(name: string): CatalogEntry | undefined {
-  const key = name.trim().toLowerCase()
-  const entry = ITEM_CATALOG[key]
-  if (!entry) return undefined
-  const iconPath = entry.iconPath ?? ITEM_ICON_PATHS[key]
-  return iconPath ? { ...entry, iconPath } : entry
+  for (const key of itemNameLookupCandidates(name)) {
+    const entry = ITEM_CATALOG[key]
+    if (!entry) continue
+    const iconPath = entry.iconPath ?? ITEM_ICON_PATHS[key]
+    return iconPath ? { ...entry, iconPath } : entry
+  }
+  return undefined
 }
 
 export const MOCK_EMBLEM_HASHES = [${EMBLEM_HASHES.join(', ')}]
@@ -512,3 +533,4 @@ writeFileSync('src/lib/destiny/itemIconPaths.ts', iconPathsOut)
 writeFileSync('src/lib/destiny/emblemIconPaths.ts', emblemOut)
 writeFileSync('src/lib/destiny/itemsCatalog.ts', catalogOut)
 console.log('Updated itemIconPaths.ts, emblemIconPaths.ts, itemsCatalog.ts')
+console.log('Tip: run node scripts/merge-meta-catalog.mjs to merge meta-build alias entries')

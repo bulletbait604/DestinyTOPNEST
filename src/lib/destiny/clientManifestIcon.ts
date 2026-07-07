@@ -5,7 +5,9 @@
 import { activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 import { classIconUrlForClass } from '@/lib/destiny/classIconPaths'
+import { isUsableIconUrl } from '@/lib/destiny/iconUtils'
 import { itemIconPathFallback } from '@/lib/destiny/itemIconPaths'
+import { itemNameLookupCandidates } from '@/lib/destiny/itemNameAliases'
 import { catalogLookup } from '@/lib/destiny/itemsCatalog'
 import type { DestinyIconRef } from '@/lib/destiny/types'
 
@@ -15,16 +17,26 @@ export function staticIconUrlForLabel(label: string): string | undefined {
   if (!trimmed) return undefined
 
   const classUrl = classIconUrlForClass(trimmed)
-  if (classUrl) return classUrl
+  if (classUrl && isUsableIconUrl(classUrl)) return classUrl
 
-  const activityUrl = activityIconUrlForName(trimmed)
-  if (activityUrl) return activityUrl
+  for (const candidate of itemNameLookupCandidates(trimmed)) {
+    const activityUrl = activityIconUrlForName(candidate)
+    if (activityUrl && isUsableIconUrl(activityUrl)) return activityUrl
 
-  const catalog = catalogLookup(trimmed)
-  if (catalog?.iconPath) return buildBungieIconUrl(catalog.iconPath)
+    const catalog = catalogLookup(candidate)
+    if (catalog?.iconPath) {
+      const url = buildBungieIconUrl(catalog.iconPath)
+      if (isUsableIconUrl(url)) return url
+    }
 
-  const path = itemIconPathFallback(trimmed)
-  return path ? buildBungieIconUrl(path) : undefined
+    const path = itemIconPathFallback(candidate)
+    if (path) {
+      const url = buildBungieIconUrl(path)
+      if (isUsableIconUrl(url)) return url
+    }
+  }
+
+  return undefined
 }
 
 /** Fetch icon URL: static fallbacks, then authenticated manifest resolve API. */
@@ -33,6 +45,9 @@ export async function fetchManifestIconUrl(
   name?: string
 ): Promise<string | undefined> {
   const label = item?.name ?? name
+  const existing = item?.iconUrl
+  if (existing && isUsableIconUrl(existing)) return existing
+
   if (label) {
     const staticUrl = staticIconUrlForLabel(label)
     if (staticUrl) return staticUrl
@@ -48,7 +63,9 @@ export async function fetchManifestIconUrl(
     const res = await fetch(`/api/destiny/manifest/resolve?${params.toString()}`, { cache: 'no-store' })
     if (!res.ok) return label ? staticIconUrlForLabel(label) : undefined
     const json = (await res.json()) as { iconUrl?: string }
-    return json.iconUrl ?? (label ? staticIconUrlForLabel(label) : undefined)
+    const resolved = json.iconUrl
+    if (resolved && isUsableIconUrl(resolved)) return resolved
+    return label ? staticIconUrlForLabel(label) : undefined
   } catch {
     return label ? staticIconUrlForLabel(label) : undefined
   }

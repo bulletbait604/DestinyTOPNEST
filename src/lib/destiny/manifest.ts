@@ -16,6 +16,8 @@ import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
 import { activityIconPathFallback, activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
 import { classIconPathForClass, classIconRefForClass, classIconUrlForClass } from '@/lib/destiny/classIconPaths'
 import { itemIconPathFallback } from '@/lib/destiny/itemIconPaths'
+import { itemNameLookupCandidates } from '@/lib/destiny/itemNameAliases'
+import { isGenericIconUrl, isUsableIconUrl } from '@/lib/destiny/iconUtils'
 import { catalogLookup, type ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 import { DESTINY_MANIFEST_URL, destinyApiConfigured } from '@/lib/destiny/env'
 import type { DestinyIconRef } from '@/lib/destiny/types'
@@ -44,21 +46,9 @@ const HASH_RESOLVE_ENTITIES: ManifestEntityType[] = [
   'DestinyLoadoutColorDefinition',
 ]
 
-const GENERIC_ICON_MARKERS = [
-  'bd7a1fc995f87be96698263bc16698e7',
-  '8b1bfd1c1ce1cab51d23c78235a6e067',
-  'missing_icon',
-  'placeholder.jpg',
-]
-
 function isGenericIconPath(path?: string | null): boolean {
   if (!path) return true
-  return GENERIC_ICON_MARKERS.some((marker) => path.includes(marker))
-}
-
-function isGenericIconUrl(url?: string | null): boolean {
-  if (!url) return true
-  return GENERIC_ICON_MARKERS.some((marker) => url.includes(marker))
+  return isGenericIconUrl(buildBungieIconUrl(path))
 }
 
 function activityIconFromDefinition(def: unknown): string | undefined {
@@ -195,20 +185,19 @@ function iconRefFromInfo(info: ManifestDefinitionInfo): DestinyIconRef {
 }
 
 function catalogIconUrl(name: string): string | undefined {
-  const classPath = classIconPathForClass(name)
-  if (classPath) return buildBungieIconUrl(classPath)
-  const activity = activityCatalogLookup(name)
-  if (activity?.iconPath) return buildBungieIconUrl(activity.iconPath)
-  const activityFallback = activityIconPathFallback(name)
-  if (activityFallback) return buildBungieIconUrl(activityFallback)
-  const item = catalogLookup(name)
-  if (item?.iconPath) return buildBungieIconUrl(item.iconPath)
-  const itemFallback = itemIconPathFallback(name)
-  return itemFallback ? buildBungieIconUrl(itemFallback) : undefined
-}
-
-function isUsableIconUrl(url?: string | null): boolean {
-  return Boolean(url && !isGenericIconUrl(url))
+  for (const candidate of itemNameLookupCandidates(name)) {
+    const classPath = classIconPathForClass(candidate)
+    if (classPath) return buildBungieIconUrl(classPath)
+    const activity = activityCatalogLookup(candidate)
+    if (activity?.iconPath) return buildBungieIconUrl(activity.iconPath)
+    const activityFallback = activityIconPathFallback(candidate)
+    if (activityFallback) return buildBungieIconUrl(activityFallback)
+    const item = catalogLookup(candidate)
+    if (item?.iconPath) return buildBungieIconUrl(item.iconPath)
+    const itemFallback = itemIconPathFallback(candidate)
+    if (itemFallback) return buildBungieIconUrl(itemFallback)
+  }
+  return undefined
 }
 
 function withCatalogIcon(ref: DestinyIconRef, name: string): DestinyIconRef {
@@ -367,9 +356,9 @@ async function resolveFromArmorySearch(
       for (const hit of results.slice(0, 5)) {
         if (!hit.hash) continue
         const resolved = await resolveManifestHash(entity, hit.hash, hit.name || name)
-        if (resolved.iconUrl) return resolved
+        if (resolved.iconUrl && isUsableIconUrl(resolved.iconUrl)) return resolved
         const searchIcon = buildBungieIconUrl(hit.icon)
-        if (searchIcon) {
+        if (searchIcon && isUsableIconUrl(searchIcon)) {
           return withCatalogIcon(
             { name: hit.name || name, hash: hit.hash, iconUrl: searchIcon, entityType: entity },
             name
@@ -387,9 +376,11 @@ export async function resolveByName(
   name: string,
   preferredEntity: ManifestEntityType = 'DestinyInventoryItemDefinition'
 ): Promise<DestinyIconRef> {
-  const catalog = catalogLookup(name)
-  if (catalog) {
-    return resolveManifestHash(catalog.entity, catalog.hash, name)
+  for (const candidate of itemNameLookupCandidates(name)) {
+    const catalog = catalogLookup(candidate)
+    if (catalog) {
+      return resolveManifestHash(catalog.entity, catalog.hash, name)
+    }
   }
 
   const entities = [
@@ -398,8 +389,10 @@ export async function resolveByName(
   ]
 
   if (destinyApiConfigured()) {
-    const fromSearch = await resolveFromArmorySearch(name, entities)
-    if (fromSearch?.iconUrl) return fromSearch
+    for (const candidate of itemNameLookupCandidates(name)) {
+      const fromSearch = await resolveFromArmorySearch(candidate, entities)
+      if (fromSearch?.iconUrl && isUsableIconUrl(fromSearch.iconUrl)) return fromSearch
+    }
   }
 
   return withCatalogIcon({ name, entityType: preferredEntity }, name)

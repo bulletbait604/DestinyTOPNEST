@@ -3,6 +3,7 @@
 import { Star } from 'lucide-react'
 import type { PlayerProfile } from '@/lib/destiny/types'
 import { ItemIcon, StatusPill } from '@/app/components/destiny/DestinyUi'
+import ResolvedImage from '@/app/components/destiny/ResolvedImage'
 import { platformIcon } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
@@ -25,7 +26,7 @@ export default function GuardianHeroCard({ profile, darkMode, linked = true }: P
     >
       <div className="absolute inset-0">
         {bannerUrl ? (
-          <img src={bannerUrl} alt="" className="h-full w-full object-cover opacity-50" />
+          <ResolvedImage src={bannerUrl} name={profile.bungieDisplayName} className="h-full w-full object-cover opacity-50" />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-slate-800 to-slate-950" />
         )}
@@ -41,22 +42,22 @@ export default function GuardianHeroCard({ profile, darkMode, linked = true }: P
         <div className="flex flex-col sm:flex-row gap-5 items-start">
           <div className="flex items-end gap-3 shrink-0">
             {profile.emblemUrl ? (
-              <img
+              <ResolvedImage
                 src={profile.emblemUrl}
-                alt=""
+                name={profile.bungieDisplayName}
                 className="w-24 h-24 rounded-2xl ring-2 ring-white/20 object-cover shadow-lg"
               />
             ) : (
               <div className="w-24 h-24 rounded-2xl bg-white/10 ring-2 ring-white/10" />
             )}
-            {profile.characterThumbnailUrl && (
-              <img
+            {profile.characterThumbnailUrl ? (
+              <ResolvedImage
                 src={profile.characterThumbnailUrl}
-                alt=""
+                name="Equipped helmet"
                 title="Equipped helmet"
                 className="w-14 h-14 rounded-xl ring-1 ring-white/15 object-cover bg-black/30 -ml-8 mb-1 shadow-md"
               />
-            )}
+            ) : null}
           </div>
 
           <div className="flex-1 min-w-0">

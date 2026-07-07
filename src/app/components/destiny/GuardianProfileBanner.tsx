@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import type { PlayerProfile } from '@/lib/destiny/types'
+import ResolvedImage from '@/app/components/destiny/ResolvedImage'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -54,7 +55,7 @@ export default function GuardianProfileBanner({
         ) : (
           <div className="d2-profile-identity">
             {icon ? (
-              <img src={icon} alt="" className="d2-profile-avatar" />
+              <ResolvedImage src={icon} name={profile.bungieDisplayName} className="d2-profile-avatar" />
             ) : (
               <div className="d2-profile-avatar d2-profile-avatar-fallback" />
             )}

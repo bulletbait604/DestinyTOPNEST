@@ -187,6 +187,8 @@ export function CharacterEmblem({
     !backgroundUrl && characterClass
       ? { background: classFallback[characterClass] ?? classFallback.warlock }
       : undefined
+  const emblemIcon = useResolvedIconUrl(undefined, title ?? 'Emblem', iconUrl)
+  const emblemDisplay = emblemIcon.displayUrl ?? (classIconUrl && !emblemIcon.failed ? classIconUrl : undefined)
 
   return (
     <div
@@ -205,17 +207,12 @@ export function CharacterEmblem({
         />
       ) : null}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-      {iconUrl ? (
+      {emblemDisplay ? (
         <img
-          src={iconUrl}
+          src={emblemDisplay}
           alt=""
+          onError={emblemIcon.onImageError}
           className="absolute left-1/2 top-[52%] h-[52px] w-[52px] -translate-x-1/2 -translate-y-1/2 object-cover drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]"
-        />
-      ) : classIconUrl ? (
-        <img
-          src={classIconUrl}
-          alt=""
-          className="absolute left-1/2 top-[52%] h-12 w-12 -translate-x-1/2 -translate-y-1/2 object-cover opacity-80"
         />
       ) : null}
     </div>

@@ -2,22 +2,28 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { fetchManifestIconUrl } from '@/lib/destiny/clientManifestIcon'
+import { isUsableIconUrl } from '@/lib/destiny/iconUtils'
 import type { DestinyIconRef } from '@/lib/destiny/types'
 
-/** Proactively resolve missing icon URLs (static catalog + manifest API). */
+function initialUrl(item?: DestinyIconRef, name?: string, iconUrl?: string): string | undefined {
+  const url = item?.iconUrl ?? iconUrl
+  return url && isUsableIconUrl(url) ? url : undefined
+}
+
+/** Proactively resolve missing or generic icon URLs (static catalog + manifest API). */
 export function useResolvedIconUrl(
   item?: DestinyIconRef,
   name?: string,
-  initialUrl?: string
+  iconUrl?: string
 ): { displayUrl?: string; failed: boolean; onImageError: () => void } {
-  const url = item?.iconUrl ?? initialUrl
   const label = item?.name ?? name
   const [resolvedUrl, setResolvedUrl] = useState<string | undefined>()
   const [failed, setFailed] = useState(false)
-  const displayUrl = resolvedUrl ?? url
+  const seedUrl = initialUrl(item, name, iconUrl)
+  const displayUrl = resolvedUrl ?? seedUrl
 
   useEffect(() => {
-    if (displayUrl || failed || !label) return
+    if (displayUrl || failed || (!label && !item?.hash)) return
     let cancelled = false
     void fetchManifestIconUrl(item, name).then((manifestUrl) => {
       if (!cancelled && manifestUrl) setResolvedUrl(manifestUrl)
@@ -28,7 +34,8 @@ export function useResolvedIconUrl(
   }, [displayUrl, failed, item, name, label])
 
   const onImageError = useCallback(() => {
-    if (resolvedUrl || failed) {
+    if (failed) return
+    if (resolvedUrl) {
       setFailed(true)
       return
     }

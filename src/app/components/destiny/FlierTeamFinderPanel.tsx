@@ -5,6 +5,7 @@ import { Gamepad2, Mic, Plus, Trash2, Users } from 'lucide-react'
 import FireteamReviewSection from '@/app/components/destiny/FireteamReviewSection'
 import FlierTeamCreateWizard from '@/app/components/destiny/FlierTeamCreateWizard'
 import FlierTeamMemberModal from '@/app/components/destiny/FlierTeamMemberModal'
+import ResolvedImage from '@/app/components/destiny/ResolvedImage'
 import { useBungieLink } from '@/contexts/BungieLinkContext'
 import type {
   ActiveFireteamLobbySummary,
@@ -57,7 +58,7 @@ function MemberCard({
       title="View guardian build"
     >
       {member.emblemUrl ? (
-        <img src={member.emblemUrl} alt="" className="w-10 h-10 rounded-full border border-amber-500/20" />
+        <ResolvedImage src={member.emblemUrl} name={member.displayName} className="w-10 h-10 rounded-full border border-amber-500/20 object-cover" />
       ) : (
         <div className="w-10 h-10 rounded-full bg-purple-900/50" />
       )}
