@@ -211,13 +211,12 @@ export default function NewcomerWelcomeModal({ darkMode, userId }: Props) {
             <div className="tn-welcome-step-body">
               <div className="tn-welcome-step-text space-y-2">
                 <p>
-                  <strong>After your run, open Profile</strong> and vote for:
+                  <strong>After your run, open Profile → Previous Activities</strong> and vote for:
                 </p>
                 <ul className="tn-welcome-sublist">
-                  <li>That run&apos;s MVP</li>
+                  <li>That run&apos;s MVP (one linked Top Nest teammate)</li>
                   <li>
-                    If you matched randoms on FlierTeam, rate their Knowledge and Vibes (private to the
-                    community)
+                    Each fireteam member&apos;s Knowledge and Vibes (private trust ranks)
                   </li>
                 </ul>
               </div>

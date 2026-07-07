@@ -71,7 +71,7 @@ function HeroMvpCallout({ compact }: { compact?: boolean }) {
       onClick={() => navigateProfileSection('activities')}
     >
       <span className="tn-home-hero-mvp-callout-text">
-        Vote run MVP&apos;s and rank your fireteam members in Unranked Runs in the Profile Tab.
+        Vote MVP and rank Knowledge + Vibes for each fireteam member in Previous Activities on your Profile.
       </span>
     </button>
   )

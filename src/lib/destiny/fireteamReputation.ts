@@ -117,7 +117,7 @@ export function buildUnrankedRuns(
       const isSelf = member.membershipId === reviewerMembershipId
       const linked = usersByMembershipId.get(member.membershipId)
       const siteUserId = linked?.userId
-      const canReview = !isSelf && Boolean(siteUserId)
+      const canReview = !isSelf
       const alreadyReviewed = canReview
         ? reviewedKeys.has(trustReviewKey(run.id, member.membershipId))
         : false

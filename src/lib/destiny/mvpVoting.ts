@@ -6,9 +6,10 @@ import type {
   MvpVote,
   RunRecord,
   Season,
+  TrustReview,
 } from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
-import { userParticipatedInRun, usersByMembershipMap } from '@/lib/destiny/fireteamReputation'
+import { trustReviewKey, userParticipatedInRun, usersByMembershipMap } from '@/lib/destiny/fireteamReputation'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
 export const MVP_VOTER_POINTS = 0
@@ -113,9 +114,13 @@ export function buildActivityRunsForVote(
   viewerMembershipId: string | undefined,
   runs: RunRecord[],
   users: StoredDestinyUser[],
-  votesByRun: Map<string, MvpVote>
+  votesByRun: Map<string, MvpVote>,
+  trustReviews: TrustReview[] = []
 ): ActivityRunForVote[] {
   const usersByMembership = usersByMembershipMap(users)
+  const reviewedKeys = new Set(
+    trustReviews.map((review) => trustReviewKey(review.runId, review.reviewedMembershipId))
+  )
 
   return runs
     .filter((run) => run.verificationStatus === 'verified')
@@ -127,6 +132,10 @@ export function buildActivityRunsForVote(
         const isSelf = member.membershipId === viewerMembershipId
         const siteUserId = linked?.userId
         const canVoteFor = Boolean(siteUserId && siteUserId !== viewerId && !isSelf)
+        const canReview = !isSelf
+        const alreadyReviewed = canReview
+          ? reviewedKeys.has(trustReviewKey(run.id, member.membershipId))
+          : false
         return {
           membershipId: member.membershipId,
           displayName: linked?.bungieDisplayName || member.displayName,
@@ -134,8 +143,12 @@ export function buildActivityRunsForVote(
           siteUserId,
           isSelf,
           canVoteFor,
+          canReview,
+          alreadyReviewed,
         }
       })
+
+      const pendingTrustCount = guardians.filter((g) => g.canReview && !g.alreadyReviewed).length
 
       return {
         runId: run.id,
@@ -148,6 +161,7 @@ export function buildActivityRunsForVote(
         userHasVoted: Boolean(existingVote),
         selectedUserId: existingVote?.selectedUserId,
         selectedDisplayName: existingVote?.selectedDisplayName,
+        pendingTrustCount,
         guardians,
       }
     })

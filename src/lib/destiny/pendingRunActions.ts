@@ -1,4 +1,3 @@
-import { buildUnrankedRuns, usersByMembershipMap } from '@/lib/destiny/fireteamReputation'
 import { buildActivityRunsForVote } from '@/lib/destiny/mvpVoting'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import type { MvpVote, PendingRunActions, RunRecord, TrustReview } from '@/lib/destiny/types'
@@ -19,7 +18,8 @@ export function computePendingRunActions(
     viewerMembershipId,
     runs,
     users,
-    votesByRun
+    votesByRun,
+    trustReviews
   )
 
   const mvpRunCount = activities.filter((run) => {
@@ -27,18 +27,7 @@ export function computePendingRunActions(
     return run.guardians.some((guardian) => guardian.canVoteFor)
   }).length
 
-  const unrankedRuns = buildUnrankedRuns(
-    viewerId,
-    viewerMembershipId,
-    runs,
-    usersByMembershipMap(users),
-    trustReviews
-  )
-
-  const trustReviewCount = unrankedRuns.reduce(
-    (total, run) => total + run.pendingReviewCount,
-    0
-  )
+  const trustReviewCount = activities.reduce((total, run) => total + run.pendingTrustCount, 0)
 
   return {
     mvpRunCount,

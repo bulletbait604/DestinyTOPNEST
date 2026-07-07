@@ -529,7 +529,11 @@ export interface ActivityRunGuardian {
   characterClass?: DestinyCharacterClass
   siteUserId?: string
   isSelf: boolean
+  /** Can receive an MVP vote (linked Top Nest account, not self). */
   canVoteFor: boolean
+  /** Can receive a private Knowledge + Vibes rank (any fireteam member except self). */
+  canReview: boolean
+  alreadyReviewed: boolean
 }
 
 export interface ActivityRunForVote {
@@ -544,6 +548,8 @@ export interface ActivityRunForVote {
   userHasVoted: boolean
   selectedUserId?: string
   selectedDisplayName?: string
+  /** Teammates still needing a Knowledge + Vibes rank from the viewer. */
+  pendingTrustCount: number
   guardians: ActivityRunGuardian[]
 }
 

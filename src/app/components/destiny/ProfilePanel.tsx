@@ -7,7 +7,6 @@ import EmblemPicker from '@/app/components/destiny/EmblemPicker'
 import PlayerCardDetail from '@/app/components/destiny/PlayerCardDetail'
 import StatCardEditor from '@/app/components/destiny/StatCardEditor'
 import StatCardPreview from '@/app/components/destiny/StatCardPreview'
-import UnrankedRunsSection from '@/app/components/destiny/UnrankedRunsSection'
 import PreviousActivitiesSection from '@/app/components/destiny/PreviousActivitiesSection'
 import ReputationSummarySection from '@/app/components/destiny/ReputationSummarySection'
 import ProfileLoadoutsSection from '@/app/components/destiny/ProfileLoadoutsSection'
@@ -110,10 +109,7 @@ export default function ProfilePanel({
       />
 
       {view === 'activities' ? (
-        <div className="space-y-4">
-          <UnrankedRunsSection darkMode={darkMode} />
-          <PreviousActivitiesSection darkMode={darkMode} />
-        </div>
+        <PreviousActivitiesSection darkMode={darkMode} />
       ) : view === 'loadouts' ? (
         <ProfileLoadoutsSection
           darkMode={darkMode}
