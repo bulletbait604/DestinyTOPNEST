@@ -20,6 +20,7 @@ import { ensureWeeklyMetaBuildSync, getMetaBuildWeeklySyncStatus } from '@/lib/d
 import { isValidMetaBuild } from '@/lib/destiny/metaBuildClassRules'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { aggregateBuildIntelligence, verifiedRunIdSet } from '@/lib/destiny/buildIntelligence'
+import { calculateRunPoints } from '@/lib/destiny/scoring'
 import { rankTopMetaLoadoutsByClass, rankTrendingMetaBuilds, sortExternalBuildsByConsensus } from '@/lib/destiny/metaBuildConsensus'
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
@@ -303,7 +304,7 @@ export async function getFireteamLobbies(): Promise<FireteamLobby[]> {
     const database = await db()
     const rows = await database
       .collection(DESTINY_COLLECTIONS.fireteamLobbies)
-      .find({ status: 'open' })
+      .find({ status: { $in: ['open', 'full'] } })
       .sort({ createdAt: -1 })
       .limit(50)
       .toArray()
@@ -464,6 +465,167 @@ export async function getAdminReviewQueue(): Promise<AdminReviewRecord[]> {
   } catch {
     return []
   }
+}
+
+export interface AdminRunsListQuery {
+  status?: RunRecord['verificationStatus'] | 'all'
+  activityType?: RunRecord['type'] | 'all'
+  q?: string
+  limit?: number
+  offset?: number
+}
+
+export async function getAdminRunsList(query: AdminRunsListQuery = {}): Promise<{
+  runs: RunRecord[]
+  total: number
+}> {
+  try {
+    await ensureDestinyIndexes()
+    const database = await db()
+    const limit = Math.min(Math.max(query.limit ?? 40, 1), 100)
+    const offset = Math.max(query.offset ?? 0, 0)
+    const filter: Record<string, unknown> = {}
+
+    if (query.status && query.status !== 'all') {
+      filter.verificationStatus = query.status
+    }
+    if (query.activityType && query.activityType !== 'all') {
+      filter.type = query.activityType
+    }
+    if (query.q?.trim()) {
+      const regex = new RegExp(query.q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+      filter.$or = [
+        { activityName: regex },
+        { ownerDisplayName: regex },
+        { ownerUserId: regex },
+        { pgcrId: regex },
+        { 'teamMembers.displayName': regex },
+      ]
+    }
+
+    const collection = database.collection(DESTINY_COLLECTIONS.runRecords)
+    const [runs, total] = await Promise.all([
+      collection.find(filter).sort({ completedAt: -1 }).skip(offset).limit(limit).toArray(),
+      collection.countDocuments(filter),
+    ])
+
+    return { runs: runs as unknown as RunRecord[], total }
+  } catch {
+    return { runs: [], total: 0 }
+  }
+}
+
+async function applyAdminRunDecision(
+  run: RunRecord,
+  decision: AdminReviewDecision,
+  adminId: string,
+  notes: string | undefined,
+  reviewId: string,
+  suspiciousScore: number
+): Promise<void> {
+  const database = await db()
+  const now = new Date().toISOString()
+
+  const reviewStatus =
+    decision === 'reject'
+      ? 'rejected'
+      : decision === 'approve' || decision === 'checkpoint_non_scoring'
+        ? 'approved'
+        : 'rejected'
+
+  await database.collection(DESTINY_COLLECTIONS.adminReviews).updateOne(
+    { id: reviewId },
+    {
+      $set: {
+        id: reviewId,
+        runId: run.id,
+        suspiciousScore,
+        aiSummary: run.aiReview?.summary ?? 'Manual staff review',
+        status: reviewStatus,
+        decision,
+        notes,
+        adminId,
+        reviewedAt: now,
+        run,
+        updatedAt: now,
+      },
+    },
+    { upsert: true }
+  )
+
+  const verificationStatus =
+    decision === 'reject'
+      ? 'rejected'
+      : decision === 'approve' || decision === 'checkpoint_non_scoring'
+        ? 'verified'
+        : 'rejected'
+
+  let pointsUpdate: number | undefined
+  if (decision === 'checkpoint_non_scoring') {
+    pointsUpdate = 0
+  } else if (decision === 'approve') {
+    pointsUpdate = calculateRunPoints({
+      activityType: run.type,
+      clanMemberCount: run.clanMemberCount,
+      randoCount: run.randoCount,
+      isFullClanTeam: run.isFullClanTeam,
+      completed: run.completed,
+      checkpointLikely: false,
+      verificationStatus: 'verified',
+      suspiciousScore: 0,
+    }).points
+  }
+
+  await database.collection(DESTINY_COLLECTIONS.runRecords).updateOne(
+    { id: run.id },
+    {
+      $set: {
+        verificationStatus,
+        ...(pointsUpdate !== undefined ? { pointsAwarded: pointsUpdate } : {}),
+        adminNotes: notes,
+        updatedAt: now,
+      },
+    }
+  )
+
+  await database.collection(DESTINY_COLLECTIONS.buildSnapshots).updateMany(
+    { runId: run.id },
+    { $set: { verificationStatus, updatedAt: now } }
+  )
+
+  await logAdminActivity({
+    kind: 'run_review',
+    actorId: adminId,
+    targetUserId: run.ownerUserId,
+    targetLabel: run.ownerDisplayName,
+    summary: `Run ${decision.replace(/_/g, ' ')} — ${run.activityName ?? run.id}`,
+    detail: notes,
+    metadata: {
+      decision,
+      reviewId,
+      suspiciousScore,
+    },
+  })
+}
+
+export async function resolveRunAdminDecision(
+  runId: string,
+  decision: AdminReviewDecision,
+  adminId: string,
+  notes?: string
+): Promise<boolean> {
+  const run = await getRunRecordById(runId)
+  if (!run) return false
+
+  await applyAdminRunDecision(
+    run,
+    decision,
+    adminId,
+    notes,
+    `review-${runId}`,
+    run.suspiciousScore ?? 0
+  )
+  return true
 }
 
 export async function getBuildIntelligenceCards(): Promise<BuildIntelligenceCard[]> {
@@ -715,6 +877,28 @@ export async function saveRunRecord(record: RunRecord): Promise<void> {
   )
 }
 
+export async function getRunRecordById(id: string): Promise<RunRecord | null> {
+  try {
+    const database = await db()
+    const doc = await database.collection(DESTINY_COLLECTIONS.runRecords).findOne({ id })
+    return doc ? (doc as unknown as RunRecord) : null
+  } catch {
+    return null
+  }
+}
+
+export async function getAdminReviewByRunId(runId: string): Promise<AdminReviewRecord | null> {
+  try {
+    const database = await db()
+    const doc = await database
+      .collection(DESTINY_COLLECTIONS.adminReviews)
+      .findOne({ runId })
+    return doc ? (doc as unknown as AdminReviewRecord) : null
+  } catch {
+    return null
+  }
+}
+
 export async function runRecordExists(id: string): Promise<boolean> {
   try {
     const database = await db()
@@ -733,13 +917,27 @@ export async function queueAdminReview(record: AdminReviewRecord): Promise<void>
     .collection(DESTINY_COLLECTIONS.adminReviews)
     .findOne({ id: record.id })) as AdminReviewRecord | null
 
+  const terminalReview =
+    existing?.status === 'approved' || existing?.status === 'rejected'
+
+  const payload: AdminReviewRecord = terminalReview
+    ? {
+        ...record,
+        status: existing!.status,
+        decision: existing!.decision,
+        notes: existing!.notes,
+        adminId: existing!.adminId,
+        reviewedAt: existing!.reviewedAt,
+      }
+    : record
+
   await database.collection(DESTINY_COLLECTIONS.adminReviews).updateOne(
     { id: record.id },
-    { $set: { ...record, updatedAt: new Date().toISOString() } },
+    { $set: { ...payload, updatedAt: new Date().toISOString() } },
     { upsert: true }
   )
 
-  if (record.status === 'pending' && existing?.status !== 'pending') {
+  if (record.status === 'pending' && existing?.status !== 'pending' && !terminalReview) {
     await logAdminActivity({
       kind: 'run_flagged',
       actorId: 'system',
@@ -762,80 +960,22 @@ export async function resolveAdminReview(
   notes?: string
 ): Promise<boolean> {
   const database = await db()
-  const now = new Date().toISOString()
   const review = (await database
     .collection(DESTINY_COLLECTIONS.adminReviews)
     .findOne({ id: reviewId })) as AdminReviewRecord | null
 
-  if (!review) return false
+  if (!review?.runId) return false
 
-  const status =
-    decision === 'reject'
-      ? 'rejected'
-      : decision === 'approve' || decision === 'checkpoint_non_scoring'
-        ? 'approved'
-        : 'rejected'
+  const run = review.run ?? (await getRunRecordById(review.runId))
+  if (!run) return false
 
-  await database.collection(DESTINY_COLLECTIONS.adminReviews).updateOne(
-    { id: reviewId },
-    {
-      $set: {
-        status,
-        decision,
-        notes,
-        adminId,
-        reviewedAt: now,
-        updatedAt: now,
-      },
-    }
+  await applyAdminRunDecision(
+    run,
+    decision,
+    adminId,
+    notes,
+    reviewId,
+    review.suspiciousScore ?? run.suspiciousScore ?? 0
   )
-
-  if (review.runId) {
-    const verificationStatus =
-      decision === 'reject'
-        ? 'rejected'
-        : decision === 'approve' || decision === 'checkpoint_non_scoring'
-          ? 'verified'
-          : 'rejected'
-
-    const pointsUpdate =
-      decision === 'approve' && review.run
-        ? review.run.pointsAwarded
-        : decision === 'checkpoint_non_scoring'
-          ? 0
-          : undefined
-
-    await database.collection(DESTINY_COLLECTIONS.runRecords).updateOne(
-      { id: review.runId },
-      {
-        $set: {
-          verificationStatus,
-          ...(pointsUpdate !== undefined ? { pointsAwarded: pointsUpdate } : {}),
-          adminNotes: notes,
-          updatedAt: now,
-        },
-      }
-    )
-
-    await database.collection(DESTINY_COLLECTIONS.buildSnapshots).updateMany(
-      { runId: review.runId },
-      { $set: { verificationStatus, updatedAt: now } }
-    )
-  }
-
-  await logAdminActivity({
-    kind: 'run_review',
-    actorId: adminId,
-    targetUserId: review.run?.ownerUserId,
-    targetLabel: review.run?.ownerDisplayName,
-    summary: `Run ${decision.replace(/_/g, ' ')} — ${review.run?.activityName ?? review.runId}`,
-    detail: notes,
-    metadata: {
-      decision,
-      reviewId,
-      suspiciousScore: review.suspiciousScore,
-    },
-  })
-
   return true
 }

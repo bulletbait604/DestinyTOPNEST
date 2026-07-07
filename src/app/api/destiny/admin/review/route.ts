@@ -4,6 +4,7 @@ import { destinyStaffHandler } from '@/lib/destiny/apiHandler'
 import type { AdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
 import { isAdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
 import { getAdminReviewQueue, resolveAdminReview } from '@/lib/destiny/store'
+import { invalidateOverviewCache } from '@/lib/destiny/overviewCache'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,6 +44,8 @@ export async function POST(req: NextRequest) {
     if (!ok) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 })
     }
+
+    invalidateOverviewCache()
 
     return NextResponse.json({
       ok: true,

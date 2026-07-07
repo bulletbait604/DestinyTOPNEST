@@ -1,4 +1,4 @@
-﻿import { getActivityHistory, getPlayerProfile, getPostGameCarnageReport } from '@/lib/destiny/bungieClient'
+﻿import { getActivityHistory, getAllClanMembersWithPresence, getPlayerProfile, getPostGameCarnageReport } from '@/lib/destiny/bungieClient'
 import {
   evaluateRunLegitimacy,
   verificationStatusFromReview,
@@ -18,11 +18,20 @@ import {
 import { calculateRunPoints } from '@/lib/destiny/scoring'
 import { isRunInActiveSeasonPacific } from '@/lib/destiny/runDates'
 import { isPantheonActivityName, squadKeyFromMembers } from '@/lib/destiny/pantheonActivities'
-import { ensureDestinyIndexes, queueAdminReview, runRecordExists, saveBuildSnapshot, saveRunRecord } from '@/lib/destiny/store'
+import {
+  ensureDestinyIndexes,
+  getAdminReviewByRunId,
+  getRunRecordById,
+  queueAdminReview,
+  runRecordExists,
+  saveBuildSnapshot,
+  saveRunRecord,
+} from '@/lib/destiny/store'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { getValidAccessToken } from '@/lib/destiny/destinyUserStore'
 import type {
   ActivityType,
+  AdminReviewRecord,
   DestinyCharacterClass,
   DestinyPlatform,
   RunRecord,
@@ -106,6 +115,20 @@ function parseTeamMembers(entries: PgcrEntry[] = []): RunTeamMember[] {
     })
 }
 
+function tagClanMembers(
+  members: RunTeamMember[],
+  clanId?: string,
+  clanName?: string,
+  clanMembershipIds?: Set<string>
+): RunTeamMember[] {
+  if (!clanId || !clanMembershipIds?.size) return members
+  return members.map((member) =>
+    clanMembershipIds.has(member.membershipId)
+      ? { ...member, clanId, clanName }
+      : member
+  )
+}
+
 function analyzeClanMix(
   members: RunTeamMember[],
   userClanId?: string
@@ -113,24 +136,64 @@ function analyzeClanMix(
   if (!userClanId) {
     return { clanMemberCount: 0, randoCount: Math.max(0, members.length - 1), isFullClanTeam: false }
   }
-  const clanMemberCount = members.filter((m) => m.clanId === userClanId).length || 1
+  const clanMemberCount = members.filter((m) => m.clanId === userClanId).length
   const randoCount = Math.max(0, members.length - clanMemberCount)
   const isFullClanTeam = members.length >= 3 && randoCount === 0
   return { clanMemberCount, randoCount, isFullClanTeam }
+}
+
+async function mergeRunRecordOnResync(
+  existing: RunRecord,
+  incoming: RunRecord,
+  review: AdminReviewRecord | null
+): Promise<RunRecord> {
+  const adminResolved =
+    review?.status === 'approved' ||
+    review?.status === 'rejected' ||
+    Boolean(existing.adminNotes)
+
+  if (!adminResolved) return incoming
+
+  if (review?.status === 'approved') {
+    return {
+      ...incoming,
+      verificationStatus: 'verified',
+      pointsAwarded: existing.pointsAwarded,
+      adminNotes: existing.adminNotes,
+    }
+  }
+
+  if (review?.status === 'rejected') {
+    return {
+      ...incoming,
+      verificationStatus: 'rejected',
+      pointsAwarded: 0,
+      adminNotes: existing.adminNotes,
+    }
+  }
+
+  return {
+    ...incoming,
+    verificationStatus: existing.verificationStatus,
+    pointsAwarded: existing.pointsAwarded,
+    adminNotes: existing.adminNotes,
+  }
 }
 
 async function fetchActivityList(
   membershipType: number,
   membershipId: string,
   characterId: string,
-  mode: number
+  mode: number,
+  accessToken: string
 ): Promise<ActivityHistoryRow[]> {
   const response = (await getActivityHistory(
     membershipType,
     membershipId,
     characterId,
     mode,
-    SYNC_COUNT
+    SYNC_COUNT,
+    accessToken
   )) as { activities?: ActivityHistoryRow[] }
 
   return response?.activities ?? []
@@ -141,17 +204,28 @@ async function pgcrToRunRecord(
   activityTypeHint: ActivityType,
   userId: string,
   displayName: string,
-  userClanId?: string,
-  options?: { pantheonOnly?: boolean; historyRow?: ActivityHistoryRow }
+  userClanId: string | undefined,
+  options: {
+    pantheonOnly?: boolean
+    historyRow?: ActivityHistoryRow
+    accessToken: string
+    clanMembershipIds?: Set<string>
+    clanName?: string
+  }
 ): Promise<{ record: RunRecord; pgcr: PgcrResponse } | null> {
-  const pgcr = (await getPostGameCarnageReport(instanceId)) as PgcrResponse
+  const pgcr = (await getPostGameCarnageReport(instanceId, options.accessToken)) as PgcrResponse
   const details = pgcr.activityDetails
   if (!details) return null
 
-  const completed = resolvePgcrCompleted(pgcr, options?.historyRow)
+  const completed = resolvePgcrCompleted(pgcr, options.historyRow)
   const checkpointLikely = pgcr.activityWasStartedFromBeginning === false
-  const durationSeconds = resolvePgcrDurationSeconds(pgcr, options?.historyRow)
-  const teamMembers = parseTeamMembers(pgcr.entries)
+  const durationSeconds = resolvePgcrDurationSeconds(pgcr, options.historyRow)
+  const teamMembers = tagClanMembers(
+    parseTeamMembers(pgcr.entries),
+    userClanId,
+    options.clanName,
+    options.clanMembershipIds
+  )
 
   const activityHash = Number(details.referenceId ?? details.directorActivityHash ?? 0)
   let activityName = `Activity ${activityHash || instanceId}`
@@ -168,7 +242,7 @@ async function pgcrToRunRecord(
   let activityType: ActivityType = activityTypeHint
   if (isPantheonActivityName(activityName)) {
     activityType = 'pantheon'
-  } else if (options?.pantheonOnly || activityTypeHint === 'pantheon') {
+  } else if (options.pantheonOnly || activityTypeHint === 'pantheon') {
     return null
   }
 
@@ -231,6 +305,22 @@ async function pgcrToRunRecord(
   return { record, pgcr }
 }
 
+async function loadClanMembershipIds(clanId?: string): Promise<Set<string>> {
+  if (!clanId) return new Set()
+  try {
+    const members = await getAllClanMembersWithPresence(clanId)
+    const ids = new Set<string>()
+    for (const member of members) {
+      const info = member.destinyUserInfo ?? member.bungieNetUserInfo
+      if (info?.membershipId != null) ids.add(String(info.membershipId))
+    }
+    return ids
+  } catch (err) {
+    console.warn('[runIngestion] clan roster lookup failed', { clanId, err })
+    return new Set()
+  }
+}
+
 export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
   synced: number
   imported: number
@@ -257,7 +347,9 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
     throw new Error('Missing Destiny membership — disconnect and reconnect Bungie.')
   }
 
-  const profile = (await getPlayerProfile(membershipType, membershipId, [100, 200])) as {
+  const clanMembershipIds = await loadClanMembershipIds(stored.clanId)
+
+  const profile = (await getPlayerProfile(membershipType, membershipId, [100, 200], accessToken)) as {
     characters?: { data?: Record<string, { classType?: number }> }
   }
 
@@ -287,7 +379,13 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
     ] as const) {
       let activities: ActivityHistoryRow[] = []
       try {
-        activities = await fetchActivityList(membershipType, membershipId, characterId, mode)
+        activities = await fetchActivityList(
+          membershipType,
+          membershipId,
+          characterId,
+          mode,
+          accessToken
+        )
       } catch (err) {
         console.warn('[runIngestion] activity history failed', { mode, characterId, err })
         continue
@@ -306,17 +404,29 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
             stored.userId,
             stored.bungieDisplayName,
             stored.clanId,
-            { pantheonOnly, historyRow: row }
+            {
+              pantheonOnly,
+              historyRow: row,
+              accessToken,
+              clanMembershipIds,
+              clanName: stored.clanName,
+            }
           )
           if (!result) {
             skipped++
             continue
           }
 
-          const { record, pgcr } = result
+          let { record, pgcr } = result
           if (!isRunInActiveSeasonPacific(record.completedAt)) {
             skipped++
             continue
+          }
+
+          const existing = await getRunRecordById(record.id)
+          if (existing) {
+            const review = await getAdminReviewByRunId(record.id)
+            record = await mergeRunRecordOnResync(existing, record, review)
           }
 
           const isNew = !(await runRecordExists(record.id))
@@ -332,22 +442,29 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
             })
           }
 
-          const memberBuilds = await extractAllBuildsFromPgcr(pgcr, record, membershipId)
-          for (const build of memberBuilds) {
-            await saveBuildSnapshot(build)
-            builds++
+          if (record.verificationStatus === 'verified' || record.verificationStatus === 'flagged') {
+            const memberBuilds = await extractAllBuildsFromPgcr(pgcr, record, membershipId)
+            for (const build of memberBuilds) {
+              await saveBuildSnapshot(build)
+              builds++
+            }
           }
 
           if (record.verificationStatus === 'flagged') {
-            flagged++
-            await queueAdminReview({
-              id: `review-${record.id}`,
-              runId: record.id,
-              suspiciousScore: record.suspiciousScore,
-              aiSummary: record.aiReview?.summary ?? 'Flagged for manual review',
-              status: 'pending',
-              run: record,
-            })
+            const review = await getAdminReviewByRunId(record.id)
+            const reviewClosed =
+              review?.status === 'approved' || review?.status === 'rejected'
+            if (!reviewClosed) {
+              flagged++
+              await queueAdminReview({
+                id: `review-${record.id}`,
+                runId: record.id,
+                suspiciousScore: record.suspiciousScore,
+                aiSummary: record.aiReview?.summary ?? 'Flagged for manual review',
+                status: 'pending',
+                run: record,
+              })
+            }
           }
 
           synced++

@@ -176,16 +176,18 @@ export async function getActivityHistory(
   membershipId: string,
   characterId: string,
   mode: number,
-  count = 25
+  count = 25,
+  accessToken?: string
 ) {
   return bungieFetch(
-    `/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=${count}`
+    `/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=${count}`,
+    { accessToken }
   )
 }
 
 /** Post-game carnage report — core for run verification. */
-export async function getPostGameCarnageReport(activityId: string) {
-  return bungieFetch(`/Destiny2/Stats/PostGameCarnageReport/${activityId}/`)
+export async function getPostGameCarnageReport(activityId: string, accessToken?: string) {
+  return bungieFetch(`/Destiny2/Stats/PostGameCarnageReport/${activityId}/`, { accessToken })
 }
 
 /** Clan info. */

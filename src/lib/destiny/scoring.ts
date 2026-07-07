@@ -39,11 +39,15 @@ export function calculateRunPoints(input: ScoringInput): ScoringResult {
   const maxRandos =
     scoringKind === 'raid' ? SCORING.maxRandosRaid : SCORING.maxRandosDungeon
   if (input.randoCount > maxRandos) {
-    reasons.push(`Rando count ${input.randoCount} exceeds max ${maxRandos} for ${input.activityType}`)
+    return {
+      points: 0,
+      eligible: false,
+      reasons: [`Rando count ${input.randoCount} exceeds max ${maxRandos} for ${input.activityType}`],
+    }
   }
 
   const clanPts = input.clanMemberCount * SCORING.pointsPerClanMember
-  const randoPts = Math.min(input.randoCount, maxRandos) * SCORING.pointsPerRando
+  const randoPts = input.randoCount * SCORING.pointsPerRando
   const points = clanPts + randoPts
 
   if (input.isFullClanTeam) {

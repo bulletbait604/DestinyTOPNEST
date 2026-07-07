@@ -4,6 +4,11 @@
 
 import { getActivityHistory, getPlayerProfile, getPostGameCarnageReport } from '@/lib/destiny/bungieClient'
 import { parsePgcrDurationSeconds, type PgcrPayload } from '@/lib/destiny/pgcrBuildExtractor'
+import {
+  durationFromActivityHistory,
+  isActivityHistoryCompleted,
+  type ActivityHistoryRowLike,
+} from '@/lib/destiny/pgcrStats'
 import { resolveActivityByHash } from '@/lib/destiny/manifest'
 import type { GuardianBungieStats } from '@/lib/destiny/types'
 
@@ -14,31 +19,35 @@ const DUNGEON_MODE = 82
 const HISTORY_COUNT = 50
 const PGCR_SAMPLE = 6
 
-interface HistoryActivity {
-  activityDetails?: {
-    referenceId?: number
-    instanceId?: string
-    completionReason?: number
-  }
-  values?: Record<string, { basic?: { value?: number } }>
-}
+type HistoryActivity = ActivityHistoryRowLike
 
 function isCompleted(row: HistoryActivity): boolean {
-  const reason =
-    row.activityDetails?.completionReason ?? row.values?.completionReason?.basic?.value
-  return reason === 0
+  return isActivityHistoryCompleted(row) === true
 }
 
 function durationFromRow(row: HistoryActivity): number | undefined {
-  const seconds =
-    row.values?.activityDurationSeconds?.basic?.value ??
-    row.values?.timePlayedSeconds?.basic?.value
-  return typeof seconds === 'number' && seconds > 0 ? seconds : undefined
+  const seconds = durationFromActivityHistory(row)
+  return seconds > 0 ? seconds : undefined
+}
+
+function dedupeActivities(rows: HistoryActivity[]): HistoryActivity[] {
+  const seen = new Set<string>()
+  const deduped: HistoryActivity[] = []
+  for (const row of rows) {
+    const instanceId = row.activityDetails?.instanceId
+    if (instanceId) {
+      if (seen.has(instanceId)) continue
+      seen.add(instanceId)
+    }
+    deduped.push(row)
+  }
+  return deduped
 }
 
 async function fastestFromActivities(
   rows: HistoryActivity[],
-  label: string
+  label: string,
+  accessToken: string
 ): Promise<{ seconds: number; name: string } | undefined> {
   const completed = rows.filter(isCompleted)
   let best: { seconds: number; name: string } | undefined
@@ -66,8 +75,8 @@ async function fastestFromActivities(
     if (!instanceId) continue
     pgcrChecked++
     try {
-      const pgcr = (await getPostGameCarnageReport(instanceId)) as PgcrPayload
-      const seconds = parsePgcrDurationSeconds(pgcr)
+      const pgcr = (await getPostGameCarnageReport(instanceId, accessToken)) as PgcrPayload
+      const seconds = parsePgcrDurationSeconds(pgcr, row)
       if (seconds <= 0) continue
       const hash = row.activityDetails?.referenceId
       let name = label
@@ -134,10 +143,10 @@ export async function fetchGuardianBungieStats(
 
     try {
       const [raidRes, dungeonRes] = await Promise.all([
-        getActivityHistory(membershipType, membershipId, id, RAID_MODE, HISTORY_COUNT) as Promise<{
+        getActivityHistory(membershipType, membershipId, id, RAID_MODE, HISTORY_COUNT, accessToken) as Promise<{
           activities?: HistoryActivity[]
         }>,
-        getActivityHistory(membershipType, membershipId, id, DUNGEON_MODE, HISTORY_COUNT) as Promise<{
+        getActivityHistory(membershipType, membershipId, id, DUNGEON_MODE, HISTORY_COUNT, accessToken) as Promise<{
           activities?: HistoryActivity[]
         }>,
       ])
@@ -148,9 +157,12 @@ export async function fetchGuardianBungieStats(
     }
   }
 
+  raidRows = dedupeActivities(raidRows)
+  dungeonRows = dedupeActivities(dungeonRows)
+
   const [fastestRaid, fastestDungeon] = await Promise.all([
-    fastestFromActivities(raidRows, 'Raid'),
-    fastestFromActivities(dungeonRows, 'Dungeon'),
+    fastestFromActivities(raidRows, 'Raid', accessToken),
+    fastestFromActivities(dungeonRows, 'Dungeon', accessToken),
   ])
 
   return {
