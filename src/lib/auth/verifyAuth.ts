@@ -26,8 +26,6 @@ export interface VerifiedUser {
   provider: 'bungie' | 'kick' | 'credentials'
 }
 
-const UNLIMITED_ROLES: UserRole[] = ['subscriber', 'subscriber_lifetime', 'admin', 'owner', 'tester']
-
 /**
  * Extract session token from request
  * Priority: 1) HTTP-Only cookie, 2) Authorization header
@@ -154,47 +152,6 @@ export async function verifyAuth(req: NextRequest): Promise<VerifiedUser> {
 
   if (await isUserBanned(user.username)) {
     throw new BannedUserError()
-  }
-
-  return user
-}
-
-/**
- * Role-based authorization guard
- * Throws 403 if user lacks required role
- */
-export function requireRole(user: VerifiedUser, allowedRoles: UserRole[]): void {
-  if (!allowedRoles.includes(user.role)) {
-    throw new AuthError(`Access denied. Required roles: ${allowedRoles.join(', ')}`, 403)
-  }
-}
-
-/**
- * Check if user has unlimited access (any paid tier)
- */
-export function hasUnlimitedAccess(user: VerifiedUser): boolean {
-  if (isAllowlistedOwner(user.username)) return true
-  return UNLIMITED_ROLES.includes(user.role)
-}
-
-/** Clip Editor entitlement: site owner, admin, editor badge, or Mongo owner role. */
-export function hasClipEditorAccess(user: VerifiedUser): boolean {
-  if (isAllowlistedOwner(user.username)) return true
-  return user.role === 'editor' || user.role === 'owner' || user.role === 'admin'
-}
-
-/**
- * Combined auth + optional role check
- * Convenience function for common use case
- */
-export async function authenticateAndAuthorize(
-  req: NextRequest,
-  allowedRoles?: UserRole[]
-): Promise<VerifiedUser> {
-  const user = await verifyAuth(req)
-
-  if (allowedRoles && allowedRoles.length > 0) {
-    requireRole(user, allowedRoles)
   }
 
   return user

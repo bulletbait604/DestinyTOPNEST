@@ -20,7 +20,7 @@ import {
 } from '@/app/components/destiny/DestinyUi'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { DEFAULT_PROFILE_FLEX_STATS } from '@/lib/destiny/profileFlex'
-import { useBungieLink } from '@/hooks/useBungieLink'
+import { useBungieLink } from '@/contexts/BungieLinkContext'
 import { useProfileData } from '@/contexts/ProfileDataContext'
 import { cn } from '@/lib/utils'
 import { useActiveCharacterSelect } from '@/hooks/useActiveCharacterSelect'

@@ -90,10 +90,3 @@ export function computeTrustRank(reviews: TrustReview[]): TrustRankSummary {
     reviewCount: reviews.length,
   }
 }
-
-/** @deprecated Use clampKnowledge */
-export function clampTrustScore(value: unknown, min: 1, max: 5): KnowledgeScore {
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(n)) return 3
-  return Math.max(min, Math.min(max, Math.round(n))) as KnowledgeScore
-}

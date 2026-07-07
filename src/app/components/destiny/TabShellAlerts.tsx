@@ -1,7 +1,7 @@
 'use client'
 
 import BungieConnectBanner from '@/app/components/destiny/BungieConnectBanner'
-import { useBungieLink } from '@/hooks/useBungieLink'
+import { useBungieLink } from '@/contexts/BungieLinkContext'
 
 /** Bungie link / reconnect alerts below nav — hidden when linked and healthy. */
 export default function TabShellAlerts({ darkMode }: { darkMode: boolean }) {

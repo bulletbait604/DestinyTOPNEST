@@ -2,7 +2,7 @@
 
 import { Loader2, LogOut, RefreshCw, Settings } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useBungieLink, SYNC_RECENT_MS } from '@/hooks/useBungieLink'
+import { useBungieLink, SYNC_RECENT_MS } from '@/contexts/BungieLinkContext'
 import { useAutoBungieSync } from '@/hooks/useAutoBungieSync'
 import { cn } from '@/lib/utils'
 

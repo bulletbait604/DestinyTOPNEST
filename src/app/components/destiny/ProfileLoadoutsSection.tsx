@@ -26,7 +26,7 @@ import { rankRecommendedLoadoutsForClass,
 } from '@/lib/destiny/recommendedBuildOptimizer'
 import { buildLoadoutPickerEntries, type LoadoutPickerEntry } from '@/lib/destiny/loadoutArchetype'
 import { destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
-import { useBungieLink } from '@/hooks/useBungieLink'
+import { useBungieLink } from '@/contexts/BungieLinkContext'
 import { useProfileData } from '@/contexts/ProfileDataContext'
 import { cn } from '@/lib/utils'
 

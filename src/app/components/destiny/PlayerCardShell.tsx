@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import type { CharacterSummary, PlayerProfile } from '@/lib/destiny/types'
 import PlayerCardCompact from '@/app/components/destiny/PlayerCardCompact'
-import { useBungieLink } from '@/hooks/useBungieLink'
+import { useBungieLink } from '@/contexts/BungieLinkContext'
 import { useProfileData } from '@/contexts/ProfileDataContext'
 
 interface Props {

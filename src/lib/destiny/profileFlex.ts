@@ -48,9 +48,6 @@ export const STAT_CARD_LABELS: Record<ProfileFlexStatId, string> = {
   season_rank: 'Season rank',
 }
 
-/** @deprecated use STAT_CARD_LABELS */
-export const FLEX_STAT_LABELS = STAT_CARD_LABELS
-
 export const STAT_CARD_GROUPS: { label: string; ids: ProfileFlexStatId[] }[] = [
   {
     label: 'Bungie live',

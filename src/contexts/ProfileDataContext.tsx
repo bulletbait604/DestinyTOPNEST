@@ -28,7 +28,7 @@ import {
   type LoadoutsCacheData,
 } from '@/lib/destiny/profileCacheStorage'
 import { PROFILE_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
-import { useBungieLink } from '@/hooks/useBungieLink'
+import { useBungieLink } from '@/contexts/BungieLinkContext'
 
 interface FetchOptions {
   force?: boolean

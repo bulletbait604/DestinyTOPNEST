@@ -13,7 +13,7 @@ import {
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import TrustReviewVoteForm from '@/app/components/destiny/TrustReviewVoteForm'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
-import { useBungieLink } from '@/hooks/useBungieLink'
+import { useBungieLink } from '@/contexts/BungieLinkContext'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { cn } from '@/lib/utils'
 

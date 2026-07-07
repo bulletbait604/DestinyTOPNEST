@@ -167,12 +167,13 @@ export async function getRunsForUser(userId: string, limit = 25): Promise<RunRec
   try {
     await ensureDestinyIndexes()
     const database = await db()
-    return (await database
+    const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
       .find({ ownerUserId: userId })
       .sort({ completedAt: -1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
+    return rows.map(normalizeRunRecord)
   } catch {
     return []
   }
@@ -190,12 +191,13 @@ export async function getRunsForParticipant(
     if (membershipId) {
       or.push({ 'teamMembers.membershipId': membershipId })
     }
-    return (await database
+    const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
       .find({ $or: or })
       .sort({ completedAt: -1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
+    return rows.map(normalizeRunRecord)
   } catch {
     return getRunsForUser(userId, limit)
   }

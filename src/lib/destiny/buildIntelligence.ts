@@ -1,4 +1,5 @@
 ﻿import type { BuildIntelligenceCard, BuildSnapshot, RunRecord } from '@/lib/destiny/types'
+import { coerceStatNumber } from '@/lib/destiny/pgcrStats'
 
 interface BuildGroup {
   signature: string
@@ -59,9 +60,10 @@ export function aggregateBuildIntelligence(
       const clears = group.snapshots.length
       const avgDuration =
         group.snapshots.reduce((s, b) => s + (b.durationSeconds ?? 0), 0) / clears
-      const totalDeaths = group.snapshots.reduce((s, b) => s + (b.deaths ?? 0), 0)
+      const totalDeaths = group.snapshots.reduce((s, b) => s + coerceStatNumber(b.deaths), 0)
       const deathRate = totalDeaths / clears
-      const successRate = group.snapshots.filter((b) => (b.deaths ?? 0) <= 3).length / clears
+      const successRate =
+        group.snapshots.filter((b) => coerceStatNumber(b.deaths) <= 3).length / clears
 
       const exoticLabel =
         first.exoticArmor !== 'Unknown exotic'

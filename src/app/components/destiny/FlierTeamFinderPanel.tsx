@@ -5,7 +5,7 @@ import { Gamepad2, Mic, Plus, Trash2, Users } from 'lucide-react'
 import FireteamReviewSection from '@/app/components/destiny/FireteamReviewSection'
 import FlierTeamCreateWizard from '@/app/components/destiny/FlierTeamCreateWizard'
 import FlierTeamMemberModal from '@/app/components/destiny/FlierTeamMemberModal'
-import { useBungieLink } from '@/hooks/useBungieLink'
+import { useBungieLink } from '@/contexts/BungieLinkContext'
 import type {
   ActiveFireteamLobbySummary,
   FireteamLobby,

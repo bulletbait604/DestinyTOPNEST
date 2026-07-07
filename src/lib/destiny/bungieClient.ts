@@ -331,21 +331,6 @@ export async function applyMetaBuildToCharacter(
   return { equipped, transferred }
 }
 
-/** @deprecated Use applyMetaBuildToCharacter — kept for older callers. */
-export async function equipLoadoutItem(
-  _membershipType: number,
-  _membershipId: string,
-  _characterId: string,
-  _itemInstanceId: string,
-  _accessToken?: string
-): Promise<{ supported: false; reason: string }> {
-  return {
-    supported: false,
-    reason:
-      'Use POST /api/destiny/loadouts/apply with a meta build plan. Requires MoveEquipDestinyItems OAuth scope.',
-  }
-}
-
 export function bungieMembershipTypeLabel(type: number): string {
   switch (type) {
     case 1:

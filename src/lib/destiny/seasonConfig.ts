@@ -4,9 +4,6 @@ import { resolveActiveSeasonByDate } from '@/lib/destiny/seasonCatalog'
 export { DEFAULT_SEASON_PRIZE_RULES, NEST_SEASON_CATALOG } from '@/lib/destiny/seasonCatalog'
 export { resolveActiveSeasonByDate, getNextSeasonDefinition } from '@/lib/destiny/seasonCatalog'
 
-/** @deprecated Use resolveActiveSeasonByDate() for runtime resolution. */
-export const ACTIVE_SEASON: Season = resolveActiveSeasonByDate()
-
 /** Current operational season — resolves from the Nest catalog by date. */
 export function getConfiguredActiveSeason(now = new Date()): Season {
   return resolveActiveSeasonByDate(now)

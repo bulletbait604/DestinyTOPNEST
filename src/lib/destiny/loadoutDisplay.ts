@@ -1,4 +1,4 @@
-import type { ArmorPiece, ArmorSlotLabel, BuildSnapshot, ExternalBuildSource } from '@/lib/destiny/types'
+import type { ArmorSlotLabel, BuildSnapshot, ExternalBuildSource } from '@/lib/destiny/types'
 import { formatArmorSetBonusesForCopy } from '@/lib/destiny/armorSetBonusFormat'
 import type { ArmoryRow } from '@/app/components/destiny/WeaponArmoryTable'
 
@@ -60,31 +60,6 @@ export function buildExternalArmorRows(build: ExternalBuildSource): ArmoryRow[] 
   }
 
   return rows
-}
-
-export function abilityRows(build: BuildSnapshot): ArmoryRow[] {
-  const entries: { slot: string; ref?: BuildSnapshot['superRef']; fallback?: string }[] = [
-    { slot: 'Super', ref: build.superRef, fallback: build.super },
-    { slot: 'Class', ref: build.classAbilityRef, fallback: build.abilities[1] },
-    { slot: 'Melee', ref: build.meleeRef, fallback: build.abilities[3] },
-    { slot: 'Grenade', ref: build.grenadeRef, fallback: build.abilities[4] },
-    { slot: 'Jump', ref: build.jumpRef, fallback: build.abilities[2] },
-  ]
-
-  return entries
-    .filter((e) => (e.ref?.name ?? e.fallback) && (e.ref?.name ?? e.fallback) !== '—')
-    .map((e) => ({
-      slot: e.slot,
-      item: e.ref,
-      fallback: e.ref?.name ?? e.fallback,
-    }))
-}
-
-export function buildExoticArmorRow(
-  build: Pick<BuildSnapshot, 'exoticArmor' | 'exoticArmorRef'>
-): ArmoryRow[] {
-  if (!build.exoticArmor || build.exoticArmor === '—') return []
-  return [{ slot: 'Exo', item: build.exoticArmorRef, fallback: build.exoticArmor }]
 }
 
 export function loadoutCopyText(build: BuildSnapshot): string {
