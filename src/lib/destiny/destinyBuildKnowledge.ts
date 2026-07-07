@@ -3,7 +3,7 @@
  * Sources: light.gg set bonuses, Edge of Fate / Reclamation armor tier system.
  */
 
-export const META_BUILD_EARLIEST_PUBLISHED = '2026-07-05T00:00:00.000Z'
+export const META_BUILD_EARLIEST_PUBLISHED = '2026-06-05T00:00:00.000Z'
 
 /** Ability stat soft-cap after Monument of Triumph — spread stats instead of single-stacking. */
 export const ARMOR_3_ABILITY_STAT_CAP = 125

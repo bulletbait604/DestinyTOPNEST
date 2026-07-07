@@ -530,7 +530,7 @@ export function metaResearchWindowStart(now = Date.now()): Date {
   return new Date(now - FOUR_WEEKS_MS)
 }
 
-/** Meta builds published on or after July 5, 2026 within the rolling research window. */
+/** Meta builds published on or after June 5, 2026 within the rolling research window. */
 export function getResearchedMetaBuilds(now = Date.now()): ExternalBuildSource[] {
   const windowStart = metaResearchWindowStart(now).getTime()
   const earliestPublished = Date.parse(META_BUILD_EARLIEST_PUBLISHED)

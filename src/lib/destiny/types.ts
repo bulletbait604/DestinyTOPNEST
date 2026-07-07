@@ -491,6 +491,7 @@ export interface BuildSnapshot {
   jumpRef?: DestinyIconRef
   meleeRef?: DestinyIconRef
   grenadeRef?: DestinyIconRef
+  armorModRefs?: DestinyIconRef[]
   /** In-game saved loadout label from Bungie. */
   loadoutName?: string
   loadoutIndex?: number
@@ -802,7 +803,7 @@ export interface ClanProfile {
   recruitmentOpen: boolean
   avgRaidClearSeconds: number
   avgDungeonClearSeconds: number
-  topMembers: { displayName: string; points: number; emblemUrl?: string }[]
+  topMembers: { displayName: string; points: number; emblemUrl?: string; isOnline?: boolean }[]
   achievements: string[]
   /** Clan members currently online (populated from live Bungie data). */
   onlineMembers?: OnlineSocialMember[]

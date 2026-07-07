@@ -28,6 +28,8 @@ interface BaseProps {
   compact?: boolean
   title?: string
   subtitle?: string
+  activeCharacterId?: string
+  activeCharacterClass?: DestinyCharacterClass
 }
 
 type Props = BaseProps & (MetaProps | VerifiedProps)
@@ -41,6 +43,8 @@ export default function TopLoadoutsByClass({
   subtitle = variant === 'meta'
     ? 'Cross-referenced from Blueberries.gg, light.gg, togame.io, and more'
     : 'Most-used builds from verified clears this season',
+  activeCharacterId,
+  activeCharacterClass,
 }: Props) {
   const t = getDestinyTheme(darkMode)
   const hasAny = (['titan', 'hunter', 'warlock'] as const).some((c) => topByClass[c]?.length)
@@ -85,6 +89,8 @@ export default function TopLoadoutsByClass({
                       build={b as ExternalBuildSource}
                       darkMode={darkMode}
                       compact={compact}
+                      characterId={activeCharacterId}
+                      characterClass={activeCharacterClass ?? (b as ExternalBuildSource).class}
                     />
                   )
                 )

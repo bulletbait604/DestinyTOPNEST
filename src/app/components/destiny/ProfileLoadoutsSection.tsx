@@ -271,6 +271,7 @@ export default function ProfileLoadoutsSection({
           <SuggestedLoadoutsSection
             darkMode={darkMode}
             characterClass={activeClass}
+            characterId={activeCharacterId}
             picks={recommendedPicks}
             summary={recommendedSummary}
           />
@@ -294,6 +295,7 @@ export default function ProfileLoadoutsSection({
                     build={b}
                     darkMode={darkMode}
                     characterId={activeCharacterId}
+                    characterClass={activeClass}
                   />
                 ))}
               </div>
@@ -311,6 +313,8 @@ export default function ProfileLoadoutsSection({
             topByClass={topMetaByClass}
             title="Top meta loadouts by class"
             subtitle="Unmodified picks from build sites — updated weekly with the reset"
+            activeCharacterId={activeCharacterId}
+            activeCharacterClass={activeClass}
           />
 
           <TopLoadoutsByClass

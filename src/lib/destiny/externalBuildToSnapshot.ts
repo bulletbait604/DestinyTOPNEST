@@ -1,4 +1,5 @@
 import type { ArmorPiece, ArmorSlotLabel, BuildSnapshot, ExternalBuildSource } from '@/lib/destiny/types'
+import { statFocusPreviewFromPriorities } from '@/lib/destiny/armorStatSimilarity'
 import { buildExternalArmorRows } from '@/lib/destiny/loadoutDisplay'
 import { assignMetaWeaponSlots } from '@/lib/destiny/metaWeaponSlots'
 
@@ -29,6 +30,7 @@ function rowSlotToArmorSlot(slot: string): ArmorSlotLabel {
 /** Convert a researched meta build into a BuildSnapshot for the shared loadout inspector. */
 export function externalBuildToSnapshot(build: ExternalBuildSource): BuildSnapshot {
   const slots = assignMetaWeaponSlots(build)
+  const statPreview = statFocusPreviewFromPriorities(build.statPriorities)
 
   return {
     id: build.id,
@@ -39,7 +41,7 @@ export function externalBuildToSnapshot(build: ExternalBuildSource): BuildSnapsh
     super: '—',
     aspects: build.aspects ?? [],
     fragments: build.fragments ?? [],
-    abilities: ['—', '—', '—', '—', '—'],
+    abilities: [],
     exoticArmor: build.exoticArmor ?? '—',
     exoticWeapon: slots.exoticWeapon,
     armorPieces: armorPiecesFromExternal(build),
@@ -48,7 +50,7 @@ export function externalBuildToSnapshot(build: ExternalBuildSource): BuildSnapsh
     powerWeapon: slots.power,
     armorMods: build.armorMods ?? [],
     artifactPerks: [],
-    stats: {},
+    stats: statPreview,
     activityId: 0,
     activityName: build.activityFocus ?? 'Meta build',
     difficulty: 'normal',
@@ -65,6 +67,7 @@ export function externalBuildToSnapshot(build: ExternalBuildSource): BuildSnapsh
     powerWeaponRef: slots.powerRef,
     aspectRefs: build.aspectRefs,
     fragmentRefs: build.fragmentRefs,
+    armorModRefs: build.armorModRefs,
     loadoutSource: 'meta',
     loadoutName: build.title,
   }

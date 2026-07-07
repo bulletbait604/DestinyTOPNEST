@@ -117,18 +117,20 @@ function OnlineMemberList({
   }
 
   return (
-    <div className="tn-clan-online-list tn-clan-online-list-scroll">
-      {members.map((member) => (
-        <OnlineMemberRow
-          key={member.membershipId}
-          member={member}
-          darkMode={darkMode}
-          appInviteEnabled={appInviteEnabled}
-          gameInviteEnabled={gameInviteEnabled}
-          invitingKey={invitingKey}
-          onInvite={onInvite}
-        />
-      ))}
+    <div className="tn-clan-online-list-shell">
+      <div className="tn-clan-online-list tn-clan-online-list-scroll">
+        {members.map((member) => (
+          <OnlineMemberRow
+            key={member.membershipId}
+            member={member}
+            darkMode={darkMode}
+            appInviteEnabled={appInviteEnabled}
+            gameInviteEnabled={gameInviteEnabled}
+            invitingKey={invitingKey}
+            onInvite={onInvite}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -351,8 +353,16 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
       ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle title={`Online clan members (${onlineClanMembers.length})`} darkMode={darkMode} />
+        <GlassCard darkMode={darkMode} className="tn-clan-online-panel">
+          <SectionTitle
+            title={`Online clan members (${onlineClanMembers.length})`}
+            subtitle={
+              onlineClanMembers.length > 6
+                ? 'Scroll to see everyone online in your clan right now.'
+                : 'Everyone online in your clan from Bungie roster presence.'
+            }
+            darkMode={darkMode}
+          />
           <OnlineMemberList
             members={onlineClanMembers}
             emptyMessage="No clan members online right now."
@@ -364,8 +374,16 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
           />
         </GlassCard>
 
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle title={`Online friends (${onlineFriends.length})`} darkMode={darkMode} />
+        <GlassCard darkMode={darkMode} className="tn-clan-online-panel">
+          <SectionTitle
+            title={`Online friends (${onlineFriends.length})`}
+            subtitle={
+              onlineFriends.length > 6
+                ? 'Scroll to see all Bungie friends online or in Destiny 2.'
+                : 'Bungie friends online on Bungie.net or playing Destiny 2.'
+            }
+            darkMode={darkMode}
+          />
           <OnlineMemberList
             members={onlineFriends}
             emptyMessage="No Bungie friends online right now."
@@ -398,19 +416,36 @@ export default function ClansPanel({ darkMode }: { darkMode: boolean }) {
         </GlassCard>
       </div>
 
-      <GlassCard darkMode={darkMode}>
-        <SectionTitle title="Top members" darkMode={darkMode} />
-        <div className="space-y-2">
-          {clan.topMembers.map((m, i) => (
-            <div key={m.displayName} className="flex items-center justify-between py-2 border-b border-white/5">
-              <div className="flex items-center gap-2">
-                <span className={cn('text-sm font-bold w-6', t.gold)}>{i + 1}</span>
-                {m.emblemUrl && <ItemIcon iconUrl={m.emblemUrl} name={m.displayName} size={28} className="rounded-full" />}
-                <span className="text-white">{m.displayName}</span>
+      <GlassCard darkMode={darkMode} className="tn-clan-online-panel">
+        <SectionTitle
+          title={`Clan roster (${clan.topMembers.length})`}
+          subtitle="Full member list from Bungie — scroll when your clan is large."
+          darkMode={darkMode}
+        />
+        <div className="tn-clan-online-list-shell">
+          <div className="tn-clan-online-list tn-clan-online-list-scroll">
+            {clan.topMembers.map((m) => (
+              <div
+                key={m.displayName}
+                className="flex items-center justify-between py-2 border-b border-white/5 last:border-0"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={cn(
+                      'w-2 h-2 rounded-full shrink-0',
+                      m.isOnline ? 'bg-emerald-400' : 'bg-white/20'
+                    )}
+                    title={m.isOnline ? 'Online' : 'Offline'}
+                  />
+                  {m.emblemUrl && (
+                    <ItemIcon iconUrl={m.emblemUrl} name={m.displayName} size={28} className="rounded-full" />
+                  )}
+                  <span className="text-white truncate">{m.displayName}</span>
+                </div>
+                {m.points > 0 ? <span className={cn('text-sm', t.gold)}>{m.points} pts</span> : null}
               </div>
-              <span className={cn('text-sm', t.gold)}>{m.points} pts</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </GlassCard>
     </div>

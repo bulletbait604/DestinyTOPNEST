@@ -51,7 +51,7 @@ function ModSlotCell({
   glow,
 }: {
   item: DestinyIconRef
-  kind: 'Aspect' | 'Fragment'
+  kind: 'Aspect' | 'Fragment' | 'Mod'
   glow: 'gold' | 'arc' | 'void' | 'solar' | 'strand' | 'stasis' | 'neutral' | 'auto'
 }) {
   return (
@@ -111,6 +111,33 @@ function StatsPanel({ build }: { build: BuildSnapshot }) {
   )
 }
 
+function ArmorModsPanel({
+  mods,
+  elementGlow,
+}: {
+  mods: DestinyIconRef[]
+  elementGlow: ReturnType<typeof subclassGlow>
+}) {
+  if (!mods.length) return null
+  return (
+    <BuildSection label="Armor mods" className="d2-profile-build-panel">
+      <div className="d2-mod-grid d2-mod-grid-profile-side">
+        {mods.map((mod) => (
+          <ModSlotCell key={mod.name} item={mod} kind="Mod" glow={elementGlow} />
+        ))}
+      </div>
+    </BuildSection>
+  )
+}
+
+function hasRealAbilityData(build: BuildSnapshot): boolean {
+  if (build.superRef || build.classAbilityRef || build.jumpRef || build.meleeRef || build.grenadeRef) {
+    return true
+  }
+  const fallbacks = [build.super, ...(build.abilities ?? [])]
+  return fallbacks.some((value) => Boolean(value && value !== '—'))
+}
+
 function WeaponsPanel({ rows }: { rows: ReturnType<typeof buildWeaponRows> }) {
   if (!rows.length) return null
   return (
@@ -141,7 +168,23 @@ export default function ProfileBuildInspectorBody({
   const weaponRows = buildWeaponRows(build)
   const armorRows = buildArmorRows(build)
   const statsPanel = <StatsPanel build={build} />
-  const abilitiesPanel = <AbilitiesPanel build={build} elementGlow={elementGlow} />
+  const abilitiesPanel = hasRealAbilityData(build) ? (
+    <AbilitiesPanel build={build} elementGlow={elementGlow} />
+  ) : build.aspectRefs?.length || build.fragmentRefs?.length ? (
+    <BuildSection label="Subclass" className="d2-profile-build-panel d2-profile-abilities-panel">
+      <div className="d2-mod-grid d2-mod-grid-profile-side">
+        {build.aspectRefs?.map((aspect) => (
+          <ModSlotCell key={aspect.name} item={aspect} kind="Aspect" glow={elementGlow} />
+        ))}
+        {build.fragmentRefs?.map((fragment) => (
+          <ModSlotCell key={fragment.name} item={fragment} kind="Fragment" glow={elementGlow} />
+        ))}
+      </div>
+    </BuildSection>
+  ) : null
+  const modsPanel = build.armorModRefs?.length ? (
+    <ArmorModsPanel mods={build.armorModRefs} elementGlow={elementGlow} />
+  ) : null
   const hasStats = Object.keys(build.stats).length > 0
 
   return (
@@ -155,8 +198,9 @@ export default function ProfileBuildInspectorBody({
         {hasStats ? <div className="d2-loadout-build-stats">{statsPanel}</div> : null}
         <div className="d2-loadout-build-armor">
           <ArmorPanel rows={armorRows} />
+          {modsPanel}
         </div>
-        <div className="d2-loadout-build-abilities">{abilitiesPanel}</div>
+        {abilitiesPanel ? <div className="d2-loadout-build-abilities">{abilitiesPanel}</div> : null}
       </div>
     </div>
   )

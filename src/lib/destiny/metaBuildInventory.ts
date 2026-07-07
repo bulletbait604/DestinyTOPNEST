@@ -3,6 +3,8 @@
  */
 
 import { getCharacterLoadoutProfile } from '@/lib/destiny/bungieClient'
+import { scoreArmorStatSimilarity } from '@/lib/destiny/armorStatSimilarity'
+import { ARMOR_STAT_HASH_LABEL, type ArmorStatKey } from '@/lib/destiny/armorStats'
 import { resolveInventoryItem } from '@/lib/destiny/manifest'
 import { catalogLookup } from '@/lib/destiny/itemsCatalog'
 import { assignMetaWeaponSlots } from '@/lib/destiny/metaWeaponSlots'
@@ -123,6 +125,7 @@ export async function buildMetaInventoryPlan(
   const profile = (await getCharacterLoadoutProfile(membershipType, membershipId, accessToken)) as {
     characterEquipment?: { data?: Record<string, { items?: ProfileItem[] }> }
     characterInventories?: { data?: Record<string, { items?: ProfileItem[] }> }
+    profileInventories?: { data?: Record<string, { items?: ProfileItem[] }> }
     profileInventory?: { data?: { items?: ProfileItem[] } }
   }
 
@@ -135,6 +138,17 @@ export async function buildMetaInventoryPlan(
   }
   for (const [cid, row] of Object.entries(profile.characterInventories?.data ?? {})) {
     allItems.push(...indexItems([], row.items ?? [], cid, cid === characterId ? 'character' : 'other_character'))
+  }
+  for (const row of Object.values(profile.profileInventories?.data ?? {})) {
+    for (const item of row.items ?? []) {
+      if (!item.itemInstanceId) continue
+      allItems.push({
+        ...item,
+        location: 'vault',
+        ownerCharacterId: characterId,
+        equipped: false,
+      })
+    }
   }
   for (const item of profile.profileInventory?.data?.items ?? []) {
     if (!item.itemInstanceId) continue
@@ -205,24 +219,60 @@ export async function buildMetaInventoryPlan(
   }
 }
 
+export interface OwnedArmorOption {
+  name: string
+  hash: number
+  itemInstanceId: string
+  location: InventoryLocation
+  stats: Record<string, number>
+  iconUrl?: string
+  tierLabel?: string
+  similarityScore: number
+  matchesRecommended: boolean
+}
+
+function parseArmorStats(
+  itemInstanceId: string,
+  statsData?: Record<string, { stats?: Record<string, { value?: number }> }>
+): Partial<Record<ArmorStatKey, number>> {
+  const row = statsData?.[itemInstanceId]?.stats
+  if (!row) return {}
+  const stats: Partial<Record<ArmorStatKey, number>> = {}
+  for (const [hash, val] of Object.entries(row)) {
+    const label = ARMOR_STAT_HASH_LABEL[Number(hash)]
+    if (label) stats[label] = val.value ?? 0
+  }
+  return stats
+}
+
 export async function listOwnedArmorForSlot(
   membershipType: number,
   membershipId: string,
   characterId: string,
   characterClass: DestinyCharacterClass,
   slot: ArmorSlotLabel,
-  accessToken: string
-): Promise<Array<{ name: string; hash: number; itemInstanceId: string; location: InventoryLocation }>> {
+  accessToken: string,
+  opts?: { statPriorities?: string[]; recommendedHash?: number }
+): Promise<OwnedArmorOption[]> {
   const profile = (await getCharacterLoadoutProfile(membershipType, membershipId, accessToken)) as {
     characterEquipment?: { data?: Record<string, { items?: ProfileItem[] }> }
     characterInventories?: { data?: Record<string, { items?: ProfileItem[] }> }
+    profileInventories?: { data?: Record<string, { items?: ProfileItem[] }> }
     profileInventory?: { data?: { items?: ProfileItem[] } }
     characters?: { data?: Record<string, { classType?: number }> }
+    itemComponents?: {
+      stats?: {
+        data?: Record<string, { stats?: Record<string, { value?: number }> }>
+      }
+    }
   }
 
   const classMap: Record<number, DestinyCharacterClass> = { 0: 'titan', 1: 'hunter', 2: 'warlock' }
-  const hits: Array<{ name: string; hash: number; itemInstanceId: string; location: InventoryLocation }> = []
+  const hits: OwnedArmorOption[] = []
   const seen = new Set<string>()
+  const statsData = profile.itemComponents?.stats?.data
+  const priorities = opts?.statPriorities ?? []
+  const recommendedHash = opts?.recommendedHash
 
   async function consider(item: ProfileItem, location: InventoryLocation, ownerId: string) {
     if (!item.itemHash || !item.itemInstanceId || !item.bucketHash) return
@@ -236,10 +286,32 @@ export async function listOwnedArmorForSlot(
     const info = await resolveInventoryItem(item.itemHash)
     if ((info.tierLabel ?? '').toLowerCase().includes('exotic')) return
 
-    const key = item.itemInstanceId
+    const key = String(item.itemInstanceId)
     if (seen.has(key)) return
     seen.add(key)
-    hits.push({ name: info.name, hash: item.itemHash, itemInstanceId: key, location })
+
+    const statMap = parseArmorStats(key, statsData)
+    const stats: Record<string, number> = {}
+    for (const [label, value] of Object.entries(statMap)) {
+      stats[label] = value
+    }
+
+    const similarityScore = scoreArmorStatSimilarity(statMap, priorities, {
+      recommendedHash,
+      itemHash: item.itemHash,
+    })
+
+    hits.push({
+      name: info.name,
+      hash: item.itemHash,
+      itemInstanceId: key,
+      location,
+      stats,
+      iconUrl: info.iconUrl,
+      tierLabel: info.tierLabel,
+      similarityScore,
+      matchesRecommended: Boolean(recommendedHash && item.itemHash === recommendedHash),
+    })
   }
 
   for (const [cid, row] of Object.entries(profile.characterEquipment?.data ?? {})) {
@@ -252,9 +324,19 @@ export async function listOwnedArmorForSlot(
       await consider(item, cid === characterId ? 'character' : 'other_character', cid)
     }
   }
+  for (const row of Object.values(profile.profileInventories?.data ?? {})) {
+    for (const item of row.items ?? []) {
+      await consider(item, 'vault', characterId)
+    }
+  }
   for (const item of profile.profileInventory?.data?.items ?? []) {
     await consider(item, 'vault', characterId)
   }
 
-  return hits.sort((a, b) => a.name.localeCompare(b.name))
+  return hits.sort((a, b) => {
+    if (b.similarityScore !== a.similarityScore) return b.similarityScore - a.similarityScore
+    if (a.location === 'vault' && b.location !== 'vault') return 1
+    if (b.location === 'vault' && a.location !== 'vault') return -1
+    return a.name.localeCompare(b.name)
+  })
 }

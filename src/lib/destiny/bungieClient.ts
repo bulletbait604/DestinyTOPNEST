@@ -199,27 +199,35 @@ export async function getClan(clanId: string, accessToken?: string) {
   return bungieFetch(`/GroupV2/${clanId}/`, { accessToken })
 }
 
-/** Clan members. */
+/** Clan members (50 per page). */
 export async function getClanMembers(clanId: string, page = 1, accessToken?: string) {
-  return bungieFetch<{ results?: ClanMemberPresenceRow[]; hasMore?: boolean }>(
-    `/GroupV2/${clanId}/Members/${page}/`,
-    { accessToken }
-  )
+  return bungieFetch<{
+    results?: ClanMemberPresenceRow[]
+    hasMore?: boolean
+    totalResults?: number
+  }>(`/GroupV2/${clanId}/Members/${page}/`, { accessToken })
 }
 
-/** Fetch every clan member page (50 per page) for accurate online presence. */
+/** Fetch every clan member page for accurate online presence across large rosters. */
 export async function getAllClanMembersWithPresence(
   clanId: string,
   accessToken?: string
 ): Promise<ClanMemberPresenceRow[]> {
   const all: ClanMemberPresenceRow[] = []
   let page = 1
-  let hasMore = true
+  let totalResults: number | undefined
 
-  while (hasMore && page <= 40) {
+  while (page <= 40) {
     const res = await getClanMembers(clanId, page, accessToken)
-    all.push(...(res.results ?? []))
-    hasMore = Boolean(res.hasMore)
+    const batch = res.results ?? []
+    if (batch.length) all.push(...batch)
+    totalResults = totalResults ?? res.totalResults
+
+    const pageFull = batch.length >= 50
+    const belowTotal = totalResults != null ? all.length < totalResults : pageFull
+    const hasMore = Boolean(res.hasMore) || (pageFull && belowTotal)
+
+    if (!batch.length || !hasMore) break
     page += 1
   }
 

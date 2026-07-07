@@ -1,6 +1,5 @@
 'use client'
 
-import { ExternalLink } from 'lucide-react'
 import type { DestinyCharacterClass } from '@/lib/destiny/types'
 import ExternalMetaBuildCard from '@/app/components/destiny/ExternalMetaBuildCard'
 import { EmptyBlock, GlassCard, SectionTitle, StatusPill } from '@/app/components/destiny/DestinyUi'
@@ -11,11 +10,13 @@ import { cn } from '@/lib/utils'
 export default function SuggestedLoadoutsSection({
   darkMode,
   characterClass,
+  characterId,
   picks,
   summary,
 }: {
   darkMode: boolean
   characterClass: DestinyCharacterClass
+  characterId?: string
   picks: RankedRecommendedLoadout[]
   summary: string
 }) {
@@ -26,7 +27,7 @@ export default function SuggestedLoadoutsSection({
     <GlassCard darkMode={darkMode}>
       <SectionTitle
         title={`Recommended ${label} loadouts`}
-        subtitle="Class-correct hybrid builds from Blueberries.gg, light.gg, and togame.io — cross-referenced with verified clears"
+        subtitle="Real meta builds from Blueberries.gg, light.gg, and togame.io (published after June 5, 2026) — cross-referenced with verified clears"
         darkMode={darkMode}
       />
       <p className={cn('text-sm mb-4 leading-relaxed', t.muted)}>{summary}</p>
@@ -53,29 +54,26 @@ export default function SuggestedLoadoutsSection({
                   <span className={cn('text-[14px] uppercase tracking-wide', t.gold)}>{pick.scoreLabel}</span>
                 </div>
               </div>
-              <div className="p-4">
-                <ExternalMetaBuildCard build={pick.build} darkMode={darkMode} compact />
-                {pick.summary ? (
-                  <p className={cn('text-base mt-3 leading-relaxed', t.muted)}>{pick.summary}</p>
-                ) : null}
-                {pick.optimizationNotes.length ? (
-                  <ul className={cn('text-base mt-2 space-y-1 list-disc list-inside', t.muted)}>
-                    {pick.optimizationNotes.map((note) => (
-                      <li key={note}>{note}</li>
-                    ))}
-                  </ul>
-                ) : null}
-                {pick.build.sourceUrl ? (
-                  <a
-                    href={pick.build.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-3 text-xs text-sky-300/90 hover:text-sky-200"
-                  >
-                    View original meta source <ExternalLink className="w-3 h-3" />
-                  </a>
-                ) : null}
-              </div>
+              <ExternalMetaBuildCard
+                build={pick.build}
+                darkMode={darkMode}
+                characterId={characterId}
+                characterClass={characterClass}
+              />
+              {pick.summary || pick.optimizationNotes.length ? (
+                <div className="px-4 pb-4 space-y-2">
+                  {pick.summary ? (
+                    <p className={cn('text-sm leading-relaxed', t.muted)}>{pick.summary}</p>
+                  ) : null}
+                  {pick.optimizationNotes.length ? (
+                    <ul className={cn('text-sm space-y-1 list-disc list-inside', t.muted)}>
+                      {pick.optimizationNotes.map((note) => (
+                        <li key={note}>{note}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           ))}
         </div>

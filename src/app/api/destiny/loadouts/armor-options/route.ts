@@ -7,7 +7,7 @@ import type { ArmorSlotLabel, DestinyCharacterClass } from '@/lib/destiny/types'
 
 export const dynamic = 'force-dynamic'
 
-/** List legendary armor in vault/characters for a slot — used by meta build armor picker. */
+/** List legendary armor in vault/characters for a slot — sorted by stat similarity to meta build. */
 export async function GET(req: NextRequest) {
   return destinyAuthHandler(req, async () => {
     const authUser = await verifyAuth(req)
@@ -27,6 +27,9 @@ export async function GET(req: NextRequest) {
     const characterId = req.nextUrl.searchParams.get('characterId') ?? stored.activeCharacterId
     const characterClass = (req.nextUrl.searchParams.get('class') ?? stored.characterClass) as DestinyCharacterClass
     const slot = req.nextUrl.searchParams.get('slot') as ArmorSlotLabel | null
+    const statPriorities = req.nextUrl.searchParams.get('statPriorities')?.split(',').filter(Boolean)
+    const recommendedHashRaw = req.nextUrl.searchParams.get('recommendedHash')
+    const recommendedHash = recommendedHashRaw ? Number(recommendedHashRaw) : undefined
 
     if (!characterId || !characterClass || !slot) {
       return NextResponse.json({ error: 'characterId, class, and slot are required' }, { status: 400 })
@@ -38,7 +41,11 @@ export async function GET(req: NextRequest) {
       characterId,
       characterClass,
       slot,
-      accessToken
+      accessToken,
+      {
+        statPriorities,
+        recommendedHash: Number.isFinite(recommendedHash) ? recommendedHash : undefined,
+      }
     )
 
     return NextResponse.json({ items, linked: true })

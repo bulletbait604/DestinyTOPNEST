@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { Copy, ExternalLink } from 'lucide-react'
-import type { ExternalBuildSource } from '@/lib/destiny/types'
+import type { ExternalBuildSource, DestinyCharacterClass } from '@/lib/destiny/types'
 import { StatusPill, SubclassBadge } from '@/app/components/destiny/DestinyUi'
 import ProfileBuildInspectorBody from '@/app/components/destiny/ProfileBuildInspectorBody'
 import MetaBuildApplyPanel from '@/app/components/destiny/MetaBuildApplyPanel'
@@ -14,14 +14,17 @@ export default function ExternalMetaBuildCard({
   darkMode,
   compact = false,
   characterId,
+  characterClass,
 }: {
   build: ExternalBuildSource
   darkMode: boolean
   compact?: boolean
   characterId?: string
+  characterClass?: DestinyCharacterClass
 }) {
   const t = getDestinyTheme(darkMode)
   const snapshot = externalBuildToSnapshot(build)
+  const activeClass = characterClass ?? build.class
 
   const copyText = [
     build.title,
@@ -104,7 +107,7 @@ export default function ExternalMetaBuildCard({
         build={build}
         darkMode={darkMode}
         characterId={characterId}
-        characterClass={build.class}
+        characterClass={activeClass}
       />
 
       <div className="flex flex-wrap gap-2 px-4 py-3 border-t border-white/[0.06]">

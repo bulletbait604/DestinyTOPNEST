@@ -32,35 +32,67 @@ function formatBungieName(
   return fallback ?? 'Guardian'
 }
 
-function mapClanMember(
-  member: ClanMemberPresenceRow,
-  selfMembershipId?: string
-): OnlineSocialMember | null {
-  if (!member.isOnline) return null
+function selfMembershipIds(stored: StoredDestinyUser): Set<string> {
+  const ids = new Set<string>()
+  if (stored.bungieMembershipId) ids.add(String(stored.bungieMembershipId))
+  if (stored.bungieNetMembershipId) ids.add(String(stored.bungieNetMembershipId))
+  return ids
+}
 
-  const info = member.destinyUserInfo ?? member.bungieNetUserInfo
-  if (!info?.membershipId) return null
+function isSelfMember(member: ClanMemberPresenceRow, selfIds: Set<string>): boolean {
+  for (const info of [member.destinyUserInfo, member.bungieNetUserInfo]) {
+    if (info?.membershipId != null && selfIds.has(String(info.membershipId))) {
+      return true
+    }
+  }
+  return false
+}
 
-  const membershipId = String(info.membershipId)
-  if (selfMembershipId && membershipId === selfMembershipId) return null
+function resolveClanMemberIdentity(member: ClanMemberPresenceRow) {
+  const destiny = member.destinyUserInfo
+  const bungie = member.bungieNetUserInfo
+  const membershipId = destiny?.membershipId ?? bungie?.membershipId
+  if (membershipId == null) return null
 
   const displayName =
-    member.destinyUserInfo?.LastSeenDisplayName ??
-    info.displayName ??
+    destiny?.LastSeenDisplayName ??
+    destiny?.displayName ??
+    bungie?.displayName ??
     'Clan member'
 
+  const iconPath = destiny?.iconPath ?? bungie?.iconPath
+
   return {
+    membershipId: String(membershipId),
     displayName,
     bungieName: formatBungieName(
-      info.bungieGlobalDisplayName,
-      info.bungieGlobalDisplayNameCode,
+      destiny?.bungieGlobalDisplayName ?? bungie?.bungieGlobalDisplayName,
+      destiny?.bungieGlobalDisplayNameCode ?? bungie?.bungieGlobalDisplayNameCode,
       displayName
     ),
-    membershipId,
-    membershipType: member.destinyUserInfo?.membershipType,
-    emblemUrl: buildBungieIconUrl(info.iconPath),
+    membershipType: destiny?.membershipType,
+    emblemUrl: buildBungieIconUrl(iconPath),
+  }
+}
+
+function mapClanMember(
+  member: ClanMemberPresenceRow,
+  selfIds: Set<string>
+): OnlineSocialMember | null {
+  if (!member.isOnline) return null
+  if (isSelfMember(member, selfIds)) return null
+
+  const identity = resolveClanMemberIdentity(member)
+  if (!identity) return null
+
+  return {
+    displayName: identity.displayName,
+    bungieName: identity.bungieName,
+    membershipId: identity.membershipId,
+    membershipType: identity.membershipType,
+    emblemUrl: identity.emblemUrl,
     isOnline: true,
-    // Clan roster only reports Bungie.net online — not active D2 session.
+    // Clan roster only reports Bungie.net online — activity enrichment may set inDestiny.
     inDestiny: false,
   }
 }
@@ -74,26 +106,40 @@ function sortOnlineMembers(members: OnlineSocialMember[]): OnlineSocialMember[] 
   })
 }
 
+function mergeMember(existing: OnlineSocialMember, incoming: OnlineSocialMember): OnlineSocialMember {
+  return {
+    ...existing,
+    ...incoming,
+    emblemUrl: incoming.emblemUrl ?? existing.emblemUrl,
+    membershipType: incoming.membershipType ?? existing.membershipType,
+    inDestiny: existing.inDestiny || incoming.inDestiny,
+    currentActivity: incoming.currentActivity ?? existing.currentActivity,
+    bungieName: incoming.bungieName ?? existing.bungieName,
+    displayName: incoming.displayName ?? existing.displayName,
+  }
+}
+
 function dedupeMembers(members: OnlineSocialMember[]): OnlineSocialMember[] {
   const map = new Map<string, OnlineSocialMember>()
   for (const member of members) {
     const existing = map.get(member.membershipId)
-    if (!existing || (member.inDestiny && !existing.inDestiny)) {
-      map.set(member.membershipId, member)
-    }
+    map.set(member.membershipId, existing ? mergeMember(existing, member) : member)
   }
   return Array.from(map.values())
 }
 
-function mapFriend(friend: BungieFriendRow): OnlineSocialMember | null {
-  if (friend.onlineStatus !== 1) return null
+function isFriendOnline(friend: BungieFriendRow): boolean {
+  // 1 = online on Bungie.net; onlineTitle 2 = currently in Destiny 2.
+  return friend.onlineStatus === 1 || friend.onlineTitle === 2
+}
 
-  const membershipId = friend.lastSeenAsMembershipId
-    ? String(friend.lastSeenAsMembershipId)
-    : friend.bungieNetUser?.membershipId
-      ? String(friend.bungieNetUser.membershipId)
-      : ''
-  if (!membershipId) return null
+function mapFriend(friend: BungieFriendRow, selfIds: Set<string>): OnlineSocialMember | null {
+  if (!isFriendOnline(friend)) return null
+
+  const membershipId = String(
+    friend.lastSeenAsMembershipId ?? friend.bungieNetUser?.membershipId ?? ''
+  )
+  if (!membershipId || selfIds.has(membershipId)) return null
 
   const displayName =
     friend.bungieNetUser?.displayName ??
@@ -119,7 +165,7 @@ export async function fetchSocialPresence(
   const accessToken = await getValidAccessToken(stored)
   if (!accessToken) return EMPTY
 
-  const selfId = stored.bungieMembershipId
+  const selfIds = selfMembershipIds(stored)
   const clanId = stored.clanId
 
   const [friendsRes, clanMembersRes, activeLobby] = await Promise.all([
@@ -135,7 +181,7 @@ export async function fetchSocialPresence(
   const onlineFriends = sortOnlineMembers(
     dedupeMembers(
       (friendsRes.friends ?? [])
-        .map(mapFriend)
+        .map((friend) => mapFriend(friend, selfIds))
         .filter((row): row is OnlineSocialMember => row != null)
     )
   )
@@ -143,7 +189,7 @@ export async function fetchSocialPresence(
   const onlineClanMembers = sortOnlineMembers(
     dedupeMembers(
       (clanMembersRes.results ?? [])
-        .map((member) => mapClanMember(member, selfId))
+        .map((member) => mapClanMember(member, selfIds))
         .filter((row): row is OnlineSocialMember => row != null)
     )
   )

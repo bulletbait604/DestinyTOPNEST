@@ -217,7 +217,7 @@ function optimizeBuild(
 }
 
 /**
- * Recommended loadouts ONLY — merges post–June 10 meta research with verified PGCR builds.
+ * Recommended loadouts ONLY — merges post–June 5 meta research with verified PGCR builds.
  * Top loadouts tab must NOT use this; it shows raw site + raw PGCR lists.
  */
 export function rankRecommendedLoadoutsForClass(
@@ -252,7 +252,7 @@ export function recommendedLoadoutsSummary(
   picks: RankedRecommendedLoadout[]
 ): string {
   if (!picks.length) {
-    return `No optimized ${characterClass} recommendations yet — sync verified runs and refresh meta research (published after June 10, 2026).`
+    return `No optimized ${characterClass} recommendations yet — sync verified runs and refresh meta research (published after June 5, 2026).`
   }
   return `${picks.length} Armor 3.0–aware hybrid${picks.length === 1 ? '' : 's'} for ${characterClass}: cross-referenced from build sites and Top Nest verified clears. Top builds tab still shows unmodified originals.`
 }

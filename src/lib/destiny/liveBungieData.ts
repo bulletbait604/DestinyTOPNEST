@@ -231,18 +231,18 @@ async function fetchClanById(
       detail?.avatarPath
     const emblemUrl = emblemPath ? buildBungieIconUrl(emblemPath) : undefined
 
-    const topMembers =
-      memberRows.slice(0, 5).map((m) => {
-        const info = m.destinyUserInfo ?? m.bungieNetUserInfo
-        return {
-          displayName:
-            m.destinyUserInfo?.LastSeenDisplayName ??
-            info?.displayName ??
-            'Member',
-          points: 0,
-          emblemUrl: buildBungieIconUrl(info?.iconPath),
-        }
-      }) ?? []
+    const topMembers = memberRows.map((m) => {
+      const info = m.destinyUserInfo ?? m.bungieNetUserInfo
+      return {
+        displayName:
+          m.destinyUserInfo?.LastSeenDisplayName ??
+          info?.displayName ??
+          'Member',
+        points: 0,
+        emblemUrl: buildBungieIconUrl(info?.iconPath),
+        isOnline: Boolean(m.isOnline),
+      }
+    })
 
     return {
       id: clanId,
