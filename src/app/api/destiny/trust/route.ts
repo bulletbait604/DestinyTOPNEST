@@ -2,7 +2,7 @@
 import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { getDestinyUserBySiteUserId, getDestinyUserByBungieMembershipId } from '@/lib/destiny/destinyUserStore'
-import { resolveActivityRef } from '@/lib/destiny/manifest'
+import { enrichRunsWithActivityRefs } from '@/lib/destiny/enrich'
 import {
   buildReviewableRuns,
   buildUnrankedRuns,
@@ -28,12 +28,7 @@ import type { TrustReview, UnrankedRun } from '@/lib/destiny/types'
 export const dynamic = 'force-dynamic'
 
 async function enrichUnrankedRuns(runs: UnrankedRun[]): Promise<UnrankedRun[]> {
-  return Promise.all(
-    runs.map(async (run) => ({
-      ...run,
-      activityRef: run.activityRef ?? (await resolveActivityRef(run.activityName)),
-    }))
-  )
+  return enrichRunsWithActivityRefs(runs)
 }
 
 export async function GET(req: NextRequest) {
@@ -70,12 +65,14 @@ export async function GET(req: NextRequest) {
         loadUsersMap(),
         getTrustReviewsByReviewer(userId),
       ])
-      const reviewableRuns = buildReviewableRuns(
-        userId,
-        stored?.bungieMembershipId,
-        runs,
-        usersByMembershipMap(Array.from(usersById.values())),
-        trustByReviewer
+      const reviewableRuns = await enrichRunsWithActivityRefs(
+        buildReviewableRuns(
+          userId,
+          stored?.bungieMembershipId,
+          runs,
+          usersByMembershipMap(Array.from(usersById.values())),
+          trustByReviewer
+        )
       )
       return NextResponse.json({ reviewableRuns })
     }

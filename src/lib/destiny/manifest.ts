@@ -40,6 +40,8 @@ const HASH_RESOLVE_ENTITIES: ManifestEntityType[] = [
   'DestinyDamageTypeDefinition',
   'DestinyClassDefinition',
   'DestinyPlugSetDefinition',
+  'DestinyEquipableItemSetDefinition',
+  'DestinyLoadoutColorDefinition',
 ]
 
 const GENERIC_ICON_MARKERS = [
@@ -205,6 +207,10 @@ function catalogIconUrl(name: string): string | undefined {
   return itemFallback ? buildBungieIconUrl(itemFallback) : undefined
 }
 
+function isUsableIconUrl(url?: string | null): boolean {
+  return Boolean(url && !isGenericIconUrl(url))
+}
+
 function withCatalogIcon(ref: DestinyIconRef, name: string): DestinyIconRef {
   const catalogUrl = catalogIconUrl(name)
   if (catalogUrl && (!ref.iconUrl || isGenericIconUrl(ref.iconUrl))) {
@@ -212,6 +218,11 @@ function withCatalogIcon(ref: DestinyIconRef, name: string): DestinyIconRef {
   }
   if (ref.iconUrl) return ref
   return catalogUrl ? { ...ref, iconUrl: catalogUrl } : ref
+}
+
+/** Apply static catalog / path fallbacks to a resolved icon ref (server or client). */
+export function finalizeIconRef(ref: DestinyIconRef): DestinyIconRef {
+  return withCatalogIcon(ref, ref.name)
 }
 
 /** Client-safe activity icon URL from static Bungie manifest paths. */
@@ -235,7 +246,7 @@ export async function resolveDefinition(
   fallbackName = `Hash ${hash}`
 ): Promise<ManifestDefinitionInfo> {
   const cached = await readCache(entityType, hash)
-  if (cached?.name) return cacheToInfo(cached)
+  if (cached?.name && isUsableIconUrl(cached.iconUrl)) return cacheToInfo(cached)
 
   if (!destinyApiConfigured()) {
     const iconUrl = catalogIconUrl(fallbackName)
@@ -245,6 +256,7 @@ export async function resolveDefinition(
   try {
     const def = await getDestinyEntityDefinition(entityType, hash)
     const props = propsFromDefinition(def)
+    const name = props?.name || fallbackName
     let iconPath = props?.icon
     let iconUrl =
       entityType === 'DestinyActivityDefinition'
@@ -254,8 +266,7 @@ export async function resolveDefinition(
       const pgcr = (def as { pgcrImage?: string }).pgcrImage
       if (pgcr && !isGenericIconPath(pgcr)) iconPath = pgcr
     }
-    if (!iconUrl || isGenericIconUrl(iconUrl)) iconUrl = catalogIconUrl(fallbackName)
-    const name = props?.name || fallbackName
+    if (!isUsableIconUrl(iconUrl)) iconUrl = catalogIconUrl(name)
     const tierLabel = tierFromDefinition(def)
     const description = props?.description
     const itemTypeDisplayName = itemTypeFromDefinition(def)
@@ -308,7 +319,7 @@ export async function resolveManifestHash(
   fallbackName: string
 ): Promise<DestinyIconRef> {
   const info = await resolveDefinition(entityType, hash, fallbackName)
-  return withCatalogIcon(iconRefFromInfo(info), fallbackName)
+  return finalizeIconRef(iconRefFromInfo(info))
 }
 
 /** Fill missing iconUrl via Bungie manifest hash lookup or name search. */
@@ -320,7 +331,7 @@ export async function enrichIconRef(
   const name = ref?.name ?? fallbackName
   if (!ref && !name) return undefined
 
-  if (ref?.iconUrl) {
+  if (ref?.iconUrl && isUsableIconUrl(ref.iconUrl)) {
     return withCatalogIcon(ref, name ?? ref.name)
   }
 

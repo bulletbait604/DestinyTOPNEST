@@ -5,7 +5,7 @@
 import { getCharacterLoadoutProfile } from '@/lib/destiny/bungieClient'
 import { scoreArmorStatSimilarity } from '@/lib/destiny/armorStatSimilarity'
 import { ARMOR_STAT_HASH_LABEL, type ArmorStatKey } from '@/lib/destiny/armorStats'
-import { resolveInventoryItem } from '@/lib/destiny/manifest'
+import { resolveInventoryItem, finalizeIconRef } from '@/lib/destiny/manifest'
 import { catalogLookup } from '@/lib/destiny/itemsCatalog'
 import { assignMetaWeaponSlots } from '@/lib/destiny/metaWeaponSlots'
 import { resolveItemHash } from '@/lib/destiny/itemExternalLinks'
@@ -286,6 +286,14 @@ export async function listOwnedArmorForSlot(
     const info = await resolveInventoryItem(item.itemHash)
     if ((info.tierLabel ?? '').toLowerCase().includes('exotic')) return
 
+    const iconRef = finalizeIconRef({
+      name: info.name,
+      hash: item.itemHash,
+      iconUrl: info.iconUrl,
+      tierLabel: info.tierLabel,
+      entityType: info.entityType,
+    })
+
     const key = String(item.itemInstanceId)
     if (seen.has(key)) return
     seen.add(key)
@@ -302,13 +310,13 @@ export async function listOwnedArmorForSlot(
     })
 
     hits.push({
-      name: info.name,
+      name: iconRef.name,
       hash: item.itemHash,
       itemInstanceId: key,
       location,
       stats,
-      iconUrl: info.iconUrl,
-      tierLabel: info.tierLabel,
+      iconUrl: iconRef.iconUrl,
+      tierLabel: iconRef.tierLabel,
       similarityScore,
       matchesRecommended: Boolean(recommendedHash && item.itemHash === recommendedHash),
     })

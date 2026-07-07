@@ -1,8 +1,7 @@
 ﻿'use client'
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { activityIconUrlForName } from '@/lib/destiny/activityIconPaths'
-import { classIconUrlForClass } from '@/lib/destiny/classIconPaths'
+import type { ReactNode } from 'react'
+import { useResolvedIconUrl } from '@/lib/destiny/useResolvedIconUrl'
 import { cn } from '@/lib/utils'
 import type { DestinyIconRef, LeaderboardEntry } from '@/lib/destiny/types'
 import { activityWalkthroughLinkTitle, activityWalkthroughUrl } from '@/lib/destiny/activityWalkthroughLinks'
@@ -16,26 +15,6 @@ import {
   platformIcon,
   tierBorderClass,
 } from '@/app/components/destiny/destinyTheme'
-
-async function fetchManifestIcon(item?: DestinyIconRef, name?: string): Promise<string | undefined> {
-  const label = item?.name ?? name
-  const classUrl = label ? classIconUrlForClass(label) : undefined
-  if (classUrl) return classUrl
-
-  const staticActivityUrl = label ? activityIconUrlForName(label) : undefined
-  if (staticActivityUrl) return staticActivityUrl
-
-  const params = new URLSearchParams()
-  if (item?.hash) params.set('hash', String(item.hash))
-  if (item?.entityType) params.set('entity', item.entityType)
-  if (label) params.set('name', label)
-  if (!params.get('name') && !params.get('hash')) return undefined
-
-  const res = await fetch(`/api/destiny/manifest/resolve?${params.toString()}`, { cache: 'no-store' })
-  if (!res.ok) return label ? activityIconUrlForName(label) : undefined
-  const json = (await res.json()) as { iconUrl?: string }
-  return json.iconUrl ?? (label ? activityIconUrlForName(label) : undefined)
-}
 
 export function ItemIcon({
   item,
@@ -55,40 +34,11 @@ export function ItemIcon({
   /** Square corners like light.gg item tiles (default). Set false for circular class icons. */
   square?: boolean
 }) {
-  const url = item?.iconUrl ?? iconUrl
   const label = item?.name ?? name ?? 'Item'
   const tier = item?.tierLabel
   const rarityClass = tierBorderClass(tier)
   const elementClass = elementBorderClass(label)
-  const [failed, setFailed] = useState(false)
-  const [resolvedUrl, setResolvedUrl] = useState<string | undefined>()
-  const displayUrl = resolvedUrl ?? url
-
-  useEffect(() => {
-    if (displayUrl || failed || !(item?.name ?? name)) return
-    const label = item?.name ?? name ?? ''
-    const classUrl = classIconUrlForClass(label)
-    if (classUrl) {
-      setResolvedUrl(classUrl)
-      return
-    }
-    const staticUrl = activityIconUrlForName(label)
-    if (staticUrl) setResolvedUrl(staticUrl)
-  }, [displayUrl, failed, item?.name, name])
-
-  const handleImageError = useCallback(() => {
-    if (resolvedUrl || failed) {
-      setFailed(true)
-      return
-    }
-    void fetchManifestIcon(item, name).then((manifestUrl) => {
-      if (manifestUrl) {
-        setResolvedUrl(manifestUrl)
-      } else {
-        setFailed(true)
-      }
-    })
-  }, [failed, item, name, resolvedUrl])
+  const { displayUrl, failed, onImageError } = useResolvedIconUrl(item, name, iconUrl)
 
   if (displayUrl && !failed) {
     return (
@@ -96,7 +46,7 @@ export function ItemIcon({
         src={displayUrl}
         alt=""
         title={title ?? (tier ? `${label} (${tier})` : label)}
-        onError={handleImageError}
+        onError={onImageError}
         className={cn(
           'd2-item-thumb object-cover',
           square ? 'rounded-sm' : 'rounded-full',

@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
+import { enrichRunsWithActivityRefs } from '@/lib/destiny/enrich'
 import { getDestinyUserBySiteUserId, getDestinyUserByBungieMembershipId } from '@/lib/destiny/destinyUserStore'
 import {
   buildReviewableRuns,
@@ -39,12 +40,14 @@ export async function GET(req: NextRequest) {
         loadUsersMap(),
         getReputationReviewsByReviewer(userId),
       ])
-      const reviewableRuns = buildReviewableRuns(
-        userId,
-        stored?.bungieMembershipId,
-        runs,
-        usersByMembershipMap(Array.from(usersById.values())),
-        reviewsByReviewer
+      const reviewableRuns = await enrichRunsWithActivityRefs(
+        buildReviewableRuns(
+          userId,
+          stored?.bungieMembershipId,
+          runs,
+          usersByMembershipMap(Array.from(usersById.values())),
+          reviewsByReviewer
+        )
       )
       return NextResponse.json({ reviewableRuns })
     }

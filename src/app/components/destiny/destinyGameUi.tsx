@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useCallback, useState } from 'react'
+import { useResolvedIconUrl } from '@/lib/destiny/useResolvedIconUrl'
 import type { DestinyIconRef } from '@/lib/destiny/types'
 import { itemExternalLinkTitle, itemExternalUrl } from '@/lib/destiny/itemExternalLinks'
 import { ItemExternalLink } from '@/app/components/destiny/ItemLink'
@@ -13,19 +13,6 @@ import ItemHoverTooltip, {
   TooltipTier,
 } from '@/app/components/destiny/ItemHoverTooltip'
 import { cn } from '@/lib/utils'
-
-async function fetchManifestIcon(item?: DestinyIconRef, name?: string): Promise<string | undefined> {
-  const params = new URLSearchParams()
-  if (item?.hash) params.set('hash', String(item.hash))
-  if (item?.entityType) params.set('entity', item.entityType)
-  if (item?.name || name) params.set('name', item?.name ?? name ?? '')
-  if (!params.get('name') && !params.get('hash')) return undefined
-
-  const res = await fetch(`/api/destiny/manifest/resolve?${params.toString()}`, { cache: 'no-store' })
-  if (!res.ok) return undefined
-  const json = (await res.json()) as { iconUrl?: string }
-  return json.iconUrl
-}
 
 /** Large glowing Bungie icon — abilities, weapons, aspects. */
 export function GlowIcon({
@@ -45,26 +32,9 @@ export function GlowIcon({
   className?: string
   title?: string
 }) {
-  const url = item?.iconUrl ?? iconUrl
   const label = item?.name ?? name ?? ''
   const resolvedGlow = glow === 'auto' ? tierGlowClass(item?.tierLabel) : glow
-  const [failed, setFailed] = useState(false)
-  const [resolvedUrl, setResolvedUrl] = useState<string | undefined>()
-  const displayUrl = resolvedUrl ?? url
-
-  const handleImageError = useCallback(() => {
-    if (resolvedUrl || failed) {
-      setFailed(true)
-      return
-    }
-    void fetchManifestIcon(item, name).then((manifestUrl) => {
-      if (manifestUrl) {
-        setResolvedUrl(manifestUrl)
-      } else {
-        setFailed(true)
-      }
-    })
-  }, [failed, item, name, resolvedUrl])
+  const { displayUrl, failed, onImageError } = useResolvedIconUrl(item, name, iconUrl)
 
   const glowMap = {
     gold: 'd2-glow-gold',
@@ -86,7 +56,7 @@ export function GlowIcon({
         <img
           src={displayUrl}
           alt=""
-          onError={handleImageError}
+          onError={onImageError}
           className="h-full w-full object-cover"
         />
       ) : (

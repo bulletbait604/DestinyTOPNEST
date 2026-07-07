@@ -36,6 +36,7 @@ export const ITEM_ICON_PATHS: Record<string, string> = {
   "void": "/common/destiny2_content/icons/DestinyDamageTypeDefinition_ceb2f6197dccf3958bb31cc783eb97a0.png",
   "strand": "/common/destiny2_content/icons/DestinyDamageTypeDefinition_b2fe51a94f3533f97079dfa0d27a4096.png",
   "stasis": "/common/destiny2_content/icons/DestinyDamageTypeDefinition_530c4c3e7981dc2aefd24fd3293482bf.png",
+  "prismatic": "/common/destiny2_content/icons/923682dba15fcb9685f195d25eff1b95.png",
   "touch of malice": "/common/destiny2_content/icons/106a8a40a6e55b5ec5088a26d1ed979d.jpg",
   "kingslayer": "/common/destiny2_content/icons/ce71024d7d432d5b0d912eca78a863d0.jpg",
   "smite of merain": "/common/destiny2_content/icons/e47393574637ea49389e500ab365b311.jpg",

@@ -10,7 +10,7 @@ import {
   type ProfileItemEntry,
 } from '@/lib/destiny/guardianBuild'
 import { tagLoadoutCompleteness } from '@/lib/destiny/loadoutCompleteness'
-import { resolveDefinition } from '@/lib/destiny/manifest'
+import { finalizeIconRef, resolveDefinition } from '@/lib/destiny/manifest'
 import type { BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
 
 const CLASS_MAP: Record<number, DestinyCharacterClass> = {
@@ -97,13 +97,13 @@ async function resolveLoadoutColor(colorHash?: number): Promise<DestinyIconRef |
   if (!colorHash) return undefined
   try {
     const def = await resolveDefinition('DestinyLoadoutColorDefinition', colorHash, 'Loadout')
-    if (!def.iconUrl) return undefined
-    return {
+    if (!def.iconUrl && !def.name) return undefined
+    return finalizeIconRef({
       name: def.name,
       hash: def.hash,
       iconUrl: def.iconUrl,
       entityType: 'DestinyLoadoutColorDefinition',
-    }
+    })
   } catch {
     return undefined
   }

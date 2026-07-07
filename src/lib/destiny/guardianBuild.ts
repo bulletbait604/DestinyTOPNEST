@@ -4,7 +4,7 @@
 
 import { getCharacterLoadout, getDestinyEntityDefinition } from '@/lib/destiny/bungieClient'
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
-import { resolveInventoryItem, resolveDefinition, type ManifestDefinitionInfo } from '@/lib/destiny/manifest'
+import { resolveInventoryItem, resolveDefinition, finalizeIconRef, type ManifestDefinitionInfo } from '@/lib/destiny/manifest'
 import type { ArmorPiece, ArmorSlotLabel, BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
 import { ARMOR_STAT_HASH_LABEL } from '@/lib/destiny/armorStats'
 
@@ -32,13 +32,13 @@ const ARMOR_BUCKETS: Record<number, ArmorSlotLabel> = {
 type PlugCategory = 'super' | 'class' | 'jump' | 'melee' | 'grenade' | 'aspect' | 'fragment' | 'other'
 
 function iconRefFromInfo(info: ManifestDefinitionInfo): DestinyIconRef {
-  return {
+  return finalizeIconRef({
     name: info.name,
     hash: info.hash,
     iconUrl: info.iconUrl,
     tierLabel: info.tierLabel,
     entityType: info.entityType,
-  }
+  })
 }
 
 const WEAPON_PERK_SKIP =

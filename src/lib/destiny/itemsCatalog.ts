@@ -83,6 +83,7 @@ export const ITEM_CATALOG: Record<string, CatalogEntry> = {
   'void': { hash: 3454344768, entity: 'DestinyDamageTypeDefinition', iconPath: '/common/destiny2_content/icons/DestinyDamageTypeDefinition_ceb2f6197dccf3958bb31cc783eb97a0.png' },
   'strand': { hash: 3949783978, entity: 'DestinyDamageTypeDefinition', iconPath: '/common/destiny2_content/icons/DestinyDamageTypeDefinition_b2fe51a94f3533f97079dfa0d27a4096.png' },
   'stasis': { hash: 151347233, entity: 'DestinyDamageTypeDefinition', iconPath: '/common/destiny2_content/icons/DestinyDamageTypeDefinition_530c4c3e7981dc2aefd24fd3293482bf.png' },
+  'prismatic': { hash: 2626922125, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/923682dba15fcb9685f195d25eff1b95.png' },
   'touch of malice': { hash: 1802135586, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/106a8a40a6e55b5ec5088a26d1ed979d.jpg' },
   'kingslayer': { hash: 1557274655, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/ce71024d7d432d5b0d912eca78a863d0.jpg' },
   'smite of merain': { hash: 694218974, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/e47393574637ea49389e500ab365b311.jpg' },
@@ -245,11 +246,23 @@ export const ITEM_CATALOG: Record<string, CatalogEntry> = {
 }
 
 export function catalogLookup(name: string): CatalogEntry | undefined {
-  const key = name.trim().toLowerCase()
-  const entry = ITEM_CATALOG[key]
-  if (!entry) return undefined
-  const iconPath = entry.iconPath ?? ITEM_ICON_PATHS[key]
-  return iconPath ? { ...entry, iconPath } : entry
+  const raw = name.trim().toLowerCase()
+  const candidates = [
+    raw,
+    raw.replace(/^the\s+/i, ''),
+    raw.replace(/[''`]/g, "'"),
+    raw.replace(/['']/g, ''),
+  ]
+  const seen = new Set<string>()
+  for (const key of candidates) {
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    const entry = ITEM_CATALOG[key]
+    if (!entry) continue
+    const iconPath = entry.iconPath ?? ITEM_ICON_PATHS[key]
+    return iconPath ? { ...entry, iconPath } : entry
+  }
+  return undefined
 }
 
 export const MOCK_EMBLEM_HASHES = [29194593, 31953746, 54004489, 54004491, 19962737, 10493725]

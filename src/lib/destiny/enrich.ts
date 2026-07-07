@@ -80,6 +80,7 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     meleeRef,
     grenadeRef,
     armorPieces,
+    loadoutColorRef,
   ] = await Promise.all([
     enrichOrResolve(build.classRef, build.characterClass).then(
       (ref) => ref ?? resolveClassIcon(build.characterClass)
@@ -136,6 +137,9 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
           })
         )
       : Promise.resolve(build.armorPieces),
+    build.loadoutColorRef
+      ? enrichOrResolve(build.loadoutColorRef, build.loadoutColorRef.name, 'DestinyLoadoutColorDefinition')
+      : Promise.resolve(undefined),
   ])
 
   const armorSetBonuses = armorPieces?.length
@@ -176,6 +180,7 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     armorPieces,
     armorSetBonuses,
     armorModRefs,
+    loadoutColorRef,
   }
 }
 
@@ -519,6 +524,17 @@ export async function enrichActivityRunsForVote(runs: ActivityRunForVote[]): Pro
     runs.map(async (run) => ({
       ...run,
       activityRef: await resolveActivityRef(run.activityName),
+    }))
+  )
+}
+
+export async function enrichRunsWithActivityRefs<
+  T extends { activityName: string; activityRef?: DestinyIconRef; activityId?: number },
+>(runs: T[]): Promise<T[]> {
+  return Promise.all(
+    runs.map(async (run) => ({
+      ...run,
+      activityRef: run.activityRef ?? (await resolveActivityRef(run.activityName, run.activityId)),
     }))
   )
 }
