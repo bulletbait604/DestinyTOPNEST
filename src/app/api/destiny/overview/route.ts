@@ -14,10 +14,13 @@ export async function GET(req: NextRequest) {
       getCachedEnrichedOverview(),
       getPendingRunActionsForUser(userId),
     ])
-    return NextResponse.json({
+    const res = NextResponse.json({
       ...enriched,
       pendingRunActions:
         pendingRunActions && pendingRunActions.pendingCount > 0 ? pendingRunActions : null,
     })
+    // Personalized pending actions — private browser cache only.
+    res.headers.set('Cache-Control', 'private, max-age=20, stale-while-revalidate=45')
+    return res
   })
 }

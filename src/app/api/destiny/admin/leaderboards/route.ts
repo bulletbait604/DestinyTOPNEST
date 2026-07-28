@@ -8,11 +8,21 @@ import {
   loadLeaderboardAdjustments,
   upsertLeaderboardAdjustment,
 } from '@/lib/destiny/leaderboardAdjustments'
+import { CACHE_TAGS, invalidateDestinySharedCaches } from '@/lib/destiny/dataCache'
 import type { LeaderboardCategory, LeaderboardPeriod } from '@/lib/destiny/types'
 import {
   getSeasonData,
   getSeasonStandingsInput,
 } from '@/lib/destiny/store'
+
+function invalidateLeaderboardCaches() {
+  invalidateDestinySharedCaches([
+    CACHE_TAGS.leaderboards,
+    CACHE_TAGS.overview,
+    CACHE_TAGS.season,
+    CACHE_TAGS.mvp,
+  ])
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -83,6 +93,7 @@ export async function POST(req: NextRequest) {
         targetUserId: entryKey.toLowerCase(),
         summary: `Cleared leaderboard adjustment (${category} · ${period})`,
       })
+      invalidateLeaderboardCaches()
       return NextResponse.json({ ok: true, action: 'clear' })
     }
 
@@ -105,6 +116,7 @@ export async function POST(req: NextRequest) {
         summary: `Excluded from ${category} leaderboard (${period})`,
         detail: body.notes,
       })
+      invalidateLeaderboardCaches()
       return NextResponse.json({ ok: true, action: 'exclude' })
     }
 
@@ -135,6 +147,7 @@ export async function POST(req: NextRequest) {
         detail: body.notes,
         metadata: { points: Math.round(body.points), category, period },
       })
+      invalidateLeaderboardCaches()
       return NextResponse.json({ ok: true, action: 'set_points' })
     }
 
@@ -165,6 +178,7 @@ export async function POST(req: NextRequest) {
         detail: body.notes,
         metadata: { pointsDelta: Math.round(body.pointsDelta), category, period },
       })
+      invalidateLeaderboardCaches()
       return NextResponse.json({ ok: true, action: 'add_delta' })
     }
 

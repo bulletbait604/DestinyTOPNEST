@@ -36,15 +36,21 @@ export async function GET(req: NextRequest) {
           return NextResponse.json({ error: 'Invalid hash' }, { status: 400 })
         }
         const ref = await resolveManifestHash(entity, hash, name ?? `Hash ${hash}`)
-        return NextResponse.json(ref)
+        const res = NextResponse.json(ref)
+        res.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
+        return res
       }
 
       if (name) {
         if (activityCatalogLookup(name)) {
-          return NextResponse.json(await resolveActivity(name))
+          const res = NextResponse.json(await resolveActivity(name))
+          res.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
+          return res
         }
         const ref = await resolveByName(name, entity ?? 'DestinyInventoryItemDefinition')
-        return NextResponse.json(ref)
+        const res = NextResponse.json(ref)
+        res.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
+        return res
       }
 
       if (hashRaw) {
@@ -56,7 +62,9 @@ export async function GET(req: NextRequest) {
           { name: name ?? `Hash ${hash}`, hash, entityType: entity ?? undefined },
           name ?? undefined
         )
-        return NextResponse.json(ref ?? { name: name ?? `Hash ${hash}`, hash })
+        const res = NextResponse.json(ref ?? { name: name ?? `Hash ${hash}`, hash })
+        res.headers.set('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
+        return res
       }
 
       return NextResponse.json({ error: 'Provide name and/or hash' }, { status: 400 })

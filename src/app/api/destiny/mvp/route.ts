@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
+import { getCachedMvpBoard, invalidateDestinySharedCaches, CACHE_TAGS } from '@/lib/destiny/dataCache'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
 import { usersByMembershipMap } from '@/lib/destiny/fireteamReputation'
 import {
-  COMMANDER_RANK_LIMIT,
   MVP_SELECTED_POINTS,
   MVP_VOTER_POINTS,
   validateMvpVoteSubmission,
 } from '@/lib/destiny/mvpVoting'
-import { aggregateGuardianLeaderboard } from '@/lib/destiny/leaderboards'
 import {
   findMvpVote,
   getMvpVotesByReviewer,
   getRunsForParticipant,
-  getSeasonData,
-  loadAllMvpVotes,
   loadUsersMap,
   saveMvpVote,
 } from '@/lib/destiny/store'
@@ -30,24 +27,19 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const period = searchParams.get('period') === 'season' ? 'season' : 'monthly'
 
-    const [season, usersById, votes, myVotes] = await Promise.all([
-      getSeasonData(),
-      loadUsersMap(),
-      loadAllMvpVotes(),
+    const [board, myVotes] = await Promise.all([
+      getCachedMvpBoard(period),
       getMvpVotesByReviewer(userId),
     ])
 
-    const leaders = aggregateGuardianLeaderboard(votes, usersById, period, season, 10)
-    const commanders = leaders.filter((entry) => entry.rank <= COMMANDER_RANK_LIMIT)
-
-    return NextResponse.json({
-      leaders,
-      commanders,
-      period,
+    const res = NextResponse.json({
+      ...board,
       voterPoints: MVP_VOTER_POINTS,
       selectedPoints: MVP_SELECTED_POINTS,
       myVotes,
     })
+    res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60')
+    return res
   })
 }
 
@@ -95,6 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     await saveMvpVote(vote)
+    invalidateDestinySharedCaches([CACHE_TAGS.mvp, CACHE_TAGS.overview, CACHE_TAGS.leaderboards])
 
     return NextResponse.json({
       ok: true,

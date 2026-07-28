@@ -1,43 +1,48 @@
+import { unstable_cache } from 'next/cache'
 import type { OverviewPayload } from '@/lib/destiny/types'
 import { enrichOverview } from '@/lib/destiny/enrich'
 import { getOverviewData } from '@/lib/destiny/store'
 import { OVERVIEW_CACHE_TTL_MS } from '@/lib/destiny/syncEvents'
+import { CACHE_TAGS, invalidateDestinySharedCaches } from '@/lib/destiny/dataCache'
 
 export { OVERVIEW_CACHE_TTL_MS } from '@/lib/destiny/syncEvents'
 
-let cache: { payload: OverviewPayload; at: number } | null = null
-let inflight: Promise<OverviewPayload> | null = null
+const revalidateSeconds = Math.max(1, Math.round(OVERVIEW_CACHE_TTL_MS / 1000))
+
+/** Last-good fallback within a warm instance if Data Cache refresh fails. */
+let lastGood: OverviewPayload | null = null
+
+const cachedEnrichedOverview = unstable_cache(
+  async (): Promise<OverviewPayload> => {
+    const data = await getOverviewData()
+    return enrichOverview({ ...data, pendingRunActions: null })
+  },
+  ['destiny-overview-enriched'],
+  { revalidate: revalidateSeconds, tags: [CACHE_TAGS.overview] }
+)
 
 export function invalidateOverviewCache(): void {
-  cache = null
-  inflight = null
+  lastGood = null
+  invalidateDestinySharedCaches([
+    CACHE_TAGS.overview,
+    CACHE_TAGS.leaderboards,
+    CACHE_TAGS.builds,
+    CACHE_TAGS.season,
+    CACHE_TAGS.mvp,
+  ])
 }
 
 /** Enriched overview without per-user pendingRunActions — safe to share across requests. */
 export async function getCachedEnrichedOverview(): Promise<OverviewPayload> {
-  const now = Date.now()
-  if (cache && now - cache.at < OVERVIEW_CACHE_TTL_MS) {
-    return cache.payload
-  }
-
-  if (inflight) return inflight
-
-  inflight = (async () => {
-    try {
-      const data = await getOverviewData()
-      const enriched = await enrichOverview({ ...data, pendingRunActions: null })
-      cache = { payload: enriched, at: Date.now() }
-      return enriched
-    } catch (error) {
-      if (cache) {
-        console.warn('[overviewCache] refresh failed — serving last good payload', error)
-        return cache.payload
-      }
-      throw error
-    } finally {
-      inflight = null
+  try {
+    const payload = await cachedEnrichedOverview()
+    lastGood = payload
+    return payload
+  } catch (error) {
+    if (lastGood) {
+      console.warn('[overviewCache] refresh failed — serving last good payload', error)
+      return lastGood
     }
-  })()
-
-  return inflight
+    throw error
+  }
 }

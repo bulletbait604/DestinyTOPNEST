@@ -60,7 +60,8 @@ export async function fetchManifestIconUrl(
   if (!params.get('name') && !params.get('hash')) return undefined
 
   try {
-    const res = await fetch(`/api/destiny/manifest/resolve?${params.toString()}`, { cache: 'no-store' })
+    // Rely on route Cache-Control (s-maxage=1d) — avoid no-store so browsers can reuse icons.
+    const res = await fetch(`/api/destiny/manifest/resolve?${params.toString()}`)
     if (!res.ok) return label ? staticIconUrlForLabel(label) : undefined
     const json = (await res.json()) as { iconUrl?: string }
     const resolved = json.iconUrl

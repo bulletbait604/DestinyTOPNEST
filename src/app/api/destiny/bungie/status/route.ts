@@ -1,12 +1,13 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
-import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { checkBungieApiHealth } from '@/lib/destiny/bungieClient'
 
-export const dynamic = 'force-dynamic'
+/** Public Bungie API health — Edge runtime (no Mongo / Node crypto). */
+export const runtime = 'edge'
+export const revalidate = 60
 
-export async function GET(req: NextRequest) {
-  return destinyAuthHandler(req, async () => {
-    const health = await checkBungieApiHealth()
-    return NextResponse.json(health)
-  })
+export async function GET(_req: NextRequest) {
+  const health = await checkBungieApiHealth()
+  const res = NextResponse.json(health)
+  res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
+  return res
 }

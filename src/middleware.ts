@@ -1,6 +1,27 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+/**
+ * API routes that set their own CDN Cache-Control (shared / non-personalized).
+ * Everything else under /api stays no-store so auth and user data never hit the CDN.
+ */
+const CDN_CACHEABLE_API_PREFIXES = [
+  '/api/destiny/bungie/status',
+  '/api/destiny/weekly-reset',
+  '/api/destiny/leaderboards',
+  '/api/destiny/builds',
+  '/api/destiny/manifest/resolve',
+  '/api/destiny/overview',
+  '/api/destiny/season',
+  '/api/destiny/mvp',
+] as const
+
+function isCdnCacheableApi(pathname: string): boolean {
+  return CDN_CACHEABLE_API_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  )
+}
+
 /** Baseline security headers for all responses. */
 export function middleware(request: NextRequest) {
   const response = NextResponse.next()
@@ -11,7 +32,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()')
   response.headers.set('X-DNS-Prefetch-Control', 'off')
 
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  if (request.nextUrl.pathname.startsWith('/api/') && !isCdnCacheableApi(request.nextUrl.pathname)) {
     response.headers.set('Cache-Control', 'no-store')
   }
 

@@ -1,8 +1,128 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
       "path": "/api/destiny/cron/weekly-meta-builds",
       "schedule": "30 17 * * 2"
     }
-  ]
+  ],
+  "functions": {
+    "src/app/api/auth/session/route.ts": {
+      "memory": 256
+    },
+    "src/app/api/auth/logout/route.ts": {
+      "memory": 256
+    },
+    "src/app/api/destiny/auth/bungie/disconnect/route.ts": {
+      "memory": 256
+    },
+    "src/app/api/destiny/auth/bungie/start/route.ts": {
+      "memory": 256
+    },
+    "src/app/api/destiny/auth/bungie/status/route.ts": {
+      "memory": 256
+    },
+    "src/app/api/destiny/auth/bungie/ready/route.ts": {
+      "memory": 256
+    },
+    "src/app/api/destiny/social/invite/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/trust/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/reputation/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/season/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/season/claim/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/fireteam/member/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/clans/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/emblems/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/manifest/resolve/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/overview/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/profile/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/builds/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/mvp/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/fireteam/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/fireteam/[lobbyId]/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/leaderboards/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/runs/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/loadouts/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/loadouts/armor-options/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/loadouts/apply/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/admin/users/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/admin/loot-icons/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/admin/leaderboards/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/admin/runs/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/admin/season/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/admin/staff/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/admin/activity/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/admin/review/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/admin/fireteam/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/destiny/cron/weekly-meta-builds/route.ts": {
+      "memory": 1024
+    },
+    "src/app/api/destiny/admin/meta-builds/route.ts": {
+      "memory": 1024
+    },
+    "src/app/api/destiny/runs/sync/route.ts": {
+      "memory": 1024
+    },
+    "src/app/api/destiny/auth/bungie/callback/route.ts": {
+      "memory": 1024
+    }
+  }
 }
