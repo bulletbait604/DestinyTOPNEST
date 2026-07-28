@@ -404,10 +404,10 @@ export type VibesLabel = 'quiet' | 'loud' | 'good' | 'ego' | 'sherpa'
 export interface TrustReview {
   id: string
   reviewerId: string
+  /** Set when the reviewed player is linked on Top Nest. */
+  reviewedUserId?: string
   reviewedMembershipId: string
   runId: string
-  /** Selected MVP from the run. */
-  mvpCandidateMembershipId?: string
   /** 1 = knew nothing · 5 = knew the entire run */
   knowledge: 1 | 2 | 3 | 4 | 5
   /** Categorical vibes label (legacy rows may store 1–3 numbers). */
@@ -529,12 +529,13 @@ export interface ActivityRunGuardian {
   membershipId: string
   displayName: string
   characterClass?: DestinyCharacterClass
+  siteUserId?: string
   isSelf: boolean
-  /** True when player is eligible for MVP votes. */
-  isMvpCandidate: boolean
-  /** True when player is eligible for a private Knowledge + Vibes rank. */
-  canRank: boolean
-  alreadyRanked: boolean
+  /** Can receive an MVP vote (linked Top Nest account, not self). */
+  canVoteFor: boolean
+  /** Can receive a private Knowledge + Vibes rank (any fireteam member except self). */
+  canReview: boolean
+  alreadyReviewed: boolean
 }
 
 export interface ActivityRunForVote {
@@ -547,10 +548,10 @@ export interface ActivityRunForVote {
   pointsAwarded: number
   verificationStatus: VerificationStatus
   userHasVoted: boolean
-  selectedMvpMembershipId?: string
-  selectedMvpDisplayName?: string
+  selectedUserId?: string
+  selectedDisplayName?: string
   /** Teammates still needing a Knowledge + Vibes rank from the viewer. */
-  pendingRankCount: number
+  pendingTrustCount: number
   guardians: ActivityRunGuardian[]
 }
 
