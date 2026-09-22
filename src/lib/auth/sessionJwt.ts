@@ -46,6 +46,6 @@ export function verifySessionJwt(
 }
 
 export function getSessionSecret(): string | null {
-  const s = process.env.SESSION_SECRET || process.env.JWT_SECRET
+  const s = (process.env.SESSION_SECRET || process.env.JWT_SECRET)?.trim()
   return s && s.length > 0 ? s : null
 }

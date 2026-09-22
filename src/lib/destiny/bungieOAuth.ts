@@ -114,6 +114,54 @@ interface BungieTokenResponse {
   error_description?: string
 }
 
+function tokenField(payload: Record<string, unknown>, snake: string, camel: string): unknown {
+  if (payload[snake] != null && payload[snake] !== '') return payload[snake]
+  if (payload[camel] != null && payload[camel] !== '') return payload[camel]
+  return undefined
+}
+
+/** Normalize Bungie OAuth token JSON (flat OAuth2, wrapped Response, or legacy accessToken.value). */
+function normalizeTokenPayload(parsed: Record<string, unknown>): BungieTokenResponse {
+  const root =
+    parsed.Response && typeof parsed.Response === 'object'
+      ? (parsed.Response as Record<string, unknown>)
+      : parsed
+
+  const legacyAccess = root.accessToken
+  const legacyAccessValue =
+    legacyAccess && typeof legacyAccess === 'object' && 'value' in legacyAccess
+      ? (legacyAccess as { value?: unknown }).value
+      : undefined
+
+  const accessTokenRaw = tokenField(root, 'access_token', 'accessToken') ?? legacyAccessValue
+  const refreshTokenRaw = tokenField(root, 'refresh_token', 'refreshToken')
+  const membershipRaw = tokenField(root, 'membership_id', 'membershipId')
+
+  return {
+    access_token: accessTokenRaw != null ? String(accessTokenRaw) : undefined,
+    refresh_token: refreshTokenRaw != null ? String(refreshTokenRaw) : undefined,
+    expires_in:
+      tokenField(root, 'expires_in', 'expiresIn') != null
+        ? Number(tokenField(root, 'expires_in', 'expiresIn'))
+        : undefined,
+    refresh_expires_in:
+      tokenField(root, 'refresh_expires_in', 'refreshExpiresIn') != null
+        ? Number(tokenField(root, 'refresh_expires_in', 'refreshExpiresIn'))
+        : undefined,
+    membership_id:
+      membershipRaw != null && membershipRaw !== ''
+        ? (membershipRaw as string | number)
+        : undefined,
+    error: typeof root.error === 'string' ? root.error : undefined,
+    error_description:
+      typeof root.error_description === 'string'
+        ? root.error_description
+        : typeof root.errorDescription === 'string'
+          ? root.errorDescription
+          : undefined,
+  }
+}
+
 function parseTokenResponse(res: Response, rawText: string): BungieTokenResponse {
   if (!rawText.trim()) {
     throw new Error('Empty token response from Bungie')
@@ -125,10 +173,7 @@ function parseTokenResponse(res: Response, rawText: string): BungieTokenResponse
     throw new Error(String(parsed.Message || `Bungie error ${parsed.ErrorCode}`))
   }
 
-  const payload =
-    parsed.Response && typeof parsed.Response === 'object'
-      ? (parsed.Response as BungieTokenResponse)
-      : (parsed as BungieTokenResponse)
+  const payload = normalizeTokenPayload(parsed)
 
   if (!res.ok || payload.error) {
     throw new Error(

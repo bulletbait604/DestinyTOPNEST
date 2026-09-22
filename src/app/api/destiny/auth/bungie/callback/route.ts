@@ -25,6 +25,7 @@ import {
 } from '@/lib/destiny/env'
 import { defaultBungieReturnPath } from '@/lib/routing/tabUrl'
 import { sessionCookieSecure } from '@/lib/sessionCookie'
+import { bungieOAuthCallbackErrorCode } from '@/lib/destiny/bungieOAuthMessages'
 
 export const dynamic = 'force-dynamic'
 
@@ -147,8 +148,26 @@ export async function GET(req: NextRequest) {
       req.cookies.get('bungieOAuthRedirect')?.value ||
       bungieOAuthRedirectUriFromRequest(req)
 
-    const tokens = await exchangeBungieAuthorizationCode(code, redirectUri)
-    const memberships = await getDestinyMembershipsForCurrentUser(tokens.accessToken)
+    let tokens: Awaited<ReturnType<typeof exchangeBungieAuthorizationCode>>
+    try {
+      tokens = await exchangeBungieAuthorizationCode(code, redirectUri)
+    } catch (tokenError) {
+      console.error('[destiny/auth/bungie/callback] Token exchange failed:', tokenError)
+      const detail = tokenError instanceof Error ? tokenError.message : ''
+      const message = bungieOAuthCallbackErrorCode(detail, 'token')
+      return redirectAfterOAuth({ bungie: 'error', message }, req, returnPath)
+    }
+
+    let memberships: Awaited<ReturnType<typeof getDestinyMembershipsForCurrentUser>>
+    try {
+      memberships = await getDestinyMembershipsForCurrentUser(tokens.accessToken)
+    } catch (membershipError) {
+      console.error('[destiny/auth/bungie/callback] Membership lookup failed:', membershipError)
+      const detail = membershipError instanceof Error ? membershipError.message : ''
+      const message = bungieOAuthCallbackErrorCode(detail, 'membership')
+      return redirectAfterOAuth({ bungie: 'error', message }, req, returnPath)
+    }
+
     const primary = pickPrimaryDestinyMembership(
       memberships.destinyMemberships ?? [],
       memberships.primaryMembershipId
@@ -198,23 +217,30 @@ export async function GET(req: NextRequest) {
       console.warn('[destiny/auth/bungie/callback] Guardian summary fetch failed:', summaryError)
     }
 
-    await upsertDestinyUser(siteUserId, {
-      bungieMembershipId: primary.membershipId,
-      bungieNetMembershipId: tokens.membershipId,
-      destinyMembershipType: primary.membershipType,
-      bungieDisplayName: displayName,
-      platform: platformFromMembershipType(primary.membershipType) as
-        | 'steam'
-        | 'xbox'
-        | 'playstation'
-        | 'epic',
-      emblemUrl: summary?.emblemUrl,
-      powerLevel: summary?.powerLevel,
-      characterClass: summary?.characterClass,
-      guardianRank: undefined,
-      connectedAt: new Date().toISOString(),
-      oauth: tokens,
-    })
+    try {
+      await upsertDestinyUser(siteUserId, {
+        bungieMembershipId: primary.membershipId,
+        bungieNetMembershipId: tokens.membershipId,
+        destinyMembershipType: primary.membershipType,
+        bungieDisplayName: displayName,
+        platform: platformFromMembershipType(primary.membershipType) as
+          | 'steam'
+          | 'xbox'
+          | 'playstation'
+          | 'epic',
+        emblemUrl: summary?.emblemUrl,
+        powerLevel: summary?.powerLevel,
+        characterClass: summary?.characterClass,
+        guardianRank: undefined,
+        connectedAt: new Date().toISOString(),
+        oauth: tokens,
+      })
+    } catch (persistError) {
+      console.error('[destiny/auth/bungie/callback] User persist failed:', persistError)
+      const detail = persistError instanceof Error ? persistError.message : ''
+      const message = bungieOAuthCallbackErrorCode(detail, 'persist')
+      return redirectAfterOAuth({ bungie: 'error', message }, req, returnPath)
+    }
 
     if (!getSessionSecret()) {
       return redirectAfterOAuth({ bungie: 'error', message: 'session_not_configured' }, req, returnPath)
@@ -232,13 +258,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('[destiny/auth/bungie/callback]', error)
     const detail = error instanceof Error ? error.message : ''
-    const lower = detail.toLowerCase()
-    const message =
-      lower.includes('redirect_uri') || lower.includes('redirect uri')
-        ? 'redirect_uri_mismatch'
-        : lower.includes('mongodb') || lower.includes('mongo')
-          ? 'database_unavailable'
-          : 'exchange_failed'
+    const message = bungieOAuthCallbackErrorCode(detail, 'token')
     return redirectAfterOAuth({ bungie: 'error', message }, req, returnPath)
   }
 }

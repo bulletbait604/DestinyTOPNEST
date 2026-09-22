@@ -42,10 +42,29 @@ export default function HomePage() {
 
     if (bungie === 'error') {
       const msg = params.get('message') || ''
-      setLoginError(
-        msg ? bungieOAuthErrorMessage(msg) : 'Bungie sign-in failed. Try again.'
-      )
-      setLoginPending(false)
+      void (async () => {
+        let text = msg ? bungieOAuthErrorMessage(msg) : 'Bungie sign-in failed. Try again.'
+        const needsRedirectHint =
+          msg === 'exchange_failed' ||
+          msg === 'redirect_uri_mismatch' ||
+          msg === 'invalid_client' ||
+          msg === 'api_key_mismatch'
+        if (needsRedirectHint) {
+          try {
+            const res = await fetch('/api/destiny/auth/bungie/config', { cache: 'no-store' })
+            if (res.ok) {
+              const data = (await res.json()) as { redirectUri?: string }
+              if (data.redirectUri) {
+                text += ` Expected redirect URL: ${data.redirectUri}`
+              }
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+        setLoginError(text)
+        setLoginPending(false)
+      })()
       stripUrlParams(['bungie', 'message'])
     }
   }, [mounted, user, refresh])
