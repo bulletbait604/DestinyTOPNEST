@@ -41,11 +41,19 @@ const GENERIC_ICON_MARKERS = [
 ]
 
 function loadEnvKey() {
-  const envPath = resolve(__dirname, '../../.env.local')
-  if (existsSync(envPath)) {
+  const candidates = [
+    resolve(__dirname, '../../.env.local'),
+    resolve(__dirname, '../../.env.production.local'),
+    resolve(__dirname, '../../../SDHQCC/.env.local'),
+  ]
+  for (const envPath of candidates) {
+    if (!existsSync(envPath)) continue
     for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
       const m = line.match(/^(?:DESTINY_API|BUNGIE_API_KEY)\s*=\s*(.+)$/)
-      if (m) return m[1].trim().replace(/^["']|["']$/g, '')
+      if (m) {
+        const key = m[1].trim().replace(/^["']|["']$/g, '')
+        if (key && key !== '[SENSITIVE]') return key
+      }
     }
   }
   return process.env.DESTINY_API || process.env.BUNGIE_API_KEY || ''

@@ -115,8 +115,35 @@ DestinyTopNest uses the `destinytopnest` MongoDB database by default (override w
 - `destiny_admin_reviews`
 - `destiny_external_build_sources`
 - `destiny_manifest_cache` — cached Bungie icon URLs (7-day TTL)
+- `destiny_gear_catalog_meta` — last Armor 3.0 / mod catalog sync metadata
+- `destiny_armor_stats` — six Armor 3.0 stats (Weapons / Health / Class / Super / Grenade / Melee) + icons
+- `destiny_armor_archetypes` — 12 Monument of Triumph archetypes
+- `destiny_gear_mods` — live armor + weapon (and Ghost Armorer) mods with Bungie CDN icons
 
-## Manifest icons
+## Armor 3.0 + mod catalog
+
+Current Destiny armor is **Armor 3.0** (Edge of Fate → Monument of Triumph). Legacy Armor 2.0 names map as:
+
+| Armor 2.0 | Armor 3.0 |
+|-----------|-----------|
+| Mobility | Weapons |
+| Resilience | Health |
+| Recovery | Class |
+| Intellect | Super |
+| Discipline | Grenade |
+| Strength | Melee |
+
+Sync from the live Bungie manifest (icons via `https://www.bungie.net` + `displayProperties.icon`):
+
+```bash
+npm run catalog:gear
+```
+
+Public API for the loadout optimizer / viewer:
+
+`GET /api/destiny/gear/catalog?kind=armor,weapon&include=stats,archetypes,mods,meta`
+
+Staff status: `GET /api/destiny/admin/gear-catalog`
 
 Gear, activity, subclass, and emblem thumbnails are resolved server-side via:
 
@@ -129,7 +156,7 @@ Icon URLs use `https://www.bungie.net` + manifest `displayProperties.icon` paths
 ## Weekly reset
 
 Featured raid/dungeon rotation updates every **Tuesday 10:00 AM Pacific (17:00 UTC)**.
-Schedule is maintained in `src/lib/destiny/weeklyRotation.ts` (Monument of Triumph era rotator).
+Schedule is maintained in `src/lib/destiny/weeklyRotation.ts` (Monument of Triumph era rotator — Dexerto/Kyber pairs with an 8-week cycle after 2026-08-04).
 
 ## Phases
 

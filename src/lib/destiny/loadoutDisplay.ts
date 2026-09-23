@@ -1,3 +1,4 @@
+import { withoutPlaceholderPlugs } from '@/lib/destiny/gearIconPick'
 import type { ArmorSlotLabel, BuildSnapshot, ExternalBuildSource } from '@/lib/destiny/types'
 import { formatArmorSetBonusesForCopy } from '@/lib/destiny/armorSetBonusFormat'
 import type { ArmoryRow } from '@/app/components/destiny/WeaponArmoryTable'
@@ -20,7 +21,7 @@ export function buildArmorRows(build: Pick<BuildSnapshot, 'armorPieces' | 'exoti
       slot: armorSlotLabel(piece.slot),
       item: piece.ref,
       fallback: piece.name,
-      perks: piece.mods,
+      perks: withoutPlaceholderPlugs(piece.mods),
     }))
   }
 

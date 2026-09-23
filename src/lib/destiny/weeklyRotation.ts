@@ -1,12 +1,16 @@
 ﻿/**
  * Destiny 2 weekly reset schedule (Tuesday 10:00 AM Pacific / 17:00 UTC).
- * Rotation sourced from Bungie TWID + community reset trackers (Monument of Triumph era).
+ * Featured raid/dungeon pairs sourced from community reset trackers
+ * (Dexerto + Kyber’s Corner, Monument of Triumph era — verified Sep 2026).
  */
 
 import type { Difficulty } from '@/lib/destiny/types'
 
 export const WEEKLY_RESET_HOUR_UTC = 17 // 10:00 AM PDT
 export const WEEKLY_RESET_DAY = 2 // Tuesday
+
+/** First Monument of Triumph featured-rotator Tuesday. */
+export const ROTATION_EPOCH = '2026-06-09'
 
 export interface RotationWeek {
   /** ISO date (YYYY-MM-DD) of the Tuesday reset that starts this week */
@@ -16,37 +20,103 @@ export interface RotationWeek {
   pantheon?: string
 }
 
-/** Featured raid/dungeon pairs by reset week (post–Monument of Triumph rotator). */
-export const ROTATION_SCHEDULE: RotationWeek[] = [
-  {
-    resetStart: '2026-06-09',
-    raids: ['Vow of the Disciple', 'Last Wish'],
-    dungeons: ['Shattered Throne', 'Duality'],
-    pantheon: 'Pantheon 2.0 launch',
-  },
-  {
-    resetStart: '2026-06-16',
-    raids: ['Garden of Salvation', "King's Fall"],
-    dungeons: ['Spire of the Watcher', 'Pit of Heresy'],
-    pantheon: 'Reprise: Gahlran · Encore: Consecrated Mind',
-  },
-  {
-    resetStart: '2026-06-23',
-    raids: ['Root of Nightmares', 'Deep Stone Crypt'],
-    dungeons: ['Ghosts of the Deep', 'Duality'],
-    pantheon: 'Featured single-boss encounters',
-  },
-  {
-    resetStart: '2026-06-30',
-    raids: ["Crota's End", 'Vault of Glass'],
-    dungeons: ["Warlord's Ruin", 'Grasp of Avarice'],
-  },
-  {
-    resetStart: '2026-07-07',
-    raids: ['Salvation\'s Edge', 'Crown of Sorrow'],
-    dungeons: ['Vesper\'s Host', 'Prophecy'],
-  },
+type ActivityPair = [string, string]
+
+/** Weeks 0–7 after Monument of Triumph (Dexerto). */
+const RAID_WEEKS_0_7: ActivityPair[] = [
+  ['Vow of the Disciple', 'Last Wish'],
+  ['Garden of Salvation', "King's Fall"],
+  ['Root of Nightmares', 'Deep Stone Crypt'],
+  ["Crota's End", 'Vault of Glass'],
+  ["Salvation's Edge", 'Vow of the Disciple'],
+  ["King's Fall", 'Last Wish'],
+  ['Garden of Salvation', 'Root of Nightmares'],
+  ['Deep Stone Crypt', "Crota's End"],
 ]
+
+/**
+ * From Aug 4 2026 the raid pair order shifted into this repeating 8-week cycle.
+ * Index 0 = week of 2026-08-04. Index 6 = 2026-09-15 (King's Fall + Last Wish).
+ */
+const RAID_CYCLE_FROM_AUG_4: ActivityPair[] = [
+  ['Vault of Glass', "Salvation's Edge"],
+  ['Vow of the Disciple', 'Last Wish'],
+  ['Garden of Salvation', "King's Fall"],
+  ['Deep Stone Crypt', 'Root of Nightmares'],
+  ['Vault of Glass', "Crota's End"],
+  ['Vow of the Disciple', "Salvation's Edge"],
+  ["King's Fall", 'Last Wish'],
+  ['Garden of Salvation', 'Root of Nightmares'],
+]
+
+const DUNGEON_WEEKS_0_7: ActivityPair[] = [
+  ['Shattered Throne', 'Duality'],
+  ['Pit of Heresy', 'Spire of the Watcher'],
+  ['Ghosts of the Deep', 'Duality'],
+  ["Warlord's Ruin", 'Grasp of Avarice'],
+  ["Vesper's Host", 'Duality'],
+  ['Spire of the Watcher', 'Sundered Doctrine'],
+  ['Ghosts of the Deep', 'Shattered Throne'],
+  ["Warlord's Ruin", 'Pit of Heresy'],
+]
+
+/** Repeating dungeon cycle starting 2026-08-04 (Dexerto). Last slot extrapolated. */
+const DUNGEON_CYCLE_FROM_AUG_4: ActivityPair[] = [
+  ['Prophecy', "Vesper's Host"],
+  ['Grasp of Avarice', 'Sundered Doctrine'],
+  ['Duality', 'Shattered Throne'],
+  ['Pit of Heresy', 'Spire of the Watcher'],
+  ['Prophecy', 'Ghosts of the Deep'],
+  ['Grasp of Avarice', "Warlord's Ruin"],
+  ['Duality', "Vesper's Host"],
+  ['Spire of the Watcher', 'Sundered Doctrine'],
+]
+
+/** Optional Pantheon labels by reset week start (when known). */
+const PANTHEON_BY_RESET: Record<string, string> = {
+  '2026-06-09': 'Pantheon 2.0 launch',
+  '2026-06-16': 'Reprise: Gahlran · Encore: Consecrated Mind',
+  '2026-09-08': 'Gahlran · Consecrated Mind',
+  '2026-09-15': 'Calus · Morgeth',
+}
+
+function weeksSinceEpoch(resetStart: Date): number {
+  const epoch = parseUtcDate(ROTATION_EPOCH)
+  const ms = resetStart.getTime() - epoch.getTime()
+  return Math.max(0, Math.round(ms / (7 * 24 * 60 * 60 * 1000)))
+}
+
+function resetStartIso(weekIndex: number): string {
+  const epoch = parseUtcDate(ROTATION_EPOCH)
+  const d = new Date(epoch)
+  d.setUTCDate(d.getUTCDate() + weekIndex * 7)
+  return d.toISOString().slice(0, 10)
+}
+
+export function raidPairForWeekIndex(weekIndex: number): ActivityPair {
+  if (weekIndex < 8) return RAID_WEEKS_0_7[weekIndex]!
+  return RAID_CYCLE_FROM_AUG_4[(weekIndex - 8) % RAID_CYCLE_FROM_AUG_4.length]!
+}
+
+export function dungeonPairForWeekIndex(weekIndex: number): ActivityPair {
+  if (weekIndex < 8) return DUNGEON_WEEKS_0_7[weekIndex]!
+  return DUNGEON_CYCLE_FROM_AUG_4[(weekIndex - 8) % DUNGEON_CYCLE_FROM_AUG_4.length]!
+}
+
+export function rotationWeekForIndex(weekIndex: number): RotationWeek {
+  const resetStart = resetStartIso(weekIndex)
+  return {
+    resetStart,
+    raids: raidPairForWeekIndex(weekIndex),
+    dungeons: dungeonPairForWeekIndex(weekIndex),
+    pantheon: PANTHEON_BY_RESET[resetStart],
+  }
+}
+
+/** Explicit schedule snapshot for tooling / docs (generated from the cycle helpers). */
+export const ROTATION_SCHEDULE: RotationWeek[] = Array.from({ length: 40 }, (_, i) =>
+  rotationWeekForIndex(i)
+)
 
 export interface WeeklyResetState {
   resetAt: string
@@ -102,16 +172,7 @@ export function getNextWeeklyReset(now = new Date()): Date {
 }
 
 function weekEntryForDate(resetStart: Date): RotationWeek {
-  const key = resetStart.toISOString().slice(0, 10)
-  const exact = ROTATION_SCHEDULE.find((w) => w.resetStart === key)
-  if (exact) return exact
-
-  let chosen = ROTATION_SCHEDULE[0]
-  for (const week of ROTATION_SCHEDULE) {
-    if (week.resetStart <= key) chosen = week
-    else break
-  }
-  return chosen
+  return rotationWeekForIndex(weeksSinceEpoch(resetStart))
 }
 
 export function getWeeklyResetState(now = new Date()): WeeklyResetState {

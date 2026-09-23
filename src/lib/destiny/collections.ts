@@ -19,4 +19,8 @@ export const DESTINY_COLLECTIONS = {
   leaderboardAdjustments: 'destiny_leaderboard_adjustments',
   weeklyLootIcons: 'destiny_weekly_loot_icons',
   metaBuildWeeklySync: 'destiny_meta_build_weekly_sync',
+  gearCatalogMeta: 'destiny_gear_catalog_meta',
+  armorStats: 'destiny_armor_stats',
+  armorArchetypes: 'destiny_armor_archetypes',
+  gearMods: 'destiny_gear_mods',
 } as const

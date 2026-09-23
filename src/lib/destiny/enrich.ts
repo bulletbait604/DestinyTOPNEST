@@ -36,18 +36,31 @@ import { activityIconUrlForName, pantheonActivityIconUrl } from '@/lib/destiny/a
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { getOrBuildWeeklyLootIcons } from '@/lib/destiny/weeklyLootIcons'
 import { resolveArmorSetBonusesFromPieces } from '@/lib/destiny/armorSetBonuses'
+import { findGearModByName, gearModToIconRef } from '@/lib/destiny/gearCatalog'
+import { isPlaceholderGearName, withoutPlaceholderPlugs } from '@/lib/destiny/gearIconPick'
 
 function activityIconUrl(name: string, resolved?: { iconUrl?: string }): string | undefined {
   return activityIconUrlForName(name) ?? resolved?.iconUrl
 }
 
+async function resolveArmorModName(mod: string): Promise<DestinyIconRef | undefined> {
+  if (isPlaceholderGearName(mod)) return undefined
+  const fromCatalog = await findGearModByName(mod)
+  if (fromCatalog?.iconUrl) return gearModToIconRef(fromCatalog)
+  const fromItem = await resolveByName(mod, 'DestinyInventoryItemDefinition')
+  if (fromItem?.iconUrl) return fromItem
+  return resolveByName(mod, 'DestinySandboxPerkDefinition')
+}
+
 async function enrichPerkList(perks?: DestinyIconRef[]): Promise<DestinyIconRef[] | undefined> {
-  if (!perks?.length) return perks
-  return Promise.all(
-    perks.map((perk) =>
+  const visible = withoutPlaceholderPlugs(perks)
+  if (!visible?.length) return visible
+  const enriched = await Promise.all(
+    visible.map((perk) =>
       enrichIconRef(perk, perk.name, 'DestinySandboxPerkDefinition').then((r) => r ?? perk)
     )
   )
+  return withoutPlaceholderPlugs(enriched)
 }
 
 async function enrichOrResolve(
@@ -146,17 +159,15 @@ async function enrichBuildSnapshot(build: BuildSnapshot): Promise<BuildSnapshot>
     ? await resolveArmorSetBonusesFromPieces(armorPieces)
     : build.armorSetBonuses
 
-  const armorModRefs = build.armorModRefs?.length
-    ? build.armorModRefs
-    : build.armorMods?.length
-      ? await Promise.all(
-          build.armorMods.map(async (mod) => {
-            const fromItem = await resolveByName(mod, 'DestinyInventoryItemDefinition')
-            if (fromItem?.iconUrl) return fromItem
-            return resolveByName(mod, 'DestinySandboxPerkDefinition')
-          })
-        )
-      : undefined
+  const armorModRefs = withoutPlaceholderPlugs(
+    build.armorModRefs?.length
+      ? build.armorModRefs
+      : build.armorMods?.length
+        ? (await Promise.all(build.armorMods.map((mod) => resolveArmorModName(mod)))).filter(
+            (ref): ref is DestinyIconRef => Boolean(ref?.iconUrl || ref?.name)
+          )
+        : undefined
+  )
 
   return {
     ...build,
@@ -450,12 +461,10 @@ export async function enrichExternalBuild(build: ExternalBuildSource): Promise<E
         })
       : Promise.resolve(undefined),
     build.armorMods?.length
-      ? Promise.all(
-          build.armorMods.map(async (mod) => {
-            const fromItem = await resolveByName(mod, 'DestinyInventoryItemDefinition')
-            if (fromItem?.iconUrl) return fromItem
-            return resolveByName(mod, 'DestinySandboxPerkDefinition')
-          })
+      ? Promise.all(build.armorMods.map((mod) => resolveArmorModName(mod))).then((refs) =>
+          withoutPlaceholderPlugs(
+            refs.filter((ref): ref is DestinyIconRef => Boolean(ref?.iconUrl || ref?.name))
+          )
         )
       : Promise.resolve(undefined),
   ])

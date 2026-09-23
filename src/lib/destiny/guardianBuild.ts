@@ -7,6 +7,7 @@ import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 import { resolveInventoryItem, resolveDefinition, finalizeIconRef, type ManifestDefinitionInfo } from '@/lib/destiny/manifest'
 import type { ArmorPiece, ArmorSlotLabel, BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
 import { ARMOR_STAT_HASH_LABEL } from '@/lib/destiny/armorStats'
+import { isPlaceholderGearName } from '@/lib/destiny/gearIconPick'
 
 const CLASS_MAP: Record<number, DestinyCharacterClass> = {
   0: 'titan',
@@ -48,6 +49,7 @@ function isWeaponPerkPlug(info: ManifestDefinitionInfo): boolean {
   const type = (info.itemTypeDisplayName ?? '').toLowerCase()
   const name = info.name.toLowerCase()
   if (!type && !name) return false
+  if (isPlaceholderGearName(info.name)) return false
   if (WEAPON_PERK_SKIP.test(type) || WEAPON_PERK_SKIP.test(name)) return false
   return /perk|trait/i.test(type)
 }
@@ -55,6 +57,7 @@ function isWeaponPerkPlug(info: ManifestDefinitionInfo): boolean {
 function isArmorModPlug(info: ManifestDefinitionInfo): boolean {
   const type = (info.itemTypeDisplayName ?? '').toLowerCase()
   const name = info.name.toLowerCase()
+  if (isPlaceholderGearName(info.name)) return false
   if (WEAPON_PERK_SKIP.test(type) || WEAPON_PERK_SKIP.test(name)) return false
   return /armor mod|combat style|activity mod|raid mod|dungeon mod|ghost mod|^mod\b/i.test(type)
 }

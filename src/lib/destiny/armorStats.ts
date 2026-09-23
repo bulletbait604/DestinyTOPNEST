@@ -1,6 +1,7 @@
 /**
- * Destiny 2 Armor 3.0 stat names (Edge of Fate).
- * Bungie API stat hashes are unchanged; only display names differ from Armor 2.0.
+ * Destiny 2 Armor 3.0 stats (Edge of Fate → Monument of Triumph).
+ * Bungie API stat hashes are unchanged from Armor 2.0; display names + benefits differ.
+ * Live icons / descriptions also sync into Mongo via `scripts/sync-armor-mod-catalog.mjs`.
  */
 
 export type ArmorStatKey = 'Weapons' | 'Health' | 'Class' | 'Super' | 'Grenade' | 'Melee'
@@ -11,13 +12,57 @@ export const ARMOR_STAT_ORDER: ReadonlyArray<{
   legacyKey: string
   hash: number
   label: string
+  iconPath: string
+  iconUrl: string
 }> = [
-  { key: 'Weapons', legacyKey: 'Mobility', hash: 2996146975, label: 'Weapons' },
-  { key: 'Health', legacyKey: 'Resilience', hash: 392767087, label: 'Health' },
-  { key: 'Class', legacyKey: 'Recovery', hash: 1943323491, label: 'Class' },
-  { key: 'Super', legacyKey: 'Intellect', hash: 144602215, label: 'Super' },
-  { key: 'Grenade', legacyKey: 'Discipline', hash: 1735777505, label: 'Grenade' },
-  { key: 'Melee', legacyKey: 'Strength', hash: 4244567218, label: 'Melee' },
+  {
+    key: 'Weapons',
+    legacyKey: 'Mobility',
+    hash: 2996146975,
+    label: 'Weapons',
+    iconPath: '/common/destiny2_content/icons/bc69675acdae9e6b9a68a02fb4d62e07.png',
+    iconUrl: 'https://www.bungie.net/common/destiny2_content/icons/bc69675acdae9e6b9a68a02fb4d62e07.png',
+  },
+  {
+    key: 'Health',
+    legacyKey: 'Resilience',
+    hash: 392767087,
+    label: 'Health',
+    iconPath: '/common/destiny2_content/icons/717b8b218cc14325a54869bef21d2964.png',
+    iconUrl: 'https://www.bungie.net/common/destiny2_content/icons/717b8b218cc14325a54869bef21d2964.png',
+  },
+  {
+    key: 'Class',
+    legacyKey: 'Recovery',
+    hash: 1943323491,
+    label: 'Class',
+    iconPath: '/common/destiny2_content/icons/7eb845acb5b3a4a9b7e0b2f05f5c43f1.png',
+    iconUrl: 'https://www.bungie.net/common/destiny2_content/icons/7eb845acb5b3a4a9b7e0b2f05f5c43f1.png',
+  },
+  {
+    key: 'Super',
+    legacyKey: 'Intellect',
+    hash: 144602215,
+    label: 'Super',
+    iconPath: '/common/destiny2_content/icons/585ae4ede9c3da96b34086fccccdc8cd.png',
+    iconUrl: 'https://www.bungie.net/common/destiny2_content/icons/585ae4ede9c3da96b34086fccccdc8cd.png',
+  },
+  {
+    key: 'Grenade',
+    legacyKey: 'Discipline',
+    hash: 1735777505,
+    label: 'Grenade',
+    iconPath: '/common/destiny2_content/icons/065cdaabef560e5808e821cefaeaa22c.png',
+    iconUrl: 'https://www.bungie.net/common/destiny2_content/icons/065cdaabef560e5808e821cefaeaa22c.png',
+  },
+  {
+    key: 'Melee',
+    legacyKey: 'Strength',
+    hash: 4244567218,
+    label: 'Melee',
+    iconPath: '/common/destiny2_content/icons/fa534aca76d7f2d7e7b4ba4df4271b42.png',
+    iconUrl: 'https://www.bungie.net/common/destiny2_content/icons/fa534aca76d7f2d7e7b4ba4df4271b42.png',
+  },
 ]
 
 export const ARMOR_STAT_HASH_LABEL: Record<number, ArmorStatKey> = Object.fromEntries(
@@ -34,36 +79,60 @@ export const D2_ARMOR_STAT_COLORS: Record<ArmorStatKey, string> = {
   Melee: '#e67e22',
 }
 
-/** Armor 3.0 stat benefits by tier (Edge of Fate). */
+/** Armor 3.0 stat benefits (Monument of Triumph / Edge of Fate). */
 export const ARMOR_STAT_BENEFITS: Record<
   ArmorStatKey,
   { base: readonly string[]; bonus: readonly string[] }
 > = {
   Weapons: {
-    base: ['Faster reload and handling', 'Bonus damage vs minors and majors'],
-    bonus: ['Boss damage bonus', 'Higher ammo brick drop chance'],
+    base: ['Faster reload and handling', '+15% PvE damage vs minors and majors'],
+    bonus: ['Extra ammo from bricks', '+15% damage vs bosses', '+6% PvP damage'],
   },
   Health: {
-    base: ['Healing from Orbs of Power', 'Flinch resistance'],
-    bonus: ['Faster shield recharge', 'Increased shield capacity'],
+    base: ['+Orb healing (up to 70 HP)', '+Flinch resist (up to 10%)'],
+    bonus: [
+      'Faster shield recharge (up to +25%)',
+      'Faster full recharge (up to 50%)',
+      '+20 shield HP (PvE)',
+    ],
   },
   Class: {
-    base: ['Faster class ability cooldown', 'More class ability energy from kills'],
-    bonus: ['Overshield when you cast class ability'],
+    base: ['Faster class ability regen', 'More class ability energy from kills'],
+    bonus: ['+40 HP overshield on class ability (PvE)', '+10 HP overshield (PvP)'],
   },
   Super: {
     base: ['More Super energy from damage and orbs'],
-    bonus: ['Increased Super damage'],
+    bonus: ['+45% Super damage'],
   },
   Grenade: {
     base: ['Faster grenade cooldown', 'More grenade energy from kills'],
-    bonus: ['Increased grenade damage'],
+    bonus: ['+65% grenade damage (PvE)'],
   },
   Melee: {
     base: ['Faster melee cooldown', 'More melee energy from kills'],
-    bonus: ['Increased melee, powered, and glaive damage'],
+    bonus: ['+30% melee / powered / glaive damage'],
   },
 }
+
+/** All 12 Armor 3.0 archetypes after Monument of Triumph. */
+export const ARMOR_ARCHETYPES: ReadonlyArray<{
+  name: string
+  primary: ArmorStatKey
+  secondary: ArmorStatKey
+}> = [
+  { name: 'Bulwark', primary: 'Health', secondary: 'Class' },
+  { name: 'Brawler', primary: 'Melee', secondary: 'Health' },
+  { name: 'Grenadier', primary: 'Grenade', secondary: 'Super' },
+  { name: 'Paragon', primary: 'Super', secondary: 'Melee' },
+  { name: 'Specialist', primary: 'Class', secondary: 'Weapons' },
+  { name: 'Gunner', primary: 'Weapons', secondary: 'Grenade' },
+  { name: 'Siegebreaker', primary: 'Health', secondary: 'Grenade' },
+  { name: 'Skirmisher', primary: 'Melee', secondary: 'Weapons' },
+  { name: 'Demolitionist', primary: 'Grenade', secondary: 'Class' },
+  { name: 'Colossus', primary: 'Super', secondary: 'Health' },
+  { name: 'Reaver', primary: 'Class', secondary: 'Melee' },
+  { name: 'Powerhouse', primary: 'Weapons', secondary: 'Super' },
+]
 
 /** Plain-text summary for native title fallback. */
 export function armorStatBenefitSummary(key: ArmorStatKey, value: number): string {

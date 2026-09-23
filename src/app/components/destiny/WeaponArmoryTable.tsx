@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { withoutPlaceholderPlugs } from '@/lib/destiny/gearIconPick'
 import type { DestinyIconRef } from '@/lib/destiny/types'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import { ItemIcon } from '@/app/components/destiny/DestinyUi'
@@ -134,19 +135,19 @@ export function buildWeaponRows(build: {
       slot: 'Kin',
       item: build.kineticWeaponRef,
       fallback: build.kineticWeapon,
-      perks: build.kineticWeaponPerks,
+      perks: withoutPlaceholderPlugs(build.kineticWeaponPerks),
     },
     {
       slot: 'Eng',
       item: build.energyWeaponRef,
       fallback: build.energyWeapon,
-      perks: build.energyWeaponPerks,
+      perks: withoutPlaceholderPlugs(build.energyWeaponPerks),
     },
     {
       slot: 'Pow',
       item: build.powerWeaponRef,
       fallback: build.powerWeapon,
-      perks: build.powerWeaponPerks,
+      perks: withoutPlaceholderPlugs(build.powerWeaponPerks),
     },
   ]
 

@@ -18,6 +18,8 @@ import { classIconPathForClass, classIconRefForClass, classIconUrlForClass } fro
 import { itemIconPathFallback } from '@/lib/destiny/itemIconPaths'
 import { itemNameLookupCandidates } from '@/lib/destiny/itemNameAliases'
 import { isGenericIconUrl, isUsableIconUrl } from '@/lib/destiny/iconUtils'
+import { findGearModByHash, findGearModByName, gearModToIconRef } from '@/lib/destiny/gearCatalog'
+import { isPlaceholderGearName } from '@/lib/destiny/gearIconPick'
 import { catalogLookup, type ManifestEntityType } from '@/lib/destiny/itemsCatalog'
 import { DESTINY_MANIFEST_URL, destinyApiConfigured } from '@/lib/destiny/env'
 import type { DestinyIconRef } from '@/lib/destiny/types'
@@ -228,17 +230,38 @@ export async function getLiveManifestVersion(): Promise<string | undefined> {
   }
 }
 
+function linkedSandboxPerkHash(def: unknown): number | undefined {
+  if (!def || typeof def !== 'object') return undefined
+  const perks = (def as { perks?: Array<{ perkHash?: number }> }).perks
+  const hash = perks?.find((perk) => perk.perkHash && perk.perkHash > 0)?.perkHash
+  return hash && hash > 0 ? hash : undefined
+}
+
+function plugIconShouldFollowPerk(def: unknown): boolean {
+  const type = (itemTypeFromDefinition(def) ?? '').toLowerCase()
+  return /trait|perk|fragment|aspect|\bmod\b|ability/.test(type)
+}
+
 /** Resolve any manifest definition hash to name, icon, tier, and description. */
 export async function resolveDefinition(
   entityType: ManifestEntityType,
   hash: number,
   fallbackName = `Hash ${hash}`
 ): Promise<ManifestDefinitionInfo> {
+  return resolveDefinitionInner(entityType, hash, fallbackName, 0)
+}
+
+async function resolveDefinitionInner(
+  entityType: ManifestEntityType,
+  hash: number,
+  fallbackName: string,
+  depth: number
+): Promise<ManifestDefinitionInfo> {
   const cached = await readCache(entityType, hash)
   if (cached?.name && isUsableIconUrl(cached.iconUrl)) return cacheToInfo(cached)
 
   if (!destinyApiConfigured()) {
-    const iconUrl = catalogIconUrl(fallbackName)
+    const iconUrl = (await gearCatalogIcon(hash)) ?? catalogIconUrl(fallbackName)
     return { hash, entityType, name: fallbackName, iconUrl }
   }
 
@@ -254,6 +277,27 @@ export async function resolveDefinition(
     if (entityType === 'DestinyActivityDefinition' && def && typeof def === 'object') {
       const pgcr = (def as { pgcrImage?: string }).pgcrImage
       if (pgcr && !isGenericIconPath(pgcr)) iconPath = pgcr
+    }
+    if (
+      depth === 0 &&
+      entityType === 'DestinyInventoryItemDefinition' &&
+      !isUsableIconUrl(iconUrl) &&
+      plugIconShouldFollowPerk(def)
+    ) {
+      const perkHash = linkedSandboxPerkHash(def)
+      if (perkHash) {
+        const perk = await resolveDefinitionInner('DestinySandboxPerkDefinition', perkHash, name, 1)
+        if (isUsableIconUrl(perk.iconUrl)) {
+          iconUrl = perk.iconUrl
+          iconPath = undefined
+        }
+      }
+    }
+    if (
+      !isUsableIconUrl(iconUrl) &&
+      (entityType === 'DestinyInventoryItemDefinition' || entityType === 'DestinySandboxPerkDefinition')
+    ) {
+      iconUrl = (await gearCatalogIcon(hash)) ?? iconUrl
     }
     if (!isUsableIconUrl(iconUrl)) iconUrl = catalogIconUrl(name)
     const tierLabel = tierFromDefinition(def)
@@ -289,9 +333,15 @@ export async function resolveDefinition(
       equipableItemSetHash,
     }
   } catch {
-    const iconUrl = catalogIconUrl(fallbackName)
+    const iconUrl = (await gearCatalogIcon(hash)) ?? catalogIconUrl(fallbackName)
     return { hash, entityType, name: fallbackName, iconUrl }
   }
+}
+
+async function gearCatalogIcon(hash: number): Promise<string | undefined> {
+  if (!hash) return undefined
+  const mod = await findGearModByHash(hash)
+  return mod?.iconUrl && isUsableIconUrl(mod.iconUrl) ? mod.iconUrl : undefined
 }
 
 export async function resolveInventoryItem(hash: number, fallbackName?: string): Promise<ManifestDefinitionInfo> {
@@ -346,17 +396,35 @@ export async function enrichIconRef(
   return ref ? withCatalogIcon(ref, ref.name) : undefined
 }
 
+function orderedArmoryHits<T extends { name: string }>(query: string, hits: T[]): T[] {
+  const q = query.trim().toLowerCase()
+  const wantsOrnament = q.includes('ornament')
+  const filtered = hits.filter((hit) => {
+    const name = hit.name.trim().toLowerCase()
+    if (!name || isPlaceholderGearName(hit.name)) return false
+    if (!wantsOrnament && name.includes('ornament')) return false
+    return true
+  })
+  return filtered.sort((a, b) => {
+    const aExact = a.name.trim().toLowerCase() === q ? 0 : 1
+    const bExact = b.name.trim().toLowerCase() === q ? 0 : 1
+    return aExact - bExact
+  })
+}
+
 async function resolveFromArmorySearch(
   name: string,
   entities: ManifestEntityType[]
 ): Promise<DestinyIconRef | undefined> {
   for (const entity of entities) {
     try {
-      const results = await searchDestinyEntities(entity, name)
+      const results = orderedArmoryHits(name, await searchDestinyEntities(entity, name))
       for (const hit of results.slice(0, 5)) {
         if (!hit.hash) continue
         const resolved = await resolveManifestHash(entity, hit.hash, hit.name || name)
-        if (resolved.iconUrl && isUsableIconUrl(resolved.iconUrl)) return resolved
+        if (resolved.iconUrl && isUsableIconUrl(resolved.iconUrl) && !isPlaceholderGearName(resolved.name)) {
+          return resolved
+        }
         const searchIcon = buildBungieIconUrl(hit.icon)
         if (searchIcon && isUsableIconUrl(searchIcon)) {
           return withCatalogIcon(
@@ -381,6 +449,11 @@ export async function resolveByName(
     if (catalog) {
       return resolveManifestHash(catalog.entity, catalog.hash, name)
     }
+  }
+
+  const fromGear = await findGearModByName(name)
+  if (fromGear?.iconUrl && isUsableIconUrl(fromGear.iconUrl)) {
+    return gearModToIconRef(fromGear)
   }
 
   const entities = [

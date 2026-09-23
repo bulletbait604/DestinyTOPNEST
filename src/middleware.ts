@@ -8,6 +8,7 @@ import type { NextRequest } from 'next/server'
 const CDN_CACHEABLE_API_PREFIXES = [
   '/api/destiny/bungie/status',
   '/api/destiny/weekly-reset',
+  '/api/destiny/gear/catalog',
   '/api/destiny/leaderboards',
   '/api/destiny/builds',
   '/api/destiny/manifest/resolve',

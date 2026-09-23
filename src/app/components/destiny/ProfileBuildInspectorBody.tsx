@@ -1,6 +1,7 @@
 'use client'
 
 import type { BuildSnapshot, DestinyIconRef } from '@/lib/destiny/types'
+import { withoutPlaceholderPlugs } from '@/lib/destiny/gearIconPick'
 import { buildArmorRows } from '@/lib/destiny/loadoutDisplay'
 import {
   AbilityChip,
@@ -182,8 +183,9 @@ export default function ProfileBuildInspectorBody({
       </div>
     </BuildSection>
   ) : null
-  const modsPanel = build.armorModRefs?.length ? (
-    <ArmorModsPanel mods={build.armorModRefs} elementGlow={elementGlow} />
+  const armorMods = withoutPlaceholderPlugs(build.armorModRefs) ?? []
+  const modsPanel = armorMods.length ? (
+    <ArmorModsPanel mods={armorMods} elementGlow={elementGlow} />
   ) : null
   const hasStats = Object.keys(build.stats).length > 0
 

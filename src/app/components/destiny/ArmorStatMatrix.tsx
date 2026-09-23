@@ -33,7 +33,7 @@ export default function ArmorStatMatrix({
         loadout && 'd2-stat-matrix-loadout'
       )}
     >
-      {ARMOR_STAT_ORDER.map(({ key, legacyKey, label }) => {
+      {ARMOR_STAT_ORDER.map(({ key, legacyKey, label, iconUrl }) => {
         const value = armorStatValue(stats, key, legacyKey)
         const pct = Math.min(100, Math.max(0, (value / tier) * 100))
         const color = D2_ARMOR_STAT_COLORS[key as ArmorStatKey]
@@ -41,7 +41,11 @@ export default function ArmorStatMatrix({
         return (
           <StatBenefitTooltip key={key} statKey={key as ArmorStatKey} label={label} value={value}>
             <div className="d2-stat-matrix-row">
-              <span className="d2-stat-matrix-label">{label}</span>
+              <span className="d2-stat-matrix-label">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={iconUrl} alt="" className="d2-stat-matrix-icon" width={16} height={16} />
+                {label}
+              </span>
               <div className="d2-stat-matrix-track">
                 <div
                   className="d2-stat-matrix-fill"

@@ -39,7 +39,25 @@ export function staticIconUrlForLabel(label: string): string | undefined {
   return undefined
 }
 
-/** Fetch icon URL: static fallbacks, then authenticated manifest resolve API. */
+async function gearCatalogIcon(hash?: number, name?: string): Promise<string | undefined> {
+  const params = new URLSearchParams()
+  params.set('include', 'mods')
+  if (hash) params.set('hash', String(hash))
+  else if (name?.trim()) params.set('name', name.trim())
+  else return undefined
+
+  try {
+    const res = await fetch(`/api/destiny/gear/catalog?${params.toString()}`)
+    if (!res.ok) return undefined
+    const json = (await res.json()) as { mods?: Array<{ iconUrl?: string | null }> }
+    const url = json.mods?.[0]?.iconUrl
+    return url && isUsableIconUrl(url) ? url : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/** Fetch icon URL: static paths, gear catalog, then authenticated manifest resolve API. */
 export async function fetchManifestIconUrl(
   item?: DestinyIconRef,
   name?: string
@@ -48,9 +66,16 @@ export async function fetchManifestIconUrl(
   const existing = item?.iconUrl
   if (existing && isUsableIconUrl(existing)) return existing
 
+  if (item?.hash) {
+    const byHash = await gearCatalogIcon(item.hash)
+    if (byHash) return byHash
+  }
+
   if (label) {
     const staticUrl = staticIconUrlForLabel(label)
     if (staticUrl) return staticUrl
+    const byName = await gearCatalogIcon(undefined, label)
+    if (byName) return byName
   }
 
   const params = new URLSearchParams()
