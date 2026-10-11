@@ -44,7 +44,7 @@ export function syncTabToUrl(tab: DestinyTopNestTab) {
 
 export const DESTINY_TAB_NAV_EVENT = 'destiny-topnest:tab'
 
-export type ProfileNavView = 'guardian' | 'activities' | 'loadouts'
+export type ProfileNavView = 'guardian' | 'passport' | 'activities' | 'loadouts'
 
 export const DESTINY_PROFILE_NAV_EVENT = 'destiny-topnest:profile-nav'
 

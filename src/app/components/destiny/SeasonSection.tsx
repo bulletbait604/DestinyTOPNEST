@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Clock, Target } from 'lucide-react'
-import type { LeaderboardEntry, PrizeClaim, Season, WeeklyResetInfo } from '@/lib/destiny/types'
+import type { LeaderboardEntry, PrizeClaim, Season, WeeklyContractsSnapshot, WeeklyResetInfo } from '@/lib/destiny/types'
 import type { UserPrizeTrackEntry } from '@/lib/destiny/seasonPrizes'
 import SeasonPrizeClaimSection from '@/app/components/destiny/SeasonPrizeClaimSection'
+import WeeklyContractsPanel from '@/app/components/destiny/WeeklyContractsPanel'
+import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { ActivityBadge, GlassCard, ItemIcon, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { leaderboardCategoryIconUrl } from '@/lib/destiny/activityIconPaths'
@@ -27,7 +29,9 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
   const [seasonEnded, setSeasonEnded] = useState(false)
   const [myStandings, setMyStandings] = useState<LeaderboardEntry[]>([])
   const [weeklyReset, setWeeklyReset] = useState<WeeklyResetInfo | null>(null)
+  const [weeklyContracts, setWeeklyContracts] = useState<WeeklyContractsSnapshot | null>(null)
   const [loading, setLoading] = useState(true)
+  const showPrizes = monetaryPrizesEnabled()
   const t = getDestinyTheme(darkMode)
 
   const load = useCallback(async () => {
@@ -44,6 +48,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
         setSeasonEnded(Boolean(json.seasonEnded))
         setMyStandings(json.myStandings ?? [])
         setWeeklyReset(json.weeklyReset ?? null)
+        setWeeklyContracts(json.weeklyContracts ?? null)
       }
     } finally {
       setLoading(false)
@@ -123,13 +128,17 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
         </GlassCard>
       )}
 
-      <SeasonPrizeClaimSection
-        darkMode={darkMode}
-        prizeEligible={prizeEligible}
-        prizeClaims={prizeClaims}
-        seasonEnded={seasonEnded}
-        onClaimed={() => void load()}
-      />
+      {weeklyContracts ? <WeeklyContractsPanel board={weeklyContracts} darkMode={darkMode} /> : null}
+
+      {showPrizes ? (
+        <SeasonPrizeClaimSection
+          darkMode={darkMode}
+          prizeEligible={prizeEligible}
+          prizeClaims={prizeClaims}
+          seasonEnded={seasonEnded}
+          onClaimed={() => void load()}
+        />
+      ) : null}
 
       {season?.status === 'archived' && (
         <GlassCard darkMode={darkMode}>

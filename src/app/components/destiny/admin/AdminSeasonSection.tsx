@@ -5,6 +5,7 @@ import { Check, Gift, ImageIcon, Layers, Loader2, Trophy, X } from 'lucide-react
 import type { PrizeClaim, SeasonWinner } from '@/lib/destiny/types'
 import { GlassCard, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { cn } from '@/lib/utils'
 
 export default function AdminSeasonSection({
@@ -284,47 +285,61 @@ export default function AdminSeasonSection({
         </button>
       </GlassCard>
 
-      <GlassCard darkMode={darkMode}>
-        <div className="flex items-center gap-2 mb-2">
-          <Gift className="w-5 h-5 text-purple-400" />
-          <SectionTitle title="Pending prize claims" darkMode={darkMode} />
-        </div>
-        {!pendingClaims.length ? (
-          <p className={t.muted}>No pending prize claims.</p>
-        ) : (
-          <div className="space-y-3">
-            {pendingClaims.map((claim) => (
-              <div key={claim.id} className="rounded-xl p-4 bg-black/30 border border-purple-500/20">
-                <p className="text-white font-semibold">
-                  {claim.userId} · {claim.category.replace(/_/g, ' ')} #{claim.rank}
-                </p>
-                <p className={cn('text-xs mt-1', t.muted)}>{claim.prize}</p>
-                <p className={cn('text-xs mt-1', t.body)}>
-                  {claim.platform} · {claim.contact}
-                </p>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <button
-                    type="button"
-                    disabled={acting === claim.id}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs bg-emerald-500/20 text-emerald-200 border border-emerald-500/40"
-                    onClick={() => void updateClaim(claim.id, 'fulfilled')}
-                  >
-                    <Check className="w-3 h-3" /> Fulfilled
-                  </button>
-                  <button
-                    type="button"
-                    disabled={acting === claim.id}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs bg-red-500/20 text-red-200 border border-red-500/40"
-                    onClick={() => void updateClaim(claim.id, 'rejected')}
-                  >
-                    <X className="w-3 h-3" /> Reject
-                  </button>
-                </div>
-              </div>
-            ))}
+      {monetaryPrizesEnabled() ? (
+        <GlassCard darkMode={darkMode}>
+          <div className="flex items-center gap-2 mb-2">
+            <Gift className="w-5 h-5 text-purple-400" />
+            <SectionTitle title="Pending prize claims" darkMode={darkMode} />
           </div>
-        )}
-      </GlassCard>
+          {!pendingClaims.length ? (
+            <p className={t.muted}>No pending prize claims.</p>
+          ) : (
+            <div className="space-y-3">
+              {pendingClaims.map((claim) => (
+                <div key={claim.id} className="rounded-xl p-4 bg-black/30 border border-purple-500/20">
+                  <p className="text-white font-semibold">
+                    {claim.userId} · {claim.category.replace(/_/g, ' ')} #{claim.rank}
+                  </p>
+                  <p className={cn('text-xs mt-1', t.muted)}>{claim.prize}</p>
+                  <p className={cn('text-xs mt-1', t.body)}>
+                    {claim.platform} · {claim.contact}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <button
+                      type="button"
+                      disabled={acting === claim.id}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs bg-emerald-500/20 text-emerald-200 border border-emerald-500/40"
+                      onClick={() => void updateClaim(claim.id, 'fulfilled')}
+                    >
+                      <Check className="w-3 h-3" /> Fulfilled
+                    </button>
+                    <button
+                      type="button"
+                      disabled={acting === claim.id}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs bg-red-500/20 text-red-200 border border-red-500/40"
+                      onClick={() => void updateClaim(claim.id, 'rejected')}
+                    >
+                      <X className="w-3 h-3" /> Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </GlassCard>
+      ) : (
+        <GlassCard darkMode={darkMode}>
+          <div className="flex items-center gap-2 mb-2">
+            <Gift className="w-5 h-5 text-purple-400" />
+            <SectionTitle title="Prize claims" darkMode={darkMode} />
+          </div>
+          <p className={cn('text-sm', t.muted)}>
+            Monetary and physical prizes are off. Fireteam HQ rewards are badges, titles, profile frames, and season tiers.
+            Claim fulfillment stays in the codebase and turns back on only if NEXT_PUBLIC_FIRETEAM_HQ_MONETARY_PRIZES is set
+            after written Bungie permission.
+          </p>
+        </GlassCard>
+      )}
     </div>
   )
 }

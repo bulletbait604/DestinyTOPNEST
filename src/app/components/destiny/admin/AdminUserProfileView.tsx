@@ -46,6 +46,12 @@ export default function AdminUserProfileView({
     { label: 'MVP crowns', value: profile.guardianPoints ?? 0 },
     { label: 'Verified clears', value: profile.verifiedClears },
     { label: 'Reputation', value: profile.reputationScore },
+    ...(profile.passport
+      ? [
+          { label: 'Passport stamps', value: profile.passport.totalStamps },
+          { label: 'Distinct teammates', value: profile.passport.distinctTeammates },
+        ]
+      : []),
   ]
 
   return (

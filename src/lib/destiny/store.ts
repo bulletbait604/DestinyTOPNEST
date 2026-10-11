@@ -20,6 +20,7 @@ import { ensureWeeklyMetaBuildSync, getMetaBuildWeeklySyncStatus } from '@/lib/d
 import { isValidMetaBuild } from '@/lib/destiny/metaBuildClassRules'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { aggregateBuildIntelligence, verifiedRunIdSet } from '@/lib/destiny/buildIntelligence'
+import { staffApprovedFullClearForDecision } from '@/lib/destiny/passport'
 import { calculateRunPoints } from '@/lib/destiny/scoring'
 import { normalizeRunRecord } from '@/lib/destiny/pgcrStats'
 import { rankTopMetaLoadoutsByClass, rankTrendingMetaBuilds, sortExternalBuildsByConsensus } from '@/lib/destiny/metaBuildConsensus'
@@ -200,6 +201,40 @@ export async function getRunsForParticipant(
     return rows.map(normalizeRunRecord)
   } catch {
     return getRunsForUser(userId, limit)
+  }
+}
+
+/**
+ * Verified runs that include any of the given Destiny membership ids.
+ * Used to tell whether a teammate already has a full clear of an activity.
+ * `complete` is false when the safety cap was hit.
+ */
+export async function listVerifiedRunsForMembers(
+  membershipIds: string[],
+  limit = 5000
+): Promise<{ runs: RunRecord[]; complete: boolean }> {
+  const ids = Array.from(new Set(membershipIds.filter(Boolean)))
+  if (!ids.length) return { runs: [], complete: true }
+  try {
+    await ensureDestinyIndexes()
+    const database = await db()
+    const rows = (await database
+      .collection(DESTINY_COLLECTIONS.runRecords)
+      .find({
+        verificationStatus: 'verified',
+        completed: true,
+        'teamMembers.membershipId': { $in: ids },
+        ...nestLaunchMongoFilter(),
+      })
+      .sort({ completedAt: 1 })
+      .limit(limit)
+      .toArray()) as unknown as RunRecord[]
+    return {
+      runs: rows.map(normalizeRunRecord),
+      complete: rows.length < limit,
+    }
+  } catch {
+    return { runs: [], complete: false }
   }
 }
 
@@ -565,6 +600,7 @@ async function applyAdminRunDecision(
       : decision === 'approve' || decision === 'checkpoint_non_scoring'
         ? 'verified'
         : 'rejected'
+  const staffApprovedFullClear = staffApprovedFullClearForDecision(decision)
 
   let pointsUpdate: number | undefined
   if (decision === 'checkpoint_non_scoring') {
@@ -587,6 +623,7 @@ async function applyAdminRunDecision(
     {
       $set: {
         verificationStatus,
+        staffApprovedFullClear,
         ...(pointsUpdate !== undefined ? { pointsAwarded: pointsUpdate } : {}),
         adminNotes: notes,
         updatedAt: now,

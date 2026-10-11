@@ -13,6 +13,7 @@ export const LEADERBOARD_RULES_BULLETS = [
   'Pantheon squads: each boss encounter counts as one raid worth of points for the fireteam',
   'MVP votes: pick one MVP per verified run in Previous Activities (Top Guardians ranked by MVP crowns)',
   'Checkpoint runs tracked but not scored unless admin approved',
+  'Weekly contracts earn season tier points (titles, frames, badges) and do not change leaderboard scores',
   'Suspicious runs blocked until review (score 70+)',
 ] as const
 

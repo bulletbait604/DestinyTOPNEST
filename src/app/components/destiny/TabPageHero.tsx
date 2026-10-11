@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import { BRAND_LOGO_ALT, BRAND_LOGO_PATH } from '@/lib/destiny/branding'
 import { navTabArtUrl, homeSectionArtUrl } from '@/lib/destiny/navArt'
+import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { HERO_PRIZE_POOL_STICKER } from '@/lib/destiny/seasonConfig'
 import { tabHeroArtKey, tabPageCopy } from '@/lib/destiny/tabPageCopy'
 import { navigateProfileSection } from '@/lib/routing/tabUrl'
@@ -85,7 +86,7 @@ export default function TabPageHero({ tab, aside }: Props) {
   const isHomeHero = artKey === 'overview'
   const compact = !isHomeHero
   const enlargedTabHero = ENLARGED_TAB_HERO_TABS.includes(tab)
-  const showPrizeSticker = PRIZE_STICKER_TABS.includes(tab)
+  const showPrizeSticker = monetaryPrizesEnabled() && PRIZE_STICKER_TABS.includes(tab)
   const prizeUnderTitle = showPrizeSticker && PRIZE_UNDER_TITLE_TABS.includes(tab)
   const prizeInRightStack = showPrizeSticker && !prizeUnderTitle
   const hasRightStack = prizeInRightStack || Boolean(aside)

@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "catalog:items": "node scripts/build-item-catalog.mjs",
     "catalog:activities": "node scripts/build-activity-icon-paths.mjs",
     "catalog:gear": "node scripts/sync-armor-mod-catalog.mjs",
@@ -39,6 +40,7 @@
   "devDependencies": {
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
-    "playwright": "^1.61.1"
+    "playwright": "^1.61.1",
+    "vitest": "^3.2.4"
   }
 }

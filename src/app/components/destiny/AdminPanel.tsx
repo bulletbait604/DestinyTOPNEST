@@ -11,6 +11,7 @@ import AdminStaffSection from '@/app/components/destiny/admin/AdminStaffSection'
 import AdminUsersSection from '@/app/components/destiny/admin/AdminUsersSection'
 import { GlassCard, SegmentedControl, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { cn } from '@/lib/utils'
 
 type AdminSection = 'activity' | 'runs' | 'users' | 'staff' | 'leaderboards' | 'season' | 'fireteam'
@@ -38,7 +39,9 @@ export default function AdminPanel({
   const [feedKey, setFeedKey] = useState(0)
   const t = getDestinyTheme(darkMode)
 
-  const visibleSections = SECTIONS.filter((item) => !item.ownerOnly || isOwner)
+  const visibleSections = SECTIONS.filter((item) => !item.ownerOnly || isOwner).map((item) =>
+    item.value === 'season' && !monetaryPrizesEnabled() ? { ...item, label: 'Season' } : item
+  )
 
   const refreshFeed = useCallback(() => {
     setFeedKey((k) => k + 1)
