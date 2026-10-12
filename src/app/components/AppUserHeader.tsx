@@ -53,7 +53,7 @@ export default function AppUserHeader({
   }
 
   return (
-    <header className="d2-app-header flex items-center gap-2 px-3 sm:px-4 py-2">
+    <div className="d2-app-header flex items-center gap-2 px-3 sm:px-4 py-2">
       <div className="flex items-center gap-2 min-w-0 mr-auto">
         <span className="text-xs text-white/55 truncate max-w-[40vw] sm:max-w-none">{displayName}</span>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -106,6 +106,6 @@ export default function AppUserHeader({
           Log out
         </button>
       </div>
-    </header>
+    </div>
   )
 }

@@ -31,6 +31,8 @@ import { ProfileDataProvider, useProfileData } from '@/contexts/ProfileDataConte
 import { OverviewDataProvider } from '@/contexts/OverviewDataContext'
 import { useActiveCharacterSelect } from '@/hooks/useActiveCharacterSelect'
 import { cn } from '@/lib/utils'
+import { HubClans, HubContracts, HubEvents, HubSherpas } from '@/app/components/hub/HubPages'
+import YourWeek from '@/app/components/hub/YourWeek'
 
 type ProfileView = 'guardian' | 'passport' | 'activities' | 'loadouts'
 type LoadoutSection = 'mine' | 'community' | 'builder'
@@ -40,6 +42,8 @@ interface Props {
   isAdmin?: boolean
   isOwner?: boolean
   userId?: string
+  /** Page chrome already shows the Guardian Hub nav. */
+  embedded?: boolean
 }
 
 function resolveProfileView(tab: DestinyTopNestTab): ProfileView {
@@ -81,7 +85,13 @@ function ProfilePlayerBanner({
   )
 }
 
-export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner = false, userId }: Props) {
+export default function DestinyTopNestApp({
+  darkMode,
+  isAdmin = false,
+  isOwner = false,
+  userId,
+  embedded = false,
+}: Props) {
   const [activeTab, setActiveTab] = useState<DestinyTopNestTab>('overview')
   const [profileView, setProfileView] = useState<ProfileView>('guardian')
   const [loadoutSection, setLoadoutSection] = useState<LoadoutSection | undefined>()
@@ -195,7 +205,12 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner =
   function renderMainPanel() {
     switch (activeTab) {
       case 'overview':
-        return <OverviewPanel darkMode={darkMode} onGoToActivities={navigateToProfileActivities} />
+        return (
+          <>
+            <YourWeek />
+            <OverviewPanel darkMode={darkMode} onGoToActivities={navigateToProfileActivities} />
+          </>
+        )
       case 'leaderboards':
         return <LeaderboardsPanel darkMode={darkMode} />
       case 'fireteam':
@@ -205,7 +220,18 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner =
       case 'builds':
         return null
       case 'clans':
-        return <ClansPanel darkMode={darkMode} />
+        return (
+          <>
+            <HubClans />
+            <ClansPanel darkMode={darkMode} />
+          </>
+        )
+      case 'contracts':
+        return <HubContracts />
+      case 'sherpas':
+        return <HubSherpas />
+      case 'events':
+        return <HubEvents />
       case 'season':
         return <LeaderboardsPanel darkMode={darkMode} />
       case 'admin':
@@ -217,23 +243,30 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner =
     }
   }
 
-  const showTopNestCallout = activeTab === 'overview'
+  const hubTab = activeTab === 'overview' || activeTab === 'contracts' || activeTab === 'sherpas' || activeTab === 'events' || activeTab === 'clans'
+  const showTopNestCallout = activeTab === 'overview' && !embedded
   const showLeaderboardRules = activeTab === 'leaderboards' || activeTab === 'season'
+  const showHero = !embedded || !hubTab
+  const showPlayerCard = !embedded || PROFILE_TABS.has(activeTab)
   const heroAside = showTopNestCallout ? <HomeSoloPreview darkMode={darkMode} /> : undefined
 
   return (
     <OverviewDataProvider>
       <ProfileDataProvider>
         {userId ? <NewcomerWelcomeModal darkMode={darkMode} userId={userId} /> : null}
-        <div className={cn('rounded-xl overflow-hidden ring-1 ring-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.45)]', theme.shell)}>
+        <div className={cn(!embedded && 'rounded-xl overflow-hidden ring-1 ring-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.45)]', !embedded && theme.shell)}>
         <RunSyncToast darkMode={darkMode} />
-        <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4 space-y-4">
-          <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
+        <div className={cn('space-y-4', !embedded && 'px-3 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4')}>
+          {embedded ? null : (
+            <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
+          )}
           <TabShellAlerts darkMode={darkMode} />
-          <TabPageHero tab={activeTab} aside={heroAside} />
-          <div className="d2-player-card-featured">
-            <ProfilePlayerBanner darkMode={darkMode} activeTab={activeTab} />
-          </div>
+          {showHero ? <TabPageHero tab={activeTab} aside={heroAside} /> : null}
+          {showPlayerCard ? (
+            <div className="d2-player-card-featured">
+              <ProfilePlayerBanner darkMode={darkMode} activeTab={activeTab} />
+            </div>
+          ) : null}
           {showLeaderboardRules ? <LeaderboardRulesSection darkMode={darkMode} /> : null}
           {showTopNestCallout ? <HomeTopNestCallout darkMode={darkMode} /> : null}
           <div className="min-w-0">{renderPanel()}</div>

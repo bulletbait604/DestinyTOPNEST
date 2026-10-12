@@ -13,6 +13,7 @@ const CDN_CACHEABLE_API_PREFIXES = [
   '/api/destiny/builds',
   '/api/destiny/manifest/resolve',
   '/api/destiny/overview',
+  '/api/destiny/hub',
   '/api/destiny/season',
   '/api/destiny/mvp',
 ] as const
