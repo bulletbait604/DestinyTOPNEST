@@ -5,12 +5,12 @@ import { useEffect, useState } from 'react'
 import { HUB_NAME } from '@/lib/destiny/branding'
 import { bungieOAuthErrorMessage } from '@/lib/destiny/bungieOAuthMessages'
 import { TopNestLogoMark } from '@/app/components/destiny/TopNestBrandBanner'
-import AppUserHeader from '@/app/components/AppUserHeader'
 import DestinyTopNestApp from '@/app/components/DestinyTopNestApp'
 import HubChrome from '@/app/components/hub/HubChrome'
+import HubErrorBoundary from '@/app/components/hub/HubErrorBoundary'
 import PublicHub from '@/app/components/hub/PublicHub'
+import SignedInHubFrame from '@/app/components/hub/SignedInHubFrame'
 import SiteBackdrop from '@/app/components/SiteBackdrop'
-import { BungieLinkProvider } from '@/contexts/BungieLinkContext'
 import { useAppSession } from '@/hooks/useAppSession'
 import { stripUrlParams, navigateDestinyTab } from '@/lib/routing/tabUrl'
 
@@ -90,35 +90,39 @@ export default function HomePage() {
     )
   }
 
+  if (user) {
+    return (
+      <SiteBackdrop variant="hub">
+        <SignedInHubFrame
+          displayName={user.displayName}
+          onLogout={() => void logout()}
+          showAdmin={isAdmin}
+          onOpenAdmin={() => navigateDestinyTab('admin')}
+          onLogin={handleLogin}
+          loginPending={loginPending}
+        >
+          {loginError ? (
+            <p className="gh-alert" role="alert">
+              {loginError}
+            </p>
+          ) : null}
+          <DestinyTopNestApp embedded darkMode isAdmin={isAdmin} isOwner={isOwner} userId={user.id} />
+        </SignedInHubFrame>
+      </SiteBackdrop>
+    )
+  }
+
   return (
     <SiteBackdrop variant="hub">
-      <HubChrome
-        signedIn={Boolean(user)}
-        onLogin={handleLogin}
-        loginPending={loginPending}
-        account={
-          user ? (
-            <AppUserHeader
-              displayName={user.displayName}
-              onLogout={() => void logout()}
-              showAdminSettings={isAdmin}
-              onOpenAdmin={() => navigateDestinyTab('admin')}
-            />
-          ) : null
-        }
-      >
+      <HubChrome signedIn={false} onLogin={handleLogin} loginPending={loginPending}>
         {loginError ? (
           <p className="gh-alert" role="alert">
             {loginError}
           </p>
         ) : null}
-        {user ? (
-          <BungieLinkProvider>
-            <DestinyTopNestApp embedded darkMode isAdmin={isAdmin} isOwner={isOwner} userId={user.id} />
-          </BungieLinkProvider>
-        ) : (
+        <HubErrorBoundary label="public hub">
           <PublicHub onLogin={handleLogin} />
-        )}
+        </HubErrorBoundary>
       </HubChrome>
     </SiteBackdrop>
   )

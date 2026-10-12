@@ -5,6 +5,30 @@ import type { PublicHubSnapshot } from '@/lib/destiny/publicHub'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import { navigateDestinyTab } from '@/lib/routing/tabUrl'
 
+function asArray<T>(value: T[] | undefined | null): T[] {
+  return Array.isArray(value) ? value : []
+}
+
+/** Drop a hub payload that is missing the lists the page maps over. */
+export function normalizePublicHub(value: unknown): PublicHubSnapshot | null {
+  if (!value || typeof value !== 'object') return null
+  const data = value as Partial<PublicHubSnapshot>
+  if (!Array.isArray(data.contracts) || !Array.isArray(data.scoring)) return null
+  return {
+    weekLabel: typeof data.weekLabel === 'string' ? data.weekLabel : '',
+    resetsInLabel: typeof data.resetsInLabel === 'string' ? data.resetsInLabel : '',
+    featuredDungeons: asArray(data.featuredDungeons),
+    featuredRaids: asArray(data.featuredRaids),
+    contracts: data.contracts,
+    sherpas: asArray(data.sherpas),
+    clans: asArray(data.clans),
+    events: asArray(data.events),
+    fireteams: asArray(data.fireteams),
+    scoring: data.scoring,
+    historyComplete: data.historyComplete !== false,
+  }
+}
+
 export function usePublicHub() {
   const [snapshot, setSnapshot] = useState<PublicHubSnapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -14,10 +38,15 @@ export function usePublicHub() {
     fetch('/api/destiny/hub', { cache: 'no-store' })
       .then(async (response) => {
         if (!response.ok) throw new Error('Hub unavailable')
-        return (await response.json()) as PublicHubSnapshot
+        return normalizePublicHub(await response.json())
       })
       .then((data) => {
-        if (!cancelled) setSnapshot(data)
+        if (cancelled) return
+        if (!data) {
+          setError('The public boards came back empty. Refresh to try again.')
+          return
+        }
+        setSnapshot(data)
       })
       .catch(() => {
         if (!cancelled) {

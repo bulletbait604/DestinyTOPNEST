@@ -17,9 +17,13 @@ export default function YourWeek() {
   const passport = fullProfile?.passport
   const chemistry = fullProfile?.chemistry
   const nightOps = fullProfile?.nightOps
-  const upcoming = nightOps?.events.filter((event) => event.status === 'upcoming' || event.status === 'live') ?? []
-  const done = contracts?.contracts.filter((contract) => contract.completed).length ?? 0
-  const needsLink = !bungie.linked || bungie.status?.needsReconnect
+  const contractRows = Array.isArray(contracts?.contracts) ? contracts.contracts : []
+  const recentStamps = Array.isArray(passport?.recentStamps) ? passport.recentStamps : []
+  const suggestions = Array.isArray(chemistry?.suggestions) ? chemistry.suggestions : []
+  const nightEvents = Array.isArray(nightOps?.events) ? nightOps.events : []
+  const upcoming = nightEvents.filter((event) => event.status === 'upcoming' || event.status === 'live')
+  const done = contractRows.filter((contract) => contract.completed).length
+  const needsLink = !bungie.linked || Boolean(bungie.status?.needsReconnect)
   const noClears = (passport?.clearStamps ?? 0) === 0
 
   return (
@@ -59,14 +63,15 @@ export default function YourWeek() {
       <div className="gh-grid">
         <article className="gh-card">
           <h2>Contracts</h2>
-          {contracts ? (
+          {contractRows.length || contracts ? (
             <>
               <p className="gh-muted">
-                {done} of {contracts.contracts.length} done · {contracts.seasonTier.title} ·{' '}
-                {contracts.resetsInLabel} until reset
+                {done} of {contractRows.length} done
+                {contracts?.seasonTier?.title ? ` · ${contracts.seasonTier.title}` : ''}
+                {contracts?.resetsInLabel ? ` · ${contracts.resetsInLabel} until reset` : ''}
               </p>
               <ul className="gh-plain-list">
-                {contracts.contracts.map((contract) => (
+                {contractRows.map((contract) => (
                   <li key={contract.id}>
                     {contract.completed ? 'Done' : 'Open'} · {contract.title}
                   </li>
@@ -83,9 +88,9 @@ export default function YourWeek() {
 
         <article className="gh-card">
           <h2>Recent stamps</h2>
-          {passport && passport.recentStamps.length ? (
+          {recentStamps.length ? (
             <ul className="gh-plain-list">
-              {passport.recentStamps.slice(0, 3).map((stamp) => (
+              {recentStamps.slice(0, 3).map((stamp) => (
                 <li key={stamp.runId}>
                   {stamp.activityName}
                   {stamp.newGuardianNames.length ? ` · new: ${stamp.newGuardianNames.join(', ')}` : ''}
@@ -102,9 +107,9 @@ export default function YourWeek() {
 
         <article className="gh-card">
           <h2>Suggested teammates</h2>
-          {chemistry && chemistry.suggestions.length ? (
+          {suggestions.length ? (
             <ul className="gh-plain-list">
-              {chemistry.suggestions.slice(0, 3).map((suggestion) => (
+              {suggestions.slice(0, 3).map((suggestion) => (
                 <li key={suggestion.membershipId}>
                   {suggestion.displayName} · {suggestion.reason}
                 </li>

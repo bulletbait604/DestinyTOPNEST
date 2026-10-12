@@ -31,6 +31,7 @@ import { ProfileDataProvider, useProfileData } from '@/contexts/ProfileDataConte
 import { OverviewDataProvider } from '@/contexts/OverviewDataContext'
 import { useActiveCharacterSelect } from '@/hooks/useActiveCharacterSelect'
 import { cn } from '@/lib/utils'
+import HubErrorBoundary from '@/app/components/hub/HubErrorBoundary'
 import { HubClans, HubContracts, HubEvents, HubSherpas } from '@/app/components/hub/HubPages'
 import YourWeek from '@/app/components/hub/YourWeek'
 
@@ -207,7 +208,9 @@ export default function DestinyTopNestApp({
       case 'overview':
         return (
           <>
-            <YourWeek />
+            <HubErrorBoundary label="your week">
+              <YourWeek />
+            </HubErrorBoundary>
             <OverviewPanel darkMode={darkMode} onGoToActivities={navigateToProfileActivities} />
           </>
         )
