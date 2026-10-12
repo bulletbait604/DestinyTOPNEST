@@ -9,7 +9,16 @@ export interface TabPageCopy {
 }
 
 export const TAB_PAGE_COPY: Record<
-  'overview' | 'leaderboards' | 'profile' | 'fireteam' | 'clans' | 'loadouts' | 'admin',
+  | 'overview'
+  | 'leaderboards'
+  | 'profile'
+  | 'fireteam'
+  | 'clans'
+  | 'loadouts'
+  | 'admin'
+  | 'contracts'
+  | 'sherpas'
+  | 'events',
   TabPageCopy
 > = {
   overview: {
@@ -45,12 +54,25 @@ export const TAB_PAGE_COPY: Record<
     title: 'Admin',
     description: 'Review flagged runs, moderate users, adjust leaderboards, ban accounts, and monitor the staff activity feed.',
   },
+  contracts: {
+    title: 'Weekly contracts',
+    description: 'Three community goals that reset every Tuesday. They earn season tiers, not leaderboard points.',
+  },
+  sherpas: {
+    title: 'Sherpas',
+    description: 'Guides who helped someone get a verified first clear. Learner MVP votes add a bonus.',
+  },
+  events: {
+    title: 'Night Ops',
+    description: 'Scheduled community sessions. A badge needs a verified clear inside the event window.',
+  },
 }
 
 /** Map route tab ids to hero copy keys. */
 export function tabPageCopyKey(tab: DestinyTopNestTab): keyof typeof TAB_PAGE_COPY {
   if (tab === 'builds' || tab === 'loadouts') return 'loadouts'
   if (tab === 'season') return 'leaderboards'
+  if (tab === 'contracts' || tab === 'sherpas' || tab === 'events') return tab
   return tab as keyof typeof TAB_PAGE_COPY
 }
 

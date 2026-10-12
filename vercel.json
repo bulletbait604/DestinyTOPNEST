@@ -132,6 +132,9 @@
     },
     "src/app/api/discord/register/route.ts": {
       "memory": 256
+    },
+    "src/app/api/destiny/hub/route.ts": {
+      "memory": 512
     }
   }
 }

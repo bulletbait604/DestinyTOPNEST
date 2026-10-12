@@ -106,6 +106,9 @@ export type DestinyTopNestTab =
   | 'clans'
   | 'season'
   | 'admin'
+  | 'contracts'
+  | 'sherpas'
+  | 'events'
 
 export interface DestinyIconRef {
   name: string

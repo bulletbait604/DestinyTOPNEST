@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Crown, LogIn, Sparkles, Trophy, Users, X } from 'lucide-react'
 import { BRAND_LOGO_ALT, BRAND_LOGO_PATH } from '@/lib/destiny/branding'
+import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { ACTIVITY_ICON_PATHS } from '@/lib/destiny/activityIconPaths'
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
 import { COMMUNITY_ART, homeSectionArtUrl } from '@/lib/destiny/navArt'
@@ -141,7 +142,9 @@ export default function NewcomerWelcomeModal({ darkMode, userId }: Props) {
               <span className="tn-welcome-title-accent">TOPNEST</span>
             </h2>
             <p id="tn-welcome-lede" className="tn-welcome-lede">
-              Verified runs, fireteam votes, and season prizes — here&apos;s how Top Nest works.
+              {monetaryPrizesEnabled()
+                ? 'Verified runs, fireteam votes, and season prizes — here’s how Top Nest works.'
+                : 'Verified clears, weekly contracts, and sherpa ranks — here’s how the Guardian Hub works.'}
             </p>
           </div>
         </div>
@@ -251,8 +254,17 @@ export default function NewcomerWelcomeModal({ darkMode, userId }: Props) {
           <div className="tn-welcome-prize-copy">
             <Trophy className="w-5 h-5 text-amber-300 shrink-0" />
             <p>
-              <strong className="text-amber-100">TOP NEST</strong> wins prizes at the end of each Season
-              (month). Climb the board and represent your fireteam.
+              {monetaryPrizesEnabled() ? (
+                <>
+                  <strong className="text-amber-100">TOP NEST</strong> wins prizes at the end of each Season
+                  (month). Climb the board and represent your fireteam.
+                </>
+              ) : (
+                <>
+                  <strong className="text-amber-100">Your week</strong> tracks contracts, stamps, and people
+                  you clear with. Rewards are badges, titles, and frames.
+                </>
+              )}
             </p>
           </div>
         </div>
