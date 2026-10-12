@@ -155,11 +155,18 @@ async function mergeRunRecordOnResync(
   if (!adminResolved) return incoming
 
   if (review?.status === 'approved') {
+    const staffApprovedFullClear =
+      review.decision === 'approve'
+        ? true
+        : review.decision === 'checkpoint_non_scoring'
+          ? false
+          : existing.staffApprovedFullClear
     return {
       ...incoming,
       verificationStatus: 'verified',
       pointsAwarded: existing.pointsAwarded,
       adminNotes: existing.adminNotes,
+      staffApprovedFullClear,
     }
   }
 
@@ -177,6 +184,7 @@ async function mergeRunRecordOnResync(
     verificationStatus: existing.verificationStatus,
     pointsAwarded: existing.pointsAwarded,
     adminNotes: existing.adminNotes,
+    staffApprovedFullClear: existing.staffApprovedFullClear,
   }
 }
 

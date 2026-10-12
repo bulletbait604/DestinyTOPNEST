@@ -32,7 +32,7 @@ import { OverviewDataProvider } from '@/contexts/OverviewDataContext'
 import { useActiveCharacterSelect } from '@/hooks/useActiveCharacterSelect'
 import { cn } from '@/lib/utils'
 
-type ProfileView = 'guardian' | 'activities' | 'loadouts'
+type ProfileView = 'guardian' | 'passport' | 'activities' | 'loadouts'
 type LoadoutSection = 'mine' | 'community' | 'builder'
 
 interface Props {
@@ -131,7 +131,7 @@ export default function DestinyTopNestApp({ darkMode, isAdmin = false, isOwner =
   useEffect(() => {
     const onProfileNav = (event: Event) => {
       const view = (event as CustomEvent<ProfileView>).detail
-      if (view !== 'guardian' && view !== 'activities' && view !== 'loadouts') return
+      if (view !== 'guardian' && view !== 'passport' && view !== 'activities' && view !== 'loadouts') return
       setProfileView(view)
       setLoadoutSection(undefined)
       setActiveTab('profile')

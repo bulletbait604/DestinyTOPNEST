@@ -24,7 +24,7 @@ export const TAB_PAGE_COPY: Record<
   profile: {
     title: 'Profile',
     description:
-      'Your Guardian build, verified run history, reputation, and emblem — synced from Bungie.',
+      'Your Guardian, Fireteam Passport, verified clears, weekly contracts, and emblem — synced from Bungie.',
   },
   fireteam: {
     title: 'FIRETEAMS',

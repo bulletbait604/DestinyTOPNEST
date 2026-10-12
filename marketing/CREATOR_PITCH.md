@@ -1,7 +1,7 @@
 # Destiny's Top Nest — Creator Outreach Deck
 
 Use this as slide copy for Google Slides, Canva, or the included HTML deck.  
-**Replace `YOUR_DISCORD_INVITE` with your real Discord invite URL before sending.**
+**TODO: set `DISCORD_INVITE_URL` in `marketing/site.config.js` before sending.** The checked-in value is the placeholder `TODO_SET_DISCORD_INVITE_URL`, not a live invite.
 
 ---
 
@@ -11,7 +11,7 @@ Use this as slide copy for Google Slides, Canva, or the included HTML deck.
 *The community hub where Guardians compete with honor.*
 
 - **App:** https://topnest.app  
-- **Discord:** YOUR_DISCORD_INVITE  
+- **Discord:** `TODO_SET_DISCORD_INVITE_URL` (TODO: replace `DISCORD_INVITE_URL` in `marketing/site.config.js`)  
 - **Season 1:** Season of the Monument Era · starts **July 1, 2026**
 
 ---
@@ -128,7 +128,7 @@ We're looking for creators who care about **community-first endgame**.
 
 **Get in touch:** bulletbait604@gmail.com  
 **App:** https://topnest.app  
-**Discord:** YOUR_DISCORD_INVITE  
+**Discord:** `TODO_SET_DISCORD_INVITE_URL` (TODO: replace `DISCORD_INVITE_URL` in `marketing/site.config.js`)  
 
 ---
 

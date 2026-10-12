@@ -154,9 +154,10 @@
   </style>
 </head>
 <body>
-  <!-- Edit Discord URL before sharing -->
+  <!-- TODO: set DISCORD_INVITE_URL in site.config.js before sharing. -->
+  <script src="site.config.js"></script>
   <script>
-    const DISCORD_URL = 'YOUR_DISCORD_INVITE';
+    const DISCORD_URL = DISCORD_INVITE_URL;
     const APP_URL = 'https://topnest.app';
   </script>
 
@@ -269,7 +270,7 @@
         <a class="cta cta-app" href="https://topnest.app">topnest.app</a>
         <a class="cta cta-discord" id="cta-discord-2" href="#">Join Discord</a>
       </div>
-      <p class="note">Edit DISCORD_URL at the top of this file before presenting.</p>
+      <p class="note">TODO: set DISCORD_INVITE_URL in site.config.js (placeholder TODO_SET_DISCORD_INVITE_URL) before presenting.</p>
     </section>
   </div>
 

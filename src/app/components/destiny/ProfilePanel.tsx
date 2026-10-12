@@ -8,8 +8,11 @@ import PlayerCardDetail from '@/app/components/destiny/PlayerCardDetail'
 import StatCardEditor from '@/app/components/destiny/StatCardEditor'
 import StatCardPreview from '@/app/components/destiny/StatCardPreview'
 import PreviousActivitiesSection from '@/app/components/destiny/PreviousActivitiesSection'
+import PassportPanel from '@/app/components/destiny/PassportPanel'
 import ReputationSummarySection from '@/app/components/destiny/ReputationSummarySection'
 import ProfileLoadoutsSection from '@/app/components/destiny/ProfileLoadoutsSection'
+import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
+import { formatStampPoints } from '@/lib/destiny/passport'
 import {
   GlassCard,
   LoadingBlock,
@@ -24,7 +27,7 @@ import { useProfileData } from '@/contexts/ProfileDataContext'
 import { cn } from '@/lib/utils'
 import { useActiveCharacterSelect } from '@/hooks/useActiveCharacterSelect'
 
-type ProfileView = 'guardian' | 'activities' | 'loadouts'
+type ProfileView = 'guardian' | 'passport' | 'activities' | 'loadouts'
 type LoadoutSection = 'mine' | 'community' | 'builder'
 
 interface Props {
@@ -77,6 +80,7 @@ export default function ProfilePanel({
     )
   }
 
+  const showPrizes = monetaryPrizesEnabled()
   const pointTiles = [
     { label: 'Raid pts', value: profile.raidPoints },
     { label: 'Dungeon pts', value: profile.dungeonPoints },
@@ -103,12 +107,27 @@ export default function ProfilePanel({
         onChange={setView}
         options={[
           { value: 'guardian', label: 'Guardian' },
+          { value: 'passport', label: 'Passport' },
           { value: 'activities', label: 'Previous Activities' },
           { value: 'loadouts', label: 'Loadouts' },
         ]}
       />
 
-      {view === 'activities' ? (
+      {view === 'passport' && profile.passport ? (
+        <PassportPanel
+          passport={profile.passport}
+          weeklyContracts={profile.weeklyContracts}
+          sherpa={profile.sherpa}
+          nightOps={profile.nightOps}
+          chemistry={profile.chemistry}
+          darkMode={darkMode}
+        />
+      ) : view === 'passport' ? (
+        <GlassCard darkMode={darkMode} padding="compact">
+          <SectionTitle title="Fireteam Passport" darkMode={darkMode} compact />
+          <p className={cn('text-sm', t.muted)}>Link Bungie and sync runs to stamp your passport.</p>
+        </GlassCard>
+      ) : view === 'activities' ? (
         <PreviousActivitiesSection darkMode={darkMode} />
       ) : view === 'loadouts' ? (
         <ProfileLoadoutsSection
@@ -163,8 +182,24 @@ export default function ProfilePanel({
             </GlassCard>
 
             <GlassCard darkMode={darkMode} padding="compact">
-              <SectionTitle title="Prize eligibility" darkMode={darkMode} compact />
-              <p className={cn('text-sm leading-relaxed', t.body)}>{profile.prizeEligibility}</p>
+              <SectionTitle
+                title={showPrizes ? 'Prize eligibility' : 'Passport'}
+                darkMode={darkMode}
+                compact
+              />
+              {showPrizes ? (
+                <p className={cn('text-sm leading-relaxed', t.body)}>{profile.prizeEligibility}</p>
+              ) : profile.passport ? (
+                <button type="button" className="text-left w-full" onClick={() => setView('passport')}>
+                  <p className={cn('text-sm', t.body)}>
+                    {profile.passport.displayTitle} · {formatStampPoints(profile.passport.totalStamps)} stamps ·{' '}
+                    {profile.passport.distinctTeammates} teammates
+                  </p>
+                  <p className={cn('text-xs mt-1', t.muted)}>{profile.prizeEligibility}</p>
+                </button>
+              ) : (
+                <p className={cn('text-sm leading-relaxed', t.body)}>{profile.prizeEligibility}</p>
+              )}
               {profile.favoriteTeammates.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {profile.favoriteTeammates.map((name) => (

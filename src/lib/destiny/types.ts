@@ -252,6 +252,12 @@ export interface RunRecord {
   ownerDisplayName?: string
   /** Pantheon fireteam fingerprint (sorted membership ids). */
   squadKey?: string
+  /**
+   * Staff chose "approve" on this run, so it counts as a full clear for Passport
+   * and weekly contracts even when the PGCR looks like a checkpoint start.
+   * `checkpoint_non_scoring` leaves this false.
+   */
+  staffApprovedFullClear?: boolean
 }
 
 export interface LeaderboardEntry {
@@ -708,6 +714,211 @@ export interface PlayerProfile extends DestinyUser {
   trustRank?: TrustRankSummary
   displayEmblem?: ResolvedEmblem
   displayEmblemSource?: 'equipped' | 'collection'
+  /** Verified full-clear stamps and teammate collection. Omitted on summary profiles. */
+  passport?: PassportProfile
+  /** Current week's contracts plus season-tier progress. Omitted on summary profiles. */
+  weeklyContracts?: WeeklyContractsSnapshot
+  sherpa?: SherpaBoard
+  clanWars?: ClanWarsBoard
+  nightOps?: NightOpsBoard
+  chemistry?: ChemistryBoard
+}
+
+/** Non-monetary profile frame earned from season tier points. */
+export type PassportFrameId = 'recruit' | 'bronze' | 'silver' | 'gold' | 'prismatic'
+
+export interface PassportActivityBadge {
+  activityKey: string
+  activityId: number
+  activityName: string
+  activityType: ActivityType
+  clearCount: number
+  firstStampedAt: string
+  latestStampedAt: string
+  badgeLabel: string
+}
+
+export interface PassportStamp {
+  runId: string
+  pgcrId: string
+  activityName: string
+  activityType: ActivityType
+  completedAt: string
+  /** Always 1 for a stamp-eligible full clear. */
+  clearStamp: number
+  /** Teammates the player had never cleared with before this run. */
+  newGuardianStamps: number
+  /** Repeat teammates contribute a smaller credit (see REPEAT_TEAMMATE_STAMP_WEIGHT). */
+  repeatTeammateCredit: number
+  stampTotal: number
+  newGuardianNames: string[]
+}
+
+export interface PassportTitle {
+  id: string
+  title: string
+  earned: boolean
+}
+
+export interface PassportProfile {
+  clearStamps: number
+  newGuardianStamps: number
+  repeatTeammateCredit: number
+  totalStamps: number
+  distinctTeammates: number
+  displayTitle: string
+  titles: PassportTitle[]
+  activities: PassportActivityBadge[]
+  recentStamps: PassportStamp[]
+}
+
+export type WeeklyContractRule =
+  | { kind: 'featured_dungeon_new_guardians'; minNewGuardians: number }
+  | { kind: 'raid_mixed_clan' }
+  | { kind: 'help_first_timer' }
+
+export interface WeeklyContractDefinition {
+  id: string
+  title: string
+  description: string
+  /** Season tier points awarded once per Destiny weekly reset when verified. */
+  tierPoints: number
+  rule: WeeklyContractRule
+}
+
+export interface WeeklyContractProgress {
+  id: string
+  title: string
+  description: string
+  tierPoints: number
+  completed: boolean
+  progressLabel: string
+  evidenceRunId?: string
+  evidenceActivityName?: string
+}
+
+export interface SeasonTierStatus {
+  tier: number
+  title: string
+  frame: PassportFrameId
+  points: number
+  nextTierPoints: number | null
+  pointsToNext: number | null
+}
+
+export interface WeeklyContractsSnapshot {
+  weekStart: string
+  weekEnd: string
+  weekLabel: string
+  resetsInLabel: string
+  contracts: WeeklyContractProgress[]
+  weekTierPoints: number
+  seasonTierPoints: number
+  seasonTier: SeasonTierStatus
+  /** False when stored clear history was capped, so first-timer contracts stay open. */
+  historyComplete: boolean
+}
+
+export interface SherpaCredit {
+  runId: string
+  activityName: string
+  completedAt: string
+  sherpaMembershipId: string
+  sherpaDisplayName: string
+  learnerMembershipId: string
+  learnerDisplayName: string
+  learnerMvp: boolean
+  points: number
+}
+
+export interface SherpaStanding {
+  membershipId: string
+  displayName: string
+  guidedClears: number
+  learnerMvps: number
+  points: number
+  rank: number
+  title: string
+}
+
+export interface SherpaBoard {
+  guidedClears: number
+  learnerMvps: number
+  points: number
+  rank: number | null
+  title: string
+  recentCredits: SherpaCredit[]
+  hallOfFame: SherpaStanding[]
+  historyComplete: boolean
+}
+
+export interface ClanWarStanding {
+  clanId: string
+  clanName: string
+  weeklyPoints: number
+  seasonPoints: number
+  verifiedClears: number
+  recruitBonuses: number
+  division: string
+  rank: number
+}
+
+export interface ClanWarsBoard {
+  weekLabel: string
+  standings: ClanWarStanding[]
+  viewerClan: ClanWarStanding | null
+  historyComplete: boolean
+}
+
+export interface NightOpsEvent {
+  id: string
+  title: string
+  hostName: string
+  startsAt: string
+  endsAt: string
+  activityName?: string
+  clanId?: string
+  kickUrl?: string
+  twitchUrl?: string
+  notes?: string
+}
+
+export interface NightOpsCard {
+  event: NightOpsEvent
+  status: 'upcoming' | 'live' | 'ended'
+  attended: boolean
+  badgeLabel: string | null
+  evidenceRunId?: string
+}
+
+export interface NightOpsBoard {
+  events: NightOpsCard[]
+  badges: string[]
+}
+
+export interface ChemistrySquad {
+  squadKey: string
+  memberNames: string[]
+  runsTogether: number
+  clears: number
+  clearRate: number
+  averageClearSeconds: number | null
+  bestClearSeconds: number | null
+}
+
+export interface TeammateSuggestion {
+  membershipId: string
+  displayName: string
+  runsTogether: number
+  clearsTogether: number
+  clearRate: number
+  averageClearSeconds: number | null
+  reason: string
+}
+
+export interface ChemistryBoard {
+  squads: ChemistrySquad[]
+  suggestions: TeammateSuggestion[]
 }
 
 export interface BuildIntelligenceCard {

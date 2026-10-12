@@ -2,6 +2,7 @@
 
 import { LogIn } from 'lucide-react'
 import { BRAND_LOGO_ALT, BRAND_LOGO_PATH } from '@/lib/destiny/branding'
+import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
 
 interface Props {
   onLogin: () => void
@@ -54,7 +55,9 @@ export default function LoginTitleScreen({ onLogin, errorMessage, loading }: Pro
           </button>
 
           <p className="d2-login-screen-footnote">
-            Bungie.net login · verified runs, loadouts, and season prizes
+            {monetaryPrizesEnabled()
+              ? 'Bungie.net login · verified runs, loadouts, and season prizes'
+              : 'Bungie.net login · verified runs, loadouts, and weekly contracts'}
           </p>
         </div>
       </div>

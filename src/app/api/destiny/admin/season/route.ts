@@ -9,6 +9,7 @@ import {
   getSeasonStandingsInput,
   updatePrizeClaimStatus,
 } from '@/lib/destiny/store'
+import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { computeSeasonStandings } from '@/lib/destiny/seasonPrizes'
 
 export const dynamic = 'force-dynamic'
@@ -61,6 +62,12 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.action === 'update_claim') {
+      if (!monetaryPrizesEnabled()) {
+        return NextResponse.json(
+          { error: 'Monetary prizes are disabled. Claim fulfillment stays off until the flag is enabled.' },
+          { status: 403 }
+        )
+      }
       if (!body.claimId || !body.claimStatus) {
         return NextResponse.json({ error: 'claimId and claimStatus required' }, { status: 400 })
       }

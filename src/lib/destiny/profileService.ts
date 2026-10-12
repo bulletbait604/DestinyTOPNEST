@@ -9,6 +9,8 @@ import {
   type StoredDestinyUser,
 } from '@/lib/destiny/destinyUserStore'
 import { fetchLiveClan, fetchLiveLoadout, refreshGuardianFromBungie } from '@/lib/destiny/liveBungieData'
+import { monetaryPrizesEnabled, NON_MONETARY_REWARD_SUMMARY } from '@/lib/destiny/featureFlags'
+import { loadFireteamProgress } from '@/lib/destiny/fireteamProgressService'
 import { buildPlayerProfileFromStored, emptyPlayerProfile } from '@/lib/destiny/profileBuilder'
 import { guardianPointsForUser } from '@/lib/destiny/mvpVoting'
 import {
@@ -82,7 +84,27 @@ export async function buildUserProfile(
 
   const guardianPoints = guardianPointsForUser(siteUserId, mvpVotes, 'monthly', season)
 
-  const profile = syncProfileWithActiveCharacter(
+  let passport = undefined
+  let weeklyContracts = undefined
+  let progressSherpa = undefined
+  let progressClanWars = undefined
+  let progressNightOps = undefined
+  let progressChemistry = undefined
+  if (scope === 'full') {
+    try {
+      const progress = await loadFireteamProgress(stored)
+      passport = progress.passport
+      weeklyContracts = progress.weeklyContracts
+      progressSherpa = progress.sherpa
+      progressClanWars = progress.clanWars
+      progressNightOps = progress.nightOps
+      progressChemistry = progress.chemistry
+    } catch (err) {
+      console.warn('[profile] fireteam progress failed', err)
+    }
+  }
+
+  const built = syncProfileWithActiveCharacter(
     buildPlayerProfileFromStored(stored, runs, {
       loadout,
       reviews,
@@ -93,6 +115,21 @@ export async function buildUserProfile(
       guardianPoints,
     })
   )
+  const earnedTitles = passport?.titles.filter((title) => title.earned).map((title) => title.title) ?? []
+  const sherpaTitle = progressSherpa && progressSherpa.title !== 'Unranked' ? [progressSherpa.title] : []
+  const profile = {
+    ...built,
+    passport,
+    weeklyContracts,
+    sherpa: progressSherpa,
+    clanWars: progressClanWars,
+    nightOps: progressNightOps,
+    chemistry: progressChemistry,
+    badges: Array.from(
+      new Set([...built.badges, ...earnedTitles, ...sherpaTitle, ...(progressNightOps?.badges ?? [])])
+    ),
+    prizeEligibility: monetaryPrizesEnabled() ? built.prizeEligibility : NON_MONETARY_REWARD_SUMMARY,
+  }
 
   return {
     profile: await enrichProfile(profile, scope),

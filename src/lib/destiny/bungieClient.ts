@@ -4,6 +4,7 @@
  * Endpoint catalog: https://bungie-net.github.io/  Root: https://www.bungie.net/Platform
  */
 
+import { bungieRetryDelayMs } from '@/lib/destiny/bungieRateLimit'
 import { BUNGIE_API_BASE, DESTINY_MANIFEST_PATH, destinyApiKey } from '@/lib/destiny/env'
 import JSONbig from 'json-bigint'
 
@@ -30,14 +31,14 @@ interface BungieEnvelope<T> {
 
 async function bungieFetch<T>(
   path: string,
-  options: RequestInit & { accessToken?: string } = {}
+  options: RequestInit & { accessToken?: string; rateLimitAttempt?: number } = {}
 ): Promise<T> {
   const apiKey = destinyApiKey()
   if (!apiKey) {
     throw new BungieApiError('DESTINY_API is not configured', 503)
   }
 
-  const { accessToken, ...fetchOptions } = options
+  const { accessToken, rateLimitAttempt = 0, ...fetchOptions } = options
   const headers: Record<string, string> = {
     'X-API-Key': apiKey,
     ...(fetchOptions.headers as Record<string, string>),
@@ -51,6 +52,15 @@ async function bungieFetch<T>(
     headers,
     cache: 'no-store',
   })
+
+  if (res.status === 429) {
+    const delay = bungieRetryDelayMs(res.headers.get('retry-after'), rateLimitAttempt)
+    if (delay != null) {
+      await new Promise((resolve) => setTimeout(resolve, delay))
+      return bungieFetch(path, { ...options, rateLimitAttempt: rateLimitAttempt + 1 })
+    }
+    throw new BungieApiError('Bungie rate limit reached. Try again shortly.', 429)
+  }
 
   if (!res.ok) {
     throw new BungieApiError(`Bungie HTTP ${res.status}`, res.status)
