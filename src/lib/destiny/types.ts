@@ -718,6 +718,10 @@ export interface PlayerProfile extends DestinyUser {
   passport?: PassportProfile
   /** Current week's contracts plus season-tier progress. Omitted on summary profiles. */
   weeklyContracts?: WeeklyContractsSnapshot
+  sherpa?: SherpaBoard
+  clanWars?: ClanWarsBoard
+  nightOps?: NightOpsBoard
+  chemistry?: ChemistryBoard
 }
 
 /** Non-monetary profile frame earned from season tier points. */
@@ -813,6 +817,108 @@ export interface WeeklyContractsSnapshot {
   seasonTier: SeasonTierStatus
   /** False when stored clear history was capped, so first-timer contracts stay open. */
   historyComplete: boolean
+}
+
+export interface SherpaCredit {
+  runId: string
+  activityName: string
+  completedAt: string
+  sherpaMembershipId: string
+  sherpaDisplayName: string
+  learnerMembershipId: string
+  learnerDisplayName: string
+  learnerMvp: boolean
+  points: number
+}
+
+export interface SherpaStanding {
+  membershipId: string
+  displayName: string
+  guidedClears: number
+  learnerMvps: number
+  points: number
+  rank: number
+  title: string
+}
+
+export interface SherpaBoard {
+  guidedClears: number
+  learnerMvps: number
+  points: number
+  rank: number | null
+  title: string
+  recentCredits: SherpaCredit[]
+  hallOfFame: SherpaStanding[]
+  historyComplete: boolean
+}
+
+export interface ClanWarStanding {
+  clanId: string
+  clanName: string
+  weeklyPoints: number
+  seasonPoints: number
+  verifiedClears: number
+  recruitBonuses: number
+  division: string
+  rank: number
+}
+
+export interface ClanWarsBoard {
+  weekLabel: string
+  standings: ClanWarStanding[]
+  viewerClan: ClanWarStanding | null
+  historyComplete: boolean
+}
+
+export interface NightOpsEvent {
+  id: string
+  title: string
+  hostName: string
+  startsAt: string
+  endsAt: string
+  activityName?: string
+  clanId?: string
+  kickUrl?: string
+  twitchUrl?: string
+  notes?: string
+}
+
+export interface NightOpsCard {
+  event: NightOpsEvent
+  status: 'upcoming' | 'live' | 'ended'
+  attended: boolean
+  badgeLabel: string | null
+  evidenceRunId?: string
+}
+
+export interface NightOpsBoard {
+  events: NightOpsCard[]
+  badges: string[]
+}
+
+export interface ChemistrySquad {
+  squadKey: string
+  memberNames: string[]
+  runsTogether: number
+  clears: number
+  clearRate: number
+  averageClearSeconds: number | null
+  bestClearSeconds: number | null
+}
+
+export interface TeammateSuggestion {
+  membershipId: string
+  displayName: string
+  runsTogether: number
+  clearsTogether: number
+  clearRate: number
+  averageClearSeconds: number | null
+  reason: string
+}
+
+export interface ChemistryBoard {
+  squads: ChemistrySquad[]
+  suggestions: TeammateSuggestion[]
 }
 
 export interface BuildIntelligenceCard {

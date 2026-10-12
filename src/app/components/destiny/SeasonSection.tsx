@@ -2,9 +2,20 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Clock, Target } from 'lucide-react'
-import type { LeaderboardEntry, PrizeClaim, Season, WeeklyContractsSnapshot, WeeklyResetInfo } from '@/lib/destiny/types'
+import type {
+  ChemistryBoard,
+  ClanWarsBoard,
+  LeaderboardEntry,
+  NightOpsBoard,
+  PrizeClaim,
+  Season,
+  SherpaBoard,
+  WeeklyContractsSnapshot,
+  WeeklyResetInfo,
+} from '@/lib/destiny/types'
 import type { UserPrizeTrackEntry } from '@/lib/destiny/seasonPrizes'
 import SeasonPrizeClaimSection from '@/app/components/destiny/SeasonPrizeClaimSection'
+import { ChemistryPanel, ClanWarsPanel, NightOpsPanel, SherpaPanel } from '@/app/components/destiny/FireteamHqPanels'
 import WeeklyContractsPanel from '@/app/components/destiny/WeeklyContractsPanel'
 import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { ActivityBadge, GlassCard, ItemIcon, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
@@ -30,6 +41,10 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
   const [myStandings, setMyStandings] = useState<LeaderboardEntry[]>([])
   const [weeklyReset, setWeeklyReset] = useState<WeeklyResetInfo | null>(null)
   const [weeklyContracts, setWeeklyContracts] = useState<WeeklyContractsSnapshot | null>(null)
+  const [sherpa, setSherpa] = useState<SherpaBoard | null>(null)
+  const [clanWars, setClanWars] = useState<ClanWarsBoard | null>(null)
+  const [nightOps, setNightOps] = useState<NightOpsBoard | null>(null)
+  const [chemistry, setChemistry] = useState<ChemistryBoard | null>(null)
   const [loading, setLoading] = useState(true)
   const showPrizes = monetaryPrizesEnabled()
   const t = getDestinyTheme(darkMode)
@@ -49,6 +64,10 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
         setMyStandings(json.myStandings ?? [])
         setWeeklyReset(json.weeklyReset ?? null)
         setWeeklyContracts(json.weeklyContracts ?? null)
+        setSherpa(json.sherpa ?? null)
+        setClanWars(json.clanWars ?? null)
+        setNightOps(json.nightOps ?? null)
+        setChemistry(json.chemistry ?? null)
       }
     } finally {
       setLoading(false)
@@ -129,6 +148,10 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
       )}
 
       {weeklyContracts ? <WeeklyContractsPanel board={weeklyContracts} darkMode={darkMode} /> : null}
+      {sherpa ? <SherpaPanel board={sherpa} darkMode={darkMode} /> : null}
+      {clanWars ? <ClanWarsPanel board={clanWars} darkMode={darkMode} /> : null}
+      {nightOps ? <NightOpsPanel board={nightOps} darkMode={darkMode} /> : null}
+      {chemistry ? <ChemistryPanel board={chemistry} darkMode={darkMode} /> : null}
 
       {showPrizes ? (
         <SeasonPrizeClaimSection

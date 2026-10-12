@@ -123,6 +123,15 @@
     },
     "src/app/api/destiny/auth/bungie/callback/route.ts": {
       "memory": 1024
+    },
+    "src/app/api/discord/interactions/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/discord/announce/route.ts": {
+      "memory": 512
+    },
+    "src/app/api/discord/register/route.ts": {
+      "memory": 256
     }
   }
 }

@@ -238,6 +238,30 @@ export async function listVerifiedRunsForMembers(
   }
 }
 
+/** Newest verified clears. `complete` is false when the safety cap is hit or Mongo is unavailable. */
+export async function listVerifiedFullClears(limit = 5000): Promise<{ runs: RunRecord[]; complete: boolean }> {
+  try {
+    await ensureDestinyIndexes()
+    const database = await db()
+    const rows = (await database
+      .collection(DESTINY_COLLECTIONS.runRecords)
+      .find({
+        verificationStatus: 'verified',
+        completed: true,
+        ...nestLaunchMongoFilter(),
+      })
+      .sort({ completedAt: -1 })
+      .limit(limit)
+      .toArray()) as unknown as RunRecord[]
+    return {
+      runs: rows.map(normalizeRunRecord),
+      complete: rows.length < limit,
+    }
+  } catch {
+    return { runs: [], complete: false }
+  }
+}
+
 async function attachReputationScores(entries: LeaderboardEntry[]): Promise<LeaderboardEntry[]> {
   return Promise.all(
     entries.map(async (entry) => {

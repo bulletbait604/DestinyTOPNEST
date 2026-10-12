@@ -117,6 +117,9 @@ export default function ProfilePanel({
         <PassportPanel
           passport={profile.passport}
           weeklyContracts={profile.weeklyContracts}
+          sherpa={profile.sherpa}
+          nightOps={profile.nightOps}
+          chemistry={profile.chemistry}
           darkMode={darkMode}
         />
       ) : view === 'passport' ? (

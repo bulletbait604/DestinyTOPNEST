@@ -30,11 +30,20 @@ export async function GET(req: NextRequest) {
       : []
 
     let weeklyContracts = null
+    let sherpa = null
+    let clanWars = null
+    let nightOps = null
+    let chemistry = null
     if (stored?.bungieMembershipId) {
       try {
-        weeklyContracts = (await loadFireteamProgress(stored)).weeklyContracts
+        const progress = await loadFireteamProgress(stored)
+        weeklyContracts = progress.weeklyContracts
+        sherpa = progress.sherpa
+        clanWars = progress.clanWars
+        nightOps = progress.nightOps
+        chemistry = progress.chemistry
       } catch (err) {
-        console.warn('[season] weekly contracts failed', err)
+        console.warn('[season] fireteam HQ progress failed', err)
       }
     }
 
@@ -52,6 +61,10 @@ export async function GET(req: NextRequest) {
       bungieLinked: Boolean(stored?.oauth),
       monetaryPrizesEnabled: prizesEnabled,
       weeklyContracts,
+      sherpa,
+      clanWars,
+      nightOps,
+      chemistry,
     })
     // Personalized fields — browser may soft-cache; never CDN-public.
     res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60')

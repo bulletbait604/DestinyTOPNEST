@@ -86,11 +86,19 @@ export async function buildUserProfile(
 
   let passport = undefined
   let weeklyContracts = undefined
+  let progressSherpa = undefined
+  let progressClanWars = undefined
+  let progressNightOps = undefined
+  let progressChemistry = undefined
   if (scope === 'full') {
     try {
       const progress = await loadFireteamProgress(stored)
       passport = progress.passport
       weeklyContracts = progress.weeklyContracts
+      progressSherpa = progress.sherpa
+      progressClanWars = progress.clanWars
+      progressNightOps = progress.nightOps
+      progressChemistry = progress.chemistry
     } catch (err) {
       console.warn('[profile] fireteam progress failed', err)
     }
@@ -108,11 +116,18 @@ export async function buildUserProfile(
     })
   )
   const earnedTitles = passport?.titles.filter((title) => title.earned).map((title) => title.title) ?? []
+  const sherpaTitle = progressSherpa && progressSherpa.title !== 'Unranked' ? [progressSherpa.title] : []
   const profile = {
     ...built,
     passport,
     weeklyContracts,
-    badges: [...built.badges, ...earnedTitles.filter((title) => !built.badges.includes(title))],
+    sherpa: progressSherpa,
+    clanWars: progressClanWars,
+    nightOps: progressNightOps,
+    chemistry: progressChemistry,
+    badges: Array.from(
+      new Set([...built.badges, ...earnedTitles, ...sherpaTitle, ...(progressNightOps?.badges ?? [])])
+    ),
     prizeEligibility: monetaryPrizesEnabled() ? built.prizeEligibility : NON_MONETARY_REWARD_SUMMARY,
   }
 

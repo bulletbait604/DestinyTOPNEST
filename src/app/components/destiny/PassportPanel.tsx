@@ -1,12 +1,13 @@
 'use client'
 
 import { Stamp } from 'lucide-react'
+import { ChemistryPanel, NightOpsPanel, SherpaPanel } from '@/app/components/destiny/FireteamHqPanels'
 import WeeklyContractsPanel from '@/app/components/destiny/WeeklyContractsPanel'
 import { GlassCard, SectionTitle, StatusPill } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { activityTypeLabel, formatStampPoints } from '@/lib/destiny/passport'
 import { PASSPORT_FRAME_LABELS } from '@/lib/destiny/weeklyContractCatalog'
-import type { PassportProfile, WeeklyContractsSnapshot } from '@/lib/destiny/types'
+import type { ChemistryBoard, NightOpsBoard, PassportProfile, SherpaBoard, WeeklyContractsSnapshot } from '@/lib/destiny/types'
 import { cn } from '@/lib/utils'
 
 const FRAME_CLASS: Record<string, string> = {
@@ -20,10 +21,16 @@ const FRAME_CLASS: Record<string, string> = {
 export default function PassportPanel({
   passport,
   weeklyContracts,
+  sherpa,
+  nightOps,
+  chemistry,
   darkMode,
 }: {
   passport: PassportProfile
   weeklyContracts?: WeeklyContractsSnapshot
+  sherpa?: SherpaBoard
+  nightOps?: NightOpsBoard
+  chemistry?: ChemistryBoard
   darkMode: boolean
 }) {
   const t = getDestinyTheme(darkMode)
@@ -143,6 +150,9 @@ export default function PassportPanel({
       </GlassCard>
 
       {weeklyContracts ? <WeeklyContractsPanel board={weeklyContracts} darkMode={darkMode} compact /> : null}
+      {sherpa ? <SherpaPanel board={sherpa} darkMode={darkMode} showHall={false} /> : null}
+      {chemistry ? <ChemistryPanel board={chemistry} darkMode={darkMode} /> : null}
+      {nightOps ? <NightOpsPanel board={nightOps} darkMode={darkMode} /> : null}
     </div>
   )
 }
