@@ -6,6 +6,7 @@ import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
 import { listVerifiedFullClears } from '@/lib/destiny/store'
 import type { FireteamLobby, NightOpsEvent, RunRecord } from '@/lib/destiny/types'
 import { resolveWeeklyContractCatalog } from '@/lib/destiny/weeklyContractCatalog'
+import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
 export interface PublicContractCard {
@@ -195,6 +196,7 @@ export function assemblePublicHub(input: {
 }
 
 export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHubSnapshot> {
+  await refreshLiveWeeklyRotationBounded(now)
   try {
     const [clears, lobbies] = await Promise.all([listVerifiedFullClears(2000), listOpenLobbies()])
     return assemblePublicHub({

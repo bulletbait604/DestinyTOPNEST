@@ -4,6 +4,7 @@ import { enrichOverview } from '@/lib/destiny/enrich'
 import { getOverviewData } from '@/lib/destiny/store'
 import { OVERVIEW_CACHE_TTL_MS } from '@/lib/destiny/syncEvents'
 import { CACHE_TAGS, invalidateDestinySharedCaches } from '@/lib/destiny/dataCache'
+import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
 export { OVERVIEW_CACHE_TTL_MS } from '@/lib/destiny/syncEvents'
 
@@ -11,9 +12,10 @@ const revalidateSeconds = Math.max(1, Math.round(OVERVIEW_CACHE_TTL_MS / 1000))
 
 /** Last-good fallback within a warm instance if Data Cache refresh fails. */
 let lastGood: OverviewPayload | null = null
+let lastGoodWeek: string | null = null
 
 const cachedEnrichedOverview = unstable_cache(
-  async (): Promise<OverviewPayload> => {
+  async (_weekStart: string): Promise<OverviewPayload> => {
     const data = await getOverviewData()
     return enrichOverview({ ...data, pendingRunActions: null })
   },
@@ -23,6 +25,7 @@ const cachedEnrichedOverview = unstable_cache(
 
 export function invalidateOverviewCache(): void {
   lastGood = null
+  lastGoodWeek = null
   invalidateDestinySharedCaches([
     CACHE_TAGS.overview,
     CACHE_TAGS.leaderboards,
@@ -34,12 +37,14 @@ export function invalidateOverviewCache(): void {
 
 /** Enriched overview without per-user pendingRunActions — safe to share across requests. */
 export async function getCachedEnrichedOverview(): Promise<OverviewPayload> {
+  const weekStart = getWeeklyResetState().weekStart
   try {
-    const payload = await cachedEnrichedOverview()
+    const payload = await cachedEnrichedOverview(weekStart)
     lastGood = payload
+    lastGoodWeek = weekStart
     return payload
   } catch (error) {
-    if (lastGood) {
+    if (lastGood && lastGoodWeek === weekStart) {
       console.warn('[overviewCache] refresh failed — serving last good payload', error)
       return lastGood
     }

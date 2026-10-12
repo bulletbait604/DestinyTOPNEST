@@ -8,6 +8,7 @@ import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
 import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { loadFireteamProgress } from '@/lib/destiny/fireteamProgressService'
 import { getPrizeClaimsForUser, getSeasonStandingForUser } from '@/lib/destiny/store'
+import { cacheControlUntilWeeklyReset } from '@/lib/destiny/weeklyRotation'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,7 +68,10 @@ export async function GET(req: NextRequest) {
       chemistry,
     })
     // Personalized fields — browser may soft-cache; never CDN-public.
-    res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60')
+    res.headers.set(
+      'Cache-Control',
+      cacheControlUntilWeeklyReset(new Date(), { scope: 'private', maxAge: 30, staleWhileRevalidate: 60 })
+    )
     return res
   })
 }

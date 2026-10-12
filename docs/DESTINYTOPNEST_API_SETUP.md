@@ -24,6 +24,7 @@ Every request needs header `X-API-Key: <your key>`. OAuth routes need `Authoriza
 | Manifest index | [https://www.bungie.net/Platform/Destiny2/Manifest/](https://www.bungie.net/Platform/Destiny2/Manifest/) | `getDestinyManifest()` |
 | Single definition | `/Destiny2/Manifest/{EntityType}/{hash}/` | `resolveDefinition()` in `manifest.ts` |
 | Armory search (by name) | `/Destiny2/Armory/Search/{EntityType}/{term}/` | `searchDestinyEntities()` |
+| Public milestones (weekly featured raids/dungeons) | `/Destiny2/Milestones/` | `getPublicMilestones()` |
 
 Constants live in `src/lib/destiny/env.ts` (`BUNGIE_API_BASE`, `DESTINY_MANIFEST_URL`, OAuth URLs).
 
@@ -156,7 +157,10 @@ Icon URLs use `https://www.bungie.net` + manifest `displayProperties.icon` paths
 ## Weekly reset
 
 Featured raid/dungeon rotation updates every **Tuesday 10:00 AM Pacific (17:00 UTC)**.
-Schedule is maintained in `src/lib/destiny/weeklyRotation.ts` (Monument of Triumph era rotator — Dexerto/Kyber pairs with an 8-week cycle after 2026-08-04).
+
+The current week is read from Bungie's public `Destiny2/Milestones` endpoint (`getPublicMilestones` in `bungieClient.ts`). Milestone and activity definitions supply the names. That result is cached only until the next reset, keyed by the Tuesday date, so a warm server cannot keep last week's raids.
+
+If the API key is missing or Bungie is unreachable, `src/lib/destiny/weeklyRotation.ts` falls back to the Monument of Triumph schedule: raids repeat every 9 weeks from 2026-07-28, dungeons every 10 weeks from 2026-07-21. Weekly contract checks use the same featured-dungeon list.
 
 ## Phases
 

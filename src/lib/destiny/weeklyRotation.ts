@@ -1,10 +1,18 @@
 ﻿/**
  * Destiny 2 weekly reset schedule (Tuesday 10:00 AM Pacific / 17:00 UTC).
- * Featured raid/dungeon pairs sourced from community reset trackers
- * (Dexerto + Kyber’s Corner, Monument of Triumph era — verified Sep 2026).
+ *
+ * The schedule below is the fallback when Destiny2/Milestones is unavailable.
+ * Raids repeat every 9 weeks from 2026-07-28. Dungeons repeat every 10 weeks
+ * from 2026-07-21. An earlier 8-week slice that started 2026-08-04 matched
+ * through 2026-09-22, then wrapped a week early (the Jul 28 raid pair and the
+ * Jul 21–28 dungeon pairs sit in front of that slice).
+ *
+ * The current week is replaced by a live Bungie milestone result when one is
+ * cached. That cache is keyed by reset date and expires at the next reset.
  */
 
 import type { Difficulty } from '@/lib/destiny/types'
+import { getLiveFeaturedWeek } from '@/lib/destiny/weeklyRotationLive'
 
 export const WEEKLY_RESET_HOUR_UTC = 17 // 10:00 AM PDT
 export const WEEKLY_RESET_DAY = 2 // Tuesday
@@ -35,10 +43,11 @@ const RAID_WEEKS_0_7: ActivityPair[] = [
 ]
 
 /**
- * From Aug 4 2026 the raid pair order shifted into this repeating 8-week cycle.
- * Index 0 = week of 2026-08-04. Index 6 = 2026-09-15 (King's Fall + Last Wish).
+ * Repeating raid cycle. Index 0 = week of 2026-07-28 (Deep Stone Crypt + Crota's End).
+ * The old Aug 4 list is index 1 through index 8 of this cycle.
  */
-const RAID_CYCLE_FROM_AUG_4: ActivityPair[] = [
+const RAID_CYCLE_FROM_JUL_28: ActivityPair[] = [
+  ['Deep Stone Crypt', "Crota's End"],
   ['Vault of Glass', "Salvation's Edge"],
   ['Vow of the Disciple', 'Last Wish'],
   ['Garden of Salvation', "King's Fall"],
@@ -60,8 +69,13 @@ const DUNGEON_WEEKS_0_7: ActivityPair[] = [
   ["Warlord's Ruin", 'Pit of Heresy'],
 ]
 
-/** Repeating dungeon cycle starting 2026-08-04 (Dexerto). Last slot extrapolated. */
-const DUNGEON_CYCLE_FROM_AUG_4: ActivityPair[] = [
+/**
+ * Repeating dungeon cycle. Index 0 = week of 2026-07-21.
+ * The old Aug 4 list is index 2 through index 9.
+ */
+const DUNGEON_CYCLE_FROM_JUL_21: ActivityPair[] = [
+  ['Ghosts of the Deep', 'Shattered Throne'],
+  ["Warlord's Ruin", 'Pit of Heresy'],
   ['Prophecy', "Vesper's Host"],
   ['Grasp of Avarice', 'Sundered Doctrine'],
   ['Duality', 'Shattered Throne'],
@@ -78,6 +92,8 @@ const PANTHEON_BY_RESET: Record<string, string> = {
   '2026-06-16': 'Reprise: Gahlran · Encore: Consecrated Mind',
   '2026-09-08': 'Gahlran · Consecrated Mind',
   '2026-09-15': 'Calus · Morgeth',
+  '2026-09-29': 'Gahlran · Warpriest',
+  '2026-10-06': 'Calus · Consecrated Mind',
 }
 
 function weeksSinceEpoch(resetStart: Date): number {
@@ -94,13 +110,13 @@ function resetStartIso(weekIndex: number): string {
 }
 
 export function raidPairForWeekIndex(weekIndex: number): ActivityPair {
-  if (weekIndex < 8) return RAID_WEEKS_0_7[weekIndex]!
-  return RAID_CYCLE_FROM_AUG_4[(weekIndex - 8) % RAID_CYCLE_FROM_AUG_4.length]!
+  if (weekIndex < 7) return RAID_WEEKS_0_7[weekIndex]!
+  return RAID_CYCLE_FROM_JUL_28[(weekIndex - 7) % RAID_CYCLE_FROM_JUL_28.length]!
 }
 
 export function dungeonPairForWeekIndex(weekIndex: number): ActivityPair {
-  if (weekIndex < 8) return DUNGEON_WEEKS_0_7[weekIndex]!
-  return DUNGEON_CYCLE_FROM_AUG_4[(weekIndex - 8) % DUNGEON_CYCLE_FROM_AUG_4.length]!
+  if (weekIndex < 6) return DUNGEON_WEEKS_0_7[weekIndex]!
+  return DUNGEON_CYCLE_FROM_JUL_21[(weekIndex - 6) % DUNGEON_CYCLE_FROM_JUL_21.length]!
 }
 
 export function rotationWeekForIndex(weekIndex: number): RotationWeek {
@@ -130,6 +146,8 @@ export interface WeeklyResetState {
   featuredDungeons: { name: string; difficulty: Difficulty }[]
   pantheon?: string
   resetTimeLabel: string
+  /** `bungie` when both pairs came from Destiny2/Milestones for this reset. */
+  rotationSource: 'bungie' | 'mixed' | 'schedule'
 }
 
 function parseUtcDate(isoDate: string): Date {
@@ -183,20 +201,47 @@ export function getWeeklyResetState(now = new Date()): WeeklyResetState {
 
   const entry = weekEntryForDate(weekStartDate)
   const resetsInMs = Math.max(0, nextResetDate.getTime() - now.getTime())
+  const weekStart = weekStartDate.toISOString().slice(0, 10)
+  const live = getLiveFeaturedWeek(weekStart, now.getTime())
+  const raids = live?.raids && live.raids.length >= 2 ? live.raids.slice(0, 2) : entry.raids
+  const dungeons = live?.dungeons && live.dungeons.length >= 2 ? live.dungeons.slice(0, 2) : entry.dungeons
+  const raidsFromBungie = Boolean(live?.raids && live.raids.length >= 2)
+  const dungeonsFromBungie = Boolean(live?.dungeons && live.dungeons.length >= 2)
+  const rotationSource =
+    raidsFromBungie && dungeonsFromBungie ? 'bungie' : raidsFromBungie || dungeonsFromBungie ? 'mixed' : 'schedule'
 
   return {
     resetAt: weekStartDate.toISOString(),
     nextResetAt: nextResetDate.toISOString(),
-    weekStart: weekStartDate.toISOString().slice(0, 10),
+    weekStart,
     weekEnd: weekEndDate.toISOString().slice(0, 10),
     weekLabel: `${formatShortDate(weekStartDate)} – ${formatShortDate(weekEndDate)}`,
     resetsInMs,
     resetsInLabel: formatCountdown(resetsInMs),
-    featuredRaids: entry.raids.map((name) => ({ name, difficulty: 'normal' as Difficulty })),
-    featuredDungeons: entry.dungeons.map((name) => ({ name, difficulty: 'normal' as Difficulty })),
-    pantheon: entry.pantheon,
+    featuredRaids: raids.map((name) => ({ name, difficulty: 'normal' as Difficulty })),
+    featuredDungeons: dungeons.map((name) => ({ name, difficulty: 'normal' as Difficulty })),
+    pantheon: live?.pantheon ?? entry.pantheon,
     resetTimeLabel: 'Every Tuesday · 10:00 AM Pacific (17:00 UTC)',
+    rotationSource,
   }
+}
+
+/**
+ * CDN / browser cache header that cannot outlive the next Tuesday 17:00 UTC reset.
+ * `stale-while-revalidate` is clamped so a stale response is not served after reset.
+ */
+export function cacheControlUntilWeeklyReset(
+  now: Date,
+  options: { scope: 'public' | 'private'; maxAge: number; staleWhileRevalidate?: number }
+): string {
+  const secondsUntilReset = Math.max(0, Math.floor((getNextWeeklyReset(now).getTime() - now.getTime()) / 1000))
+  const maxAge = Math.min(Math.max(0, options.maxAge), secondsUntilReset)
+  const swrBudget = Math.max(0, secondsUntilReset - maxAge)
+  const swr = Math.min(Math.max(0, options.staleWhileRevalidate ?? 0), swrBudget)
+  const parts = [options.scope, `max-age=${maxAge}`]
+  if (options.scope === 'public') parts.push(`s-maxage=${maxAge}`)
+  if (swr > 0) parts.push(`stale-while-revalidate=${swr}`)
+  return parts.join(', ')
 }
 
 export function isFeaturedActivity(name: string, now = new Date()): boolean {

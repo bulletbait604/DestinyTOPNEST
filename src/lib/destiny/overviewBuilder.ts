@@ -40,6 +40,7 @@ export function buildOverviewPayload(input: {
       resetsInMs: weekly.resetsInMs,
       pantheon: weekly.pantheon,
       resetTimeLabel: weekly.resetTimeLabel,
+      rotationSource: weekly.rotationSource,
       featuredRaids: weekly.featuredRaids.map((r) => ({ ...r })),
       featuredDungeons: weekly.featuredDungeons.map((d) => ({ ...d })),
     },

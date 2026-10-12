@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { getCachedLeaderboardPayload } from '@/lib/destiny/dataCache'
+import { cacheControlUntilWeeklyReset } from '@/lib/destiny/weeklyRotation'
 import type { LeaderboardCategory, LeaderboardPeriod } from '@/lib/destiny/types'
 
 export const dynamic = 'force-dynamic'
@@ -13,7 +14,14 @@ export async function GET(req: NextRequest) {
     const payload = await getCachedLeaderboardPayload(category, period)
     const res = NextResponse.json(payload)
     // Shared payload after auth — Data Cache is the main win; private avoids CDN 401 poisoning.
-    res.headers.set('Cache-Control', 'private, max-age=45, stale-while-revalidate=120')
+    res.headers.set(
+      'Cache-Control',
+      cacheControlUntilWeeklyReset(new Date(), {
+        scope: 'private',
+        maxAge: 45,
+        staleWhileRevalidate: period === 'weekly' ? 0 : 120,
+      })
+    )
     return res
   })
 }
