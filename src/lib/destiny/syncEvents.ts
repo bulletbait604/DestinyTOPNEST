@@ -41,8 +41,12 @@ export function dispatchSyncSuccess(detail: SyncResultDetail) {
 
 export function readLastSyncedAt(): number | null {
   if (typeof window === 'undefined') return null
-  const raw = sessionStorage.getItem(SYNC_AT_STORAGE_KEY)
-  if (!raw) return null
-  const n = Number(raw)
-  return Number.isFinite(n) ? n : null
+  try {
+    const raw = sessionStorage.getItem(SYNC_AT_STORAGE_KEY)
+    if (!raw) return null
+    const n = Number(raw)
+    return Number.isFinite(n) ? n : null
+  } catch {
+    return null
+  }
 }

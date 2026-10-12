@@ -93,21 +93,25 @@ function useBungieLinkState(): BungieLinkValue {
 
     const params = new URLSearchParams(window.location.search)
     const bungie = params.get('bungie')
-    if (bungie === 'linked') {
-      const text = 'Signed in with Bungie.'
-      setLinkMessage(text)
-      sessionStorage.removeItem('bungieLinkMessage')
-      void load()
-    } else if (bungie === 'error') {
-      const msg = params.get('message') || ''
-      const text = msg
-        ? `Bungie sign-in failed: ${bungieOAuthErrorMessage(msg)}`
-        : 'Bungie sign-in failed. Try again.'
-      setLinkMessage(text)
-      sessionStorage.setItem('bungieLinkMessage', text)
-    } else {
-      const saved = sessionStorage.getItem('bungieLinkMessage')
-      if (saved) setLinkMessage(saved)
+    try {
+      if (bungie === 'linked') {
+        const text = 'Signed in with Bungie.'
+        setLinkMessage(text)
+        sessionStorage.removeItem('bungieLinkMessage')
+        void load()
+      } else if (bungie === 'error') {
+        const msg = params.get('message') || ''
+        const text = msg
+          ? `Bungie sign-in failed: ${bungieOAuthErrorMessage(msg)}`
+          : 'Bungie sign-in failed. Try again.'
+        setLinkMessage(text)
+        sessionStorage.setItem('bungieLinkMessage', text)
+      } else {
+        const saved = sessionStorage.getItem('bungieLinkMessage')
+        if (saved) setLinkMessage(saved)
+      }
+    } catch {
+      /* sessionStorage can throw in private mode; the hub still renders */
     }
     if (bungie) stripUrlParams(['bungie', 'message'])
   }, [load])
@@ -135,7 +139,11 @@ function useBungieLinkState(): BungieLinkValue {
         method: 'POST',
         credentials: 'include',
       })
-      sessionStorage.removeItem(SYNC_AT_STORAGE_KEY)
+      try {
+        sessionStorage.removeItem(SYNC_AT_STORAGE_KEY)
+      } catch {
+        /* ignore private-mode storage */
+      }
       setLastSyncedAt(null)
       await load()
       setLinkMessage('Bungie unlinked. Sign in with Bungie again when you want to sync runs.')
