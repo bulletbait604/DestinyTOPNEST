@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server'
 import { loadPublicHubSnapshot } from '@/lib/destiny/publicHub'
+import { cacheControlUntilWeeklyReset } from '@/lib/destiny/weeklyRotation'
 
 export const dynamic = 'force-dynamic'
 
 /** Logged-out Guardian Hub boards. No account data. */
 export async function GET() {
-  const snapshot = await loadPublicHubSnapshot()
+  const now = new Date()
+  const snapshot = await loadPublicHubSnapshot(now)
   const res = NextResponse.json(snapshot)
-  res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
+  res.headers.set(
+    'Cache-Control',
+    cacheControlUntilWeeklyReset(now, { scope: 'public', maxAge: 60, staleWhileRevalidate: 120 })
+  )
   return res
 }

@@ -100,6 +100,14 @@ export async function getDestinyManifest(): Promise<DestinyManifestInfo> {
   return bungieFetch<DestinyManifestInfo>(DESTINY_MANIFEST_PATH)
 }
 
+/**
+ * Public milestones for the current reset, including featured raid and dungeon rotators.
+ * https://bungie-net.github.io/ Destiny2.GetPublicMilestones
+ */
+export async function getPublicMilestones() {
+  return bungieFetch<Record<string, unknown>>('/Destiny2/Milestones/')
+}
+
 export interface ArmorySearchResult {
   hash: number
   name: string

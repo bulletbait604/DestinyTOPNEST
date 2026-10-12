@@ -6,6 +6,7 @@ import { evaluateClanWars } from '@/lib/destiny/clanWars'
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
 import { getFireteamLobbies, listVerifiedFullClears } from '@/lib/destiny/store'
 import { DEFAULT_WEEKLY_CONTRACTS } from '@/lib/destiny/weeklyContractCatalog'
+import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
 export const dynamic = 'force-dynamic'
@@ -23,7 +24,9 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const week = getWeeklyResetState()
+  const now = new Date()
+  await refreshLiveWeeklyRotationBounded(now)
+  const week = getWeeklyResetState(now)
   let topClan = null
   let historyNote = ''
   try {

@@ -10,6 +10,7 @@ import { metaResearchSummary } from '@/lib/destiny/externalMetaResearch'
 import { aggregateGuardianLeaderboard } from '@/lib/destiny/leaderboards'
 import { COMMANDER_RANK_LIMIT } from '@/lib/destiny/mvpVoting'
 import { getSeasonCountdown } from '@/lib/destiny/seasonConfig'
+import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { computeSeasonStandings } from '@/lib/destiny/seasonPrizes'
 import {
   getBuildIntelligenceCards,
@@ -44,8 +45,8 @@ export function invalidateDestinySharedCaches(tags: Array<(typeof CACHE_TAGS)[ke
   }
 }
 
-export const getCachedLeaderboardPayload = unstable_cache(
-  async (category: LeaderboardCategory, period: LeaderboardPeriod) => {
+const cachedLeaderboardPayload = unstable_cache(
+  async (category: LeaderboardCategory, period: LeaderboardPeriod, _weekKey: string) => {
     const entries = await enrichLeaderboardEntries(await getLeaderboardEntries(category, period))
     return { entries, category, period }
   },
@@ -53,8 +54,13 @@ export const getCachedLeaderboardPayload = unstable_cache(
   { revalidate: 45, tags: [CACHE_TAGS.leaderboards] }
 )
 
-export const getCachedBuildsPayload = unstable_cache(
-  async (activity: string) => {
+export function getCachedLeaderboardPayload(category: LeaderboardCategory, period: LeaderboardPeriod) {
+  const weekKey = period === 'weekly' ? getWeeklyResetState().weekStart : 'period'
+  return cachedLeaderboardPayload(category, period, weekKey)
+}
+
+const cachedBuildsPayload = unstable_cache(
+  async (activity: string, _weekStart: string) => {
     const [verifiedBuilds, externalBuilds] = await Promise.all([
       getBuildIntelligenceCards(),
       getExternalBuildSources(),
@@ -102,6 +108,10 @@ export const getCachedBuildsPayload = unstable_cache(
   { revalidate: 120, tags: [CACHE_TAGS.builds] }
 )
 
+export function getCachedBuildsPayload(activity: string) {
+  return cachedBuildsPayload(activity, getWeeklyResetState().weekStart)
+}
+
 export interface CachedSeasonShared {
   season: Season
   countdown: ReturnType<typeof getSeasonCountdown>
@@ -111,8 +121,8 @@ export interface CachedSeasonShared {
   seasonEnded: boolean
 }
 
-export const getCachedSeasonShared = unstable_cache(
-  async (): Promise<CachedSeasonShared> => {
+const cachedSeasonShared = unstable_cache(
+  async (_weekStart: string): Promise<CachedSeasonShared> => {
     const season = await getSeasonData()
     const weeklyReset = await buildWeeklyResetInfo()
     const { runs, usersById, votes } = await getSeasonStandingsInput()
@@ -132,6 +142,10 @@ export const getCachedSeasonShared = unstable_cache(
   ['destiny-season-shared'],
   { revalidate: 90, tags: [CACHE_TAGS.season] }
 )
+
+export function getCachedSeasonShared(): Promise<CachedSeasonShared> {
+  return cachedSeasonShared(getWeeklyResetState().weekStart)
+}
 
 export const getCachedMvpBoard = unstable_cache(
   async (period: 'season' | 'monthly') => {

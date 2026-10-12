@@ -33,6 +33,7 @@ import {
 import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
 import { flierTeamRequirementLabels } from '@/lib/destiny/flierTeamRequirements'
 import { activityIconUrlForName, pantheonActivityIconUrl } from '@/lib/destiny/activityIconPaths'
+import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { getOrBuildWeeklyLootIcons } from '@/lib/destiny/weeklyLootIcons'
 import { resolveArmorSetBonusesFromPieces } from '@/lib/destiny/armorSetBonuses'
@@ -245,6 +246,7 @@ async function enrichLobby(lobby: FireteamLobby): Promise<FireteamLobby> {
 }
 
 export async function buildWeeklyResetInfo(): Promise<WeeklyResetInfo> {
+  await refreshLiveWeeklyRotationBounded()
   const state = getWeeklyResetState()
   const [raidIcons, dungeonIcons] = await Promise.all([
     Promise.all(state.featuredRaids.map((r) => resolveActivity(r.name))),
@@ -277,6 +279,7 @@ export async function buildWeeklyResetInfo(): Promise<WeeklyResetInfo> {
     pantheon: state.pantheon,
     pantheonIconUrl: pantheonActivityIconUrl(state.pantheon),
     resetTimeLabel: state.resetTimeLabel,
+    rotationSource: state.rotationSource,
     featuredRaids,
     featuredDungeons,
     lootByActivity,

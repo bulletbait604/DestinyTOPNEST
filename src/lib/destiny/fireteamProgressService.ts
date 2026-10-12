@@ -21,6 +21,7 @@ import type {
   SherpaBoard,
   WeeklyContractsSnapshot,
 } from '@/lib/destiny/types'
+import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { evaluateWeeklyContracts } from '@/lib/destiny/weeklyContracts'
 
 const VIEWER_RUN_LIMIT = 2000
@@ -62,6 +63,7 @@ function membershipToUserId(users: Map<string, StoredDestinyUser>): Map<string, 
 
 /** Passport, contracts, sherpa, clan wars, night ops, and chemistry. Read-only. */
 export async function loadFireteamProgress(stored: StoredDestinyUser, now = new Date()): Promise<FireteamProgress> {
+  await refreshLiveWeeklyRotationBounded(now)
   const viewer = viewerFromStored(stored)
   const viewerResult = await getRunsForParticipant(stored.userId, stored.bungieMembershipId, VIEWER_RUN_LIMIT)
   const viewerHistoryComplete = viewerResult.length < VIEWER_RUN_LIMIT

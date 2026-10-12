@@ -1,16 +1,22 @@
 import { NextResponse } from 'next/server'
-import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
+import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
+import { cacheControlUntilWeeklyReset, getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
 /**
- * Public weekly rotation countdown — Edge + CDN cached.
- * Pure date math (no Mongo / Node crypto), so it stays cheap while idling.
+ * Public weekly rotation. Featured raids and dungeons come from Destiny2/Milestones
+ * when DESTINY_API is set, otherwise from the verified reset schedule.
+ * The CDN entry expires at the next Tuesday 17:00 UTC reset.
  */
-export const runtime = 'edge'
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const state = getWeeklyResetState()
+  const now = new Date()
+  await refreshLiveWeeklyRotationBounded(now)
+  const state = getWeeklyResetState(now)
   const res = NextResponse.json(state)
-  res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300')
+  res.headers.set(
+    'Cache-Control',
+    cacheControlUntilWeeklyReset(now, { scope: 'public', maxAge: 60, staleWhileRevalidate: 60 })
+  )
   return res
 }

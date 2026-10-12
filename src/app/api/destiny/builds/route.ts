@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { getCachedBuildsPayload } from '@/lib/destiny/dataCache'
+import { cacheControlUntilWeeklyReset } from '@/lib/destiny/weeklyRotation'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +11,10 @@ export async function GET(req: NextRequest) {
     const activity = searchParams.get('activity') ?? ''
     const payload = await getCachedBuildsPayload(activity)
     const res = NextResponse.json(payload)
-    res.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=300')
+    res.headers.set(
+      'Cache-Control',
+      cacheControlUntilWeeklyReset(new Date(), { scope: 'private', maxAge: 120, staleWhileRevalidate: 300 })
+    )
     return res
   })
 }
