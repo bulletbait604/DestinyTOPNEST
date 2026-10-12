@@ -43,6 +43,16 @@ export default function PublicHub({ onLogin }: { onLogin: () => void }) {
   if (tab === 'sherpas') return <HubSherpas />
   if (tab === 'events') return <HubEvents />
 
+  if (tab === 'history') {
+    return (
+      <SignInGate
+        title="Activity history"
+        body="Sign in with Bungie to sync every run still stored for your characters. The list, totals, and post-game reports stay on your account."
+        onLogin={onLogin}
+      />
+    )
+  }
+
   const gated =
     tab === 'profile'
       ? {

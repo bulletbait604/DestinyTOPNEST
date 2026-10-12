@@ -109,6 +109,7 @@ export type DestinyTopNestTab =
   | 'contracts'
   | 'sherpas'
   | 'events'
+  | 'history'
 
 export interface DestinyIconRef {
   name: string

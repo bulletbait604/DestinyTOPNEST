@@ -14,6 +14,7 @@ import {
 
 const NAV: { id: DestinyTopNestTab; label: string }[] = [
   { id: 'overview', label: 'Home' },
+  { id: 'history', label: 'History' },
   { id: 'fireteam', label: 'Find a Fireteam' },
   { id: 'contracts', label: 'Contracts' },
   { id: 'leaderboards', label: 'Leaderboards' },

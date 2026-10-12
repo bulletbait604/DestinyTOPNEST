@@ -127,6 +127,17 @@ export default function YourWeek() {
         </article>
 
         <article className="gh-card">
+          <h2>Activity history</h2>
+          <p className="gh-muted">
+            Every raid, dungeon, strike, and Crucible run Bungie still has — not just this week. The first sync walks
+            your full history and later visits only fetch new runs.
+          </p>
+          <button type="button" className="gh-text-btn" onClick={() => navigateDestinyTab('history')}>
+            Open activity history
+          </button>
+        </article>
+
+        <article className="gh-card">
           <h2>Night Ops</h2>
           {upcoming.length ? (
             <ul className="gh-plain-list">
