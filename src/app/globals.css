@@ -4459,8 +4459,19 @@ a { color: inherit; text-decoration: none; }
 }
 .gh-nav {
   display: flex;
+  align-items: flex-start;
   gap: 0.35rem;
+  overflow: visible;
+}
+/* Scroll the links only. overflow-x: auto on the nav itself computes
+   overflow-y to auto and clips the More menu into that short scrollport. */
+.gh-nav-scroll {
+  display: flex;
+  gap: 0.35rem;
+  flex: 0 1 auto;
+  min-width: 0;
   overflow-x: auto;
+  overflow-y: clip;
   padding-bottom: 0.85rem;
   scrollbar-width: thin;
 }
@@ -4502,18 +4513,28 @@ a { color: inherit; text-decoration: none; }
 }
 .gh-more {
   position: relative;
+  flex: 0 0 auto;
+  z-index: 30;
+  overflow: visible;
 }
 .gh-more-menu {
   position: absolute;
+  top: calc(100% + 0.35rem);
   right: 0;
-  z-index: 5;
+  z-index: 1;
+  width: max-content;
   min-width: 11rem;
+  max-width: calc(100vw - 1.5rem);
+  height: auto;
+  max-height: none;
+  overflow: visible;
   display: grid;
   gap: 0.25rem;
   padding: 0.4rem;
   border-radius: 12px;
   background: #121820;
   border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
 .gh-more-menu button {
   min-height: 40px;

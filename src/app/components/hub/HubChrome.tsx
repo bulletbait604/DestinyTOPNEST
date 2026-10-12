@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import {
@@ -42,6 +42,12 @@ export default function HubChrome({
   account?: ReactNode
 }) {
   const [tab, setTab] = useState<DestinyTopNestTab>('overview')
+  const moreRef = useRef<HTMLDetailsElement>(null)
+
+  const chooseMore = (action: () => void) => {
+    action()
+    if (moreRef.current) moreRef.current.open = false
+  }
 
   useEffect(() => {
     const read = () => setTab(visibleTab(parseTabFromSearch(window.location.search)))
@@ -85,27 +91,29 @@ export default function HubChrome({
         </div>
       </header>
       <nav className="gh-nav" aria-label="Guardian Hub">
-        {NAV.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className="gh-nav-link"
-            aria-current={tab === item.id ? 'page' : undefined}
-            onClick={() => navigateDestinyTab(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-        <details className="gh-more">
+        <div className="gh-nav-scroll">
+          {NAV.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className="gh-nav-link"
+              aria-current={tab === item.id ? 'page' : undefined}
+              onClick={() => navigateDestinyTab(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <details className="gh-more" ref={moreRef}>
           <summary>More</summary>
           <div className="gh-more-menu">
-            <button type="button" onClick={() => navigateDestinyTab('profile')}>
+            <button type="button" onClick={() => chooseMore(() => navigateDestinyTab('profile'))}>
               Your Guardian
             </button>
-            <button type="button" onClick={() => navigateProfileSection('passport')}>
+            <button type="button" onClick={() => chooseMore(() => navigateProfileSection('passport'))}>
               Passport
             </button>
-            <button type="button" onClick={() => navigateDestinyTab('loadouts')}>
+            <button type="button" onClick={() => chooseMore(() => navigateDestinyTab('loadouts'))}>
               Builds
             </button>
           </div>
