@@ -48,13 +48,13 @@ export function middleware(request: NextRequest) {
     [
       "default-src 'self'",
       "base-uri 'self'",
-      "form-action 'self' https://www.bungie.net https://id.kick.com",
+      "form-action 'self' https://www.bungie.net",
       "frame-ancestors 'none'",
-      "img-src 'self' data: blob: https://www.bungie.net https://images.kick.com https://files.kick.com https://kick.com",
+      "img-src 'self' data: blob: https://www.bungie.net",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "connect-src 'self' https://www.bungie.net https://id.kick.com",
+      "connect-src 'self' https://www.bungie.net",
     ].join('; ')
   )
 

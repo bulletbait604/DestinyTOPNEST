@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { cronSecret } from '@/lib/destiny/env'
 import { runWeeklyMetaBuildSync } from '@/lib/destiny/metaBuildWeeklySync'
@@ -12,7 +13,11 @@ export const dynamic = 'force-dynamic'
 export async function GET(req: NextRequest) {
   const secret = cronSecret()
   const auth = req.headers.get('authorization')
-  if (secret && auth !== `Bearer ${secret}`) {
+  if (!secret) {
+    // Fail closed: without CRON_SECRET anyone could trigger this expensive sync.
+    return NextResponse.json({ error: 'CRON_SECRET is not configured' }, { status: 503 })
+  }
+  if (!auth || !safeEqual(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -33,4 +38,10 @@ export async function GET(req: NextRequest) {
     const message = error instanceof Error ? error.message : 'Weekly meta build sync failed'
     return NextResponse.json({ error: message }, { status: 500 })
   }
+}
+
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a)
+  const bb = Buffer.from(b)
+  return ab.length === bb.length && timingSafeEqual(ab, bb)
 }

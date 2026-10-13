@@ -61,7 +61,7 @@ export async function ensureSiteUserRecord(
 
   const existing = await db.collection('users').findOne({ username: normalized })
   let role = capOwnerRole(normalized, (existing?.role as UserRole) || 'free', bungieDisplayName)
-  if (isAllowlistedOwner(normalized, bungieDisplayName) && role !== 'owner' && role !== 'admin') {
+  if (isAllowlistedOwner(normalized, bungieDisplayName, bungieMembershipId) && role !== 'owner' && role !== 'admin') {
     role = 'owner'
   }
 
