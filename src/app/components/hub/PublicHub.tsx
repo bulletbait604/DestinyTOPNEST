@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import CommunityBuildsBrowser from '@/app/components/destiny/community/CommunityBuildsBrowser'
 import {
   ConnectedHome,
   HubClans,
@@ -44,6 +45,9 @@ export default function PublicHub({ onLogin }: { onLogin: () => void }) {
   if (tab === 'clans') return <HubClans />
   if (tab === 'sherpas') return <HubSherpas />
   if (tab === 'events') return <HubEvents />
+  if (tab === 'loadouts' || tab === 'builds') {
+    return <CommunityBuildsBrowser darkMode onLogin={onLogin} />
+  }
 
   const gated =
     tab === 'profile'
@@ -51,15 +55,10 @@ export default function PublicHub({ onLogin }: { onLogin: () => void }) {
           title: 'Your Guardian',
           body: 'Passport stamps, loadouts, and your weekly progress open after you sign in with Bungie.',
         }
-      : tab === 'loadouts' || tab === 'builds'
-        ? {
-            title: 'Builds',
-            body: 'Saved loadouts and community builds are tied to your linked Guardian.',
-          }
-        : {
-            title: 'Sign in to continue',
-            body: 'That part of the hub is available on your account.',
-          }
+      : {
+          title: 'Sign in to continue',
+          body: 'That part of the hub is available on your account.',
+        }
 
   return <SignInGate title={gated.title} body={gated.body} onLogin={onLogin} />
 }

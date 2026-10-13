@@ -26,9 +26,10 @@ import { useBungieLink } from '@/contexts/BungieLinkContext'
 import { useProfileData } from '@/contexts/ProfileDataContext'
 import { cn } from '@/lib/utils'
 import { useActiveCharacterSelect } from '@/hooks/useActiveCharacterSelect'
+import type { LoadoutSectionId } from '@/lib/routing/tabUrl'
 
 type ProfileView = 'guardian' | 'passport' | 'activities' | 'loadouts'
-type LoadoutSection = 'mine' | 'community' | 'builder'
+type LoadoutSection = LoadoutSectionId
 
 interface Props {
   darkMode: boolean
@@ -76,6 +77,9 @@ export default function ProfilePanel({
     return (
       <div className="space-y-4">
         <BungieConnectBanner darkMode={darkMode} bungie={bungie} variant="compact" />
+        {view === 'loadouts' ? (
+          <ProfileLoadoutsSection darkMode={darkMode} initialSection={initialLoadoutSection} />
+        ) : null}
       </div>
     )
   }

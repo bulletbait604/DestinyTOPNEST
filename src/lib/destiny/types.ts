@@ -644,6 +644,7 @@ export type AdminActivityKind =
   | 'meta_builds_sync'
   | 'fireteam_room_delete'
   | 'fireteam_rooms_clear'
+  | 'community_build_moderate'
 
 export interface AdminActivityEntry {
   id: string

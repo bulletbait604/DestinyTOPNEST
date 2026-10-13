@@ -29,9 +29,11 @@ import { buildLoadoutPickerEntries, type LoadoutPickerEntry } from '@/lib/destin
 import { destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { useBungieLink } from '@/contexts/BungieLinkContext'
 import { useProfileData } from '@/contexts/ProfileDataContext'
+import { syncLoadoutSectionToUrl, type LoadoutSectionId } from '@/lib/routing/tabUrl'
+import CommunityBuildsBrowser from '@/app/components/destiny/community/CommunityBuildsBrowser'
 import { cn } from '@/lib/utils'
 
-type LoadoutSection = 'mine' | 'community' | 'builder'
+type LoadoutSection = LoadoutSectionId
 
 interface Props {
   darkMode: boolean
@@ -75,8 +77,9 @@ export default function ProfileLoadoutsSection({
   const externalBuilds = builds?.externalBuilds ?? []
   const metaResearchSummary = builds?.metaResearchSummary ?? ''
   const loading =
-    (loadoutsLoading && !loadouts && section !== 'builder') ||
-    (buildsLoading && !builds && section !== 'builder')
+    section !== 'builder' &&
+    section !== 'shared' &&
+    ((loadoutsLoading && !loadouts) || (buildsLoading && !builds))
 
   const activeClass =
     characters.find((c) => c.characterId === activeCharacterId)?.characterClass ?? characterClass
@@ -87,7 +90,7 @@ export default function ProfileLoadoutsSection({
 
   useEffect(() => {
     if (!bungie.linked) return
-    if (section !== 'builder') {
+    if (section !== 'builder' && section !== 'shared') {
       const characterChanged = prevCharacterRef.current !== activeCharacterId
       prevCharacterRef.current = activeCharacterId
       void ensureFullProfile(activeCharacterId)
@@ -162,15 +165,21 @@ export default function ProfileLoadoutsSection({
         label="Section"
         darkMode={darkMode}
         value={section}
-        onChange={setSection}
         options={[
           { value: 'mine', label: 'My loadouts' },
+          { value: 'shared', label: 'Shared' },
           { value: 'community', label: 'Top builds' },
           { value: 'builder', label: 'Builder' },
         ]}
+        onChange={(next) => {
+          setSection(next)
+          syncLoadoutSectionToUrl(next)
+        }}
       />
 
-      {loading || switchingCharacter ? (
+      {section === 'shared' ? (
+        <CommunityBuildsBrowser darkMode={darkMode} signedIn />
+      ) : loading || switchingCharacter ? (
         <GlassCard darkMode={darkMode}>
           <p className={cn('text-sm text-center py-8', t.muted)}>
             {switchingCharacter ? 'Switching guardian…' : 'Loading loadouts…'}

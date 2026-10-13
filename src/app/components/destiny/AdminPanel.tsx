@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ShieldAlert } from 'lucide-react'
 import AdminActivitySection from '@/app/components/destiny/admin/AdminActivitySection'
+import AdminCommunityBuildsSection from '@/app/components/destiny/admin/AdminCommunityBuildsSection'
 import AdminFireteamSection from '@/app/components/destiny/admin/AdminFireteamSection'
 import AdminLeaderboardsSection from '@/app/components/destiny/admin/AdminLeaderboardsSection'
 import AdminRunReviewSection from '@/app/components/destiny/admin/AdminRunReviewSection'
@@ -14,13 +15,14 @@ import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { cn } from '@/lib/utils'
 
-type AdminSection = 'activity' | 'runs' | 'users' | 'staff' | 'leaderboards' | 'season' | 'fireteam'
+type AdminSection = 'activity' | 'runs' | 'users' | 'staff' | 'leaderboards' | 'season' | 'fireteam' | 'builds'
 
 const SECTIONS: { value: AdminSection; label: string; ownerOnly?: boolean }[] = [
   { value: 'activity', label: 'Activity feed' },
   { value: 'runs', label: 'Run review' },
   { value: 'users', label: 'Users' },
   { value: 'fireteam', label: 'FlierTeam' },
+  { value: 'builds', label: 'Shared builds' },
   { value: 'staff', label: 'Admin access', ownerOnly: true },
   { value: 'leaderboards', label: 'Leaderboards' },
   { value: 'season', label: 'Season & prizes' },
@@ -99,6 +101,9 @@ export default function AdminPanel({
       ) : null}
       {section === 'fireteam' ? (
         <AdminFireteamSection darkMode={darkMode} onAction={refreshFeed} />
+      ) : null}
+      {section === 'builds' ? (
+        <AdminCommunityBuildsSection darkMode={darkMode} onAction={refreshFeed} />
       ) : null}
       {section === 'season' ? (
         <AdminSeasonSection darkMode={darkMode} onAction={refreshFeed} />

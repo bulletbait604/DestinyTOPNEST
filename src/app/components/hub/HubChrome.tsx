@@ -10,6 +10,7 @@ import {
   isDestinyTopNestTab,
   navigateDestinyTab,
   navigateProfileSection,
+  navigateSharedBuilds,
   parseTabFromSearch,
 } from '@/lib/routing/tabUrl'
 
@@ -116,6 +117,9 @@ export default function HubChrome({
             </button>
             <button type="button" onClick={() => navigateDestinyTab('loadouts')}>
               Builds
+            </button>
+            <button type="button" onClick={() => navigateSharedBuilds()}>
+              Shared builds
             </button>
           </div>
         </details>
