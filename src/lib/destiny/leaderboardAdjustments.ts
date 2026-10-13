@@ -3,11 +3,7 @@ import clientPromise from '@/lib/mongodb'
 import { getMongoDbName } from '@/lib/database'
 import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
-import {
-  aggregateGuardianLeaderboard,
-  aggregateLeaderboard,
-  aggregatePantheonSquadLeaderboard,
-} from '@/lib/destiny/leaderboards'
+import { aggregateLeaderboard } from '@/lib/destiny/leaderboards'
 import type {
   LeaderboardAdjustment,
   LeaderboardCategory,
@@ -92,7 +88,6 @@ export function applyLeaderboardAdjustments(
       points: Math.max(0, Math.round(points)),
       verifiedClears: Math.max(0, adj.verifiedClearsOverride ?? adj.verifiedClearsDelta ?? 0),
       rank: 0,
-      isSquadEntry: category === 'pantheon',
       hasManualAdjustment: true,
     })
   }
@@ -114,14 +109,9 @@ export async function buildLeaderboardWithAdjustments(
   season: Season,
   runs: RunRecord[],
   usersById: Map<string, StoredDestinyUser>,
-  votes: MvpVote[]
+  _votes: MvpVote[]
 ): Promise<LeaderboardEntry[]> {
-  const base =
-    category === 'top_guardians'
-      ? aggregateGuardianLeaderboard(votes, usersById, period, season)
-      : category === 'pantheon'
-        ? aggregatePantheonSquadLeaderboard(runs, usersById, period, season)
-        : aggregateLeaderboard(runs, usersById, category, period, season)
+  const base = aggregateLeaderboard(runs, usersById, category, period, season)
 
   const adjustments = await loadLeaderboardAdjustments(category, period, season.id)
   return applyLeaderboardAdjustments(base, adjustments, usersById, category, period, season)

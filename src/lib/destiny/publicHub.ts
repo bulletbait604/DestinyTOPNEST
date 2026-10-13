@@ -79,7 +79,7 @@ export interface PublicHubSnapshot {
 export const HUB_SCORING: PublicScoringNote[] = [
   {
     title: 'Leaderboard points',
-    body: 'A verified full clear from the start of the activity scores. Each clanmate on the team adds 2 points. Each person you grouped with through the fireteam finder adds 5, up to 2 on a raid and 1 on a dungeon. A checkpoint clear scores only if a moderator approves it.',
+    body: 'A verified full clear from the start scores 10 (raid) or 6 (dungeon). Every fireteam member you have never cleared with adds a New Bonds bonus: 15 on a raid, 10 on a dungeon. Your 2nd and 3rd clears with someone add 4 each. Up to 6 new bonds score per 24 hours, and a teammate must finish and play at least half the run. A checkpoint clear scores only if a moderator approves it.',
   },
   {
     title: 'Passport stamps',
@@ -91,7 +91,7 @@ export const HUB_SCORING: PublicScoringNote[] = [
   },
   {
     title: 'Sherpa ranks',
-    body: 'You get a sherpa point when you guide someone through their first verified clear of an activity you have already cleared. If they vote you MVP, you get one more point. Sherpa ranks are separate from Commander crowns.',
+    body: 'You get a sherpa point when you guide someone through their first verified clear of an activity you have already cleared. If they vote you MVP, you get one more point.',
   },
   {
     title: 'Clan Wars',

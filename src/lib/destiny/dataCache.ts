@@ -7,8 +7,6 @@
 import { revalidateTag, unstable_cache } from 'next/cache'
 import { enrichBuildsResponse, enrichLeaderboardEntries, buildWeeklyResetInfo } from '@/lib/destiny/enrich'
 import { metaResearchSummary } from '@/lib/destiny/externalMetaResearch'
-import { aggregateGuardianLeaderboard } from '@/lib/destiny/leaderboards'
-import { COMMANDER_RANK_LIMIT } from '@/lib/destiny/mvpVoting'
 import { getSeasonCountdown } from '@/lib/destiny/seasonConfig'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { computeSeasonStandings } from '@/lib/destiny/seasonPrizes'
@@ -19,8 +17,6 @@ import {
   getMetaResearchMeta,
   getSeasonData,
   getSeasonStandingsInput,
-  loadAllMvpVotes,
-  loadUsersMap,
 } from '@/lib/destiny/store'
 import type { LeaderboardCategory, LeaderboardPeriod, Season } from '@/lib/destiny/types'
 
@@ -146,18 +142,3 @@ const cachedSeasonShared = unstable_cache(
 export function getCachedSeasonShared(): Promise<CachedSeasonShared> {
   return cachedSeasonShared(getWeeklyResetState().weekStart)
 }
-
-export const getCachedMvpBoard = unstable_cache(
-  async (period: 'season' | 'monthly') => {
-    const [season, usersById, votes] = await Promise.all([
-      getSeasonData(),
-      loadUsersMap(),
-      loadAllMvpVotes(),
-    ])
-    const leaders = aggregateGuardianLeaderboard(votes, usersById, period, season, 10)
-    const commanders = leaders.filter((entry) => entry.rank <= COMMANDER_RANK_LIMIT)
-    return { leaders, commanders, period }
-  },
-  ['destiny-mvp-board'],
-  { revalidate: 45, tags: [CACHE_TAGS.mvp] }
-)

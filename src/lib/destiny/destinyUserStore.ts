@@ -3,6 +3,7 @@ import { getMongoDbName } from '@/lib/database'
 import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import type { BungieOAuthTokens } from '@/lib/destiny/bungieOAuth'
 import type { DestinyPlatform, DestinyUser } from '@/lib/destiny/types'
+import { decryptTokenPair, encryptTokenPair } from '@/lib/auth/tokenCrypto'
 
 export interface StoredDestinyUser extends DestinyUser {
   bungieNetMembershipId?: string
@@ -69,6 +70,10 @@ export async function upsertDestinyUser(
   const now = new Date().toISOString()
 
   const { userId: _omit, ...patch } = data
+  if (patch.oauth?.accessToken) {
+    // Never persist OAuth tokens in plaintext.
+    patch.oauth = encryptTokenPair(patch.oauth)
+  }
   const setFields: Record<string, unknown> = {
     ...patch,
     updatedAt: now,
@@ -122,18 +127,30 @@ export async function clearBungieOAuth(userId: string): Promise<void> {
 
 export async function getValidAccessToken(stored: StoredDestinyUser): Promise<string | null> {
   if (!stored.oauth?.accessToken) return null
+  let oauth: BungieOAuthTokens
+  try {
+    oauth = decryptTokenPair(stored.oauth)
+  } catch (error) {
+    console.error('[destiny] Stored Bungie token could not be decrypted for', stored.userId, error)
+    return null
+  }
+  const legacyPlaintext = !stored.oauth.accessToken.startsWith('enc:')
 
-  const obtained = new Date(stored.oauth.obtainedAt).getTime()
-  const expiresMs = (stored.oauth.expiresIn - 60) * 1000
+  const obtained = new Date(oauth.obtainedAt).getTime()
+  const expiresMs = (oauth.expiresIn - 60) * 1000
   if (Date.now() < obtained + expiresMs) {
-    return stored.oauth.accessToken
+    if (legacyPlaintext) {
+      // Opportunistically migrate legacy plaintext tokens to encrypted storage.
+      await upsertDestinyUser(stored.userId, { oauth }).catch(() => undefined)
+    }
+    return oauth.accessToken
   }
 
-  if (!stored.oauth.refreshToken) return null
+  if (!oauth.refreshToken) return null
 
   try {
     const { refreshBungieAccessToken } = await import('@/lib/destiny/bungieOAuth')
-    const refreshed = await refreshBungieAccessToken(stored.oauth.refreshToken)
+    const refreshed = await refreshBungieAccessToken(oauth.refreshToken)
     await upsertDestinyUser(stored.userId, { oauth: refreshed })
     return refreshed.accessToken
   } catch (error) {

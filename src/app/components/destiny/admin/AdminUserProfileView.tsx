@@ -42,8 +42,6 @@ export default function AdminUserProfileView({
   const pointTiles = [
     { label: 'Raid pts', value: profile.raidPoints },
     { label: 'Dungeon pts', value: profile.dungeonPoints },
-    { label: 'Pantheon pts', value: profile.pantheonPoints ?? 0 },
-    { label: 'MVP crowns', value: profile.guardianPoints ?? 0 },
     { label: 'Verified clears', value: profile.verifiedClears },
     { label: 'Reputation', value: profile.reputationScore },
     ...(profile.passport

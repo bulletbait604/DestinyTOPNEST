@@ -7,9 +7,10 @@ import {
   getPendingPrizeClaims,
   getSeasonData,
   getSeasonStandingsInput,
+  saveSeasonData,
   updatePrizeClaimStatus,
 } from '@/lib/destiny/store'
-import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
+import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { computeSeasonStandings } from '@/lib/destiny/seasonPrizes'
 
 export const dynamic = 'force-dynamic'
@@ -39,6 +40,35 @@ export async function POST(req: NextRequest) {
       claimId?: string
       claimStatus?: 'fulfilled' | 'rejected'
       adminNotes?: string
+      season?: { name?: string; tagline?: string; startDate?: string; endDate?: string }
+    }
+
+    if (body.action === 'update_season') {
+      const patch = body.season ?? {}
+      const valid = (v?: string) => v === undefined || (typeof v === 'string' && !Number.isNaN(Date.parse(v)))
+      if (!valid(patch.startDate) || !valid(patch.endDate)) {
+        return NextResponse.json({ error: 'startDate/endDate must be ISO dates' }, { status: 400 })
+      }
+      if (patch.startDate && patch.endDate && Date.parse(patch.endDate) <= Date.parse(patch.startDate)) {
+        return NextResponse.json({ error: 'endDate must be after startDate' }, { status: 400 })
+      }
+      const season = await getSeasonData()
+      const adminOverride = {
+        ...(season.adminOverride ?? {}),
+        ...(patch.name ? { name: String(patch.name).slice(0, 80) } : {}),
+        ...(patch.tagline ? { tagline: String(patch.tagline).slice(0, 200) } : {}),
+        ...(patch.startDate ? { startDate: new Date(patch.startDate).toISOString() } : {}),
+        ...(patch.endDate ? { endDate: new Date(patch.endDate).toISOString() } : {}),
+      }
+      await saveSeasonData({ ...season, adminOverride })
+      await logAdminActivity({
+        kind: 'season_finalize',
+        actorId,
+        actorLabel: authUser.displayName,
+        summary: `Updated season ${season.id}`,
+        metadata: { seasonId: season.id, ...adminOverride },
+      })
+      return NextResponse.json({ ok: true, season: await getSeasonData() })
     }
 
     if (body.action === 'finalize') {
@@ -62,9 +92,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.action === 'update_claim') {
-      if (!monetaryPrizesEnabled()) {
+      if (!seasonPrizesEnabled()) {
         return NextResponse.json(
-          { error: 'Monetary prizes are disabled. Claim fulfillment stays off until the flag is enabled.' },
+          { error: 'Season prizes are turned off.' },
           { status: 403 }
         )
       }

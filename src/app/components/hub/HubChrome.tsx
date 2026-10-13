@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
+import { Award, Home, Trophy, User, Users, type LucideIcon } from 'lucide-react'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import {
@@ -12,19 +13,17 @@ import {
   parseTabFromSearch,
 } from '@/lib/routing/tabUrl'
 
-const NAV: { id: DestinyTopNestTab; label: string }[] = [
-  { id: 'overview', label: 'Home' },
-  { id: 'fireteam', label: 'Find a Fireteam' },
-  { id: 'contracts', label: 'Contracts' },
-  { id: 'leaderboards', label: 'Leaderboards' },
-  { id: 'clans', label: 'Clans' },
-  { id: 'sherpas', label: 'Sherpas' },
-  { id: 'events', label: 'Events' },
+/** The five primary tabs. Everything else lives under "More" or inside Profile. */
+const NAV: { id: DestinyTopNestTab; label: string; icon: LucideIcon }[] = [
+  { id: 'overview', label: 'Home', icon: Home },
+  { id: 'fireteam', label: 'LFG', icon: Users },
+  { id: 'leaderboards', label: 'Leaderboards', icon: Trophy },
+  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'season', label: 'Season', icon: Award },
 ]
 
 function visibleTab(tab: DestinyTopNestTab): DestinyTopNestTab {
-  if (tab === 'season') return 'leaderboards'
-  if (tab === 'builds') return 'loadouts'
+  if (tab === 'builds' || tab === 'loadouts') return 'profile'
   return tab
 }
 
@@ -93,14 +92,24 @@ export default function HubChrome({
             aria-current={tab === item.id ? 'page' : undefined}
             onClick={() => navigateDestinyTab(item.id)}
           >
-            {item.label}
+            <item.icon aria-hidden />
+            <span>{item.label}</span>
           </button>
         ))}
         <details className="gh-more">
           <summary>More</summary>
           <div className="gh-more-menu">
-            <button type="button" onClick={() => navigateDestinyTab('profile')}>
-              Your Guardian
+            <button type="button" onClick={() => navigateDestinyTab('contracts')}>
+              Contracts
+            </button>
+            <button type="button" onClick={() => navigateDestinyTab('clans')}>
+              Clans
+            </button>
+            <button type="button" onClick={() => navigateDestinyTab('sherpas')}>
+              Sherpas
+            </button>
+            <button type="button" onClick={() => navigateDestinyTab('events')}>
+              Events
             </button>
             <button type="button" onClick={() => navigateProfileSection('passport')}>
               Passport
@@ -114,7 +123,7 @@ export default function HubChrome({
       <main id="hub-main" className="gh-main">
         {children}
       </main>
-      <footer className="gh-footer">Fan-made Guardian Hub for Destiny players. Not affiliated with Bungie.</footer>
+      <footer className="gh-footer">Fan-made hub for Destiny 2 players — clear with new Guardians, climb the boards. Not affiliated with Bungie. <a href="/rules">Rules &amp; prizes</a></footer>
     </div>
   )
 }

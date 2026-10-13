@@ -38,15 +38,9 @@ export const HOME_SECTION_ART = {
   raidBoard: ACTIVITY_ICON_PATHS["king's fall"],
   soloBoard: COMMUNITY_ART.communityDares,
   dungeonBoard: ACTIVITY_ICON_PATHS['ghosts of the deep'],
-  pantheonBoard: ACTIVITY_ICON_PATHS.pantheon,
   todayPanel: COMMUNITY_ART.fireteamRaid,
 } as const
 
 export function homeSectionArtUrl(key: keyof typeof HOME_SECTION_ART): string {
   return buildBungieIconUrl(HOME_SECTION_ART[key]) ?? ''
-}
-
-/** Solo / monthly Commanders leaderboard tile icon (Guardians' Oath emblem icon). */
-export function soloLeaderboardIconUrl(): string {
-  return buildBungieIconUrl(COMMUNITY_ART.guardiansOathIcon) ?? ''
 }

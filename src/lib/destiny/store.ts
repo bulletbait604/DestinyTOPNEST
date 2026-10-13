@@ -10,7 +10,7 @@ import { buildOverviewPayload } from '@/lib/destiny/overviewBuilder'
 import { computeSeasonStandings } from '@/lib/destiny/seasonPrizes'
 import { computeReputationScore } from '@/lib/destiny/reputation'
 import { buildLeaderboardWithAdjustments } from '@/lib/destiny/leaderboardAdjustments'
-import { squadKeyIncludesMember } from '@/lib/destiny/pantheonActivities'
+import { isActiveLeaderboardCategory } from '@/lib/destiny/leaderboards'
 import {
   getResearchedMetaBuilds,
   META_BUILD_RESEARCH_DATE,
@@ -141,24 +141,15 @@ export async function getSeasonStandingForUser(userId: string): Promise<Leaderbo
   try {
     const season = await getSeasonData()
     const [runs, usersById, votes] = await Promise.all([loadAllRuns(), loadUsersMap(), loadAllMvpVotes()])
-    const user = usersById.get(userId)
-    const individual = (
+    return (
       await Promise.all([
         buildLeaderboardWithAdjustments('raid', 'season', season, runs, usersById, votes),
         buildLeaderboardWithAdjustments('dungeon', 'season', season, runs, usersById, votes),
-        buildLeaderboardWithAdjustments('top_guardians', 'season', season, runs, usersById, votes),
+        buildLeaderboardWithAdjustments('new_bonds', 'season', season, runs, usersById, votes),
       ])
     )
       .flat()
       .filter((entry) => entry.userId === userId)
-
-    const pantheon =
-      user?.bungieMembershipId != null
-        ? (
-            await buildLeaderboardWithAdjustments('pantheon', 'season', season, runs, usersById, votes)
-          ).filter((entry) => squadKeyIncludesMember(entry.userId, user.bungieMembershipId))
-        : []
-    return [...individual, ...pantheon]
   } catch {
     return []
   }
@@ -295,12 +286,6 @@ export async function getOverviewData(): Promise<OverviewPayload> {
   const dungeonTop10 = await attachReputationScores(
     await buildLeaderboardWithAdjustments('dungeon', 'season', season, runs, usersById, votes)
   )
-  const pantheonTop10 = await attachReputationScores(
-    await buildLeaderboardWithAdjustments('pantheon', 'season', season, runs, usersById, votes)
-  )
-  const guardiansTop3 = (
-    await buildLeaderboardWithAdjustments('top_guardians', 'monthly', season, runs, usersById, votes)
-  ).slice(0, 3)
   const topLoadoutsByClass = rankTopMetaLoadoutsByClass(externalBuilds, 2)
   const topVerifiedLoadoutsByClass = rankTopLoadoutsByClass(verifiedBuilds, 2)
   const { hallOfFame } = await computeSeasonStandings(runs, usersById, season, votes)
@@ -308,8 +293,6 @@ export async function getOverviewData(): Promise<OverviewPayload> {
   return buildOverviewPayload({
     raidTop10,
     dungeonTop10,
-    pantheonTop10,
-    guardiansTop3,
     recentRuns,
     lookingForGroup: lobbies,
     trendingBuilds: rankTrendingMetaBuilds(externalBuilds, 3),
@@ -443,11 +426,12 @@ export async function finalizeActiveSeason(): Promise<Season> {
   const season = await getSeasonData()
   const { runs, usersById, votes } = await getSeasonStandingsInput()
   const { hallOfFame } = await computeSeasonStandings(runs, usersById, season, votes)
+  const retiredWinners = (season.winners ?? []).filter((winner) => !isActiveLeaderboardCategory(winner.category))
 
   const archived: Season = {
     ...season,
     status: 'archived',
-    winners: hallOfFame,
+    winners: [...hallOfFame, ...retiredWinners],
     endDate: new Date().toISOString(),
   }
 
@@ -639,6 +623,7 @@ async function applyAdminRunDecision(
       checkpointLikely: false,
       verificationStatus: 'verified',
       suspiciousScore: 0,
+      bondPoints: run.bondPoints ?? 0,
     }).points
   }
 
@@ -654,6 +639,11 @@ async function applyAdminRunDecision(
       },
     }
   )
+
+  if (decision === 'approve' && run.ownerMembershipId && (pointsUpdate ?? 0) > 0) {
+    const { recordRunBonds } = await import('@/lib/destiny/bondStore')
+    await recordRunBonds({ ...run, verificationStatus: 'verified' }, run.ownerMembershipId).catch(() => undefined)
+  }
 
   await database.collection(DESTINY_COLLECTIONS.buildSnapshots).updateMany(
     { runId: run.id },

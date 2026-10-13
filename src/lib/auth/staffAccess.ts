@@ -9,8 +9,9 @@ export function isStaffRole(role: string | undefined): boolean {
   return role === 'admin' || role === 'owner'
 }
 
-export function isOwnerActor(_role: string | undefined, username: string, displayName?: string): boolean {
-  return isAllowlistedOwner(username, displayName)
+/** `role` must come from verifyAuth, which already caps owner to the allowlist (incl. membership id). */
+export function isOwnerActor(role: string | undefined, username: string, displayName?: string): boolean {
+  return role === 'owner' || isAllowlistedOwner(username, displayName)
 }
 
 async function staffRoleFromDb(username: string): Promise<string | undefined> {
@@ -46,7 +47,7 @@ export async function verifyOwnerUser(req: NextRequest): Promise<VerifiedUser> {
   const effectiveDbRole = dbRole
     ? capOwnerRole(user.username, dbRole as VerifiedUser['role'], user.displayName)
     : undefined
-  if (isOwnerActor(effectiveDbRole, user.username, user.displayName)) {
+  if (isOwnerActor(undefined, user.username, user.displayName)) {
     user.role = effectiveDbRole as VerifiedUser['role']
     return user
   }

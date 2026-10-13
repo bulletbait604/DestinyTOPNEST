@@ -1,30 +1,48 @@
-﻿import { OWNER_USERNAMES } from '@/lib/home/roles'
-import { isSiteOwner, normalizeKickUsername, normalizeOwnerHandle } from '@/lib/home/ownerIdentity'
-
-function ownerAllowlist(): string[] {
-  const envRaw = process.env.OWNER_USERNAMES || ''
-  const envList = envRaw
-    .split(',')
-    .map((s) => normalizeOwnerHandle(s))
-    .filter(Boolean)
-  if (envList.length > 0) return envList
-  return OWNER_USERNAMES.map((o) => normalizeOwnerHandle(o))
-}
-
-function matchesAllowlist(username: string, displayName?: string): boolean {
-  const allowlist = ownerAllowlist()
-  const candidates = [username, displayName]
-    .filter((v): v is string => Boolean(v?.trim()))
-    .flatMap((v) => [normalizeOwnerHandle(v), normalizeKickUsername(v)])
-
-  return candidates.some((candidate) => allowlist.includes(normalizeOwnerHandle(candidate)))
-}
+import { OWNER_USERNAMES, PRIMARY_OWNER_BUNGIE_NAME } from '@/lib/home/roles'
 
 /**
  * Server-side owner allowlist.
- * Matches site username or Bungie display name (e.g. Bulletbait604#0950).
+ *
+ * Owner access is granted ONLY by identifiers a player cannot choose:
+ *  - OWNER_MEMBERSHIP_IDS (comma-separated Destiny/Bungie.net membership ids) — preferred
+ *  - the legacy site username (assigned server-side, never user-editable)
+ *  - the exact full Bungie global name including the #code (unique per Bungie account)
+ *
+ * Previously the #code was stripped, so any "Bulletbait604#xxxx" could become owner.
  */
-export function isAllowlistedOwner(username: string, displayName?: string): boolean {
-  if (matchesAllowlist(username, displayName)) return true
-  return isSiteOwner(username) || isSiteOwner(normalizeOwnerHandle(username))
+function list(raw: string | undefined): string[] {
+  return (raw || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean)
+}
+
+export function ownerMembershipIds(): string[] {
+  return list(process.env.OWNER_MEMBERSHIP_IDS)
+}
+
+function ownerUsernames(): string[] {
+  const env = list(process.env.OWNER_USERNAMES).filter((s) => !s.includes('#'))
+  return env.length ? env : OWNER_USERNAMES.map((o) => o.toLowerCase())
+}
+
+function ownerFullBungieNames(): string[] {
+  const env = list(process.env.OWNER_USERNAMES).filter((s) => /#\d{3,4}$/.test(s))
+  return env.length ? env : [PRIMARY_OWNER_BUNGIE_NAME.toLowerCase()]
+}
+
+export function isAllowlistedOwner(
+  username: string,
+  displayName?: string,
+  membershipId?: string
+): boolean {
+  const user = (username || '').trim().toLowerCase()
+  const ids = ownerMembershipIds()
+  if (ids.length > 0) {
+    // Strict mode: membership id only (username equals membership id for new accounts).
+    return Boolean((membershipId && ids.includes(membershipId.trim().toLowerCase())) || (user && ids.includes(user)))
+  }
+  if (user && ownerUsernames().includes(user)) return true
+  const name = (displayName || '').trim().toLowerCase()
+  return Boolean(name && ownerFullBungieNames().includes(name))
 }

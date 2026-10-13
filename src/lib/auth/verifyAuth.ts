@@ -140,7 +140,7 @@ export async function verifyAuth(req: NextRequest): Promise<VerifiedUser> {
   }
 
   user.role = capOwnerRole(user.username, (dbUser.role as UserRole) ?? 'free', user.displayName)
-  if (isAllowlistedOwner(user.username, user.displayName)) {
+  if (isAllowlistedOwner(user.username, user.displayName, typeof dbUser.bungieMembershipId === 'string' ? dbUser.bungieMembershipId : undefined)) {
     if (user.role !== 'owner') {
       user.role = 'owner'
       await db.collection('users').updateOne(

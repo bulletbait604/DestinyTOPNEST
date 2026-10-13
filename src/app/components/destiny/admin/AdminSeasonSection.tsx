@@ -5,7 +5,7 @@ import { Check, Gift, ImageIcon, Layers, Loader2, Trophy, X } from 'lucide-react
 import type { PrizeClaim, SeasonWinner } from '@/lib/destiny/types'
 import { GlassCard, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
-import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
+import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { cn } from '@/lib/utils'
 
 export default function AdminSeasonSection({
@@ -285,7 +285,7 @@ export default function AdminSeasonSection({
         </button>
       </GlassCard>
 
-      {monetaryPrizesEnabled() ? (
+      {seasonPrizesEnabled() ? (
         <GlassCard darkMode={darkMode}>
           <div className="flex items-center gap-2 mb-2">
             <Gift className="w-5 h-5 text-purple-400" />

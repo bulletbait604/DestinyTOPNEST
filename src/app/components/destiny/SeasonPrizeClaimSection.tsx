@@ -11,8 +11,7 @@ import { cn } from '@/lib/utils'
 const CATEGORY_LABELS: Record<LeaderboardCategory, string> = {
   raid: 'Raid',
   dungeon: 'Dungeon',
-  pantheon: 'Pantheon squad',
-  top_guardians: 'Top Guardians',
+  new_bonds: 'New Bonds',
 }
 
 interface Props {
@@ -36,6 +35,7 @@ export default function SeasonPrizeClaimSection({
   )
   const [platform, setPlatform] = useState<DestinyPlatform>('steam')
   const [contact, setContact] = useState('')
+  const [country, setCountry] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -50,7 +50,7 @@ export default function SeasonPrizeClaimSection({
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, platform, contact: contact.trim() }),
+        body: JSON.stringify({ category, platform, contact: contact.trim(), country }),
       })
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
@@ -143,6 +143,23 @@ export default function SeasonPrizeClaimSection({
             </label>
           </div>
           <label className="block">
+            <span className={cn('text-xs', t.caption)}>Country of residence</span>
+            <select
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              className={cn('mt-1 w-full rounded-xl px-3 py-2 text-sm ring-1 ring-white/10 bg-black/20', t.body)}
+            >
+              <option value="">Select…</option>
+              <option value="US">United States — Destiny 2 3D print (shipping covered)</option>
+              <option value="CA">Canada — Destiny 2 3D print (shipping covered)</option>
+              <option value="GB">United Kingdom — $50 CAD Steam gift card</option>
+              <option value="OTHER">Other — not prize-eligible</option>
+            </select>
+            {country === 'OTHER' ? (
+              <p className="text-xs text-amber-200 mt-1">Prizes are only available to players in the USA, Canada and UK.</p>
+            ) : null}
+          </label>
+          <label className="block">
             <span className={cn('text-xs', t.caption)}>Contact (Bungie name, email, or Discord)</span>
             <input
               value={contact}
@@ -158,7 +175,7 @@ export default function SeasonPrizeClaimSection({
           {error ? <p className="text-xs text-red-300">{error}</p> : null}
           <button
             type="button"
-            disabled={saving || !contact.trim() || !category}
+            disabled={saving || !contact.trim() || !category || !country || country === 'OTHER'}
             onClick={() => void submit()}
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium',

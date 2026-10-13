@@ -14,28 +14,25 @@ const BOARDS: {
   defaultPeriod: LeaderboardPeriod
   footnote?: string
 }[] = [
-  { category: 'raid', title: 'Raids', defaultPeriod: 'season' },
-  { category: 'dungeon', title: 'Dungeons', defaultPeriod: 'season' },
   {
-    category: 'pantheon',
-    title: 'The Pantheon',
+    category: 'new_bonds',
+    title: 'New Bonds',
     defaultPeriod: 'season',
-    footnote: 'Squads ranked by fireteam — each verified boss encounter scores like a raid clear.',
+    footnote: 'Points for clearing with Guardians you had never played with. #1 wins a prize (3D print US/CA · Steam card UK).',
   },
   {
-    category: 'top_guardians',
-    title: 'Commanders / Sherpas',
-    defaultPeriod: 'monthly',
-    footnote: 'Top Guardians crowned from MVP votes received each month.',
+    category: 'raid',
+    title: 'Raids',
+    defaultPeriod: 'season',
+    footnote: 'Verified raid clears + bond bonuses. #1 wins a prize (3D print US/CA · Steam card UK).',
+  },
+  {
+    category: 'dungeon',
+    title: 'Dungeons',
+    defaultPeriod: 'season',
+    footnote: 'Verified dungeon clears + bond bonuses. #1 wins a prize (3D print US/CA · Steam card UK).',
   },
 ]
-
-function periodsForCategory(category: LeaderboardCategory): LeaderboardPeriod[] {
-  if (category === 'top_guardians') {
-    return PERIOD_OPTIONS.filter((p) => p !== 'weekly')
-  }
-  return PERIOD_OPTIONS
-}
 
 type BoardState = {
   entries: LeaderboardEntry[]
@@ -47,8 +44,7 @@ function initialBoardState(): Record<LeaderboardCategory, BoardState> {
   return {
     raid: { entries: [], loading: true, period: 'season' },
     dungeon: { entries: [], loading: true, period: 'season' },
-    pantheon: { entries: [], loading: true, period: 'season' },
-    top_guardians: { entries: [], loading: true, period: 'monthly' },
+    new_bonds: { entries: [], loading: true, period: 'season' },
   }
 }
 
@@ -119,7 +115,7 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
               title={board.title}
               category={board.category}
               period={state.period}
-              periodOptions={periodsForCategory(board.category)}
+              periodOptions={PERIOD_OPTIONS}
               onPeriodChange={(period) => handlePeriodChange(board.category, period)}
               entries={state.entries}
               loading={state.loading}

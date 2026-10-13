@@ -33,7 +33,7 @@ export interface ArmorSetBonusGroup {
 export type ActivityType = 'raid' | 'dungeon' | 'pantheon'
 export type VerificationStatus = 'verified' | 'pending' | 'flagged' | 'rejected'
 export type LegitimacyStatus = 'clean' | 'warning' | 'suspicious' | 'highly_suspicious'
-export type LeaderboardCategory = 'raid' | 'dungeon' | 'pantheon' | 'top_guardians'
+export type LeaderboardCategory = 'raid' | 'dungeon' | 'new_bonds'
 export type LeaderboardPeriod = 'weekly' | 'monthly' | 'season' | 'all_time'
 export type Difficulty = 'normal' | 'master'
 export type FireteamGoal =
@@ -222,6 +222,10 @@ export interface RunTeamMember {
   assists: number
   score: number
   powerLevel: number
+  /** PGCR `completed` flag for this player (undefined on legacy rows). */
+  completed?: boolean
+  timePlayedSeconds?: number
+  fireteamId?: string
 }
 
 export interface AiReview {
@@ -263,6 +267,11 @@ export interface RunRecord {
    * `checkpoint_non_scoring` leaves this false.
    */
   staffApprovedFullClear?: boolean
+  /** New Bonds: points from first-time / growing teammate bonds (part of pointsAwarded). */
+  bondPoints?: number
+  newBondMembershipIds?: string[]
+  /** Owner's Destiny membership id at ingest time. */
+  ownerMembershipId?: string
 }
 
 export interface LeaderboardEntry {
@@ -293,7 +302,7 @@ export interface LeaderboardEntry {
 
 export interface LeaderboardAdjustment {
   id: string
-  /** Site user id, squad key (Pantheon), or guardian id for Top Guardians. */
+  /** Site user id for an individual leaderboard row. */
   entryKey: string
   displayName?: string
   category: LeaderboardCategory
@@ -521,10 +530,10 @@ export interface BuildSnapshot {
 export interface SeasonPrizeRules {
   raid: { first: string; second: string; thirdToFifth: string; participation: string }
   dungeon: { first: string; second: string; thirdToFifth: string; participation: string }
-  topGuardians: { first: string; second: string; third: string }
+  newBonds?: { first: string; second: string; thirdToFifth: string; participation: string }
 }
 
-/** Fireteam MVP vote — one pick per run; Top Guardians ranks by MVP crowns received. */
+/** Fireteam MVP vote — one pick per run. Used for sherpa credit, not a leaderboard. */
 export interface MvpVote {
   id: string
   runId: string
@@ -603,6 +612,8 @@ export interface Season {
   status: 'active' | 'upcoming' | 'archived'
   prizeRules: SeasonPrizeRules
   winners?: SeasonWinner[]
+  /** Owner/admin edits applied on top of the generated quarterly catalog. */
+  adminOverride?: { name?: string; tagline?: string; startDate?: string; endDate?: string }
 }
 
 export interface AdminReviewRecord {
@@ -697,10 +708,11 @@ export interface CharacterSummary {
 export interface PlayerProfile extends DestinyUser {
   raidPoints: number
   dungeonPoints: number
+  /** Retired Pantheon board score. Always 0; historical runs stay on the profile activity list. */
   pantheonPoints: number
-  /** Top Guardians score from MVP votes (current month). */
+  /** Retired Commander / Top Guardians score. Always 0. */
   guardianPoints: number
-  /** @deprecated Use guardianPoints — kept for legacy profile reads */
+  /** @deprecated Kept for legacy profile reads */
   fullClanPoints?: number
   verifiedClears: number
   reputationScore: number
@@ -1036,11 +1048,6 @@ export interface ClanProfile {
 export interface OverviewPayload {
   raidTop10: LeaderboardEntry[]
   dungeonTop10: LeaderboardEntry[]
-  pantheonTop10: LeaderboardEntry[]
-  /** Top 3 monthly Commanders (Top Guardians board). */
-  guardiansTop3: LeaderboardEntry[]
-  /** @deprecated Renamed to guardiansTop3 */
-  clanTop5?: LeaderboardEntry[]
   recentRuns: RunRecord[]
   featuredRaid: FeaturedActivity
   featuredDungeon: FeaturedActivity

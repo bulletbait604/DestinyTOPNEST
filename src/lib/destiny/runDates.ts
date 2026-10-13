@@ -1,7 +1,8 @@
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
 
 /** July 6 2026 1:00 AM America/Los_Angeles — Top Nest run window opens (PDT, UTC-7). */
-export const NEST_LAUNCH_ISO = '2026-07-06T08:00:00.000Z'
+/** Season 1 (quarterly) start — Oct 1 2026, Pacific midnight. Older runs never score. */
+export const NEST_LAUNCH_ISO = '2026-10-01T07:00:00.000Z'
 
 export function nestLaunchUtcMs(): number {
   return Date.parse(NEST_LAUNCH_ISO)

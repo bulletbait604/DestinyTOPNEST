@@ -1,6 +1,6 @@
 ﻿import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { destinyApiConfigured } from '@/lib/destiny/env'
-import { monetaryPrizesEnabled, NON_MONETARY_REWARD_SUMMARY } from '@/lib/destiny/featureFlags'
+import { seasonPrizesEnabled, NON_MONETARY_REWARD_SUMMARY } from '@/lib/destiny/featureFlags'
 import { getConfiguredActiveSeason, getSeasonCountdown, PRIZE_SUMMARY } from '@/lib/destiny/seasonConfig'
 import type { OverviewPayload, PendingRunActions, Season, SeasonWinner } from '@/lib/destiny/types'
 import type { TopMetaLoadoutsByClass } from '@/lib/destiny/metaBuildConsensus'
@@ -9,8 +9,6 @@ import type { TopLoadoutsByClass as TopVerifiedLoadoutsByClass } from '@/lib/des
 export function buildOverviewPayload(input: {
   raidTop10: OverviewPayload['raidTop10']
   dungeonTop10: OverviewPayload['dungeonTop10']
-  pantheonTop10: OverviewPayload['pantheonTop10']
-  guardiansTop3: OverviewPayload['guardiansTop3']
   recentRuns: OverviewPayload['recentRuns']
   lookingForGroup: OverviewPayload['lookingForGroup']
   trendingBuilds: OverviewPayload['trendingBuilds']
@@ -28,9 +26,6 @@ export function buildOverviewPayload(input: {
   return {
     raidTop10: input.raidTop10,
     dungeonTop10: input.dungeonTop10,
-    pantheonTop10: input.pantheonTop10,
-    guardiansTop3: input.guardiansTop3,
-    clanTop5: input.guardiansTop3,
     recentRuns: input.recentRuns,
     weeklyReset: {
       resetAt: weekly.resetAt,
@@ -56,7 +51,7 @@ export function buildOverviewPayload(input: {
     },
     season,
     seasonCountdown: getSeasonCountdown(season),
-    prizeSummary: monetaryPrizesEnabled() ? PRIZE_SUMMARY : NON_MONETARY_REWARD_SUMMARY,
+    prizeSummary: seasonPrizesEnabled() ? PRIZE_SUMMARY : NON_MONETARY_REWARD_SUMMARY,
     lookingForGroup: input.lookingForGroup,
     trendingBuilds: input.trendingBuilds,
     topLoadoutsByClass: input.topLoadoutsByClass,

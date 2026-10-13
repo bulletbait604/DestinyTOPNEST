@@ -1,5 +1,8 @@
 ﻿'use client'
 
+import NewBondsLfgPanel from '@/app/components/nest/NewBondsLfgPanel'
+import ProfileDeepDive from '@/app/components/nest/ProfileDeepDive'
+import SeasonRulesPanel from '@/app/components/nest/SeasonRulesPanel'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import {
@@ -22,8 +25,6 @@ import AdminPanel from '@/app/components/destiny/AdminPanel'
 import PlayerCardShell from '@/app/components/destiny/PlayerCardShell'
 import TabPageHero from '@/app/components/destiny/TabPageHero'
 import TabShellAlerts from '@/app/components/destiny/TabShellAlerts'
-import HomeTopNestCallout from '@/app/components/destiny/HomeTopNestCallout'
-import HomeSoloPreview from '@/app/components/destiny/HomeSoloPreview'
 import LeaderboardRulesSection from '@/app/components/destiny/LeaderboardRulesSection'
 import RunSyncToast from '@/app/components/destiny/RunSyncToast'
 import NewcomerWelcomeModal from '@/app/components/destiny/NewcomerWelcomeModal'
@@ -124,7 +125,7 @@ export default function DestinyTopNestApp({
 
     const tab = parseTabFromSearch(window.location.search)
     if (isDestinyTopNestTab(tab)) {
-      const resolved = tab === 'season' ? 'leaderboards' : tab
+      const resolved = tab
       if (resolved === 'admin' && !isAdmin) {
         setActiveTab('overview')
       } else {
@@ -188,6 +189,11 @@ export default function DestinyTopNestApp({
       <>
         {profilePanelMounted ? (
           <div className={cn(!isProfileTab && 'hidden')} aria-hidden={!isProfileTab}>
+            {activeTab === 'profile' ? (
+              <div className="mb-4">
+                <ProfileDeepDive />
+              </div>
+            ) : null}
             <ProfilePanel
               darkMode={darkMode}
               initialView={profileView}
@@ -217,7 +223,14 @@ export default function DestinyTopNestApp({
       case 'leaderboards':
         return <LeaderboardsPanel darkMode={darkMode} />
       case 'fireteam':
-        return <FireteamPanel darkMode={darkMode} isAdmin={isAdmin} />
+        return (
+          <>
+            <div className="mb-4">
+              <NewBondsLfgPanel />
+            </div>
+            <FireteamPanel darkMode={darkMode} isAdmin={isAdmin} />
+          </>
+        )
       case 'profile':
       case 'loadouts':
       case 'builds':
@@ -236,7 +249,7 @@ export default function DestinyTopNestApp({
       case 'events':
         return <HubEvents />
       case 'season':
-        return <LeaderboardsPanel darkMode={darkMode} />
+        return <SeasonRulesPanel />
       case 'admin':
         return isAdmin ? (
           <AdminPanel darkMode={darkMode} isAdmin isOwner={isOwner} />
@@ -247,11 +260,9 @@ export default function DestinyTopNestApp({
   }
 
   const hubTab = activeTab === 'overview' || activeTab === 'contracts' || activeTab === 'sherpas' || activeTab === 'events' || activeTab === 'clans'
-  const showTopNestCallout = activeTab === 'overview' && !embedded
-  const showLeaderboardRules = activeTab === 'leaderboards' || activeTab === 'season'
+  const showLeaderboardRules = activeTab === 'leaderboards'
   const showHero = !embedded || !hubTab
   const showPlayerCard = !embedded || PROFILE_TABS.has(activeTab)
-  const heroAside = showTopNestCallout ? <HomeSoloPreview darkMode={darkMode} /> : undefined
 
   return (
     <OverviewDataProvider>
@@ -264,14 +275,13 @@ export default function DestinyTopNestApp({
             <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
           )}
           <TabShellAlerts darkMode={darkMode} />
-          {showHero ? <TabPageHero tab={activeTab} aside={heroAside} /> : null}
+          {showHero ? <TabPageHero tab={activeTab} /> : null}
           {showPlayerCard ? (
             <div className="d2-player-card-featured">
               <ProfilePlayerBanner darkMode={darkMode} activeTab={activeTab} />
             </div>
           ) : null}
           {showLeaderboardRules ? <LeaderboardRulesSection darkMode={darkMode} /> : null}
-          {showTopNestCallout ? <HomeTopNestCallout darkMode={darkMode} /> : null}
           <div className="min-w-0">{renderPanel()}</div>
         </div>
         </div>

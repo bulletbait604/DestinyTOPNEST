@@ -22,8 +22,7 @@ import { cn } from '@/lib/utils'
 const CATEGORIES: { value: LeaderboardCategory; label: string }[] = [
   { value: 'raid', label: 'Raids' },
   { value: 'dungeon', label: 'Dungeons' },
-  { value: 'pantheon', label: 'Pantheon' },
-  { value: 'top_guardians', label: 'Top Guardians' },
+  { value: 'new_bonds', label: 'New Bonds' },
 ]
 
 const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
@@ -80,7 +79,7 @@ export default function AdminLeaderboardsSection({
 
   async function postAction(action: string, extra?: Record<string, unknown>) {
     if (!entryKey.trim()) {
-      setError('Entry id is required (site user id or Pantheon squad key).')
+      setError('Entry id is required (site user id).')
       return
     }
     setActing(true)
@@ -134,7 +133,7 @@ export default function AdminLeaderboardsSection({
           />
           <SegmentedControl
             label="Period"
-            options={PERIODS.filter((p) => category !== 'top_guardians' || p.value !== 'weekly')}
+            options={PERIODS}
             value={period}
             onChange={setPeriod}
             darkMode={darkMode}
@@ -193,13 +192,13 @@ export default function AdminLeaderboardsSection({
           <input
             value={entryKey}
             onChange={(e) => setEntryKey(e.target.value)}
-            placeholder="Entry id (user id or squad key)"
+            placeholder="Entry id (user id)"
             className="rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm text-white"
           />
           <input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Display label (optional, for Pantheon squads)"
+            placeholder="Display label (optional)"
             className="rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm text-white"
           />
           <input

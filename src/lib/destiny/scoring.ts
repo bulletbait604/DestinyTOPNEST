@@ -1,4 +1,4 @@
-﻿import { SCORING } from '@/lib/destiny/env'
+﻿import { BOND_RULES } from '@/lib/destiny/bonds'
 import type { ActivityType } from '@/lib/destiny/types'
 
 export interface ScoringInput {
@@ -10,6 +10,8 @@ export interface ScoringInput {
   checkpointLikely: boolean
   verificationStatus: 'verified' | 'pending' | 'flagged' | 'rejected'
   suspiciousScore: number
+  /** Bond bonus computed by scoreBondRun (0 when none). */
+  bondPoints?: number
 }
 
 export interface ScoringResult {
@@ -35,23 +37,15 @@ export function calculateRunPoints(input: ScoringInput): ScoringResult {
     return { points: 0, eligible: false, reasons: ['Suspicious score 70+ — blocked until admin approval'] }
   }
 
-  const scoringKind = input.activityType === 'pantheon' ? 'raid' : input.activityType
-  const maxRandos =
-    scoringKind === 'raid' ? SCORING.maxRandosRaid : SCORING.maxRandosDungeon
-  if (input.randoCount > maxRandos) {
-    return {
-      points: 0,
-      eligible: false,
-      reasons: [`Rando count ${input.randoCount} exceeds max ${maxRandos} for ${input.activityType}`],
-    }
-  }
-
-  const clanPts = input.clanMemberCount * SCORING.pointsPerClanMember
-  const randoPts = input.randoCount * SCORING.pointsPerRando
-  const points = clanPts + randoPts
+  // The old stranger cap (max 2 randos raid / 1 dungeon) is gone: playing with new
+  // people is the point. Points = base clear + New Bonds bonus (see bonds.ts).
+  const base = BOND_RULES.basePoints[input.activityType] ?? 0
+  const bondPoints = Math.max(0, input.bondPoints ?? 0)
+  const points = base + bondPoints
+  if (bondPoints > 0) reasons.push(`+${bondPoints} New Bonds points`)
 
   if (input.isFullClanTeam) {
-    reasons.push('Eligible for Full Clan Team leaderboard category')
+    reasons.push('Full clan team clear')
   }
 
   return { points, eligible: true, reasons }

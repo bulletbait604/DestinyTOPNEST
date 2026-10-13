@@ -3,7 +3,7 @@ import { BungieApiError, getDestinyEntityDefinition } from '@/lib/destiny/bungie
 import { bungieRetryDelayMs } from '@/lib/destiny/bungieRateLimit'
 import { clanDivisionForPoints, evaluateClanWars } from '@/lib/destiny/clanWars'
 import { evaluateFireteamChemistry } from '@/lib/destiny/fireteamChemistry'
-import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
+import { monetaryPrizesEnabled, seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { evaluateNightOps, resolveNightOpsCatalog } from '@/lib/destiny/nightOps'
 import type { FireteamViewer } from '@/lib/destiny/passport'
 import { evaluateSherpaRanks, sherpaTitleForPoints } from '@/lib/destiny/sherpaRanks'
@@ -387,5 +387,12 @@ describe('reward flag', () => {
     expect(monetaryPrizesEnabled()).toBe(false)
     process.env.NEXT_PUBLIC_FIRETEAM_HQ_MONETARY_PRIZES = 'true'
     expect(monetaryPrizesEnabled()).toBe(true)
+  })
+  it('season 3D-print prizes default on and can be switched off', () => {
+    delete process.env.NEXT_PUBLIC_SEASON_PRIZES
+    expect(seasonPrizesEnabled()).toBe(true)
+    process.env.NEXT_PUBLIC_SEASON_PRIZES = 'off'
+    expect(seasonPrizesEnabled()).toBe(false)
+    delete process.env.NEXT_PUBLIC_SEASON_PRIZES
   })
 })

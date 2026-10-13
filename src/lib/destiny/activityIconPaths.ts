@@ -97,9 +97,7 @@ export function pantheonActivityIconUrl(label?: string | null): string | undefin
 const LEADERBOARD_CATEGORY_ICON_KEYS: Record<string, string> = {
   raid: "king's fall",
   dungeon: 'ghosts of the deep',
-  pantheon: 'pantheon',
-  /** Guardians' Oath emblem icon — monthly Commanders / solo board. */
-  top_guardians: '/common/destiny2_content/icons/524388229145e86a3dc6bf79d8a641f4.jpg',
+  new_bonds: 'vault of glass',
   full_clan: 'vault of glass',
 }
 

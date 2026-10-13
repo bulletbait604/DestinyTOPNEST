@@ -26,7 +26,7 @@ function invalidateLeaderboardCaches() {
 
 export const dynamic = 'force-dynamic'
 
-const CATEGORIES: LeaderboardCategory[] = ['raid', 'dungeon', 'pantheon', 'top_guardians']
+const CATEGORIES: LeaderboardCategory[] = ['raid', 'dungeon', 'new_bonds']
 const PERIODS: LeaderboardPeriod[] = ['weekly', 'monthly', 'season', 'all_time']
 
 function parseCategory(raw: string | null): LeaderboardCategory | null {

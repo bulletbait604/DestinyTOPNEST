@@ -9,17 +9,14 @@ import {
   type StoredDestinyUser,
 } from '@/lib/destiny/destinyUserStore'
 import { fetchLiveClan, fetchLiveLoadout, refreshGuardianFromBungie } from '@/lib/destiny/liveBungieData'
-import { monetaryPrizesEnabled, NON_MONETARY_REWARD_SUMMARY } from '@/lib/destiny/featureFlags'
+import { seasonPrizesEnabled, NON_MONETARY_REWARD_SUMMARY } from '@/lib/destiny/featureFlags'
 import { loadFireteamProgress } from '@/lib/destiny/fireteamProgressService'
 import { buildPlayerProfileFromStored, emptyPlayerProfile } from '@/lib/destiny/profileBuilder'
-import { guardianPointsForUser } from '@/lib/destiny/mvpVoting'
 import {
   getReputationReviewsForUser,
   getRunsForUser,
-  getSeasonData,
   getSeasonStandingForUser,
   getTrustReviewsForUser,
-  loadAllMvpVotes,
 } from '@/lib/destiny/store'
 import type { PlayerProfile } from '@/lib/destiny/types'
 
@@ -73,16 +70,12 @@ export async function buildUserProfile(
     loadout = (await fetchLiveLoadout(stored, activeCharacterId).catch(() => null)) ?? undefined
   }
 
-  const [runs, reviews, trustReviews, seasonLeaderboardEntries, season, mvpVotes] = await Promise.all([
+  const [runs, reviews, trustReviews, seasonLeaderboardEntries] = await Promise.all([
     scope === 'full' ? getRunsForUser(siteUserId) : Promise.resolve([]),
     scope === 'full' ? getReputationReviewsForUser(siteUserId) : Promise.resolve([]),
     getTrustReviewsForUser(siteUserId, stored?.bungieMembershipId),
     scope === 'full' ? getSeasonStandingForUser(siteUserId) : Promise.resolve([]),
-    getSeasonData(),
-    loadAllMvpVotes(),
   ])
-
-  const guardianPoints = guardianPointsForUser(siteUserId, mvpVotes, 'monthly', season)
 
   let passport = undefined
   let weeklyContracts = undefined
@@ -112,7 +105,6 @@ export async function buildUserProfile(
       seasonLeaderboardEntries,
       displayEmblem,
       characters,
-      guardianPoints,
     })
   )
   const earnedTitles = passport?.titles.filter((title) => title.earned).map((title) => title.title) ?? []
@@ -128,7 +120,7 @@ export async function buildUserProfile(
     badges: Array.from(
       new Set([...built.badges, ...earnedTitles, ...sherpaTitle, ...(progressNightOps?.badges ?? [])])
     ),
-    prizeEligibility: monetaryPrizesEnabled() ? built.prizeEligibility : NON_MONETARY_REWARD_SUMMARY,
+    prizeEligibility: seasonPrizesEnabled() ? built.prizeEligibility : NON_MONETARY_REWARD_SUMMARY,
   }
 
   return {
