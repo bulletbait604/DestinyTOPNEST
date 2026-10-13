@@ -1,14 +1,20 @@
 ﻿/**
  * Destiny 2 weekly reset schedule (Tuesday 10:00 AM Pacific / 17:00 UTC).
  *
- * The schedule below is the fallback when Destiny2/Milestones is unavailable.
- * Raids repeat every 9 weeks from 2026-07-28. Dungeons repeat every 10 weeks
- * from 2026-07-21. An earlier 8-week slice that started 2026-08-04 matched
- * through 2026-09-22, then wrapped a week early (the Jul 28 raid pair and the
- * Jul 21–28 dungeon pairs sit in front of that slice).
+ * This schedule is the fallback when Destiny2/Milestones is unavailable.
+ * The current week is still replaced by a live Bungie milestone result when
+ * one is cached. That cache is keyed by reset date and expires at the next reset.
  *
- * The current week is replaced by a live Bungie milestone result when one is
- * cached. That cache is keyed by reset date and expires at the next reset.
+ * Both rotators are repeating cycles counted from the Monument of Triumph
+ * epoch (2026-06-09), matching the blueberries.gg 2026 calendar:
+ * https://www.blueberries.gg/leveling/destiny-2-raid-dungeon-rotation/
+ *
+ * Raids repeat every 8 weeks from that epoch (the whole published raid table).
+ * Dungeons are a 9-name ring: week slot i is paired with slot i+4. Slot 0 is
+ * the week of 2026-08-04 (week index 8). That ring matches the published
+ * dungeon table from 2026-07-07 through 2026-10-27. Oct 13 (week index 18)
+ * is Root of Nightmares + Deep Stone Crypt and Spire of the Watcher +
+ * Shattered Throne. Rows after 2026-10-27 in that table step off this ring.
  */
 
 import type { Difficulty } from '@/lib/destiny/types'
@@ -30,61 +36,40 @@ export interface RotationWeek {
 
 type ActivityPair = [string, string]
 
-/** Weeks 0–7 after Monument of Triumph (Dexerto). */
-const RAID_WEEKS_0_7: ActivityPair[] = [
+/**
+ * Repeating raid cycle. Index 0 is the week of 2026-06-09.
+ * Order matches the blueberries raid table (Raid 1, Raid 2).
+ */
+const RAID_CYCLE: ActivityPair[] = [
   ['Vow of the Disciple', 'Last Wish'],
-  ['Garden of Salvation', "King's Fall"],
+  ["King's Fall", 'Garden of Salvation'],
   ['Root of Nightmares', 'Deep Stone Crypt'],
   ["Crota's End", 'Vault of Glass'],
-  ["Salvation's Edge", 'Vow of the Disciple'],
-  ["King's Fall", 'Last Wish'],
-  ['Garden of Salvation', 'Root of Nightmares'],
-  ['Deep Stone Crypt', "Crota's End"],
-]
-
-/**
- * Repeating raid cycle. Index 0 = week of 2026-07-28 (Deep Stone Crypt + Crota's End).
- * The old Aug 4 list is index 1 through index 8 of this cycle.
- */
-const RAID_CYCLE_FROM_JUL_28: ActivityPair[] = [
-  ['Deep Stone Crypt', "Crota's End"],
-  ['Vault of Glass', "Salvation's Edge"],
-  ['Vow of the Disciple', 'Last Wish'],
+  ['Last Wish', 'Vow of the Disciple'],
   ['Garden of Salvation', "King's Fall"],
   ['Deep Stone Crypt', 'Root of Nightmares'],
   ['Vault of Glass', "Crota's End"],
-  ['Vow of the Disciple', "Salvation's Edge"],
-  ["King's Fall", 'Last Wish'],
-  ['Garden of Salvation', 'Root of Nightmares'],
-]
-
-const DUNGEON_WEEKS_0_7: ActivityPair[] = [
-  ['Shattered Throne', 'Duality'],
-  ['Pit of Heresy', 'Spire of the Watcher'],
-  ['Ghosts of the Deep', 'Duality'],
-  ["Warlord's Ruin", 'Grasp of Avarice'],
-  ["Vesper's Host", 'Duality'],
-  ['Spire of the Watcher', 'Sundered Doctrine'],
-  ['Ghosts of the Deep', 'Shattered Throne'],
-  ["Warlord's Ruin", 'Pit of Heresy'],
 ]
 
 /**
- * Repeating dungeon cycle. Index 0 = week of 2026-07-21.
- * The old Aug 4 list is index 2 through index 9.
+ * Dungeon ring. Featured pair for ring index i is (i, i+4).
+ * Ring index 0 is week index 8 (2026-08-04): Duality + Vesper's Host.
  */
-const DUNGEON_CYCLE_FROM_JUL_21: ActivityPair[] = [
-  ['Ghosts of the Deep', 'Shattered Throne'],
-  ["Warlord's Ruin", 'Pit of Heresy'],
-  ['Prophecy', "Vesper's Host"],
-  ['Grasp of Avarice', 'Sundered Doctrine'],
-  ['Duality', 'Shattered Throne'],
-  ['Pit of Heresy', 'Spire of the Watcher'],
-  ['Prophecy', 'Ghosts of the Deep'],
-  ['Grasp of Avarice', "Warlord's Ruin"],
-  ['Duality', "Vesper's Host"],
-  ['Spire of the Watcher', 'Sundered Doctrine'],
-]
+const DUNGEON_RING = [
+  'Duality',
+  'Spire of the Watcher',
+  'Ghosts of the Deep',
+  "Warlord's Ruin",
+  "Vesper's Host",
+  'Shattered Throne',
+  'Pit of Heresy',
+  'Prophecy',
+  'Grasp of Avarice',
+] as const
+
+/** Week index whose ring slot is 0. 2026-06-09 + 8 weeks = 2026-08-04. */
+const DUNGEON_RING_ORIGIN_WEEK = 8
+const DUNGEON_RING_PHASE = 4
 
 /** Optional Pantheon labels by reset week start (when known). */
 const PANTHEON_BY_RESET: Record<string, string> = {
@@ -109,14 +94,18 @@ function resetStartIso(weekIndex: number): string {
   return d.toISOString().slice(0, 10)
 }
 
+function mod(value: number, length: number): number {
+  return ((value % length) + length) % length
+}
+
 export function raidPairForWeekIndex(weekIndex: number): ActivityPair {
-  if (weekIndex < 7) return RAID_WEEKS_0_7[weekIndex]!
-  return RAID_CYCLE_FROM_JUL_28[(weekIndex - 7) % RAID_CYCLE_FROM_JUL_28.length]!
+  return RAID_CYCLE[mod(weekIndex, RAID_CYCLE.length)]!
 }
 
 export function dungeonPairForWeekIndex(weekIndex: number): ActivityPair {
-  if (weekIndex < 6) return DUNGEON_WEEKS_0_7[weekIndex]!
-  return DUNGEON_CYCLE_FROM_JUL_21[(weekIndex - 6) % DUNGEON_CYCLE_FROM_JUL_21.length]!
+  const slot = mod(weekIndex - DUNGEON_RING_ORIGIN_WEEK, DUNGEON_RING.length)
+  const partner = mod(slot + DUNGEON_RING_PHASE, DUNGEON_RING.length)
+  return [DUNGEON_RING[slot]!, DUNGEON_RING[partner]!]
 }
 
 export function rotationWeekForIndex(weekIndex: number): RotationWeek {
