@@ -25,4 +25,4 @@ export function monetaryPrizesEnabled(): boolean {
 
 /** Player-facing copy used while monetary prizes are disabled. */
 export const NON_MONETARY_REWARD_SUMMARY =
-  'Each 3-month season, #1 on the Raid, Dungeon and New Bonds boards wins a Destiny 2 3D print. Everyone else earns badges, titles and frames. No payments, ads, or cash prizes.'
+  'Each 3-month season, #1 on the Raid, Dungeon and New Bonds boards wins a Destiny 2 3D print (USA/Canada) or a $50 CAD Steam gift card (UK). Everyone else earns badges, titles and frames. No payments, ads, or cash prizes.'

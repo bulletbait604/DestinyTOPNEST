@@ -23,7 +23,7 @@ export function getSeasonCountdown(season: Season = getConfiguredActiveSeason())
 }
 
 export const PRIZE_SUMMARY =
-  'Each season, #1 on the Raid, Dungeon and New Bonds boards wins a Destiny 2 3D print.'
+  'Each season, #1 on the Raid, Dungeon and New Bonds boards wins: Destiny 2 3D print (USA/Canada, shipping covered) or $50 CAD Steam gift card (UK). Other countries not eligible.'
 
 /** Hero title-panel prize sticker (leaderboards & home). */
 export const HERO_PRIZE_POOL_STICKER = '3D-print prizes'

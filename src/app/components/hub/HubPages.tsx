@@ -171,7 +171,7 @@ export function HubHome({
           <h1>A Guardian Hub for people you actually play with</h1>
           <p className="gh-lede">
             See this week&apos;s contracts, who is teaching, and which clans are clearing — then sign in to stamp
-            your own passport. Rewards are badges, titles, and frames.
+            your own passport. Clear with new Guardians for New Bonds points — #1 on the Raid, Dungeon and New Bonds boards wins a prize each season.
           </p>
           <div className="gh-actions">
             <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
@@ -412,7 +412,7 @@ export function HubLeaderboardPreview({ onLogin }: { onLogin?: () => void }) {
       <header>
         <h1>Leaderboards</h1>
         <p className="gh-lede">
-          Raid, dungeon, Pantheon, and Commander boards use verified full clears. Sign in to see the full rankings and
+          Raid, Dungeon and New Bonds boards use verified full clears — #1 on each wins a season prize. Sign in to see the full rankings and
           cast MVP votes.
         </p>
       </header>

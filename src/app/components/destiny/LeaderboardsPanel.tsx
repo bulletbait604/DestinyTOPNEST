@@ -18,19 +18,19 @@ const BOARDS: {
     category: 'new_bonds',
     title: 'New Bonds',
     defaultPeriod: 'season',
-    footnote: 'Points for clearing with Guardians you had never played with. #1 wins a Destiny 2 3D print.',
+    footnote: 'Points for clearing with Guardians you had never played with. #1 wins a prize (3D print US/CA · Steam card UK).',
   },
   {
     category: 'raid',
     title: 'Raids',
     defaultPeriod: 'season',
-    footnote: 'Verified raid clears + bond bonuses. #1 wins a Destiny 2 3D print.',
+    footnote: 'Verified raid clears + bond bonuses. #1 wins a prize (3D print US/CA · Steam card UK).',
   },
   {
     category: 'dungeon',
     title: 'Dungeons',
     defaultPeriod: 'season',
-    footnote: 'Verified dungeon clears + bond bonuses. #1 wins a Destiny 2 3D print.',
+    footnote: 'Verified dungeon clears + bond bonuses. #1 wins a prize (3D print US/CA · Steam card UK).',
   },
   {
     category: 'pantheon',

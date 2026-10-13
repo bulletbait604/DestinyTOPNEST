@@ -95,7 +95,7 @@ export function prizeEligibilityForUser(
     return 'Eligible for verified run scoring this season. Vote MVP in Previous Activities to climb Top Guardians.'
   }
 
-  return `Season rank #${best.rank} in ${best.category.replace(/_/g, ' ')} — ${best.points} pts. #1 at season end wins a Destiny 2 3D print.`
+  return `Season rank #${best.rank} in ${best.category.replace(/_/g, ' ')} — ${best.points} pts. #1 at season end wins a prize (US/CA 3D print, UK Steam card).`
 }
 
 export interface UserPrizeTrackEntry {

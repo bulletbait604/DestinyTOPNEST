@@ -256,14 +256,14 @@ export default function NewcomerWelcomeModal({ darkMode, userId }: Props) {
             <p>
               {seasonPrizesEnabled() ? (
                 <>
-                  <strong className="text-amber-100">#1 on each board</strong> wins a Destiny 2 3D print at the
+                  <strong className="text-amber-100">#1 on each board</strong> wins a Destiny 2 3D print (USA/Canada) or $50 CAD Steam card (UK) at the
                   end of every 3-month Season.
                 </>
               ) : (
                 <>
                   <strong className="text-amber-100">Your week</strong> tracks contracts, stamps, and people
                   you clear with. Clear with new Guardians for New Bonds points — #1 on the Raid, Dungeon and
-                  New Bonds boards wins a Destiny 2 3D print each season.
+                  New Bonds boards wins a Destiny 2 3D print (USA/Canada) or $50 CAD Steam card (UK) each season.
                 </>
               )}
             </p>

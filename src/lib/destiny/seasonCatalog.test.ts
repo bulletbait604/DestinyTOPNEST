@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { NEST_SEASON_CATALOG, resolveActiveSeasonByDate, DEFAULT_SEASON_PRIZE_RULES } from './seasonCatalog'
+import { NEST_SEASON_CATALOG, resolveActiveSeasonByDate, DEFAULT_SEASON_PRIZE_RULES, prizeForCountry } from './seasonCatalog'
 
 describe('quarterly seasons', () => {
   it('season 1 is Oct 1 – Dec 31 2026 Pacific', () => {
@@ -19,9 +19,14 @@ describe('quarterly seasons', () => {
     expect(resolveActiveSeasonByDate(new Date('2026-10-13T18:00:00Z')).seasonNumber).toBe(1)
     expect(resolveActiveSeasonByDate(new Date('2027-02-10T18:00:00Z')).seasonNumber).toBe(2)
   })
-  it('prizes are 3D prints only, no cash or cards', () => {
+  it('prize is a 3D print (US/CA) or $50 CAD Steam card (UK); old $250 pool gone', () => {
     const txt = JSON.stringify(DEFAULT_SEASON_PRIZE_RULES).toLowerCase()
     expect(txt).toContain('3d print')
-    expect(txt).not.toMatch(/\$|cad|card/)
+    expect(txt).not.toMatch(/\$250|platform card|\$25 /)
+    expect(prizeForCountry('US')).toContain('3D print')
+    expect(prizeForCountry('ca')).toContain('3D print')
+    expect(prizeForCountry('UK')).toBe('$50 CAD Steam gift card')
+    expect(prizeForCountry('GB')).toBe('$50 CAD Steam gift card')
+    expect(prizeForCountry('DE')).toBeNull()
   })
 })

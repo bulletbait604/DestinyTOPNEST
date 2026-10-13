@@ -10,11 +10,30 @@ export interface NestSeasonDefinition {
   endDate: string
 }
 
-export const SEASON_PRIZE_TEXT = 'One Destiny 2 3D print' as const
+export const SEASON_PRIZE_TEXT = 'Destiny 2 3D print (USA/Canada) or $50 CAD Steam gift card (UK)' as const
+
+/** Prize eligibility by country of residence. Other countries are not eligible. */
+export const PRIZE_ELIGIBILITY = {
+  physicalPrizeCountries: ['US', 'CA'],
+  physicalPrize: 'Destiny 2 3D print, shipping covered',
+  giftCardCountries: ['GB'],
+  giftCardPrize: '$50 CAD Steam gift card',
+  summary:
+    'USA and Canada winners receive a Destiny 2 3D print (shipping covered). UK winners receive a $50 CAD Steam gift card instead. Players in other countries can compete but are not eligible for prizes.',
+} as const
+
+export function prizeForCountry(countryCode: string): string | null {
+  const c = countryCode.trim().toUpperCase()
+  if ((PRIZE_ELIGIBILITY.physicalPrizeCountries as readonly string[]).includes(c)) return PRIZE_ELIGIBILITY.physicalPrize
+  if ((PRIZE_ELIGIBILITY.giftCardCountries as readonly string[]).includes(c === 'UK' ? 'GB' : c)) return PRIZE_ELIGIBILITY.giftCardPrize
+  if (c === 'UK') return PRIZE_ELIGIBILITY.giftCardPrize
+  return null
+}
 
 /**
  * One prize per leaderboard per season: the #1 player on the Raid, Dungeon and
- * New Bonds boards each win a Destiny 2 3D print. No cash prizes.
+ * New Bonds boards each win a prize: a Destiny 2 3D print (USA/Canada, shipping covered)
+ * or a $50 CAD Steam gift card (UK). Other countries are not eligible.
  */
 export const DEFAULT_SEASON_PRIZE_RULES: SeasonPrizeRules = {
   raid: {

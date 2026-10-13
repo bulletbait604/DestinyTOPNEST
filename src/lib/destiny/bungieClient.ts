@@ -170,6 +170,23 @@ export async function getPlayerProfile(
   )
 }
 
+/** Lifetime account stats (all characters merged). */
+export async function getAccountHistoricalStats(membershipType: number, membershipId: string, accessToken?: string) {
+  return bungieFetch(`/Destiny2/${membershipType}/Account/${membershipId}/Stats/?groups=1`, { accessToken })
+}
+
+/** Raid (4) + dungeon (82) lifetime stats merged across characters (characterId 0). */
+export async function getRaidDungeonModeStats(membershipType: number, membershipId: string, accessToken?: string) {
+  return bungieFetch(`/Destiny2/${membershipType}/Account/${membershipId}/Character/0/Stats/?modes=4,82&groups=1`, {
+    accessToken,
+  })
+}
+
+/** Global Bungie settings (seal root presentation nodes etc.). */
+export async function getCommonSettings() {
+  return bungieFetch<{ destiny2CoreSettings?: Record<string, unknown> }>(`/Settings/`)
+}
+
 /** Character equipment, character inventories, vault, and in-game saved loadouts. */
 export async function getCharacterLoadoutProfile(
   membershipType: number,

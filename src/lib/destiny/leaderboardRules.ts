@@ -4,7 +4,7 @@ import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
 export const LEADERBOARD_RULES_SUMMARY = (): string => {
   const season = getConfiguredActiveSeason()
   const endLabel = new Date(season.endDate).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })
-  return `${season.name} runs ${new Date(season.startDate).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })} – ${endLabel} PT (seasons are 3 months). #1 on the Raid, Dungeon and New Bonds boards each win a Destiny 2 3D print.`
+  return `${season.name} runs ${new Date(season.startDate).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })} – ${endLabel} PT (seasons are 3 months). #1 on the Raid, Dungeon and New Bonds boards each win a Destiny 2 3D print (USA/Canada, shipping covered) or a $50 CAD Steam gift card (UK). Other countries are not prize-eligible.`
 }
 
 export const LEADERBOARD_RULES_BULLETS = [
