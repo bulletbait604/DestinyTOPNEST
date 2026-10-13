@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { applyLiveFeaturedSelection, clearBungieWeeklyCacheForTests, refreshLiveWeeklyRotation } from '@/lib/destiny/bungieWeekly'
+import { assemblePublicHub } from '@/lib/destiny/publicHub'
 import {
   DUNGEON_ACTIVITY_MODE,
   RAID_ACTIVITY_MODE,
@@ -53,44 +54,140 @@ describe('weekly reset boundary', () => {
   })
 })
 
+/** Blueberries 2026 table rows the 8-week raid cycle and 9-dungeon ring both reproduce. */
+const BLUEBERRIES_WEEKS: Array<{
+  at: string
+  weekStart: string
+  raids: [string, string]
+  dungeons: [string, string]
+}> = [
+  {
+    at: '2026-07-07T17:00:00.000Z',
+    weekStart: '2026-07-07',
+    raids: ['Last Wish', 'Vow of the Disciple'],
+    dungeons: ['Shattered Throne', 'Duality'],
+  },
+  {
+    at: '2026-08-04T17:00:00.000Z',
+    weekStart: '2026-08-04',
+    raids: ['Vow of the Disciple', 'Last Wish'],
+    dungeons: ['Duality', "Vesper's Host"],
+  },
+  {
+    at: '2026-09-22T17:00:00.000Z',
+    weekStart: '2026-09-22',
+    raids: ['Vault of Glass', "Crota's End"],
+    dungeons: ['Prophecy', 'Ghosts of the Deep'],
+  },
+  {
+    at: '2026-09-29T18:00:00.000Z',
+    weekStart: '2026-09-29',
+    raids: ['Vow of the Disciple', 'Last Wish'],
+    dungeons: ['Grasp of Avarice', "Warlord's Ruin"],
+  },
+  {
+    at: '2026-10-06T17:00:00.000Z',
+    weekStart: '2026-10-06',
+    raids: ["King's Fall", 'Garden of Salvation'],
+    dungeons: ['Duality', "Vesper's Host"],
+  },
+  {
+    at: '2026-10-13T18:00:00.000Z',
+    weekStart: '2026-10-13',
+    raids: ['Root of Nightmares', 'Deep Stone Crypt'],
+    dungeons: ['Spire of the Watcher', 'Shattered Throne'],
+  },
+  {
+    at: '2026-10-20T17:00:00.000Z',
+    weekStart: '2026-10-20',
+    raids: ["Crota's End", 'Vault of Glass'],
+    dungeons: ['Ghosts of the Deep', 'Pit of Heresy'],
+  },
+  {
+    at: '2026-10-27T17:00:00.000Z',
+    weekStart: '2026-10-27',
+    raids: ['Last Wish', 'Vow of the Disciple'],
+    dungeons: ["Warlord's Ruin", 'Prophecy'],
+  },
+]
+
 describe('featured rotation schedule', () => {
-  it('matches the verified week of 6 Oct 2026', () => {
+  it('matches the blueberries week of 6 Oct 2026', () => {
     const state = getWeeklyResetState(OCT_11)
     expect(state.weekStart).toBe('2026-10-06')
     expect(state.rotationSource).toBe('schedule')
-    expect(state.featuredRaids.map((raid) => raid.name)).toEqual(['Vault of Glass', "Salvation's Edge"])
-    expect(state.featuredDungeons.map((dungeon) => dungeon.name)).toEqual(["Warlord's Ruin", 'Pit of Heresy'])
+    expect(state.featuredRaids.map((raid) => raid.name)).toEqual(["King's Fall", 'Garden of Salvation'])
+    expect(state.featuredDungeons.map((dungeon) => dungeon.name)).toEqual(['Duality', "Vesper's Host"])
     expect(state.pantheon).toBe('Calus · Consecrated Mind')
     expect(state.nextResetAt).toBe(RESET_END)
   })
 
-  it('matches the week the old 8-week cycle wrapped early', () => {
+  it('matches the blueberries week of 29 Sep 2026', () => {
     const state = getWeeklyResetState(new Date('2026-09-30T18:00:00.000Z'))
     expect(state.weekStart).toBe('2026-09-29')
-    expect(state.featuredRaids.map((raid) => raid.name)).toEqual(['Deep Stone Crypt', "Crota's End"])
+    expect(state.featuredRaids.map((raid) => raid.name)).toEqual(['Vow of the Disciple', 'Last Wish'])
     expect(state.featuredDungeons.map((dungeon) => dungeon.name)).toEqual([
-      'Ghosts of the Deep',
-      'Shattered Throne',
+      'Grasp of Avarice',
+      "Warlord's Ruin",
     ])
     expect(state.pantheon).toBe('Gahlran · Warpriest')
   })
 
-  it('keeps the Aug 4 and Sep 22 pairs that the shorter cycle already had right', () => {
-    expect(raidPairForWeekIndex(8)).toEqual(['Vault of Glass', "Salvation's Edge"])
-    expect(dungeonPairForWeekIndex(8)).toEqual(['Prophecy', "Vesper's Host"])
+  it('keeps the Aug 4 and Sep 22 blueberries pairs', () => {
+    expect(raidPairForWeekIndex(8)).toEqual(['Vow of the Disciple', 'Last Wish'])
+    expect(dungeonPairForWeekIndex(8)).toEqual(['Duality', "Vesper's Host"])
     const sep22 = getWeeklyResetState(new Date('2026-09-22T17:00:00.000Z'))
-    expect(sep22.featuredRaids.map((raid) => raid.name)).toEqual(['Garden of Salvation', 'Root of Nightmares'])
-    expect(sep22.featuredDungeons.map((dungeon) => dungeon.name)).toEqual([
-      'Spire of the Watcher',
-      'Sundered Doctrine',
-    ])
+    expect(sep22.featuredRaids.map((raid) => raid.name)).toEqual(['Vault of Glass', "Crota's End"])
+    expect(sep22.featuredDungeons.map((dungeon) => dungeon.name)).toEqual(['Prophecy', 'Ghosts of the Deep'])
   })
 
-  it('projects the following reset from the corrected cycle', () => {
-    const next = getWeeklyResetState(new Date('2026-10-13T17:00:00.000Z'))
-    expect(next.weekStart).toBe('2026-10-13')
-    expect(next.featuredRaids.map((raid) => raid.name)).toEqual(['Vow of the Disciple', 'Last Wish'])
-    expect(next.featuredDungeons.map((dungeon) => dungeon.name)).toEqual(['Prophecy', "Vesper's Host"])
+  it('matches Oct 13 2026 and the neighboring blueberries weeks', () => {
+    for (const week of BLUEBERRIES_WEEKS) {
+      const state = getWeeklyResetState(new Date(week.at))
+      expect({
+        weekStart: state.weekStart,
+        rotationSource: state.rotationSource,
+        raids: state.featuredRaids.map((raid) => raid.name),
+        dungeons: state.featuredDungeons.map((dungeon) => dungeon.name),
+      }).toEqual({
+        weekStart: week.weekStart,
+        rotationSource: 'schedule',
+        raids: [...week.raids],
+        dungeons: [...week.dungeons],
+      })
+    }
+  })
+
+  it('repeats the raid cycle every 8 weeks and the dungeon ring every 9', () => {
+    expect(raidPairForWeekIndex(0)).toEqual(['Vow of the Disciple', 'Last Wish'])
+    expect(raidPairForWeekIndex(18)).toEqual(raidPairForWeekIndex(18 + 8))
+    expect(dungeonPairForWeekIndex(18)).toEqual(dungeonPairForWeekIndex(18 + 9))
+    const oct13 = getWeeklyResetState(new Date('2026-10-13T18:00:00.000Z'))
+    const eightWeeksLater = getWeeklyResetState(new Date('2026-12-08T18:00:00.000Z'))
+    const nineWeeksLater = getWeeklyResetState(new Date('2026-12-15T18:00:00.000Z'))
+    expect(eightWeeksLater.featuredRaids.map((raid) => raid.name)).toEqual(
+      oct13.featuredRaids.map((raid) => raid.name)
+    )
+    expect(nineWeeksLater.featuredDungeons.map((dungeon) => dungeon.name)).toEqual(
+      oct13.featuredDungeons.map((dungeon) => dungeon.name)
+    )
+  })
+
+  it('feeds the same Oct 13 pairs to the weekly reset state and the public hub', () => {
+    const now = new Date('2026-10-13T18:00:00.000Z')
+    const state = getWeeklyResetState(now)
+    const hub = assemblePublicHub({ now, runs: [], lobbies: [] })
+    expect(state.featuredRaids.map((raid) => raid.name)).toEqual([
+      'Root of Nightmares',
+      'Deep Stone Crypt',
+    ])
+    expect(state.featuredDungeons.map((dungeon) => dungeon.name)).toEqual([
+      'Spire of the Watcher',
+      'Shattered Throne',
+    ])
+    expect(hub.featuredRaids).toEqual(state.featuredRaids.map((raid) => raid.name))
+    expect(hub.featuredDungeons).toEqual(state.featuredDungeons.map((dungeon) => dungeon.name))
+    expect(hub.weekLabel).toBe('Oct 13 – Oct 19')
   })
 })
 
@@ -211,7 +308,11 @@ describe('live rotation cache', () => {
 
     const nextWeek = getWeeklyResetState(new Date(RESET_END))
     expect(nextWeek.rotationSource).toBe('schedule')
-    expect(nextWeek.featuredRaids.map((raid) => raid.name)).toEqual(['Vow of the Disciple', 'Last Wish'])
+    expect(nextWeek.featuredRaids.map((raid) => raid.name)).toEqual(['Root of Nightmares', 'Deep Stone Crypt'])
+    expect(nextWeek.featuredDungeons.map((dungeon) => dungeon.name)).toEqual([
+      'Spire of the Watcher',
+      'Shattered Throne',
+    ])
     expect(nextWeek.weekStart).toBe('2026-10-13')
   })
 
