@@ -22,6 +22,7 @@ const KIND_LABELS: Record<AdminActivityEntry['kind'], string> = {
   meta_builds_sync: 'Meta builds',
   fireteam_room_delete: 'FlierTeam delete',
   fireteam_rooms_clear: 'FlierTeam clear',
+  community_build_moderate: 'Shared build',
 }
 
 const KIND_TONE: Record<AdminActivityEntry['kind'], 'red' | 'gold' | 'purple' | 'green' | 'blue' | 'neutral'> = {
@@ -39,6 +40,7 @@ const KIND_TONE: Record<AdminActivityEntry['kind'], 'red' | 'gold' | 'purple' | 
   meta_builds_sync: 'purple',
   fireteam_room_delete: 'red',
   fireteam_rooms_clear: 'red',
+  community_build_moderate: 'gold',
 }
 
 function formatWhen(iso: string): string {

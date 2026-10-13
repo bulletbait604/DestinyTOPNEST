@@ -48,7 +48,7 @@ export const TAB_PAGE_COPY: Record<
   loadouts: {
     title: 'Builds',
     description:
-      'Your live gear, saved loadouts, community favorites, and the loadout builder.',
+      'Your live gear, saved loadouts, player-shared builds, and the loadout builder.',
   },
   admin: {
     title: 'Admin',

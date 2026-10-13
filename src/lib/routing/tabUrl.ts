@@ -33,6 +33,8 @@ export function syncTabToUrl(tab: DestinyTopNestTab) {
 
   const params = new URLSearchParams(window.location.search)
   params.delete('destiny')
+  params.delete('profileView')
+  params.delete('section')
 
   if (tab === 'overview') {
     params.delete('tab')
@@ -40,6 +42,17 @@ export function syncTabToUrl(tab: DestinyTopNestTab) {
     params.set('tab', tab)
   }
 
+  const qs = params.toString()
+  const path = hubPathname()
+  const next = qs ? `${path}?${qs}` : path
+  window.history.replaceState(null, '', next)
+}
+
+export function syncLoadoutSectionToUrl(section: LoadoutSectionId) {
+  if (typeof window === 'undefined') return
+  const params = new URLSearchParams(window.location.search)
+  if (section === 'mine') params.delete('section')
+  else params.set('section', section)
   const qs = params.toString()
   const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname
   window.history.replaceState(null, '', next)
@@ -49,10 +62,42 @@ export const DESTINY_TAB_NAV_EVENT = 'destiny-topnest:tab'
 
 export type ProfileNavView = 'guardian' | 'passport' | 'activities' | 'loadouts'
 
+export const LOADOUT_SECTIONS = ['mine', 'community', 'builder', 'shared'] as const
+export type LoadoutSectionId = (typeof LOADOUT_SECTIONS)[number]
+
 export const DESTINY_PROFILE_NAV_EVENT = 'destiny-topnest:profile-nav'
+
+function hubPathname(): string {
+  if (typeof window === 'undefined') return '/'
+  if (window.location.pathname.startsWith('/builds')) return '/'
+  return window.location.pathname || '/'
+}
+
+export function parseLoadoutSection(search: string): LoadoutSectionId | undefined {
+  const section = new URLSearchParams(search).get('section')
+  if (section && (LOADOUT_SECTIONS as readonly string[]).includes(section)) {
+    return section as LoadoutSectionId
+  }
+  return undefined
+}
+
+export function parseProfileView(search: string): ProfileNavView | undefined {
+  const value = new URLSearchParams(search).get('profileView')
+  if (value === 'guardian' || value === 'passport' || value === 'activities' || value === 'loadouts') {
+    return value
+  }
+  return undefined
+}
 
 /** Switch to Profile and a specific sub-section (Guardian, Previous Activities, Loadouts). */
 export function navigateProfileSection(view: ProfileNavView) {
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/builds')) {
+    const params = new URLSearchParams()
+    params.set('tab', 'profile')
+    if (view !== 'guardian') params.set('profileView', view)
+    window.location.assign(`/?${params.toString()}`)
+    return
+  }
   syncTabToUrl('profile')
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(DESTINY_PROFILE_NAV_EVENT, { detail: view }))
@@ -61,10 +106,33 @@ export function navigateProfileSection(view: ProfileNavView) {
 
 /** Update URL and notify the shell to switch tabs (e.g. header Settings → Admin). */
 export function navigateDestinyTab(tab: DestinyTopNestTab) {
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/builds')) {
+    const params = new URLSearchParams()
+    if (tab !== 'overview') params.set('tab', tab)
+    const qs = params.toString()
+    window.location.assign(qs ? `/?${qs}` : '/')
+    return
+  }
   syncTabToUrl(tab)
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(DESTINY_TAB_NAV_EVENT, { detail: tab }))
   }
+}
+
+/** Open player-shared builds inside the existing Builds tab. */
+export function navigateSharedBuilds() {
+  if (typeof window === 'undefined') return
+  if (window.location.pathname.startsWith('/builds')) {
+    window.location.assign('/?tab=loadouts&section=shared')
+    return
+  }
+  const params = new URLSearchParams(window.location.search)
+  params.delete('destiny')
+  params.set('tab', 'loadouts')
+  params.set('section', 'shared')
+  const qs = params.toString()
+  window.history.pushState(null, '', `${window.location.pathname}?${qs}`)
+  window.dispatchEvent(new CustomEvent(DESTINY_TAB_NAV_EVENT, { detail: 'loadouts' }))
 }
 
 export function defaultBungieReturnPath(): string {

@@ -7,12 +7,15 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import {
   isDestinyTopNestTab,
+  parseLoadoutSection,
+  parseProfileView,
   parseTabFromSearch,
   stripOAuthParams,
   syncTabToUrl,
   DESTINY_TAB_NAV_EVENT,
   DESTINY_PROFILE_NAV_EVENT,
   navigateProfileSection,
+  type LoadoutSectionId,
 } from '@/lib/routing/tabUrl'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import DestinyNav from '@/app/components/destiny/DestinyNav'
@@ -37,7 +40,7 @@ import { HubClans, HubContracts, HubEvents, HubSherpas } from '@/app/components/
 import YourWeek from '@/app/components/hub/YourWeek'
 
 type ProfileView = 'guardian' | 'passport' | 'activities' | 'loadouts'
-type LoadoutSection = 'mine' | 'community' | 'builder'
+type LoadoutSection = LoadoutSectionId
 
 interface Props {
   darkMode: boolean
@@ -52,9 +55,10 @@ function resolveProfileView(tab: DestinyTopNestTab): ProfileView {
   return tab === 'loadouts' || tab === 'builds' ? 'loadouts' : 'guardian'
 }
 
-function resolveLoadoutSection(tab: DestinyTopNestTab): LoadoutSection | undefined {
-  if (tab === 'builds') return 'community'
-  if (tab === 'loadouts') return 'mine'
+function resolveLoadoutSection(tab: DestinyTopNestTab, search = ''): LoadoutSection | undefined {
+  const fromUrl = parseLoadoutSection(search)
+  if (tab === 'builds') return fromUrl ?? 'community'
+  if (tab === 'loadouts') return fromUrl ?? 'mine'
   return undefined
 }
 
@@ -108,9 +112,9 @@ export default function DestinyTopNestApp({
       setProfileView('guardian')
       setLoadoutSection(undefined)
     }
-    if (tab === 'loadouts') {
+    if (tab === 'loadouts' || tab === 'builds') {
       setProfileView('loadouts')
-      setLoadoutSection('mine')
+      setLoadoutSection(resolveLoadoutSection(tab, window.location.search))
     }
     setActiveTab(tab)
   }, [isAdmin])
@@ -130,8 +134,9 @@ export default function DestinyTopNestApp({
         setActiveTab('overview')
       } else {
         setActiveTab(resolved)
-        setProfileView(resolveProfileView(resolved))
-        setLoadoutSection(resolveLoadoutSection(resolved))
+        const profileViewFromUrl = resolved === 'profile' ? parseProfileView(window.location.search) : undefined
+        setProfileView(profileViewFromUrl ?? resolveProfileView(resolved))
+        setLoadoutSection(resolveLoadoutSection(resolved, window.location.search))
         if (PROFILE_TABS.has(resolved)) {
           setProfilePanelMounted(true)
         }

@@ -24,4 +24,8 @@ export const DESTINY_COLLECTIONS = {
   armorArchetypes: 'destiny_armor_archetypes',
   gearMods: 'destiny_gear_mods',
   bonds: 'destiny_bonds',
+  communityBuilds: 'destiny_community_builds',
+  communityBuildVotes: 'destiny_community_build_votes',
+  communityBuildSaves: 'destiny_community_build_saves',
+  communityBuildComments: 'destiny_community_build_comments',
 } as const
