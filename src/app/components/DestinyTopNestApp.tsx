@@ -33,6 +33,7 @@ import { useActiveCharacterSelect } from '@/hooks/useActiveCharacterSelect'
 import { cn } from '@/lib/utils'
 import HubErrorBoundary from '@/app/components/hub/HubErrorBoundary'
 import { HubClans, HubContracts, HubEvents, HubSherpas } from '@/app/components/hub/HubPages'
+import ActivityHistoryPanel from '@/app/components/hub/ActivityHistoryPanel'
 import YourWeek from '@/app/components/hub/YourWeek'
 
 type ProfileView = 'guardian' | 'passport' | 'activities' | 'loadouts'
@@ -235,6 +236,8 @@ export default function DestinyTopNestApp({
         return <HubSherpas />
       case 'events':
         return <HubEvents />
+      case 'history':
+        return <ActivityHistoryPanel />
       case 'season':
         return <LeaderboardsPanel darkMode={darkMode} />
       case 'admin':
@@ -246,7 +249,13 @@ export default function DestinyTopNestApp({
     }
   }
 
-  const hubTab = activeTab === 'overview' || activeTab === 'contracts' || activeTab === 'sherpas' || activeTab === 'events' || activeTab === 'clans'
+  const hubTab =
+    activeTab === 'overview' ||
+    activeTab === 'contracts' ||
+    activeTab === 'sherpas' ||
+    activeTab === 'events' ||
+    activeTab === 'clans' ||
+    activeTab === 'history'
   const showTopNestCallout = activeTab === 'overview' && !embedded
   const showLeaderboardRules = activeTab === 'leaderboards' || activeTab === 'season'
   const showHero = !embedded || !hubTab

@@ -4667,6 +4667,112 @@ a { color: inherit; text-decoration: none; }
   color: #d5dee8;
   font-size: 0.8rem;
 }
+.gh-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.6rem;
+}
+.gh-stat {
+  background: rgba(10, 14, 20, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 0.7rem 0.8rem;
+}
+.gh-stat dt {
+  color: #9fd7ff;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.gh-stat dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+.gh-progress {
+  height: 8px;
+  margin: 0.7rem 0 0.35rem;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.gh-progress > span {
+  display: block;
+  height: 100%;
+  background: #73d2ff;
+}
+.gh-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.65rem;
+}
+.gh-filters label {
+  display: grid;
+  gap: 0.3rem;
+  color: #d5dee8;
+  font-size: 0.78rem;
+}
+.gh-search,
+.gh-select {
+  min-height: 44px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(8, 12, 18, 0.72);
+  color: #f4f7fb;
+  padding: 0.4rem 0.7rem;
+  font: inherit;
+}
+.gh-table-wrap {
+  overflow: auto;
+  max-height: 28rem;
+}
+.gh-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.gh-table th,
+.gh-table td {
+  text-align: left;
+  padding: 0.45rem 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  vertical-align: top;
+  white-space: nowrap;
+}
+.gh-table th {
+  color: #9fd7ff;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.gh-run {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.15rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.gh-run:hover span:first-child {
+  text-decoration: underline;
+}
+.gh-pgcr {
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.gh-card summary {
+  cursor: pointer;
+  font-weight: 650;
+}
 @media (min-width: 800px) {
   .gh-hero,
   .gh-split {

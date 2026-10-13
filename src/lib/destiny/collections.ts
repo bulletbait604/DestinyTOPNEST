@@ -23,4 +23,7 @@ export const DESTINY_COLLECTIONS = {
   armorStats: 'destiny_armor_stats',
   armorArchetypes: 'destiny_armor_archetypes',
   gearMods: 'destiny_gear_mods',
+  activityHistory: 'destiny_activity_history',
+  activityHistorySync: 'destiny_activity_history_sync',
+  activityPgcr: 'destiny_activity_pgcr',
 } as const

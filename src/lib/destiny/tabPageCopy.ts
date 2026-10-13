@@ -18,7 +18,8 @@ export const TAB_PAGE_COPY: Record<
   | 'admin'
   | 'contracts'
   | 'sherpas'
-  | 'events',
+  | 'events'
+  | 'history',
   TabPageCopy
 > = {
   overview: {
@@ -66,13 +67,18 @@ export const TAB_PAGE_COPY: Record<
     title: 'Night Ops',
     description: 'Scheduled community sessions. A badge needs a verified clear inside the event window.',
   },
+  history: {
+    title: 'Activity history',
+    description:
+      'Every run Bungie still has for your characters, with clears, K/D, time played, and post-game reports.',
+  },
 }
 
 /** Map route tab ids to hero copy keys. */
 export function tabPageCopyKey(tab: DestinyTopNestTab): keyof typeof TAB_PAGE_COPY {
   if (tab === 'builds' || tab === 'loadouts') return 'loadouts'
   if (tab === 'season') return 'leaderboards'
-  if (tab === 'contracts' || tab === 'sherpas' || tab === 'events') return tab
+  if (tab === 'contracts' || tab === 'sherpas' || tab === 'events' || tab === 'history') return tab
   return tab as keyof typeof TAB_PAGE_COPY
 }
 

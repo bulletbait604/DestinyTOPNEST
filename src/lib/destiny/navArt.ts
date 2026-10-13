@@ -25,6 +25,7 @@ export const NAV_TAB_ART: Partial<Record<DestinyTopNestTab, string>> = {
   builds: ACTIVITY_ICON_PATHS['deep stone crypt'],
   season: ACTIVITY_ICON_PATHS["crota's end"],
   admin: ACTIVITY_ICON_PATHS['spire of the watcher'],
+  history: ACTIVITY_ICON_PATHS['vault of glass'],
 }
 
 export function navTabArtUrl(tab: DestinyTopNestTab): string | undefined {

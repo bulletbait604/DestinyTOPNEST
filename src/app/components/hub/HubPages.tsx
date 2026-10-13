@@ -200,6 +200,10 @@ export function HubHome({
             <span>Clan standings from verified clears with your clanmates.</span>
           </li>
           <li>
+            <strong>Activity history</strong>
+            <span>Every run Bungie still has, after you sign in.</span>
+          </li>
+          <li>
             <strong>Fireteam finder</strong>
             <span>Open rooms for raids, dungeons, and teaching runs.</span>
           </li>

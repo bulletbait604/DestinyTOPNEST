@@ -4,7 +4,13 @@
  * Endpoint catalog: https://bungie-net.github.io/  Root: https://www.bungie.net/Platform
  */
 
-import { bungieRetryDelayMs } from '@/lib/destiny/bungieRateLimit'
+import {
+  bungieRetryDelayMs,
+  isBungieThrottleCode,
+  isBungieThrottleMessage,
+  patientBackoffMs,
+  waitForBungieSlot,
+} from '@/lib/destiny/bungieRateLimit'
 import { BUNGIE_API_BASE, DESTINY_MANIFEST_PATH, destinyApiKey } from '@/lib/destiny/env'
 import JSONbig from 'json-bigint'
 
@@ -31,14 +37,17 @@ interface BungieEnvelope<T> {
 
 async function bungieFetch<T>(
   path: string,
-  options: RequestInit & { accessToken?: string; rateLimitAttempt?: number } = {}
+  options: RequestInit & { accessToken?: string; rateLimitAttempt?: number; patient?: boolean } = {}
 ): Promise<T> {
   const apiKey = destinyApiKey()
   if (!apiKey) {
     throw new BungieApiError('DESTINY_API is not configured', 503)
   }
 
-  const { accessToken, rateLimitAttempt = 0, ...fetchOptions } = options
+  const { accessToken, rateLimitAttempt = 0, patient = false, ...fetchOptions } = options
+  if (patient) {
+    await waitForBungieSlot()
+  }
   const headers: Record<string, string> = {
     'X-API-Key': apiKey,
     ...(fetchOptions.headers as Record<string, string>),
@@ -54,7 +63,12 @@ async function bungieFetch<T>(
   })
 
   if (res.status === 429) {
-    const delay = bungieRetryDelayMs(res.headers.get('retry-after'), rateLimitAttempt)
+    const retryAfter = res.headers.get('retry-after')
+    if (patient && rateLimitAttempt < 4) {
+      await new Promise((resolve) => setTimeout(resolve, patientBackoffMs(retryAfter, rateLimitAttempt)))
+      return bungieFetch(path, { ...options, patient: true, rateLimitAttempt: rateLimitAttempt + 1 })
+    }
+    const delay = bungieRetryDelayMs(retryAfter, rateLimitAttempt)
     if (delay != null) {
       await new Promise((resolve) => setTimeout(resolve, delay))
       return bungieFetch(path, { ...options, rateLimitAttempt: rateLimitAttempt + 1 })
@@ -69,7 +83,13 @@ async function bungieFetch<T>(
   const raw = await res.text()
   const body = parseBungieJson.parse(raw) as BungieEnvelope<T>
   if (body.ErrorCode !== 1) {
-    throw new BungieApiError(body.Message || body.ErrorStatus, 502, body.ErrorCode)
+    const throttled =
+      isBungieThrottleCode(body.ErrorCode) || isBungieThrottleMessage(body.Message || body.ErrorStatus)
+    if (patient && throttled && rateLimitAttempt < 4) {
+      await new Promise((resolve) => setTimeout(resolve, patientBackoffMs(null, rateLimitAttempt)))
+      return bungieFetch(path, { ...options, patient: true, rateLimitAttempt: rateLimitAttempt + 1 })
+    }
+    throw new BungieApiError(body.Message || body.ErrorStatus, throttled ? 429 : 502, body.ErrorCode)
   }
 
   return body.Response
@@ -161,12 +181,13 @@ export async function getPlayerProfile(
   membershipType: number,
   membershipId: string,
   components: number[] = [100, 200],
-  accessToken?: string
+  accessToken?: string,
+  patient = false
 ) {
   const componentQuery = components.join(',')
   return bungieFetch(
     `/Destiny2/${membershipType}/Profile/${membershipId}/?components=${componentQuery}`,
-    { accessToken }
+    { accessToken, patient }
   )
 }
 
@@ -205,6 +226,37 @@ export async function getActivityHistory(
     `/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=${count}`,
     { accessToken }
   )
+}
+
+/**
+ * One page of GetActivityHistory. mode 0 is every mode Bungie will return.
+ * count is capped at 250 by Bungie. page is zero-based and newest-first.
+ */
+export async function getActivityHistoryPage(
+  membershipType: number,
+  membershipId: string,
+  characterId: string,
+  options: { mode?: number; count?: number; page?: number; accessToken?: string } = {}
+) {
+  const mode = options.mode ?? 0
+  const count = Math.min(250, Math.max(1, options.count ?? 250))
+  const page = Math.max(0, options.page ?? 0)
+  return bungieFetch<{ activities?: unknown[] | null }>(
+    `/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=${count}&page=${page}`,
+    { accessToken: options.accessToken, patient: true }
+  )
+}
+
+/** Account historical stats, including deleted characters Bungie still summarizes. */
+export async function getHistoricalStatsForAccount(
+  membershipType: number,
+  membershipId: string,
+  accessToken?: string
+) {
+  return bungieFetch<unknown>(`/Destiny2/${membershipType}/Account/${membershipId}/Stats/`, {
+    accessToken,
+    patient: true,
+  })
 }
 
 /** Post-game carnage report — core for run verification. */
