@@ -1,113 +1,16 @@
 import type {
   ActivityRunForVote,
   ActivityRunGuardian,
-  LeaderboardEntry,
-  LeaderboardPeriod,
   MvpVote,
   RunRecord,
-  Season,
   TrustReview,
 } from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { trustReviewKey, userParticipatedInRun, usersByMembershipMap } from '@/lib/destiny/fireteamReputation'
-import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
 export const MVP_VOTER_POINTS = 0
-/** MVP selection no longer awards leaderboard points — Top Guardians ranks by crowns received. */
+/** MVP votes credit sherpas. They do not score a leaderboard. */
 export const MVP_SELECTED_POINTS = 0
-export const COMMANDER_RANK_LIMIT = 3
-
-function periodStart(period: LeaderboardPeriod, season: Season): Date | null {
-  const now = Date.now()
-  switch (period) {
-    case 'weekly': {
-      const reset = getWeeklyResetState()
-      return new Date(reset.resetAt)
-    }
-    case 'monthly':
-      return new Date(now - 30 * 24 * 60 * 60 * 1000)
-    case 'season':
-      return new Date(season.startDate)
-    case 'all_time':
-      return null
-  }
-}
-
-function voteMatchesPeriod(vote: MvpVote, period: LeaderboardPeriod, season: Season): boolean {
-  const start = periodStart(period, season)
-  const voteTime = new Date(vote.createdAt).getTime()
-  if (!start) return true
-  if (period === 'season') {
-    const end = new Date(season.endDate).getTime()
-    return voteTime >= start.getTime() && voteTime <= end
-  }
-  return voteTime >= start.getTime()
-}
-
-interface UserAgg {
-  userId: string
-  points: number
-  mvpReceived: number
-}
-
-export function aggregateGuardianLeaderboard(
-  votes: MvpVote[],
-  usersById: Map<string, StoredDestinyUser>,
-  period: LeaderboardPeriod,
-  season: Season,
-  limit = 10
-): LeaderboardEntry[] {
-  const agg = new Map<string, UserAgg>()
-
-  for (const vote of votes) {
-    if (!voteMatchesPeriod(vote, period, season)) continue
-
-    const selectedRow = agg.get(vote.selectedUserId) ?? {
-      userId: vote.selectedUserId,
-      points: 0,
-      mvpReceived: 0,
-    }
-    selectedRow.mvpReceived += 1
-    selectedRow.points = selectedRow.mvpReceived
-    agg.set(vote.selectedUserId, selectedRow)
-  }
-
-  return Array.from(agg.values())
-    .sort((a, b) => b.mvpReceived - a.mvpReceived || b.points - a.points)
-    .slice(0, limit)
-    .map((row, index) => {
-      const user = usersById.get(row.userId)
-      return {
-        userId: row.userId,
-        bungieDisplayName: user?.bungieDisplayName ?? row.userId,
-        emblemUrl: user?.emblemUrl,
-        clanTag: user?.clanTag,
-        platform: user?.platform ?? 'steam',
-        guardianRank: user?.guardianRank,
-        powerLevel: user?.powerLevel,
-        category: 'top_guardians' as const,
-        seasonId: season.id,
-        period,
-        points: row.points,
-        verifiedClears: row.mvpReceived,
-        rank: index + 1,
-      }
-    })
-}
-
-export function guardianPointsForUser(
-  userId: string,
-  votes: MvpVote[],
-  period: LeaderboardPeriod,
-  season: Season
-): number {
-  let mvpCrowns = 0
-  for (const vote of votes) {
-    if (!voteMatchesPeriod(vote, period, season)) continue
-    if (vote.selectedUserId === userId) mvpCrowns += 1
-  }
-  return mvpCrowns
-}
 
 export function buildActivityRunsForVote(
   viewerId: string,

@@ -16,7 +16,7 @@ import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import PendingVotePrompt from '@/app/components/destiny/PendingVotePrompt'
 import WeeklyActivitySetCard from '@/app/components/destiny/WeeklyActivitySetCard'
-import { homeSectionArtUrl, soloLeaderboardIconUrl } from '@/lib/destiny/navArt'
+import { homeSectionArtUrl } from '@/lib/destiny/navArt'
 import { leaderboardCategoryIconUrl } from '@/lib/destiny/activityIconPaths'
 import { useOverviewData } from '@/contexts/OverviewDataContext'
 
@@ -126,7 +126,6 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
   }
 
   const { featuredRaids, featuredDungeons, resetsInLabel } = data.weeklyReset
-  const soloEntries = data.guardiansTop3 ?? data.clanTop5 ?? []
   const todayArt = homeSectionArtUrl('todayPanel')
 
   return (
@@ -143,7 +142,7 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
       <div className="space-y-5 sm:space-y-6">
       <div>
         <h2 className="d2-panel-header-title text-center text-base sm:text-lg mb-4">Leaderboard</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <HomeLeaderboardCard
           title="Raid"
           subtitle="Top raiders this season"
@@ -158,22 +157,6 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
           artUrl={homeSectionArtUrl('dungeonBoard')}
           iconUrl={featuredDungeons[0]?.iconUrl ?? data.featuredDungeon.iconUrl}
           entries={data.dungeonTop10}
-          darkMode={darkMode}
-        />
-        <HomeLeaderboardCard
-          title="Pantheon"
-          subtitle="Boss encounters = raid points"
-          artUrl={homeSectionArtUrl('pantheonBoard')}
-          iconUrl={data.weeklyReset.pantheonIconUrl ?? leaderboardCategoryIconUrl('pantheon')}
-          entries={data.pantheonTop10}
-          darkMode={darkMode}
-        />
-        <HomeLeaderboardCard
-          title="Solo"
-          subtitle="Monthly Commanders"
-          artUrl={homeSectionArtUrl('soloBoard')}
-          iconUrl={soloLeaderboardIconUrl()}
-          entries={soloEntries}
           darkMode={darkMode}
         />
         </div>

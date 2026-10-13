@@ -25,8 +25,6 @@ import AdminPanel from '@/app/components/destiny/AdminPanel'
 import PlayerCardShell from '@/app/components/destiny/PlayerCardShell'
 import TabPageHero from '@/app/components/destiny/TabPageHero'
 import TabShellAlerts from '@/app/components/destiny/TabShellAlerts'
-import HomeTopNestCallout from '@/app/components/destiny/HomeTopNestCallout'
-import HomeSoloPreview from '@/app/components/destiny/HomeSoloPreview'
 import LeaderboardRulesSection from '@/app/components/destiny/LeaderboardRulesSection'
 import RunSyncToast from '@/app/components/destiny/RunSyncToast'
 import NewcomerWelcomeModal from '@/app/components/destiny/NewcomerWelcomeModal'
@@ -262,11 +260,9 @@ export default function DestinyTopNestApp({
   }
 
   const hubTab = activeTab === 'overview' || activeTab === 'contracts' || activeTab === 'sherpas' || activeTab === 'events' || activeTab === 'clans'
-  const showTopNestCallout = activeTab === 'overview' && !embedded
   const showLeaderboardRules = activeTab === 'leaderboards'
   const showHero = !embedded || !hubTab
   const showPlayerCard = !embedded || PROFILE_TABS.has(activeTab)
-  const heroAside = showTopNestCallout ? <HomeSoloPreview darkMode={darkMode} /> : undefined
 
   return (
     <OverviewDataProvider>
@@ -279,14 +275,13 @@ export default function DestinyTopNestApp({
             <DestinyNav activeTab={activeTab} onTabChange={handleTabChange} darkMode={darkMode} showAdmin={isAdmin} />
           )}
           <TabShellAlerts darkMode={darkMode} />
-          {showHero ? <TabPageHero tab={activeTab} aside={heroAside} /> : null}
+          {showHero ? <TabPageHero tab={activeTab} /> : null}
           {showPlayerCard ? (
             <div className="d2-player-card-featured">
               <ProfilePlayerBanner darkMode={darkMode} activeTab={activeTab} />
             </div>
           ) : null}
           {showLeaderboardRules ? <LeaderboardRulesSection darkMode={darkMode} /> : null}
-          {showTopNestCallout ? <HomeTopNestCallout darkMode={darkMode} /> : null}
           <div className="min-w-0">{renderPanel()}</div>
         </div>
         </div>

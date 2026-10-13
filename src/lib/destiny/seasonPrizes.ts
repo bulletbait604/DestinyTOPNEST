@@ -1,4 +1,5 @@
 ﻿import { buildLeaderboardWithAdjustments } from '@/lib/destiny/leaderboardAdjustments'
+import { isActiveLeaderboardCategory } from '@/lib/destiny/leaderboards'
 import type { LeaderboardCategory, LeaderboardEntry, MvpVote, RunRecord, Season, SeasonWinner } from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 
@@ -7,24 +8,17 @@ function prizeForRank(
   rank: number,
   rules: Season['prizeRules']
 ): string {
-  const legacy = rules as Season['prizeRules'] & { fullClanTeam?: Season['prizeRules']['topGuardians'] }
   const bucket =
     category === 'new_bonds'
       ? (rules.newBonds ?? rules.raid)
-      : category === 'raid' || category === 'pantheon'
-      ? rules.raid
       : category === 'dungeon'
         ? rules.dungeon
-        : rules.topGuardians ?? legacy.fullClanTeam!
+        : rules.raid
 
   if (rank === 1) return bucket.first
   if (rank === 2) return bucket.second
-  if (rank === 3) {
-    if ('third' in bucket) return bucket.third
-    if ('thirdToFifth' in bucket) return bucket.thirdToFifth
-  }
-  if (rank <= 5 && 'thirdToFifth' in bucket) return bucket.thirdToFifth
-  return 'participation' in bucket ? bucket.participation : 'Season participant'
+  if (rank <= 5) return bucket.thirdToFifth
+  return bucket.participation
 }
 
 /** Live season standings → hall of fame preview (Phase 5). */
@@ -52,7 +46,7 @@ export async function computeSeasonStandings(
     ...toWinners(bondsTop, 'new_bonds', season, 3),
   ]
 
-  const storedWinners = season.winners ?? []
+  const storedWinners = (season.winners ?? []).filter((winner) => isActiveLeaderboardCategory(winner.category))
   const eligibility =
     raidTop.length || dungeonTop.length || bondsTop.length
       ? `Season ends ${new Date(season.endDate).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })} PT. #1 on the Raid, Dungeon and New Bonds boards each win a Destiny 2 3D print after a 7-day verification window.`
@@ -92,7 +86,7 @@ export function prizeEligibilityForUser(
 
   const best = entries.sort((a, b) => a.rank - b.rank)[0]
   if (!best) {
-    return 'Eligible for verified run scoring this season. Vote MVP in Previous Activities to climb Top Guardians.'
+    return 'Eligible for verified run scoring this season. Sync clears to climb the Raid, Dungeon, and New Bonds boards.'
   }
 
   return `Season rank #${best.rank} in ${best.category.replace(/_/g, ' ')} — ${best.points} pts. #1 at season end wins a prize (US/CA 3D print, UK Steam card).`

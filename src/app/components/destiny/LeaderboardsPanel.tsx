@@ -32,26 +32,7 @@ const BOARDS: {
     defaultPeriod: 'season',
     footnote: 'Verified dungeon clears + bond bonuses. #1 wins a prize (3D print US/CA · Steam card UK).',
   },
-  {
-    category: 'pantheon',
-    title: 'The Pantheon',
-    defaultPeriod: 'season',
-    footnote: 'Squads ranked by fireteam — each verified boss encounter scores like a raid clear.',
-  },
-  {
-    category: 'top_guardians',
-    title: 'Commanders / Sherpas',
-    defaultPeriod: 'monthly',
-    footnote: 'Top Guardians crowned from MVP votes received each month.',
-  },
 ]
-
-function periodsForCategory(category: LeaderboardCategory): LeaderboardPeriod[] {
-  if (category === 'top_guardians') {
-    return PERIOD_OPTIONS.filter((p) => p !== 'weekly')
-  }
-  return PERIOD_OPTIONS
-}
 
 type BoardState = {
   entries: LeaderboardEntry[]
@@ -63,9 +44,7 @@ function initialBoardState(): Record<LeaderboardCategory, BoardState> {
   return {
     raid: { entries: [], loading: true, period: 'season' },
     dungeon: { entries: [], loading: true, period: 'season' },
-    pantheon: { entries: [], loading: true, period: 'season' },
     new_bonds: { entries: [], loading: true, period: 'season' },
-    top_guardians: { entries: [], loading: true, period: 'monthly' },
   }
 }
 
@@ -136,7 +115,7 @@ export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
               title={board.title}
               category={board.category}
               period={state.period}
-              periodOptions={periodsForCategory(board.category)}
+              periodOptions={PERIOD_OPTIONS}
               onPeriodChange={(period) => handlePeriodChange(board.category, period)}
               entries={state.entries}
               loading={state.loading}

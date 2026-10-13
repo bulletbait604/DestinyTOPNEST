@@ -84,14 +84,12 @@ export default function ProfilePanel({
   const pointTiles = [
     { label: 'Raid pts', value: profile.raidPoints },
     { label: 'Dungeon pts', value: profile.dungeonPoints },
-    { label: 'Pantheon pts', value: profile.pantheonPoints ?? 0 },
-    { label: 'MVP crowns', value: profile.guardianPoints ?? 0 },
     { label: 'Verified clears', value: profile.verifiedClears },
   ]
 
   return (
     <div className="space-y-4 d2-profile-page animate-in fade-in duration-300">
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
         {pointTiles.map((stat) => (
           <div key={stat.label} className="d2-profile-stat-tile">
             <p className="d2-profile-stat-label">{stat.label}</p>

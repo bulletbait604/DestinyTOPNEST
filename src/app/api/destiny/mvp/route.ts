@@ -1,47 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
-import { getCachedMvpBoard, invalidateDestinySharedCaches, CACHE_TAGS } from '@/lib/destiny/dataCache'
+import { invalidateDestinySharedCaches, CACHE_TAGS } from '@/lib/destiny/dataCache'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
 import { usersByMembershipMap } from '@/lib/destiny/fireteamReputation'
-import {
-  MVP_SELECTED_POINTS,
-  MVP_VOTER_POINTS,
-  validateMvpVoteSubmission,
-} from '@/lib/destiny/mvpVoting'
-import {
-  findMvpVote,
-  getMvpVotesByReviewer,
-  getRunsForParticipant,
-  loadUsersMap,
-  saveMvpVote,
-} from '@/lib/destiny/store'
+import { validateMvpVoteSubmission } from '@/lib/destiny/mvpVoting'
+import { findMvpVote, getRunsForParticipant, loadUsersMap, saveMvpVote } from '@/lib/destiny/store'
 import type { MvpVote } from '@/lib/destiny/types'
 
 export const dynamic = 'force-dynamic'
-
-export async function GET(req: NextRequest) {
-  return destinyAuthHandler(req, async () => {
-    const authUser = await verifyAuth(req)
-    const userId = authUser.username.toLowerCase()
-    const { searchParams } = new URL(req.url)
-    const period = searchParams.get('period') === 'season' ? 'season' : 'monthly'
-
-    const [board, myVotes] = await Promise.all([
-      getCachedMvpBoard(period),
-      getMvpVotesByReviewer(userId),
-    ])
-
-    const res = NextResponse.json({
-      ...board,
-      voterPoints: MVP_VOTER_POINTS,
-      selectedPoints: MVP_SELECTED_POINTS,
-      myVotes,
-    })
-    res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60')
-    return res
-  })
-}
 
 export async function POST(req: NextRequest) {
   return destinyAuthHandler(req, async () => {

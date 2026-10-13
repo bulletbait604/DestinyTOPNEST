@@ -26,8 +26,7 @@ import { cn } from '@/lib/utils'
 const CATEGORY_LABELS: Record<string, string> = {
   raid: 'Raid leaders',
   dungeon: 'Dungeon leaders',
-  pantheon: 'Pantheon squads',
-  top_guardians: 'Top Guardians (Commanders)',
+  new_bonds: 'New Bonds',
 }
 
 /** Season prizes and standings — rendered below Leaderboards grid. */
@@ -85,7 +84,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
     <div className="space-y-4 pt-2 border-t border-white/[0.08]">
       <SectionTitle
         title="Season standings"
-        subtitle="Verified clears and MVP votes decide who leads each board"
+        subtitle="Verified clears decide who leads each board"
         darkMode={darkMode}
       />
 
@@ -133,8 +132,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
                 </div>
                 <p className={cn('text-2xl font-semibold tabular-nums mt-1', t.gold)}>#{track.rank}</p>
                 <p className={cn('text-xs mt-1', t.muted)}>
-                  {track.points} pts ·{' '}
-                  {track.category === 'pantheon' ? `${track.verifiedClears} encounters` : `${track.verifiedClears} clears`}
+                  {track.points} pts · {track.verifiedClears} clears
                 </p>
                 {track.fastestClearSeconds ? (
                   <p className={cn('text-[10px] mt-1', t.caption)}>

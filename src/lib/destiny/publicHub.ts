@@ -91,7 +91,7 @@ export const HUB_SCORING: PublicScoringNote[] = [
   },
   {
     title: 'Sherpa ranks',
-    body: 'You get a sherpa point when you guide someone through their first verified clear of an activity you have already cleared. If they vote you MVP, you get one more point. Sherpa ranks are separate from Commander crowns.',
+    body: 'You get a sherpa point when you guide someone through their first verified clear of an activity you have already cleared. If they vote you MVP, you get one more point.',
   },
   {
     title: 'Clan Wars',

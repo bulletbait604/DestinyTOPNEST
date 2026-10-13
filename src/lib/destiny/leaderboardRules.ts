@@ -13,8 +13,6 @@ export const LEADERBOARD_RULES_BULLETS = [
   'New Bonds: +15 (raid) / +10 (dungeon) for each fireteam member you have never cleared with — no cap on strangers',
   'Growing bonds: +4 for your 2nd and 3rd clear with the same Guardian, then bonus stops',
   'Anti-farm: max 6 new bonds scored per 24h; teammates must complete and play ≥50% of the run; very short clears earn no bond bonus; alt-account rings are disqualified',
-  'Pantheon squads: each boss encounter counts as one raid worth of points for the fireteam',
-  'MVP votes: pick one MVP per verified run in Previous Activities (Top Guardians ranked by MVP crowns)',
   'Checkpoint runs tracked but not scored unless admin approved',
   'Weekly contracts earn season tier points (titles, frames, badges) and do not change leaderboard scores',
   'Suspicious runs blocked until review (score 70+)',

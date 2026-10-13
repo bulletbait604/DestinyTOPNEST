@@ -54,11 +54,6 @@ export const DEFAULT_SEASON_PRIZE_RULES: SeasonPrizeRules = {
     thirdToFifth: 'Hall of Fame mention',
     participation: 'Season history',
   },
-  topGuardians: {
-    first: 'Hall of Fame mention',
-    second: 'Hall of Fame mention',
-    third: 'Hall of Fame mention',
-  },
 }
 
 const QUARTER_NAMES: { name: string; tagline: string }[] = [
@@ -180,6 +175,9 @@ export function mergeSeasonWithDefinition(stored: Season, def: NestSeasonDefinit
     tagline: stored.adminOverride?.tagline || def.tagline,
     startDate: stored.adminOverride?.startDate || def.startDate,
     endDate: stored.adminOverride?.endDate || def.endDate,
-    prizeRules: DEFAULT_SEASON_PRIZE_RULES,
+    prizeRules: {
+      ...(stored.prizeRules ?? {}),
+      ...DEFAULT_SEASON_PRIZE_RULES,
+    },
   }
 }

@@ -9,6 +9,7 @@
   UnrankedRunTeammate,
 } from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
+import { isActiveLeaderboardCategory } from '@/lib/destiny/leaderboards'
 import type { UserPrizeTrackEntry } from '@/lib/destiny/seasonPrizes'
 
 export interface ReviewableTeammate {
@@ -217,8 +218,6 @@ const PRIZE_RANK_LIMIT: Record<LeaderboardCategory, number> = {
   raid: 1,
   dungeon: 1,
   new_bonds: 1,
-  pantheon: 0,
-  top_guardians: 0,
 }
 
 export function prizeEligibleTracks(
@@ -229,7 +228,7 @@ export function prizeEligibleTracks(
 ): UserPrizeTrackEntry[] {
   if (season.status === 'archived' && season.winners?.length) {
     return season.winners
-      .filter((w) => w.userId === userId)
+      .filter((w) => w.userId === userId && isActiveLeaderboardCategory(w.category))
       .map((w) => ({
         category: w.category,
         rank: w.rank,
