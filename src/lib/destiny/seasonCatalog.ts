@@ -10,127 +10,83 @@ export interface NestSeasonDefinition {
   endDate: string
 }
 
-/** Shared prize structure across Nest seasons — adjust per season in admin if needed. */
+export const SEASON_PRIZE_TEXT = 'One Destiny 2 3D print' as const
+
+/**
+ * One prize per leaderboard per season: the #1 player on the Raid, Dungeon and
+ * New Bonds boards each win a Destiny 2 3D print. No cash prizes.
+ */
 export const DEFAULT_SEASON_PRIZE_RULES: SeasonPrizeRules = {
   raid: {
-    first: '$50 CAD platform card (Xbox / PlayStation / Steam)',
-    second: '$25 CAD platform card',
-    thirdToFifth: '3D print prize',
-    participation: 'Leaderboard history mention',
+    first: SEASON_PRIZE_TEXT,
+    second: 'Hall of Fame mention',
+    thirdToFifth: 'Hall of Fame mention',
+    participation: 'Season history',
   },
   dungeon: {
-    first: '$50 CAD platform card',
-    second: '$25 CAD platform card',
-    thirdToFifth: '3D print prize',
-    participation: 'Leaderboard history mention',
+    first: SEASON_PRIZE_TEXT,
+    second: 'Hall of Fame mention',
+    thirdToFifth: 'Hall of Fame mention',
+    participation: 'Season history',
+  },
+  newBonds: {
+    first: SEASON_PRIZE_TEXT,
+    second: 'Hall of Fame mention',
+    thirdToFifth: 'Hall of Fame mention',
+    participation: 'Season history',
   },
   topGuardians: {
-    first: 'Commander — $50 CAD platform card',
-    second: 'Commander — $25 CAD platform card',
-    third: 'Commander — 3D print prize',
+    first: 'Hall of Fame mention',
+    second: 'Hall of Fame mention',
+    third: 'Hall of Fame mention',
   },
 }
 
-/** Monthly Nest seasons — Season 1 begins July 1, 2026 (launch). */
-export const NEST_SEASON_CATALOG: NestSeasonDefinition[] = [
-  {
-    seasonNumber: 1,
-    id: 'dtn-s01-monument-era',
-    name: 'Season of the Monument Era',
-    tagline: 'The inaugural launch theme',
-    startDate: '2026-07-01T17:00:00.000Z',
-    endDate: '2026-07-31T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 2,
-    id: 'dtn-s02-skyward-oath',
-    name: 'Season of the Skyward Oath',
-    tagline: 'Focusing on community, honor, and the Guardian Oath',
-    startDate: '2026-08-01T17:00:00.000Z',
-    endDate: '2026-08-31T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 3,
-    id: 'dtn-s03-high-eyrie',
-    name: 'Season of the High Eyrie',
-    tagline: 'The peak of the leaderboards',
-    startDate: '2026-09-01T17:00:00.000Z',
-    endDate: '2026-09-30T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 4,
-    id: 'dtn-s04-apex-flight',
-    name: 'Season of the Apex Flight',
-    tagline: 'Focused on the race to climb the boards',
-    startDate: '2026-10-01T17:00:00.000Z',
-    endDate: '2026-10-31T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 5,
-    id: 'dtn-s05-gilded-talon',
-    name: 'Season of the Gilded Talon',
-    tagline: 'Highlighting premium digital and physical rewards',
-    startDate: '2026-11-01T17:00:00.000Z',
-    endDate: '2026-11-30T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 6,
-    id: 'dtn-s06-astral-forge',
-    name: 'Season of the Astral Forge',
-    tagline: 'Leaning into your custom 3D-printed prize culture',
-    startDate: '2026-12-01T17:00:00.000Z',
-    endDate: '2026-12-31T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 7,
-    id: 'dtn-s07-eyrie-sovereign',
-    name: 'Season of the Eyrie Sovereign',
-    tagline: 'A regal theme for the top leaderboard spots',
-    startDate: '2027-01-01T17:00:00.000Z',
-    endDate: '2027-01-31T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 8,
-    id: 'dtn-s08-nestborn',
-    name: 'Season of the Nestborn',
-    tagline: 'Celebrating the growth of the community core',
-    startDate: '2027-02-01T17:00:00.000Z',
-    endDate: '2027-02-28T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 9,
-    id: 'dtn-s09-vanguards-crest',
-    name: "Season of the Vanguard's Crest",
-    tagline: 'Grounding the app within the classic Tower lore',
-    startDate: '2027-03-01T17:00:00.000Z',
-    endDate: '2027-03-31T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 10,
-    id: 'dtn-s10-molten-crest',
-    name: 'Season of the Molten Crest',
-    tagline: 'A fiery theme for competitive faction shakeups',
-    startDate: '2027-04-01T17:00:00.000Z',
-    endDate: '2027-04-30T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 11,
-    id: 'dtn-s11-iron-hatchling',
-    name: 'Season of the Iron Hatchling',
-    tagline: 'A social-first season prioritizing fireteam building and more casual play',
-    startDate: '2027-05-01T17:00:00.000Z',
-    endDate: '2027-05-31T23:59:59.999Z',
-  },
-  {
-    seasonNumber: 12,
-    id: 'dtn-s12-golden-roost',
-    name: 'Season of the Golden Roost',
-    tagline:
-      'Celebrating the social hub of the community, where casual and endgame players come together to share builds, vote on MVPs, and chill',
-    startDate: '2027-06-01T17:00:00.000Z',
-    endDate: '2027-06-30T23:59:59.999Z',
-  },
+const QUARTER_NAMES: { name: string; tagline: string }[] = [
+  { name: 'Season of New Bonds', tagline: 'Clear with Guardians you have never met — every new fireteam counts.' },
+  { name: 'Season of the Open Hand', tagline: 'Veterans and new lights, one fireteam.' },
+  { name: 'Season of the Long Watch', tagline: 'Raid and dungeon glory, earned together.' },
+  { name: 'Season of the Kindled Flame', tagline: 'Bring someone through their first clear.' },
 ]
+
+/** Pacific midnight of a calendar date, as UTC ISO (handles PST/PDT). */
+export function pacificMidnightIso(year: number, month0: number, day = 1): string {
+  // Probe offset at noon UTC on that day to pick PST (-8) or PDT (-7).
+  const probe = new Date(Date.UTC(year, month0, day, 12))
+  const tzName = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', timeZoneName: 'short' })
+    .formatToParts(probe)
+    .find((p) => p.type === 'timeZoneName')?.value
+  const offsetHours = tzName === 'PDT' ? 7 : 8
+  return new Date(Date.UTC(year, month0, day, offsetHours)).toISOString()
+}
+
+/** Quarterly seasons: Season 1 = Oct 1 – Dec 31 2026 (Pacific), then every 3 months. */
+export function buildQuarterlyCatalog(count = 12): NestSeasonDefinition[] {
+  const out: NestSeasonDefinition[] = []
+  for (let i = 0; i < count; i++) {
+    const startMonthIndex = 9 + i * 3 // Oct 2026 = month 9
+    const y = 2026 + Math.floor(startMonthIndex / 12)
+    const m = startMonthIndex % 12
+    const endIdx = startMonthIndex + 3
+    const ey = 2026 + Math.floor(endIdx / 12)
+    const em = endIdx % 12
+    const start = pacificMidnightIso(y, m, 1)
+    const end = new Date(Date.parse(pacificMidnightIso(ey, em, 1)) - 1).toISOString()
+    const label = QUARTER_NAMES[i % QUARTER_NAMES.length]!
+    out.push({
+      seasonNumber: i + 1,
+      id: `dtn-q${String(i + 1).padStart(2, '0')}-${y}-${String(m + 1).padStart(2, '0')}`,
+      name: label.name,
+      tagline: label.tagline,
+      startDate: start,
+      endDate: end,
+    })
+  }
+  return out
+}
+
+/** Quarterly Nest seasons (DB rows in destiny_seasons may override name/tagline/dates). */
+export const NEST_SEASON_CATALOG: NestSeasonDefinition[] = buildQuarterlyCatalog()
 
 export function seasonDefinitionToSeason(
   def: NestSeasonDefinition,
@@ -199,10 +155,12 @@ export function mergeSeasonWithDefinition(stored: Season, def: NestSeasonDefinit
     }),
     ...stored,
     id: def.id,
-    name: def.name,
-    tagline: def.tagline,
     seasonNumber: def.seasonNumber,
-    startDate: def.startDate,
-    endDate: def.endDate,
+    // Admin edits (destiny_seasons.adminOverride) win over the generated catalog.
+    name: stored.adminOverride?.name || def.name,
+    tagline: stored.adminOverride?.tagline || def.tagline,
+    startDate: stored.adminOverride?.startDate || def.startDate,
+    endDate: stored.adminOverride?.endDate || def.endDate,
+    prizeRules: DEFAULT_SEASON_PRIZE_RULES,
   }
 }

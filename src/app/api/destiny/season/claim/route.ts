@@ -1,7 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
-import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
+import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { canSubmitPrizeClaim, prizeEligibleTracks } from '@/lib/destiny/fireteamReputation'
 import { buildUserPrizeTrack } from '@/lib/destiny/seasonPrizes'
 import {
@@ -26,9 +26,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return destinyAuthHandler(req, async () => {
-    if (!monetaryPrizesEnabled()) {
+    if (!seasonPrizesEnabled()) {
       return NextResponse.json(
-        { error: 'Monetary prizes are disabled. Season rewards are badges, titles, frames, and tiers.' },
+        { error: 'Season prizes are turned off.' },
         { status: 403 }
       )
     }

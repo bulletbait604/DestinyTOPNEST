@@ -14,8 +14,24 @@ const BOARDS: {
   defaultPeriod: LeaderboardPeriod
   footnote?: string
 }[] = [
-  { category: 'raid', title: 'Raids', defaultPeriod: 'season' },
-  { category: 'dungeon', title: 'Dungeons', defaultPeriod: 'season' },
+  {
+    category: 'new_bonds',
+    title: 'New Bonds',
+    defaultPeriod: 'season',
+    footnote: 'Points for clearing with Guardians you had never played with. #1 wins a Destiny 2 3D print.',
+  },
+  {
+    category: 'raid',
+    title: 'Raids',
+    defaultPeriod: 'season',
+    footnote: 'Verified raid clears + bond bonuses. #1 wins a Destiny 2 3D print.',
+  },
+  {
+    category: 'dungeon',
+    title: 'Dungeons',
+    defaultPeriod: 'season',
+    footnote: 'Verified dungeon clears + bond bonuses. #1 wins a Destiny 2 3D print.',
+  },
   {
     category: 'pantheon',
     title: 'The Pantheon',
@@ -48,6 +64,7 @@ function initialBoardState(): Record<LeaderboardCategory, BoardState> {
     raid: { entries: [], loading: true, period: 'season' },
     dungeon: { entries: [], loading: true, period: 'season' },
     pantheon: { entries: [], loading: true, period: 'season' },
+    new_bonds: { entries: [], loading: true, period: 'season' },
     top_guardians: { entries: [], loading: true, period: 'monthly' },
   }
 }

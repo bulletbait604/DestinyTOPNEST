@@ -68,6 +68,7 @@ function runMatchesCategory(run: RunRecord, category: LeaderboardCategory): bool
   if (category === 'raid') return run.type === 'raid'
   if (category === 'dungeon') return run.type === 'dungeon'
   if (category === 'pantheon') return run.type === 'pantheon'
+  if (category === 'new_bonds') return (run.bondPoints ?? 0) > 0
   return false
 }
 
@@ -85,7 +86,7 @@ export function aggregateLeaderboard(
     if (!runMatchesPeriod(run, period, season)) continue
     if (!runMatchesCategory(run, category)) continue
 
-    const pts = run.pointsAwarded ?? 0
+    const pts = category === 'new_bonds' ? (run.bondPoints ?? 0) : (run.pointsAwarded ?? 0)
     if (pts <= 0) continue
 
     const existing = agg.get(run.ownerUserId) ?? {

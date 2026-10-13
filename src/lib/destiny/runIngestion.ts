@@ -16,6 +16,7 @@ import {
   type BungieValueMap,
 } from '@/lib/destiny/pgcrStats'
 import { calculateRunPoints } from '@/lib/destiny/scoring'
+import { computeRunBondScore, recordRunBonds } from '@/lib/destiny/bondStore'
 import { isRunInActiveSeasonPacific } from '@/lib/destiny/runDates'
 import { isPantheonActivityName, squadKeyFromMembers } from '@/lib/destiny/pantheonActivities'
 import {
@@ -111,6 +112,11 @@ function parseTeamMembers(entries: PgcrEntry[] = []): RunTeamMember[] {
         assists: pgcrStatValue(statValues, 'assists'),
         score: pgcrStatValue(statValues, 'score'),
         powerLevel: e.player?.lightLevel ?? pgcrStatValue(statValues, 'characterLevel'),
+        completed: statValues && 'completed' in statValues ? pgcrStatValue(statValues, 'completed') === 1 : undefined,
+        timePlayedSeconds:
+          statValues && 'timePlayedSeconds' in statValues ? pgcrStatValue(statValues, 'timePlayedSeconds') : undefined,
+        fireteamId:
+          statValues && 'fireteamId' in statValues ? String(pgcrStatValue(statValues, 'fireteamId')) : undefined,
       }
     })
 }
@@ -183,6 +189,8 @@ async function mergeRunRecordOnResync(
     ...incoming,
     verificationStatus: existing.verificationStatus,
     pointsAwarded: existing.pointsAwarded,
+    bondPoints: existing.bondPoints ?? incoming.bondPoints,
+    newBondMembershipIds: existing.newBondMembershipIds ?? incoming.newBondMembershipIds,
     adminNotes: existing.adminNotes,
     staffApprovedFullClear: existing.staffApprovedFullClear,
   }
@@ -219,6 +227,7 @@ async function pgcrToRunRecord(
     accessToken: string
     clanMembershipIds?: Set<string>
     clanName?: string
+    ownerMembershipId?: string
   }
 ): Promise<{ record: RunRecord; pgcr: PgcrResponse } | null> {
   const pgcr = (await getPostGameCarnageReport(instanceId, options.accessToken)) as PgcrResponse
@@ -272,7 +281,27 @@ async function pgcrToRunRecord(
   const verificationStatus = verificationStatusFromReview(aiReview)
   const { clanMemberCount, randoCount, isFullClanTeam } = analyzeClanMix(teamMembers, userClanId)
 
+  // New Bonds: score first-time / growing teammates from PGCR fireteam data.
+  let bond: Awaited<ReturnType<typeof computeRunBondScore>> | null = null
+  if (options.ownerMembershipId && completed && !checkpointLikely) {
+    try {
+      bond = await computeRunBondScore(
+        {
+          pgcrId: instanceId,
+          type: activityType,
+          completedAt: pgcr.period ? new Date(pgcr.period).toISOString() : new Date().toISOString(),
+          durationSeconds,
+          teamMembers,
+        } as RunRecord,
+        options.ownerMembershipId
+      )
+    } catch (err) {
+      console.warn('[runIngestion] bond scoring failed', { instanceId, err })
+    }
+  }
+
   const scoring = calculateRunPoints({
+    bondPoints: bond?.bondPoints ?? 0,
     activityType,
     clanMemberCount,
     randoCount,
@@ -302,6 +331,9 @@ async function pgcrToRunRecord(
     verificationStatus,
     aiReview,
     pointsAwarded: scoring.points,
+    bondPoints: scoring.eligible ? (bond?.bondPoints ?? 0) : 0,
+    newBondMembershipIds: bond?.newBondIds ?? [],
+    ownerMembershipId: options.ownerMembershipId,
     ownerUserId: userId,
     ownerDisplayName: displayName,
     squadKey:
@@ -418,6 +450,7 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
               accessToken,
               clanMembershipIds,
               clanName: stored.clanName,
+              ownerMembershipId: stored.bungieMembershipId || undefined,
             }
           )
           if (!result) {
@@ -439,6 +472,16 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
 
           const isNew = !(await runRecordExists(record.id))
           await saveRunRecord(record)
+
+          if (
+            record.verificationStatus === 'verified' &&
+            (record.pointsAwarded ?? 0) > 0 &&
+            stored.bungieMembershipId
+          ) {
+            await recordRunBonds(record, stored.bungieMembershipId).catch((err) =>
+              console.warn('[runIngestion] bond persist failed', { runId: record.id, err })
+            )
+          }
 
           if (isNew) {
             imported++

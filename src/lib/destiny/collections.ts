@@ -23,4 +23,5 @@ export const DESTINY_COLLECTIONS = {
   armorStats: 'destiny_armor_stats',
   armorArchetypes: 'destiny_armor_archetypes',
   gearMods: 'destiny_gear_mods',
+  bonds: 'destiny_bonds',
 } as const

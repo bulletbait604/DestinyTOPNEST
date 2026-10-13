@@ -12,6 +12,7 @@ const CATEGORY_LABELS: Record<LeaderboardCategory, string> = {
   raid: 'Raid',
   dungeon: 'Dungeon',
   pantheon: 'Pantheon squad',
+  new_bonds: 'New Bonds',
   top_guardians: 'Top Guardians',
 }
 

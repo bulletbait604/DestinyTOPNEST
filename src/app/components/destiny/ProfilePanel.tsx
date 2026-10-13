@@ -11,7 +11,7 @@ import PreviousActivitiesSection from '@/app/components/destiny/PreviousActiviti
 import PassportPanel from '@/app/components/destiny/PassportPanel'
 import ReputationSummarySection from '@/app/components/destiny/ReputationSummarySection'
 import ProfileLoadoutsSection from '@/app/components/destiny/ProfileLoadoutsSection'
-import { monetaryPrizesEnabled } from '@/lib/destiny/featureFlags'
+import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { formatStampPoints } from '@/lib/destiny/passport'
 import {
   GlassCard,
@@ -80,7 +80,7 @@ export default function ProfilePanel({
     )
   }
 
-  const showPrizes = monetaryPrizesEnabled()
+  const showPrizes = seasonPrizesEnabled()
   const pointTiles = [
     { label: 'Raid pts', value: profile.raidPoints },
     { label: 'Dungeon pts', value: profile.dungeonPoints },

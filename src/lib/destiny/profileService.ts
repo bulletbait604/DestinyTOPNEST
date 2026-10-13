@@ -9,7 +9,7 @@ import {
   type StoredDestinyUser,
 } from '@/lib/destiny/destinyUserStore'
 import { fetchLiveClan, fetchLiveLoadout, refreshGuardianFromBungie } from '@/lib/destiny/liveBungieData'
-import { monetaryPrizesEnabled, NON_MONETARY_REWARD_SUMMARY } from '@/lib/destiny/featureFlags'
+import { seasonPrizesEnabled, NON_MONETARY_REWARD_SUMMARY } from '@/lib/destiny/featureFlags'
 import { loadFireteamProgress } from '@/lib/destiny/fireteamProgressService'
 import { buildPlayerProfileFromStored, emptyPlayerProfile } from '@/lib/destiny/profileBuilder'
 import { guardianPointsForUser } from '@/lib/destiny/mvpVoting'
@@ -128,7 +128,7 @@ export async function buildUserProfile(
     badges: Array.from(
       new Set([...built.badges, ...earnedTitles, ...sherpaTitle, ...(progressNightOps?.badges ?? [])])
     ),
-    prizeEligibility: monetaryPrizesEnabled() ? built.prizeEligibility : NON_MONETARY_REWARD_SUMMARY,
+    prizeEligibility: seasonPrizesEnabled() ? built.prizeEligibility : NON_MONETARY_REWARD_SUMMARY,
   }
 
   return {

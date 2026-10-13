@@ -1,6 +1,6 @@
 ﻿import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { destinyApiConfigured } from '@/lib/destiny/env'
-import { monetaryPrizesEnabled, NON_MONETARY_REWARD_SUMMARY } from '@/lib/destiny/featureFlags'
+import { seasonPrizesEnabled, NON_MONETARY_REWARD_SUMMARY } from '@/lib/destiny/featureFlags'
 import { getConfiguredActiveSeason, getSeasonCountdown, PRIZE_SUMMARY } from '@/lib/destiny/seasonConfig'
 import type { OverviewPayload, PendingRunActions, Season, SeasonWinner } from '@/lib/destiny/types'
 import type { TopMetaLoadoutsByClass } from '@/lib/destiny/metaBuildConsensus'
@@ -56,7 +56,7 @@ export function buildOverviewPayload(input: {
     },
     season,
     seasonCountdown: getSeasonCountdown(season),
-    prizeSummary: monetaryPrizesEnabled() ? PRIZE_SUMMARY : NON_MONETARY_REWARD_SUMMARY,
+    prizeSummary: seasonPrizesEnabled() ? PRIZE_SUMMARY : NON_MONETARY_REWARD_SUMMARY,
     lookingForGroup: input.lookingForGroup,
     trendingBuilds: input.trendingBuilds,
     topLoadoutsByClass: input.topLoadoutsByClass,

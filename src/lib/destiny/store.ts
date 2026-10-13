@@ -639,6 +639,7 @@ async function applyAdminRunDecision(
       checkpointLikely: false,
       verificationStatus: 'verified',
       suspiciousScore: 0,
+      bondPoints: run.bondPoints ?? 0,
     }).points
   }
 
@@ -654,6 +655,11 @@ async function applyAdminRunDecision(
       },
     }
   )
+
+  if (decision === 'approve' && run.ownerMembershipId && (pointsUpdate ?? 0) > 0) {
+    const { recordRunBonds } = await import('@/lib/destiny/bondStore')
+    await recordRunBonds({ ...run, verificationStatus: 'verified' }, run.ownerMembershipId).catch(() => undefined)
+  }
 
   await database.collection(DESTINY_COLLECTIONS.buildSnapshots).updateMany(
     { runId: run.id },
