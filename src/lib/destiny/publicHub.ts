@@ -66,6 +66,8 @@ export interface PublicHubSnapshot {
   resetsInLabel: string
   featuredDungeons: string[]
   featuredRaids: string[]
+  pantheon?: string
+  nightfall?: string
   contracts: PublicContractCard[]
   sherpas: PublicSherpaRow[]
   clans: PublicClanRow[]
@@ -156,6 +158,8 @@ export function assemblePublicHub(input: {
     resetsInLabel: week.resetsInLabel,
     featuredDungeons: week.featuredDungeons.map((activity) => activity.name),
     featuredRaids: week.featuredRaids.map((activity) => activity.name),
+    pantheon: week.pantheon,
+    nightfall: week.nightfall,
     contracts: resolveWeeklyContractCatalog().map((contract) => ({
       id: contract.id,
       title: contract.title,

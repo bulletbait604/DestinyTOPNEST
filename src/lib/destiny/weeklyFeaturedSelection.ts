@@ -79,6 +79,7 @@ export interface FeaturedSelection {
   raids: string[]
   dungeons: string[]
   pantheon?: string
+  nightfall?: string
   /** Earliest end of the milestones we actually used. */
   endsAtMs?: number
 }
@@ -227,13 +228,17 @@ export function selectFeaturedWeeklyActivities(
   const active = byOrder(milestones.filter((milestone) => isActive(milestone, now)))
   const ends: number[] = []
   let pantheon: string | undefined
+  let nightfall: string | undefined
 
   const featuredRaidGroups: string[][] = []
   const featuredDungeonGroups: string[][] = []
 
   for (const milestone of active) {
     const text = milestoneText(milestone)
-    if (isIgnoredPlaylist(text)) continue
+    if (isIgnoredPlaylist(text)) {
+      if (!nightfall && /nightfall|grandmaster/.test(text)) nightfall = nightfallName(milestone)
+      continue
+    }
     if (isPantheonMilestone(text)) {
       pantheon = pantheonLabel(milestone) ?? pantheon
       const end = endMs(milestone)
@@ -325,14 +330,32 @@ export function selectFeaturedWeeklyActivities(
     }
   }
 
-  if (raids.length < 2 && dungeons.length < 2 && !pantheon) return null
+  if (raids.length < 2 && dungeons.length < 2 && !pantheon && !nightfall) return null
   const finiteEnds = ends.filter((value) => Number.isFinite(value))
   return {
     raids: raids.slice(0, 2),
     dungeons: dungeons.slice(0, 2),
     pantheon,
+    nightfall,
     endsAtMs: finiteEnds.length ? Math.min(...finiteEnds) : undefined,
   }
+}
+
+function nightfallName(milestone: WeeklyMilestoneSnapshot): string | undefined {
+  for (const activity of milestone.activities ?? []) {
+    if (!activity.name) continue
+    const cleaned = cleanActivityDisplayName(activity.name)
+    if (!cleaned) continue
+    if (/nightfall|grandmaster|vanguard ops|strike/i.test(cleaned) && cleaned.split(/\s+/).length <= 2) continue
+    return cleaned
+  }
+  const title = cleanActivityDisplayName(milestone.name ?? '')
+  const fromTitle = title
+    .replace(/^grandmaster\s+nightfall\s*[:\-–]?\s*/i, '')
+    .replace(/^grandmaster\s*[:\-–]?\s*/i, '')
+    .trim()
+  if (fromTitle && !/nightfall|grandmaster/i.test(fromTitle)) return fromTitle
+  return undefined
 }
 
 function preferLabeled<T extends { milestone: WeeklyMilestoneSnapshot }>(

@@ -137,8 +137,10 @@ export interface WeeklyResetInfo {
   pantheon?: string
   pantheonIconUrl?: string
   resetTimeLabel: string
-  /** `bungie` when both featured pairs came from Destiny2/Milestones for this reset. */
-  rotationSource?: 'bungie' | 'mixed' | 'schedule'
+  /** `bungie` or `web` when both featured pairs came from a live source. `schedule` is the calendar. */
+  rotationSource?: 'bungie' | 'web' | 'mixed' | 'schedule'
+  /** Grandmaster nightfall for this reset, when a live source named one. */
+  nightfall?: string
   /** Server-resolved loot icons for featured activities, keyed by activity name. */
   lootByActivity?: Record<string, WeeklyActivityLootSnapshot>
 }

@@ -16,8 +16,16 @@ import {
   type FeaturedSelection,
   type WeeklyMilestoneSnapshot,
 } from '@/lib/destiny/weeklyFeaturedSelection'
+import { readMongoWeeklyRotation, writeMongoWeeklyRotation, type WeeklyRotationStore } from '@/lib/destiny/weeklyRotationCache'
+import { fetchScrapedFeaturedWeek } from '@/lib/destiny/weeklyRotationScrape'
 import { getCurrentWeekResetStart, getNextWeeklyReset } from '@/lib/destiny/weeklyRotation'
-import { clearLiveFeaturedWeek, getLiveFeaturedWeek, setLiveFeaturedWeek } from '@/lib/destiny/weeklyRotationLive'
+import {
+  clearLiveFeaturedWeek,
+  getLiveFeaturedWeek,
+  setLiveFeaturedWeek,
+  type LiveFeaturedWeek,
+  type LiveRotationSource,
+} from '@/lib/destiny/weeklyRotationLive'
 
 const DISPLAY_BY_KEY = new Map<string, string>(
   [...CANONICAL_RAIDS, ...CANONICAL_DUNGEONS].map((name) => [name.toLowerCase(), name])
@@ -107,14 +115,25 @@ function activityIsRelevant(activity: PublicMilestoneActivity): boolean {
   return mode === RAID_ACTIVITY_MODE || mode === DUNGEON_ACTIVITY_MODE || (hash != null && NAME_BY_HASH.has(hash))
 }
 
+function milestoneText(definition: DefinitionDisplay | null): string {
+  return `${definition?.displayProperties?.name ?? ''} ${definition?.friendlyName ?? ''} ${definition?.displayProperties?.description ?? ''}`.toLowerCase()
+}
+
+/** Featured, pantheon, nightfall, or anything that ends before the following reset. */
+function milestoneLooksWeekly(definition: DefinitionDisplay | null, milestone: PublicMilestone, now: Date): boolean {
+  const text = milestoneText(definition)
+  if (/feature|rotator|pinnacle|pantheon|nightfall|grandmaster/.test(text)) return true
+  if ((milestone.activities ?? []).some(activityIsRelevant)) return true
+  if (!milestone.endDate) return false
+  const end = Date.parse(milestone.endDate)
+  return Number.isFinite(end) && end > now.getTime() && end <= now.getTime() + 8 * 24 * 60 * 60 * 1000
+}
+
 /** Fetch milestones and resolve activity names. Null when the API key is missing or the call fails. */
 export async function loadBungieFeaturedSelection(now: Date): Promise<FeaturedSelection | null> {
   if (!destinyApiKey()) return null
   const response = await getPublicMilestones()
-  const entries = milestoneEntries(response).filter(([, milestone]) =>
-    (milestone.activities ?? []).some(activityIsRelevant)
-  )
-  const capped = entries.slice(0, 40)
+  const capped = milestoneEntries(response).slice(0, 50)
 
   const definitions = await mapPool(capped, 6, async ([hash, milestone]) => {
     const numeric = asNumber(milestone.milestoneHash) ?? asNumber(hash)
@@ -122,17 +141,20 @@ export async function loadBungieFeaturedSelection(now: Date): Promise<FeaturedSe
     return { hash, milestone, definition }
   })
 
-  const unknownHashes = new Set<number>()
-  for (const { milestone } of definitions) {
+  const weekly = definitions.filter(({ milestone, definition }) => milestoneLooksWeekly(definition, milestone, now))
+  const unknownHashes: number[] = []
+  const seenHashes = new Set<number>()
+  for (const { milestone } of weekly) {
     for (const activity of milestone.activities ?? []) {
-      if (!activityIsRelevant(activity)) continue
       const hash = asNumber(activity.activityHash)
-      if (hash != null && !NAME_BY_HASH.has(hash)) unknownHashes.add(hash)
+      if (hash == null || NAME_BY_HASH.has(hash) || seenHashes.has(hash)) continue
+      seenHashes.add(hash)
+      unknownHashes.push(hash)
     }
   }
 
   const activityNames = new Map<number, { name?: string; mode?: number }>()
-  await mapPool(Array.from(unknownHashes).slice(0, 40), 6, async (hash) => {
+  await mapPool(unknownHashes.slice(0, 40), 6, async (hash) => {
     const definition = await readDefinition('DestinyActivityDefinition', hash)
     activityNames.set(hash, {
       name: definition?.displayProperties?.name,
@@ -140,7 +162,7 @@ export async function loadBungieFeaturedSelection(now: Date): Promise<FeaturedSe
     })
   })
 
-  const snapshots: WeeklyMilestoneSnapshot[] = definitions.map(({ hash, milestone, definition }) => ({
+  const snapshots: WeeklyMilestoneSnapshot[] = weekly.map(({ hash, milestone, definition }) => ({
     milestoneHash: hash,
     name: definition?.displayProperties?.name,
     friendlyName: definition?.friendlyName,
@@ -148,44 +170,87 @@ export async function loadBungieFeaturedSelection(now: Date): Promise<FeaturedSe
     order: milestone.order,
     startDate: milestone.startDate,
     endDate: milestone.endDate,
-    activities: (milestone.activities ?? []).filter(activityIsRelevant).map((activity) => {
+    activities: (milestone.activities ?? []).flatMap((activity) => {
       const activityHash = asNumber(activity.activityHash)
       const known = activityHash != null ? NAME_BY_HASH.get(activityHash) : undefined
       const resolved = activityHash != null ? activityNames.get(activityHash) : undefined
-      return {
-        name: known ?? resolved?.name,
-        activityModeType: asNumber(activity.activityModeType) ?? resolved?.mode,
-      }
+      const name = known ?? resolved?.name
+      const mode = asNumber(activity.activityModeType) ?? resolved?.mode
+      if (!name && mode !== RAID_ACTIVITY_MODE && mode !== DUNGEON_ACTIVITY_MODE) return []
+      return [{ name, activityModeType: mode }]
     }),
   }))
 
   return selectFeaturedWeeklyActivities(snapshots, now)
 }
 
+export interface WeeklyRotationRefreshDeps {
+  loadBungie?: WeeklyMilestoneLoader
+  loadWeb?: (now: Date) => Promise<FeaturedSelection | null>
+  store?: WeeklyRotationStore
+}
+
+function pairOf(names: string[] | undefined): string[] | undefined {
+  return names && names.length >= 2 ? names.slice(0, 2) : undefined
+}
+
+function mergeFeatured(
+  bungie: FeaturedSelection | null,
+  web: FeaturedSelection | null
+): { selection: FeaturedSelection; source: LiveRotationSource } | null {
+  const raids = pairOf(bungie?.raids) ?? pairOf(web?.raids) ?? []
+  const dungeons = pairOf(bungie?.dungeons) ?? pairOf(web?.dungeons) ?? []
+  const pantheon = bungie?.pantheon || web?.pantheon
+  const nightfall = bungie?.nightfall || web?.nightfall
+  if (raids.length < 2 && dungeons.length < 2 && !pantheon && !nightfall) return null
+  const raidsFrom = pairOf(bungie?.raids) ? 'bungie' : pairOf(web?.raids) ? 'web' : null
+  const dungeonsFrom = pairOf(bungie?.dungeons) ? 'bungie' : pairOf(web?.dungeons) ? 'web' : null
+  let source: LiveRotationSource = bungie ? 'bungie' : 'web'
+  if (raidsFrom && dungeonsFrom) source = raidsFrom === dungeonsFrom ? raidsFrom : 'mixed'
+  else if (raidsFrom) source = raidsFrom
+  else if (dungeonsFrom) source = dungeonsFrom
+  const ends = [bungie?.endsAtMs, web?.endsAtMs].filter((value): value is number => value != null && Number.isFinite(value))
+  return {
+    source,
+    selection: {
+      raids,
+      dungeons,
+      pantheon,
+      nightfall,
+      endsAtMs: ends.length ? Math.min(...ends) : undefined,
+    },
+  }
+}
+
 /** Remember a parsed week until the next reset, and not a moment longer. */
-export function applyLiveFeaturedSelection(now: Date, selection: FeaturedSelection | null): void {
-  if (!selection) return
+export function applyLiveFeaturedSelection(
+  now: Date,
+  selection: FeaturedSelection | null,
+  source: LiveRotationSource = 'bungie'
+): LiveFeaturedWeek | null {
+  if (!selection) return null
   const raids = selection.raids.length >= 2 ? selection.raids.slice(0, 2) : undefined
   const dungeons = selection.dungeons.length >= 2 ? selection.dungeons.slice(0, 2) : undefined
-  if (!raids && !dungeons && !selection.pantheon) return
+  if (!raids && !dungeons && !selection.pantheon && !selection.nightfall) return null
 
   const nextReset = getNextWeeklyReset(now).getTime()
   let expiresAtMs = nextReset
   if (selection.endsAtMs != null && Number.isFinite(selection.endsAtMs)) {
     expiresAtMs = Math.min(expiresAtMs, selection.endsAtMs)
   }
-  if (expiresAtMs <= now.getTime()) return
+  if (expiresAtMs <= now.getTime()) return null
 
-  setLiveFeaturedWeek(
-    {
-      weekStart: weekStartFor(now),
-      expiresAtMs,
-      raids,
-      dungeons,
-      pantheon: selection.pantheon,
-    },
-    now.getTime()
-  )
+  const entry: LiveFeaturedWeek = {
+    weekStart: weekStartFor(now),
+    expiresAtMs,
+    raids,
+    dungeons,
+    pantheon: selection.pantheon,
+    nightfall: selection.nightfall,
+    source,
+  }
+  setLiveFeaturedWeek(entry, now.getTime())
+  return entry
 }
 
 function noteFailure(weekStart: string, now: Date): void {
@@ -195,10 +260,25 @@ function noteFailure(weekStart: string, now: Date): void {
 
 export async function refreshLiveWeeklyRotation(
   now = new Date(),
-  load: WeeklyMilestoneLoader = loadBungieFeaturedSelection
+  loadOrDeps: WeeklyMilestoneLoader | WeeklyRotationRefreshDeps = loadBungieFeaturedSelection
 ): Promise<void> {
+  const deps: WeeklyRotationRefreshDeps =
+    typeof loadOrDeps === 'function' ? { loadBungie: loadOrDeps } : loadOrDeps
+  const defaultPath = loadOrDeps === loadBungieFeaturedSelection
+  const loadBungie = deps.loadBungie ?? loadBungieFeaturedSelection
+  const loadWeb = deps.loadWeb ?? (defaultPath ? fetchScrapedFeaturedWeek : undefined)
+  const store: WeeklyRotationStore | undefined =
+    deps.store ?? (defaultPath ? { read: readMongoWeeklyRotation, write: writeMongoWeeklyRotation } : undefined)
+
   const weekStart = weekStartFor(now)
   if (getLiveFeaturedWeek(weekStart, now.getTime())) return
+  if (store) {
+    const cached = await store.read(weekStart, now.getTime())
+    if (cached && (pairOf(cached.raids) || pairOf(cached.dungeons) || cached.pantheon || cached.nightfall)) {
+      setLiveFeaturedWeek(cached, now.getTime())
+      return
+    }
+  }
   if (failure && failure.weekStart === weekStart && now.getTime() < failure.untilMs) return
   if (inflight && inflightWeek === weekStart) {
     await inflight
@@ -207,19 +287,34 @@ export async function refreshLiveWeeklyRotation(
 
   inflightWeek = weekStart
   inflight = (async () => {
+    let bungie: FeaturedSelection | null = null
+    let web: FeaturedSelection | null = null
     try {
-      const selection = await load(now)
-      if (!selection || (selection.raids.length < 2 && selection.dungeons.length < 2 && !selection.pantheon)) {
-        noteFailure(weekStart, now)
-        return
-      }
-      applyLiveFeaturedSelection(now, selection)
-      if (!getLiveFeaturedWeek(weekStart, now.getTime())) noteFailure(weekStart, now)
+      bungie = await loadBungie(now)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error'
       console.warn('[weekly] Bungie milestone refresh failed:', message)
-      noteFailure(weekStart, now)
     }
+    const bungieComplete = Boolean(pairOf(bungie?.raids) && pairOf(bungie?.dungeons))
+    if (!bungieComplete && loadWeb) {
+      try {
+        web = await loadWeb(now)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'unknown error'
+        console.warn('[weekly] reset-post scrape failed:', message)
+      }
+    }
+    const merged = mergeFeatured(bungie, web)
+    if (!merged) {
+      noteFailure(weekStart, now)
+      return
+    }
+    const stored = applyLiveFeaturedSelection(now, merged.selection, merged.source)
+    if (!stored) {
+      noteFailure(weekStart, now)
+      return
+    }
+    if (store) await store.write(stored)
   })()
 
   try {

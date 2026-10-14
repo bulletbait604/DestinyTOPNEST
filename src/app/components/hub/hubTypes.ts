@@ -19,6 +19,8 @@ export function normalizePublicHub(value: unknown): PublicHubSnapshot | null {
     resetsInLabel: typeof data.resetsInLabel === 'string' ? data.resetsInLabel : '',
     featuredDungeons: asArray(data.featuredDungeons),
     featuredRaids: asArray(data.featuredRaids),
+    pantheon: typeof data.pantheon === 'string' ? data.pantheon : undefined,
+    nightfall: typeof data.nightfall === 'string' ? data.nightfall : undefined,
     contracts: data.contracts,
     sherpas: asArray(data.sherpas),
     clans: asArray(data.clans),

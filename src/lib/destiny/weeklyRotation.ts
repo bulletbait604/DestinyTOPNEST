@@ -1,20 +1,16 @@
 ﻿/**
  * Destiny 2 weekly reset schedule (Tuesday 10:00 AM Pacific / 17:00 UTC).
  *
- * This schedule is the fallback when Destiny2/Milestones is unavailable.
- * The current week is still replaced by a live Bungie milestone result when
- * one is cached. That cache is keyed by reset date and expires at the next reset.
+ * What the site shows, in order:
+ * 1. This week's Destiny2/Milestones result (memory or Mongo, filled by the weekly cron).
+ * 2. A scraped weekly reset post cached the same way.
+ * 3. This static calendar, only when both live sources miss.
  *
- * Both rotators are repeating cycles counted from the Monument of Triumph
- * epoch (2026-06-09), matching the blueberries.gg 2026 calendar:
- * https://www.blueberries.gg/leveling/destiny-2-raid-dungeon-rotation/
- *
- * Raids repeat every 8 weeks from that epoch (the whole published raid table).
- * Dungeons are a 9-name ring: week slot i is paired with slot i+4. Slot 0 is
- * the week of 2026-08-04 (week index 8). That ring matches the published
- * dungeon table from 2026-07-07 through 2026-10-27. Oct 13 (week index 18)
- * is Root of Nightmares + Deep Stone Crypt and Spire of the Watcher +
- * Shattered Throne. Rows after 2026-10-27 in that table step off this ring.
+ * The calendar repeats the rotator published after Monument of Triumph.
+ * Raids are a 9-week cycle whose first row is 2026-07-28.
+ * Dungeons are a 10-week cycle whose first row is 2026-07-21.
+ * The week of 2026-10-13 is Vow of the Disciple + Last Wish and
+ * Prophecy + Vesper's Host.
  */
 
 import type { Difficulty } from '@/lib/destiny/types'
@@ -23,8 +19,10 @@ import { getLiveFeaturedWeek } from '@/lib/destiny/weeklyRotationLive'
 export const WEEKLY_RESET_HOUR_UTC = 17 // 10:00 AM PDT
 export const WEEKLY_RESET_DAY = 2 // Tuesday
 
-/** First Monument of Triumph featured-rotator Tuesday. */
-export const ROTATION_EPOCH = '2026-06-09'
+/** First row of the 9-week raid cycle (Deep Stone Crypt + Crota's End). */
+export const RAID_ROTATION_EPOCH = '2026-07-28'
+/** First row of the 10-week dungeon cycle (Ghosts of the Deep + Shattered Throne). */
+export const DUNGEON_ROTATION_EPOCH = '2026-07-21'
 
 export interface RotationWeek {
   /** ISO date (YYYY-MM-DD) of the Tuesday reset that starts this week */
@@ -37,61 +35,42 @@ export interface RotationWeek {
 type ActivityPair = [string, string]
 
 /**
- * Repeating raid cycle. Index 0 is the week of 2026-06-09.
- * Order matches the blueberries raid table (Raid 1, Raid 2).
+ * Repeating raid cycle. Index 0 is the week of 2026-07-28.
+ * Pairs are not a fixed ring: the partner changes across the 9 weeks.
  */
 const RAID_CYCLE: ActivityPair[] = [
+  ['Deep Stone Crypt', "Crota's End"],
+  ['Vault of Glass', "Salvation's Edge"],
   ['Vow of the Disciple', 'Last Wish'],
-  ["King's Fall", 'Garden of Salvation'],
-  ['Root of Nightmares', 'Deep Stone Crypt'],
-  ["Crota's End", 'Vault of Glass'],
-  ['Last Wish', 'Vow of the Disciple'],
   ['Garden of Salvation', "King's Fall"],
   ['Deep Stone Crypt', 'Root of Nightmares'],
   ['Vault of Glass', "Crota's End"],
+  ['Vow of the Disciple', "Salvation's Edge"],
+  ["King's Fall", 'Last Wish'],
+  ['Garden of Salvation', 'Root of Nightmares'],
 ]
 
 /**
- * Dungeon ring. Featured pair for ring index i is (i, i+4).
- * Ring index 0 is week index 8 (2026-08-04): Duality + Vesper's Host.
+ * Repeating dungeon cycle. Index 0 is the week of 2026-07-21.
+ * Index 2 (and the week of 2026-10-13) is Prophecy + Vesper's Host.
  */
-const DUNGEON_RING = [
-  'Duality',
-  'Spire of the Watcher',
-  'Ghosts of the Deep',
-  "Warlord's Ruin",
-  "Vesper's Host",
-  'Shattered Throne',
-  'Pit of Heresy',
-  'Prophecy',
-  'Grasp of Avarice',
-] as const
+const DUNGEON_CYCLE: ActivityPair[] = [
+  ['Ghosts of the Deep', 'Shattered Throne'],
+  ["Warlord's Ruin", 'Pit of Heresy'],
+  ['Prophecy', "Vesper's Host"],
+  ['Grasp of Avarice', 'Sundered Doctrine'],
+  ['Duality', 'Shattered Throne'],
+  ['Pit of Heresy', 'Spire of the Watcher'],
+  ['Prophecy', 'Ghosts of the Deep'],
+  ['Grasp of Avarice', "Warlord's Ruin"],
+  ['Duality', "Vesper's Host"],
+  ['Spire of the Watcher', 'Sundered Doctrine'],
+]
 
-/** Week index whose ring slot is 0. 2026-06-09 + 8 weeks = 2026-08-04. */
-const DUNGEON_RING_ORIGIN_WEEK = 8
-const DUNGEON_RING_PHASE = 4
-
-/** Optional Pantheon labels by reset week start (when known). */
-const PANTHEON_BY_RESET: Record<string, string> = {
-  '2026-06-09': 'Pantheon 2.0 launch',
-  '2026-06-16': 'Reprise: Gahlran · Encore: Consecrated Mind',
-  '2026-09-08': 'Gahlran · Consecrated Mind',
-  '2026-09-15': 'Calus · Morgeth',
-  '2026-09-29': 'Gahlran · Warpriest',
-  '2026-10-06': 'Calus · Consecrated Mind',
-}
-
-function weeksSinceEpoch(resetStart: Date): number {
-  const epoch = parseUtcDate(ROTATION_EPOCH)
+function weeksSince(epochIso: string, resetStart: Date): number {
+  const epoch = parseUtcDate(epochIso)
   const ms = resetStart.getTime() - epoch.getTime()
-  return Math.max(0, Math.round(ms / (7 * 24 * 60 * 60 * 1000)))
-}
-
-function resetStartIso(weekIndex: number): string {
-  const epoch = parseUtcDate(ROTATION_EPOCH)
-  const d = new Date(epoch)
-  d.setUTCDate(d.getUTCDate() + weekIndex * 7)
-  return d.toISOString().slice(0, 10)
+  return Math.round(ms / (7 * 24 * 60 * 60 * 1000))
 }
 
 function mod(value: number, length: number): number {
@@ -103,25 +82,24 @@ export function raidPairForWeekIndex(weekIndex: number): ActivityPair {
 }
 
 export function dungeonPairForWeekIndex(weekIndex: number): ActivityPair {
-  const slot = mod(weekIndex - DUNGEON_RING_ORIGIN_WEEK, DUNGEON_RING.length)
-  const partner = mod(slot + DUNGEON_RING_PHASE, DUNGEON_RING.length)
-  return [DUNGEON_RING[slot]!, DUNGEON_RING[partner]!]
+  return DUNGEON_CYCLE[mod(weekIndex, DUNGEON_CYCLE.length)]!
 }
 
-export function rotationWeekForIndex(weekIndex: number): RotationWeek {
-  const resetStart = resetStartIso(weekIndex)
+export function rotationWeekForDate(resetStart: Date): RotationWeek {
+  const iso = resetStart.toISOString().slice(0, 10)
   return {
-    resetStart,
-    raids: raidPairForWeekIndex(weekIndex),
-    dungeons: dungeonPairForWeekIndex(weekIndex),
-    pantheon: PANTHEON_BY_RESET[resetStart],
+    resetStart: iso,
+    raids: raidPairForWeekIndex(weeksSince(RAID_ROTATION_EPOCH, resetStart)),
+    dungeons: dungeonPairForWeekIndex(weeksSince(DUNGEON_ROTATION_EPOCH, resetStart)),
   }
 }
 
 /** Explicit schedule snapshot for tooling / docs (generated from the cycle helpers). */
-export const ROTATION_SCHEDULE: RotationWeek[] = Array.from({ length: 40 }, (_, i) =>
-  rotationWeekForIndex(i)
-)
+export const ROTATION_SCHEDULE: RotationWeek[] = Array.from({ length: 40 }, (_, i) => {
+  const start = parseUtcDate(DUNGEON_ROTATION_EPOCH)
+  start.setUTCDate(start.getUTCDate() + i * 7)
+  return rotationWeekForDate(start)
+})
 
 export interface WeeklyResetState {
   resetAt: string
@@ -135,8 +113,10 @@ export interface WeeklyResetState {
   featuredDungeons: { name: string; difficulty: Difficulty }[]
   pantheon?: string
   resetTimeLabel: string
-  /** `bungie` when both pairs came from Destiny2/Milestones for this reset. */
-  rotationSource: 'bungie' | 'mixed' | 'schedule'
+  /** Where the featured pairs came from. `schedule` is the last-resort calendar. */
+  rotationSource: 'bungie' | 'web' | 'mixed' | 'schedule'
+  /** Grandmaster nightfall when a live source named one. */
+  nightfall?: string
 }
 
 function parseUtcDate(isoDate: string): Date {
@@ -179,7 +159,7 @@ export function getNextWeeklyReset(now = new Date()): Date {
 }
 
 function weekEntryForDate(resetStart: Date): RotationWeek {
-  return rotationWeekForIndex(weeksSinceEpoch(resetStart))
+  return rotationWeekForDate(resetStart)
 }
 
 export function getWeeklyResetState(now = new Date()): WeeklyResetState {
@@ -194,10 +174,14 @@ export function getWeeklyResetState(now = new Date()): WeeklyResetState {
   const live = getLiveFeaturedWeek(weekStart, now.getTime())
   const raids = live?.raids && live.raids.length >= 2 ? live.raids.slice(0, 2) : entry.raids
   const dungeons = live?.dungeons && live.dungeons.length >= 2 ? live.dungeons.slice(0, 2) : entry.dungeons
-  const raidsFromBungie = Boolean(live?.raids && live.raids.length >= 2)
-  const dungeonsFromBungie = Boolean(live?.dungeons && live.dungeons.length >= 2)
+  const raidsFromLive = Boolean(live?.raids && live.raids.length >= 2)
+  const dungeonsFromLive = Boolean(live?.dungeons && live.dungeons.length >= 2)
   const rotationSource =
-    raidsFromBungie && dungeonsFromBungie ? 'bungie' : raidsFromBungie || dungeonsFromBungie ? 'mixed' : 'schedule'
+    raidsFromLive && dungeonsFromLive
+      ? live?.source ?? 'bungie'
+      : raidsFromLive || dungeonsFromLive
+        ? 'mixed'
+        : 'schedule'
 
   return {
     resetAt: weekStartDate.toISOString(),
@@ -210,6 +194,7 @@ export function getWeeklyResetState(now = new Date()): WeeklyResetState {
     featuredRaids: raids.map((name) => ({ name, difficulty: 'normal' as Difficulty })),
     featuredDungeons: dungeons.map((name) => ({ name, difficulty: 'normal' as Difficulty })),
     pantheon: live?.pantheon ?? entry.pantheon,
+    nightfall: live?.nightfall,
     resetTimeLabel: 'Every Tuesday · 10:00 AM Pacific (17:00 UTC)',
     rotationSource,
   }

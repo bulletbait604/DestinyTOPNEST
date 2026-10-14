@@ -86,9 +86,14 @@ export function ContractList({
       <p className="gh-kicker">
         {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
       </p>
+      {featured && snapshot.featuredRaids.length ? (
+        <p className="gh-muted">Featured raids: {snapshot.featuredRaids.join(', ')}</p>
+      ) : null}
       {featured && snapshot.featuredDungeons.length ? (
         <p className="gh-muted">Featured dungeons: {snapshot.featuredDungeons.join(', ')}</p>
       ) : null}
+      {featured && snapshot.pantheon ? <p className="gh-muted">Pantheon: {snapshot.pantheon}</p> : null}
+      {featured && snapshot.nightfall ? <p className="gh-muted">Nightfall: {snapshot.nightfall}</p> : null}
       <div className="gh-grid">
         {snapshot.contracts.map((contract) => (
           <article key={contract.id} className="gh-card">
