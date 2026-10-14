@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
+      "path": "/api/destiny/cron/weekly-rotation",
+      "schedule": "10 17 * * 2"
+    },
+    {
       "path": "/api/destiny/cron/weekly-meta-builds",
       "schedule": "30 17 * * 2"
     }
@@ -111,6 +115,9 @@
     },
     "src/app/api/destiny/admin/fireteam/route.ts": {
       "memory": 512
+    },
+    "src/app/api/destiny/cron/weekly-rotation/route.ts": {
+      "memory": 1024
     },
     "src/app/api/destiny/cron/weekly-meta-builds/route.ts": {
       "memory": 1024

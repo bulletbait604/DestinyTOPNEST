@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { refreshLiveWeeklyRotation } from '@/lib/destiny/bungieWeekly'
 import { cronSecret } from '@/lib/destiny/env'
 import { runWeeklyMetaBuildSync } from '@/lib/destiny/metaBuildWeeklySync'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
@@ -21,7 +22,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const state = getWeeklyResetState()
+  const now = new Date()
+  await refreshLiveWeeklyRotation(now)
+  const state = getWeeklyResetState(now)
   const featuredActivities = [
     ...state.featuredRaids.map((r) => r.name),
     ...state.featuredDungeons.map((d) => d.name),

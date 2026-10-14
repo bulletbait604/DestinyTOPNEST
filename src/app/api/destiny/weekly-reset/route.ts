@@ -3,8 +3,8 @@ import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { cacheControlUntilWeeklyReset, getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
 /**
- * Public weekly rotation. Featured raids and dungeons come from Destiny2/Milestones
- * when DESTINY_API is set, otherwise from the verified reset schedule.
+ * Public weekly rotation. Featured raids and dungeons come from Destiny2/Milestones,
+ * then a scraped weekly reset post cached in Mongo, then the static calendar.
  * The CDN entry expires at the next Tuesday 17:00 UTC reset.
  */
 export const dynamic = 'force-dynamic'
