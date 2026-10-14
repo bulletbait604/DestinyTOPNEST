@@ -309,7 +309,7 @@ export default function CommunityBuildForm({
           value={modText}
           onChange={(event) => setModText(event.target.value)}
           className={cn(fieldClass, 'min-h-[72px]')}
-          placeholder="One mod per line"
+          placeholder="One mod per line (Helmet: Harmonic Siphon)"
         />
       </label>
 
