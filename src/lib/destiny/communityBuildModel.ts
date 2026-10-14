@@ -4,7 +4,7 @@
  */
 
 import { ARMOR_STAT_ORDER, type ArmorStatKey } from '@/lib/destiny/armorStats'
-import type { BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
+import type { ArmorSlotLabel, BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
 
 export const COMMUNITY_ACTIVITY_TAGS = [
   'raid',
@@ -127,7 +127,8 @@ const DESCRIPTION_MAX = 2000
 const PLUG_NAME_MAX = 64
 const ASPECT_MAX = 3
 const FRAGMENT_MAX = 6
-const MOD_MAX = 15
+/** Five armor pieces can hold several mods each, plus artifact plugs. */
+const MOD_MAX = 30
 const TAG_MAX = 4
 const STAT_MAX = 3
 const SEARCH_MAX = 80
@@ -148,6 +149,34 @@ export function isBlankGearName(value: string | undefined | null): boolean {
   const text = (value ?? '').trim().toLowerCase()
   if (!text || BLANK_GEAR.has(text)) return true
   return text.startsWith('unknown ')
+}
+
+/**
+ * Empty sockets and cosmetic plugs that Bungie returns on a live loadout.
+ * Real armor mods, aspects, and fragments stay.
+ */
+export function isIgnoredLoadoutSocketName(value: string | undefined | null): boolean {
+  const text = (value ?? '').trim().toLowerCase()
+  if (!text || isBlankGearName(text)) return true
+  if (/^(empty|default|none|no|hidden|locked|classified)\b/.test(text)) return true
+  if (/\b(shader|ornament|tracker|masterwork|intrinsic|emote|projection)\b/.test(text)) return true
+  if (/mod socket|empty socket|weapon mod/.test(text)) return true
+  if (
+    /^(armor mod|combat style mod|general armor mod|legendary armor mod|enhanced armor mod|activity mod|raid mod|ghost mod)$/.test(
+      text
+    )
+  ) {
+    return true
+  }
+  return false
+}
+
+const ARMOR_SLOT_LABEL: Record<ArmorSlotLabel, string> = {
+  helmet: 'Helmet',
+  gauntlets: 'Gauntlets',
+  chest: 'Chest',
+  legs: 'Legs',
+  class: 'Class item',
 }
 
 export function communityActivityTagLabel(tag: CommunityActivityTag): string {
@@ -555,24 +584,97 @@ export function toCommunityBuildPublic(
   }
 }
 
-function plugsFrom(refs: DestinyIconRef[] | undefined, names: string[] | undefined): CommunityBuildPlug[] {
-  const fromRefs = (refs ?? [])
-    .map((ref) => {
-      const name = sanitizePlainText(ref.name)
-      if (!name || isBlankGearName(name)) return null
-      const plug: CommunityBuildPlug = { name }
-      if (ref.hash && Number.isSafeInteger(ref.hash) && ref.hash > 0) plug.hash = ref.hash
-      const iconUrl = sanitizeIconUrl(ref.iconUrl)
-      if (iconUrl) plug.iconUrl = iconUrl
-      return plug
-    })
-    .filter((plug): plug is CommunityBuildPlug => Boolean(plug))
-  if (fromRefs.length) return fromRefs
+function plugFromRef(ref: DestinyIconRef | undefined, fallbackName?: string): CommunityBuildPlug | null {
+  const name = sanitizePlainText(ref?.name ?? fallbackName ?? '')
+  if (!name || isIgnoredLoadoutSocketName(name)) return null
+  const trimmed = name.length > PLUG_NAME_MAX ? name.slice(0, PLUG_NAME_MAX).trim() : name
+  if (!trimmed || isIgnoredLoadoutSocketName(trimmed)) return null
+  const plug: CommunityBuildPlug = { name: trimmed }
+  if (ref?.hash && Number.isSafeInteger(ref.hash) && ref.hash > 0) plug.hash = ref.hash
+  const iconUrl = sanitizeIconUrl(ref?.iconUrl)
+  if (iconUrl) plug.iconUrl = iconUrl
+  return plug
+}
 
-  return (names ?? [])
-    .map((name) => sanitizePlainText(name))
-    .filter((name) => name && !isBlankGearName(name))
-    .map((name) => ({ name }))
+function plugsFrom(refs: DestinyIconRef[] | undefined, names: string[] | undefined, max: number): CommunityBuildPlug[] {
+  const source: CommunityBuildPlug[] = []
+  const refPlugs = (refs ?? [])
+    .map((ref) => plugFromRef(ref))
+    .filter((plug): plug is CommunityBuildPlug => Boolean(plug))
+  if (refPlugs.length) {
+    source.push(...refPlugs)
+  } else {
+    for (const name of names ?? []) {
+      const plug = plugFromRef(undefined, name)
+      if (plug) source.push(plug)
+    }
+  }
+
+  const seen = new Set<string>()
+  const unique: CommunityBuildPlug[] = []
+  for (const plug of source) {
+    const key = plug.name.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    unique.push(plug)
+    if (unique.length >= max) break
+  }
+  return unique
+}
+
+function labeledModName(slotLabel: string | undefined, name: string): string {
+  if (!slotLabel) return name
+  const labeled = `${slotLabel}: ${name}`
+  return labeled.length <= PLUG_NAME_MAX ? labeled : name
+}
+
+function coversRawModName(mods: CommunityBuildPlug[], rawName: string): boolean {
+  const key = rawName.toLowerCase()
+  return mods.some((mod) => {
+    const name = mod.name.toLowerCase()
+    return name === key || name.endsWith(`: ${key}`)
+  })
+}
+
+/** Armor mods grouped by piece, then artifact plugs. Junk sockets and duplicates are dropped. */
+function modsFromSnapshot(build: BuildSnapshot): CommunityBuildPlug[] {
+  const mods: CommunityBuildPlug[] = []
+  const slotOrder = Object.keys(ARMOR_SLOT_LABEL) as ArmorSlotLabel[]
+  const pieces = [...(build.armorPieces ?? [])].sort(
+    (a, b) => slotOrder.indexOf(a.slot) - slotOrder.indexOf(b.slot)
+  )
+
+  const push = (raw: DestinyIconRef | string | undefined, slotLabel?: string, skipIfCovered = false) => {
+    if (mods.length >= MOD_MAX) return
+    const base = plugFromRef(typeof raw === 'string' ? undefined : raw, typeof raw === 'string' ? raw : raw?.name)
+    if (!base) return
+    if (skipIfCovered && coversRawModName(mods, base.name)) return
+    const name = labeledModName(slotLabel, base.name)
+    if (mods.some((mod) => mod.name.toLowerCase() === name.toLowerCase())) return
+    mods.push({ ...base, name })
+  }
+
+  if (pieces.length) {
+    for (const piece of pieces) {
+      const slotLabel = ARMOR_SLOT_LABEL[piece.slot]
+      for (const mod of piece.mods ?? []) push(mod, slotLabel)
+    }
+  }
+
+  for (const perk of build.artifactPerks ?? []) push(perk, 'Artifact')
+
+  if (!pieces.length) {
+    const refs = build.armorModRefs ?? []
+    if (refs.length) {
+      for (const mod of refs) push(mod)
+    } else {
+      for (const mod of build.armorMods ?? []) push(mod)
+    }
+  } else {
+    for (const mod of build.armorMods ?? []) push(mod, undefined, true)
+  }
+
+  return mods.slice(0, MOD_MAX)
 }
 
 function gearRef(name: string, ref: DestinyIconRef | undefined): DestinyIconRef | undefined {
@@ -614,28 +716,36 @@ export function inferActivityTags(activityName: string, difficulty?: string): Co
   return tags.slice(0, TAG_MAX)
 }
 
+function fitField(value: string, max: number): string {
+  return value.length > max ? value.slice(0, max).trim() : value
+}
+
 /** Map a live equipped (or saved) Bungie loadout into a share form draft. */
 export function communityBuildDraftFromSnapshot(build: BuildSnapshot, characterId?: string): CommunityBuildDraft {
-  const subclass = isBlankGearName(build.subclass) ? '' : sanitizePlainText(build.subclass)
-  const exoticArmor = isBlankGearName(build.exoticArmor) ? '' : sanitizePlainText(build.exoticArmor)
-  const exoticWeapon = isBlankGearName(build.exoticWeapon) ? '' : sanitizePlainText(build.exoticWeapon ?? '')
+  const subclassRaw = isBlankGearName(build.subclass) ? '' : sanitizePlainText(build.subclass)
+  const subclass = fitField(subclassRaw, SUBCLASS_MAX)
+  const exoticArmor = fitField(isBlankGearName(build.exoticArmor) ? '' : sanitizePlainText(build.exoticArmor), EXOTIC_MAX)
+  const exoticWeapon = fitField(
+    isBlankGearName(build.exoticWeapon) ? '' : sanitizePlainText(build.exoticWeapon ?? ''),
+    EXOTIC_MAX
+  )
   const classLabel = communityClassLabel(build.characterClass)
-  const name = subclass ? `${subclass} ${classLabel}`.slice(0, NAME_MAX) : ''
+  const name = subclass ? fitField(`${subclass} ${classLabel}`, NAME_MAX) : ''
 
   return {
     name,
     characterClass: build.characterClass,
     subclass,
     subclassRef: subclass ? gearRef(subclass, build.subclassRef) : undefined,
-    aspects: plugsFrom(build.aspectRefs, build.aspects),
-    fragments: plugsFrom(build.fragmentRefs, build.fragments),
+    aspects: plugsFrom(build.aspectRefs, build.aspects, ASPECT_MAX),
+    fragments: plugsFrom(build.fragmentRefs, build.fragments, FRAGMENT_MAX),
     exoticArmor,
     exoticArmorRef: gearRef(exoticArmor, build.exoticArmorRef),
     exoticWeapon,
     exoticWeaponRef: gearRef(exoticWeapon, build.exoticWeaponRef),
-    mods: plugsFrom(build.armorModRefs, build.armorMods),
-    statFocus: statFocusFromSnapshot(build.stats),
-    activityTags: inferActivityTags(build.activityName, build.difficulty),
+    mods: modsFromSnapshot(build),
+    statFocus: statFocusFromSnapshot(build.stats).slice(0, STAT_MAX),
+    activityTags: inferActivityTags(build.activityName, build.difficulty).slice(0, TAG_MAX),
     description: '',
     source: 'equipped',
     characterId,

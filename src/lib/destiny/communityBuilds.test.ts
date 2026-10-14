@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createElement } from 'react'
 import CommunityBuildsBrowser from '@/app/components/destiny/community/CommunityBuildsBrowser'
-import type { BuildSnapshot } from '@/lib/destiny/types'
+import type { ArmorSlotLabel, BuildSnapshot } from '@/lib/destiny/types'
 import {
   communityBuildDraftFromSnapshot,
   communityBuildListFilter,
@@ -111,6 +111,26 @@ describe('community build validation', () => {
     expect(validateCommunityBuildComment({ body: '<b>Nice</b>  well  ' })).toEqual({ ok: true, text: 'Nice well' })
     expect(validateCommunityBuildComment({ body: '   ' }).ok).toBe(false)
   })
+
+  it('allows 30 mods and rejects 31, plus extra aspects and fragments', () => {
+    const mods = Array.from({ length: 30 }, (_, index) => `Mod ${index + 1}`)
+    expect(validateCommunityBuildInput(validBuild({ mods })).ok).toBe(true)
+    const tooManyMods = validateCommunityBuildInput(validBuild({ mods: [...mods, 'Mod 31'] }))
+    expect(tooManyMods.ok).toBe(false)
+    if (!tooManyMods.ok) expect(tooManyMods.error).toBe('Mods can include at most 30 entries.')
+    expect(
+      validateCommunityBuildInput(
+        validBuild({ aspects: ['Touch of Flame', 'Heat Rises', 'Icarus Dash', 'Hellion'] })
+      ).ok
+    ).toBe(false)
+    expect(
+      validateCommunityBuildInput(
+        validBuild({
+          fragments: ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven'],
+        })
+      ).ok
+    ).toBe(false)
+  })
 })
 
 describe('equipped loadout draft', () => {
@@ -126,6 +146,106 @@ describe('equipped loadout draft', () => {
     expect(draft.statFocus).toEqual(['Health', 'Class'])
     expect(draft.activityTags).toEqual([])
     expect(statFocusFromSnapshot({ Mobility: 80, Resilience: 10 })).toEqual(['Weapons', 'Health'])
+  })
+
+  it('imports a full armor loadout inside every server limit', () => {
+    const junk = [
+      { name: 'Empty Mod Socket' },
+      { name: 'Default Shader' },
+      { name: 'Default Ornament' },
+      { name: 'Kill Tracker' },
+      { name: 'Masterwork' },
+      { name: 'Intrinsic' },
+      { name: 'Empty Weapon Mod' },
+      { name: 'Armor Mod' },
+      { name: '—' },
+    ]
+    const piece = (slot: ArmorSlotLabel, mods: string[]) => ({
+      slot,
+      name: slot,
+      mods: [...mods.map((name, index) => ({ name, hash: 5000 + index })), ...junk],
+    })
+
+    const draft = communityBuildDraftFromSnapshot(
+      snapshot({
+        subclass: 'P'.repeat(80),
+        exoticArmor: 'E'.repeat(100),
+        exoticWeapon: 'Gjallarhorn',
+        aspectRefs: [
+          { name: 'Touch of Flame' },
+          { name: 'Heat Rises' },
+          { name: 'Icarus Dash' },
+          { name: 'Hellion' },
+          { name: 'Empty Socket' },
+        ],
+        fragmentRefs: [
+          { name: 'Ember of Ashes' },
+          { name: 'Ember of Empyrean' },
+          { name: 'Ember of Singeing' },
+          { name: 'Ember of Searing' },
+          { name: 'Ember of Benevolence' },
+          { name: 'Ember of Torches' },
+          { name: 'Ember of Wonder' },
+          { name: 'Default Shader' },
+        ],
+        armorPieces: [
+          piece('helmet', ['Harmonic Siphon', 'Ashes to Assets', 'Harmonic Loader', 'Powerful Friends']),
+          piece('gauntlets', ['Harmonic Siphon', 'Firepower', 'Impact Induction', 'Momentum Transfer']),
+          piece('chest', ['Charged Up', 'Emergency Reinforcement', 'Harmonic Resistance', 'Shield Break Charge']),
+          piece('legs', ['Recuperation', 'Invigoration', 'Stacks on Stacks', 'Absolution']),
+          piece('class', ['Outreach', 'Outreach', 'Bomber', 'Distribution', 'Time Dilation']),
+        ],
+        artifactPerks: ['Anti-Barrier Scout Rifle', 'Default Shader', 'Anti-Barrier Scout Rifle'],
+        armorMods: ['Harmonic Siphon', 'Backup Mag', '—', 'Empty Mod Socket'],
+        activityName: 'Grandmaster raid dungeon trials gambit',
+        stats: { Weapons: 100, Health: 90, Class: 80, Super: 70, Grenade: 20 },
+      }),
+      '123'
+    )
+
+    const modNames = draft.mods.map((plug) => plug.name)
+    expect(modNames).toContain('Helmet: Harmonic Siphon')
+    expect(modNames).toContain('Gauntlets: Harmonic Siphon')
+    expect(modNames).toContain('Class item: Outreach')
+    expect(modNames.filter((name) => name === 'Class item: Outreach')).toHaveLength(1)
+    expect(modNames).toContain('Artifact: Anti-Barrier Scout Rifle')
+    expect(modNames.filter((name) => name.startsWith('Artifact:'))).toHaveLength(1)
+    expect(modNames).toContain('Backup Mag')
+    expect(modNames.some((name) => /shader|ornament|tracker|masterwork|intrinsic|empty|weapon mod|^armor mod$/i.test(name))).toBe(false)
+    expect(modNames.length).toBeLessThanOrEqual(30)
+    expect(draft.aspects.map((plug) => plug.name)).toEqual(['Touch of Flame', 'Heat Rises', 'Icarus Dash'])
+    expect(draft.fragments).toHaveLength(6)
+    expect(draft.fragments.some((plug) => /shader/i.test(plug.name))).toBe(false)
+    expect(draft.subclass.length).toBeLessThanOrEqual(48)
+    expect(draft.exoticArmor.length).toBeLessThanOrEqual(80)
+    expect(draft.exoticWeapon).toBe('Gjallarhorn')
+    expect(draft.name.length).toBeGreaterThanOrEqual(3)
+    expect(draft.name.length).toBeLessThanOrEqual(60)
+    expect(draft.statFocus.length).toBeGreaterThan(0)
+    expect(draft.statFocus.length).toBeLessThanOrEqual(3)
+    expect(draft.activityTags.length).toBeGreaterThan(0)
+    expect(draft.activityTags.length).toBeLessThanOrEqual(4)
+    expect(validateCommunityBuildInput(draft).ok).toBe(true)
+  })
+
+  it('truncates more than 30 unique imported mods and still validates', () => {
+    const draft = communityBuildDraftFromSnapshot(
+      snapshot({
+        armorPieces: [
+          {
+            slot: 'helmet',
+            name: 'Helmet',
+            mods: Array.from({ length: 40 }, (_, index) => ({ name: `Socket Mod ${index + 1}`, hash: index + 1 })),
+          },
+        ],
+        armorMods: [],
+        activityName: "King's Fall raid",
+        exoticWeapon: 'Gjallarhorn',
+      })
+    )
+    expect(draft.mods).toHaveLength(30)
+    expect(draft.mods[0]?.name).toBe('Helmet: Socket Mod 1')
+    expect(validateCommunityBuildInput(draft).ok).toBe(true)
   })
 
   it('guesses activity tags from the activity name', () => {
