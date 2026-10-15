@@ -1,3 +1,4 @@
+import { isMvpCategoryVote } from '@/lib/destiny/mvpVoting'
 import type { MvpVote, RunRecord, SherpaBoard, SherpaCredit, SherpaStanding } from '@/lib/destiny/types'
 import {
   activityKey,
@@ -75,10 +76,11 @@ function learnerVotedForSherpa(
   if (!learnerUserId) return false
   return votes.some(
     (vote) =>
+      isMvpCategoryVote(vote) &&
       vote.runId === runId &&
       vote.voterId === learnerUserId &&
       (vote.selectedMembershipId === sherpaMembershipId ||
-        (sherpaUserId != null && vote.selectedUserId === sherpaUserId))
+        (sherpaUserId != null && vote.selectedUserId != null && vote.selectedUserId === sherpaUserId))
   )
 }
 

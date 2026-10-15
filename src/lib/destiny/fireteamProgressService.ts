@@ -3,6 +3,7 @@ import { evaluateClanWars } from '@/lib/destiny/clanWars'
 import { evaluateFireteamChemistry } from '@/lib/destiny/fireteamChemistry'
 import { evaluateNightOps } from '@/lib/destiny/nightOps'
 import { evaluatePassport, type FireteamViewer } from '@/lib/destiny/passport'
+import { membershipIdsToClaimedUsers } from '@/lib/destiny/playerIdentity'
 import { evaluateSherpaRanks } from '@/lib/destiny/sherpaRanks'
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
 import {
@@ -53,14 +54,6 @@ function unionRuns(groups: RunRecord[][]): RunRecord[] {
   return Array.from(byId.values())
 }
 
-function membershipToUserId(users: Map<string, StoredDestinyUser>): Map<string, string> {
-  const map = new Map<string, string>()
-  for (const user of Array.from(users.values())) {
-    if (user.bungieMembershipId && user.userId) map.set(user.bungieMembershipId, user.userId)
-  }
-  return map
-}
-
 /** Passport, contracts, sherpa, clan wars, night ops, and chemistry. Read-only. */
 export async function loadFireteamProgress(stored: StoredDestinyUser, now = new Date()): Promise<FireteamProgress> {
   await refreshLiveWeeklyRotationBounded(now)
@@ -100,7 +93,7 @@ export async function loadFireteamProgress(stored: StoredDestinyUser, now = new 
     sherpa: evaluateSherpaRanks({
       runs,
       votes,
-      membershipToUserId: membershipToUserId(users),
+      membershipToUserId: membershipIdsToClaimedUsers(users.values()),
       season: seasonWindow,
       viewerMembershipId: stored.bungieMembershipId,
       historyComplete,

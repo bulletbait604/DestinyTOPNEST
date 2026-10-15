@@ -426,7 +426,7 @@ export function HubLeaderboardPreview({ onLogin }: { onLogin?: () => void }) {
       </BoardState>
       <SignInGate
         title="Full boards are ready after sign-in"
-        body="Your rank, MVP votes, and season placement stay on your account. The public home already shows sherpas and clan standings."
+        body="Your rank, MVP votes, and season placement stay on your Bungie membership. Votes cast for you before you joined are already on your profile."
         onLogin={onLogin}
       />
     </section>

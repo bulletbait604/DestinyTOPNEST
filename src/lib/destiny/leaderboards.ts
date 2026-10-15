@@ -73,6 +73,8 @@ export function aggregateLeaderboard(
 
   for (const run of runs) {
     if (!run.ownerUserId) continue
+    const owner = usersById.get(run.ownerUserId)
+    if (owner?.accountStatus === 'pending') continue
     if (!runMatchesPeriod(run, period, season)) continue
     if (!runMatchesCategory(run, category)) continue
 

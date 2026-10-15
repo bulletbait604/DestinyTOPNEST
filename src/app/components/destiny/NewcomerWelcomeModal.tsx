@@ -217,7 +217,7 @@ export default function NewcomerWelcomeModal({ darkMode, userId }: Props) {
                   <strong>After your run, open Profile → Previous Activities</strong> and vote for:
                 </p>
                 <ul className="tn-welcome-sublist">
-                  <li>That run&apos;s MVP (one linked Top Nest teammate)</li>
+                  <li>That run&apos;s MVP (any teammate except you — you can change it)</li>
                   <li>
                     Each fireteam member&apos;s Knowledge and Vibes (private trust ranks)
                   </li>

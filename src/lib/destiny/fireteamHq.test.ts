@@ -140,6 +140,71 @@ describe('sherpa ranks', () => {
     expect(board.hallOfFame).toEqual([])
   })
 
+  it('credits an unregistered sherpa when the learner MVP is keyed by membership id', () => {
+    const prior = run({
+      id: 'prior',
+      completedAt: '2026-10-02T18:00:00.000Z',
+      teamMembers: [member('sherpa', { displayName: 'Guide' }), member('old')],
+    })
+    const guided = run({
+      id: 'guided',
+      completedAt: '2026-10-08T18:00:00.000Z',
+      teamMembers: [member('sherpa', { displayName: 'Guide' }), member('learner', { displayName: 'Learner' })],
+    })
+    const board = evaluateSherpaRanks({
+      runs: [prior, guided],
+      votes: [
+        vote({
+          runId: 'guided',
+          voterId: 'user-learner',
+          selectedMembershipId: 'sherpa',
+          category: 'mvp',
+        }),
+      ],
+      membershipToUserId: new Map([['learner', 'user-learner']]),
+      season: SEASON,
+      viewerMembershipId: 'sherpa',
+    })
+
+    expect(board.learnerMvps).toBe(1)
+    expect(board.points).toBe(2)
+    expect(board.hallOfFame[0]?.membershipId).toBe('sherpa')
+  })
+
+  it('does not treat kudos as a learner MVP', () => {
+    const prior = run({
+      id: 'prior',
+      completedAt: '2026-10-02T18:00:00.000Z',
+      teamMembers: [member('sherpa'), member('old')],
+    })
+    const guided = run({
+      id: 'guided',
+      completedAt: '2026-10-08T18:00:00.000Z',
+      teamMembers: [member('sherpa'), member('learner')],
+    })
+    const board = evaluateSherpaRanks({
+      runs: [prior, guided],
+      votes: [
+        vote({
+          runId: 'guided',
+          voterId: 'user-learner',
+          selectedMembershipId: 'sherpa',
+          category: 'kudos',
+        }),
+      ],
+      membershipToUserId: new Map([
+        ['learner', 'user-learner'],
+        ['sherpa', 'user-sherpa'],
+      ]),
+      season: SEASON,
+      viewerMembershipId: 'sherpa',
+    })
+
+    expect(board.guidedClears).toBe(1)
+    expect(board.learnerMvps).toBe(0)
+    expect(board.points).toBe(1)
+  })
+
   it('ignores a learner MVP vote that does not name the sherpa', () => {
     const prior = run({
       id: 'prior',

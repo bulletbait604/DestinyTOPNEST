@@ -72,7 +72,7 @@ function HeroMvpCallout({ compact }: { compact?: boolean }) {
       onClick={() => navigateProfileSection('activities')}
     >
       <span className="tn-home-hero-mvp-callout-text">
-        Vote MVP and rank Knowledge + Vibes for each fireteam member in Previous Activities on your Profile.
+        Crown any fireteam member MVP — linked or not — and rank Knowledge + Vibes in Previous Activities.
       </span>
     </button>
   )

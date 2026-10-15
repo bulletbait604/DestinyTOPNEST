@@ -15,6 +15,7 @@ export const DESTINY_COLLECTIONS = {
   prizeClaims: 'destiny_prize_claims',
   trustReviews: 'destiny_trust_reviews',
   mvpVotes: 'destiny_mvp_votes',
+  pendingPlayers: 'destiny_pending_players',
   adminActivity: 'destiny_admin_activity',
   leaderboardAdjustments: 'destiny_leaderboard_adjustments',
   weeklyLootIcons: 'destiny_weekly_loot_icons',

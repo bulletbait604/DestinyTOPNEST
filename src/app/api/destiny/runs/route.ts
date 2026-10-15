@@ -26,14 +26,13 @@ export async function GET(req: NextRequest) {
       getTrustReviewsByReviewer(userId),
     ])
 
-    const votesByRun = new Map(votes.map((vote) => [vote.runId, vote]))
     const activities = await enrichActivityRunsForVote(
       buildActivityRunsForVote(
         userId,
         stored?.bungieMembershipId,
         runs,
         Array.from(usersById.values()),
-        votesByRun,
+        votes,
         trustReviews
       )
     )

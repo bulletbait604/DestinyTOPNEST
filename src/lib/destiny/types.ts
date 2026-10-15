@@ -190,6 +190,11 @@ export interface DestinyUser {
   powerLevel?: number
   characterClass?: DestinyCharacterClass
   connectedAt?: string
+  /**
+   * `pending` marks a lightweight unclaimed placeholder. Those records must not
+   * appear on leaderboards. Real sign-ins stay `active` or unset.
+   */
+  accountStatus?: 'active' | 'pending'
   profileFlexStats?: ProfileFlexStatId[]
   bungieStats?: GuardianBungieStats
   /** Bungie membership type enum (1=xbox, 2=ps, 3=steam, 6=epic) for API calls */
@@ -535,16 +540,28 @@ export interface SeasonPrizeRules {
   newBonds?: { first: string; second: string; thirdToFifth: string; participation: string }
 }
 
-/** Fireteam MVP vote — one pick per run. Used for sherpa credit, not a leaderboard. */
+/** mvp = one crown per voter per run. kudos = optional, one per other participant. */
+export type MvpVoteCategory = 'mvp' | 'kudos'
+
+/**
+ * Fireteam commend stored by the target's Bungie membership id from the PGCR.
+ * `selectedUserId` is filled once that guardian has a Top Nest account.
+ * Legacy rows omit `category` and count as the run MVP. Sherpa credit uses MVP only.
+ */
 export interface MvpVote {
   id: string
   runId: string
   voterId: string
-  /** Site user id of the selected guardian. */
-  selectedUserId: string
+  voterMembershipId?: string
+  /** Missing on legacy rows, which count as the run MVP. */
+  category?: MvpVoteCategory
+  /** Site user id once the target has claimed a Top Nest account. */
+  selectedUserId?: string
+  /** Canonical recipient — Bungie membership id from the post-game carnage report. */
   selectedMembershipId: string
   selectedDisplayName: string
   createdAt: string
+  updatedAt?: string
 }
 
 export interface ActivityRunGuardian {
@@ -553,8 +570,10 @@ export interface ActivityRunGuardian {
   characterClass?: DestinyCharacterClass
   siteUserId?: string
   isSelf: boolean
-  /** Can receive an MVP vote (linked Top Nest account, not self). */
+  /** Any other guardian on this activity's carnage report. */
   canVoteFor: boolean
+  /** Viewer already sent kudos to this guardian for the run. */
+  kudosGiven: boolean
   /** Can receive a private Knowledge + Vibes rank (any fireteam member except self). */
   canReview: boolean
   alreadyReviewed: boolean
@@ -571,7 +590,11 @@ export interface ActivityRunForVote {
   verificationStatus: VerificationStatus
   userHasVoted: boolean
   selectedUserId?: string
+  /** Bungie membership id of the crowned guardian. */
+  selectedMembershipId?: string
   selectedDisplayName?: string
+  /** Membership ids that already received kudos from the viewer on this run. */
+  kudosMembershipIds: string[]
   /** Teammates still needing a Knowledge + Vibes rank from the viewer. */
   pendingTrustCount: number
   guardians: ActivityRunGuardian[]
@@ -689,6 +712,7 @@ export interface AdminUserDetail extends AdminUserSummary {
   reputationReviews: ReputationReview[]
   trustReviews: TrustReview[]
   mvpVotesReceived: number
+  kudosReceived: number
   adminNotes: AdminActivityEntry[]
   /** Full app profile (Guardian tab) — populated on detail fetch. */
   profile?: PlayerProfile | null
@@ -718,6 +742,10 @@ export interface PlayerProfile extends DestinyUser {
   /** @deprecated Kept for legacy profile reads */
   fullClanPoints?: number
   verifiedClears: number
+  /** MVP crowns received, including votes cast before this account existed. */
+  mvpVotesReceived: number
+  /** Optional per-run kudos received. Not used for sherpa points. */
+  kudosReceived: number
   reputationScore: number
   badges: string[]
   favoriteActivities: string[]

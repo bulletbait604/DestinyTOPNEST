@@ -89,6 +89,8 @@ export default function ProfilePanel({
     { label: 'Raid pts', value: profile.raidPoints },
     { label: 'Dungeon pts', value: profile.dungeonPoints },
     { label: 'Verified clears', value: profile.verifiedClears },
+    { label: 'MVP votes', value: profile.mvpVotesReceived ?? 0 },
+    { label: 'Kudos', value: profile.kudosReceived ?? 0 },
   ]
 
   return (
@@ -101,6 +103,9 @@ export default function ProfilePanel({
           </div>
         ))}
       </div>
+      <p className={cn('text-[11px] -mt-2', t.muted)}>
+        MVP votes and kudos are stored on your Bungie membership, including ones received before you linked Top Nest.
+      </p>
 
       <SegmentedControl
         label="Profile"

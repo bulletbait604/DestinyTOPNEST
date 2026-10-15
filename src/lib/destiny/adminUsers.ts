@@ -4,7 +4,9 @@ import { isUserBanned, listBannedUsers, normalizeBanUsername } from '@/lib/banne
 import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import { getAdminNotesForUser } from '@/lib/destiny/adminActivityLog'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
+import { claimPendingPlayer } from '@/lib/destiny/pendingPlayers'
 import {
+  countReceivedVotes,
   getReputationReviewsForUser,
   getRunsForUser,
   getTrustReviewsForUser,
@@ -43,10 +45,15 @@ async function runCountsForUser(userId: string): Promise<{ verified: number; fla
   return { verified, flagged }
 }
 
-async function mvpVotesReceivedCount(userId: string): Promise<number> {
-  return (await db()).collection(DESTINY_COLLECTIONS.mvpVotes).countDocuments({
-    selectedUserId: userId,
-  })
+async function receivedVoteCounts(
+  userId: string,
+  membershipId: string | undefined
+): Promise<{ mvpVotesReceived: number; kudosReceived: number }> {
+  const [mvpVotesReceived, kudosReceived] = await Promise.all([
+    countReceivedVotes(userId, membershipId, 'mvp'),
+    countReceivedVotes(userId, membershipId, 'kudos'),
+  ])
+  return { mvpVotesReceived, kudosReceived }
 }
 
 function toSummary(
@@ -137,7 +144,13 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
 
   if (!user) return null
 
-  const [isBanned, siteRole, counts, recentRuns, reputationReviews, trustReviews, mvpVotesReceived, adminNotes] =
+  if (user.bungieMembershipId) {
+    await claimPendingPlayer(user.bungieMembershipId, normalized).catch((err) => {
+      console.warn('[admin] MVP credit attach failed', err)
+    })
+  }
+
+  const [isBanned, siteRole, counts, recentRuns, reputationReviews, trustReviews, receivedVotes, adminNotes] =
     await Promise.all([
       isUserBanned(normalized),
       siteRoleForUser(normalized),
@@ -145,7 +158,7 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
       getRunsForUser(normalized, 15),
       getReputationReviewsForUser(normalized),
       getTrustReviewsForUser(normalized),
-      mvpVotesReceivedCount(normalized),
+      receivedVoteCounts(normalized, user.bungieMembershipId),
       getAdminNotesForUser(normalized),
     ])
 
@@ -162,7 +175,8 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
     recentRuns,
     reputationReviews: reputationReviews.slice(0, 10),
     trustReviews: trustReviews.slice(0, 10),
-    mvpVotesReceived,
+    mvpVotesReceived: receivedVotes.mvpVotesReceived,
+    kudosReceived: receivedVotes.kudosReceived,
     adminNotes,
   }
 }
