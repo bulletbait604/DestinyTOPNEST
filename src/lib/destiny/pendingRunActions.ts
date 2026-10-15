@@ -12,13 +12,12 @@ export function computePendingRunActions(
   mvpVotes: MvpVote[],
   trustReviews: TrustReview[]
 ): PendingRunActions {
-  const votesByRun = new Map(mvpVotes.map((vote) => [vote.runId, vote]))
   const activities = buildActivityRunsForVote(
     viewerId,
     viewerMembershipId,
     runs,
     users,
-    votesByRun,
+    mvpVotes,
     trustReviews
   )
 

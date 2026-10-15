@@ -10,6 +10,7 @@
 } from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { isActiveLeaderboardCategory } from '@/lib/destiny/leaderboards'
+import { isPendingAccount } from '@/lib/destiny/playerIdentity'
 import type { UserPrizeTrackEntry } from '@/lib/destiny/seasonPrizes'
 
 export interface ReviewableTeammate {
@@ -194,9 +195,8 @@ export function validateReviewSubmission(
 export function usersByMembershipMap(users: StoredDestinyUser[]): Map<string, StoredDestinyUser> {
   const map = new Map<string, StoredDestinyUser>()
   for (const user of users) {
-    if (user.bungieMembershipId) {
-      map.set(user.bungieMembershipId, user)
-    }
+    if (!user.bungieMembershipId || isPendingAccount(user)) continue
+    map.set(user.bungieMembershipId, user)
   }
   return map
 }

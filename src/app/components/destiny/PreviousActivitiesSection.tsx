@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { ChevronDown, Crown, Loader2, Star, Users } from 'lucide-react'
-import type { ActivityRunForVote } from '@/lib/destiny/types'
+import type { ActivityRunForVote, MvpVoteCategory } from '@/lib/destiny/types'
+import { guardianVoteState, type MvpVoteAction } from '@/lib/destiny/mvpVoting'
 import {
   EmptyBlock,
   GlassCard,
@@ -12,7 +13,7 @@ import {
 } from '@/app/components/destiny/DestinyUi'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import TrustReviewVoteForm from '@/app/components/destiny/TrustReviewVoteForm'
-import { destinyPrimaryBtn, formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import { destinyPrimaryBtn, destinySecondaryBtn, formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { useBungieLink } from '@/contexts/BungieLinkContext'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { cn } from '@/lib/utils'
@@ -21,11 +22,107 @@ interface Props {
   darkMode: boolean
 }
 
+export function ActivityFireteamVoteList({
+  run,
+  darkMode,
+  votingKey,
+  onVote,
+}: {
+  run: ActivityRunForVote
+  darkMode: boolean
+  votingKey: string | null
+  onVote: (runId: string, membershipId: string, category: MvpVoteCategory, action: MvpVoteAction) => void
+}) {
+  const t = getDestinyTheme(darkMode)
+  const mvpCandidates = run.guardians.filter((guardian) => guardian.canVoteFor)
+  const busy = votingKey?.startsWith(`${run.runId}:`) ?? false
+
+  return (
+    <div className="space-y-2">
+      <p className={cn('text-xs uppercase tracking-wide flex items-center gap-1.5', t.caption)}>
+        <Star className="w-3.5 h-3.5 text-sky-300" />
+        MVP — crown any fireteam member
+      </p>
+      <p className={cn('text-[11px]', t.muted)}>
+        One MVP per run. You can change it. Kudos are optional, one per teammate, and still count if they join Top Nest later.
+      </p>
+      {run.guardians.map((guardian) => {
+        const state = guardianVoteState(run, guardian)
+        return (
+          <div
+            key={`mvp-${guardian.membershipId}`}
+            className="flex items-center justify-between gap-2 rounded-lg bg-black/25 px-3 py-2 ring-1 ring-white/[0.06]"
+          >
+            <div className="min-w-0">
+              <p className={cn('text-sm font-medium truncate', t.body)}>
+                {guardian.displayName}
+                {guardian.isSelf ? ' (you)' : ''}
+              </p>
+              <p className={cn('text-[11px] capitalize', t.muted)}>
+                {guardian.characterClass ?? 'guardian'}
+                {!guardian.siteUserId && !guardian.isSelf ? ' · not on Top Nest yet' : ''}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0">
+              {state.showMvpBadge ? (
+                <span className="inline-flex items-center gap-1 text-xs text-amber-200">
+                  <Crown className="w-3.5 h-3.5" /> MVP
+                </span>
+              ) : null}
+              {state.mvpButton !== 'hidden' ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onVote(run.runId, guardian.membershipId, 'mvp', 'set')}
+                  className={cn(destinyPrimaryBtn(darkMode), 'text-xs px-3 py-1.5 shrink-0')}
+                >
+                  {votingKey === `${run.runId}:${guardian.membershipId}:mvp` ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : state.mvpButton === 'change' ? (
+                    'Change MVP'
+                  ) : (
+                    'Vote MVP'
+                  )}
+                </button>
+              ) : null}
+              {state.kudosButton === 'give' ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onVote(run.runId, guardian.membershipId, 'kudos', 'set')}
+                  className={cn(destinySecondaryBtn(darkMode), 'text-xs px-3 py-1.5 shrink-0')}
+                >
+                  Kudos
+                </button>
+              ) : null}
+              {state.kudosButton === 'clear' ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  aria-pressed="true"
+                  onClick={() => onVote(run.runId, guardian.membershipId, 'kudos', 'clear')}
+                  className={cn(destinySecondaryBtn(darkMode), 'text-xs px-3 py-1.5 shrink-0')}
+                >
+                  Kudos given
+                </button>
+              ) : null}
+              {guardian.isSelf ? <StatusPill label="You" tone="neutral" /> : null}
+            </div>
+          </div>
+        )
+      })}
+      {mvpCandidates.length === 0 ? (
+        <p className={cn('text-xs', t.muted)}>No other guardians on this carnage report.</p>
+      ) : null}
+    </div>
+  )
+}
+
 export default function PreviousActivitiesSection({ darkMode }: Props) {
   const [activities, setActivities] = useState<ActivityRunForVote[]>([])
   const [expandedRunId, setExpandedRunId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [votingRunId, setVotingRunId] = useState<string | null>(null)
+  const [votingKey, setVotingKey] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const bungie = useBungieLink()
   const t = getDestinyTheme(darkMode)
@@ -53,24 +150,29 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
     return () => window.removeEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
   }, [load])
 
-  const submitMvpVote = async (runId: string, selectedUserId: string) => {
-    setVotingRunId(runId)
+  const submitVote = async (
+    runId: string,
+    membershipId: string,
+    category: MvpVoteCategory,
+    action: MvpVoteAction
+  ) => {
+    setVotingKey(`${runId}:${membershipId}:${category}`)
     setMessage(null)
     try {
       const res = await fetch('/api/destiny/mvp', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ runId, selectedUserId }),
+        body: JSON.stringify({ runId, membershipId, category, action }),
       })
       const json = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(json.error ?? 'MVP vote failed')
-      setMessage(json.message ?? 'MVP vote recorded.')
+      if (!res.ok) throw new Error(json.error ?? 'Vote failed')
+      setMessage(json.message ?? 'Vote recorded.')
       await load({ silent: true })
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'MVP vote failed')
+      setMessage(err instanceof Error ? err.message : 'Vote failed')
     } finally {
-      setVotingRunId(null)
+      setVotingKey(null)
     }
   }
 
@@ -83,7 +185,7 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
     <div className="space-y-4">
       <SectionTitle
         title="Previous Activities"
-        subtitle="Pick one MVP per run and rank each fireteam member on Knowledge (1–5) and Vibes. MVP votes are public; trust ranks stay private."
+        subtitle="Crown one MVP per run — anyone on the carnage report, even if they have not joined Top Nest. You can change it. Kudos are optional. Knowledge and Vibes stay private."
         darkMode={darkMode}
       />
 
@@ -168,56 +270,14 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
 
                 {expanded ? (
                   <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-4">
-                    <div className="space-y-2">
-                      <p className={cn('text-xs uppercase tracking-wide flex items-center gap-1.5', t.caption)}>
-                        <Star className="w-3.5 h-3.5 text-sky-300" />
-                        MVP — pick one linked Top Nest guardian
-                      </p>
-                      {run.guardians.map((guardian) => (
-                        <div
-                          key={`mvp-${guardian.membershipId}`}
-                          className="flex items-center justify-between gap-2 rounded-lg bg-black/25 px-3 py-2 ring-1 ring-white/[0.06]"
-                        >
-                          <div className="min-w-0">
-                            <p className={cn('text-sm font-medium truncate', t.body)}>
-                              {guardian.displayName}
-                              {guardian.isSelf ? ' (you)' : ''}
-                            </p>
-                            <p className={cn('text-[11px] capitalize', t.muted)}>
-                              {guardian.characterClass ?? 'guardian'}
-                              {!guardian.siteUserId && !guardian.isSelf ? ' · not on Top Nest' : ''}
-                            </p>
-                          </div>
-                          {run.userHasVoted ? (
-                            run.selectedUserId === guardian.siteUserId ? (
-                              <span className="inline-flex items-center gap-1 text-xs text-amber-200">
-                                <Crown className="w-3.5 h-3.5" /> MVP
-                              </span>
-                            ) : null
-                          ) : guardian.canVoteFor ? (
-                            <button
-                              type="button"
-                              disabled={votingRunId === run.runId}
-                              onClick={() => void submitMvpVote(run.runId, guardian.siteUserId!)}
-                              className={cn(destinyPrimaryBtn(darkMode), 'text-xs px-3 py-1.5 shrink-0')}
-                            >
-                              {votingRunId === run.runId ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : (
-                                <>
-                                  <Star className="w-3.5 h-3.5" /> Vote MVP
-                                </>
-                              )}
-                            </button>
-                          ) : guardian.isSelf ? (
-                            <StatusPill label="You" tone="neutral" />
-                          ) : null}
-                        </div>
-                      ))}
-                      {!run.userHasVoted && mvpCandidates.length === 0 ? (
-                        <p className={cn('text-xs', t.muted)}>No linked Top Nest teammates to crown MVP.</p>
-                      ) : null}
-                    </div>
+                    <ActivityFireteamVoteList
+                      run={run}
+                      darkMode={darkMode}
+                      votingKey={votingKey}
+                      onVote={(runId, membershipId, category, action) =>
+                        void submitVote(runId, membershipId, category, action)
+                      }
+                    />
 
                     <div className="space-y-3">
                       <p className={cn('text-xs uppercase tracking-wide flex items-center gap-1.5', t.caption)}>

@@ -93,7 +93,7 @@ export const HUB_SCORING: PublicScoringNote[] = [
   },
   {
     title: 'Sherpa ranks',
-    body: 'You get a sherpa point when you guide someone through their first verified clear of an activity you have already cleared. If they vote you MVP, you get one more point.',
+    body: 'You get a sherpa point when you guide someone through their first verified clear of an activity you have already cleared. If they vote you MVP, you get one more point. The vote is stored on your Bungie membership, so it still counts if you join Top Nest later.',
   },
   {
     title: 'Clan Wars',

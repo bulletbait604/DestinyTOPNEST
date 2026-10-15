@@ -22,7 +22,7 @@ export function SherpaPanel({
         <Shield className="w-4 h-4 mt-0.5 text-amber-200 shrink-0" />
         <SectionTitle
           title="Sherpa ranks"
-          subtitle="Verified first clears you guided. A learner MVP vote adds a bonus. Titles only."
+          subtitle="Verified first clears you guided. A learner MVP vote adds a bonus, even if it was cast before you joined. Titles only."
           darkMode={darkMode}
           compact
         />

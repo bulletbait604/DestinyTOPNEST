@@ -253,6 +253,7 @@ export default function AdminUsersSection({
             {selected.isBanned ? <StatusPill label="Banned" tone="red" /> : <StatusPill label="Active" tone="green" />}
             <StatusPill label={`${selected.verifiedRunCount} verified`} tone="neutral" />
             <StatusPill label={`${selected.mvpVotesReceived} MVP votes`} tone="purple" />
+            <StatusPill label={`${selected.kudosReceived ?? 0} kudos`} tone="blue" />
           </div>
           <p className={cn('text-xs mb-4', t.muted)}>
             ID {selected.userId}

@@ -34,6 +34,7 @@ import {
 } from '@/lib/destiny/seasonCatalog'
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
+import { mvpCategoryFilter, mvpVotesReceivedQuery } from '@/lib/destiny/mvpVoting'
 import { recentRunsFrom, nestLaunchMongoFilter } from '@/lib/destiny/runDates'
 import type { AdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
 import { logAdminActivity } from '@/lib/destiny/adminActivityLog'
@@ -45,6 +46,7 @@ import type {
   FireteamLobby,
   LeaderboardEntry,
   MvpVote,
+  MvpVoteCategory,
   OverviewPayload,
   PendingRunActions,
   PrizeClaim,
@@ -88,10 +90,41 @@ async function ensureDestinyIndexesOnce(): Promise<void> {
   await database.collection(DESTINY_COLLECTIONS.prizeClaims).createIndex({ status: 1, createdAt: -1 })
   await database.collection(DESTINY_COLLECTIONS.trustReviews).createIndex({ reviewedUserId: 1, createdAt: -1 })
   await database.collection(DESTINY_COLLECTIONS.trustReviews).createIndex({ reviewerId: 1, runId: 1 })
-  await database.collection(DESTINY_COLLECTIONS.mvpVotes).createIndex({ runId: 1, voterId: 1 }, { unique: true })
-  await database.collection(DESTINY_COLLECTIONS.mvpVotes).createIndex({ selectedUserId: 1, createdAt: -1 })
-  await database.collection(DESTINY_COLLECTIONS.mvpVotes).createIndex({ voterId: 1, createdAt: -1 })
-  await database.collection(DESTINY_COLLECTIONS.mvpVotes).createIndex({ createdAt: -1 })
+  const mvpVotes = database.collection(DESTINY_COLLECTIONS.mvpVotes)
+  try {
+    const existingVoteIndexes = await mvpVotes.indexes()
+    for (const index of existingVoteIndexes) {
+      const key = index.key as Record<string, number> | undefined
+      const fields = key ? Object.keys(key) : []
+      const legacyUnique =
+        Boolean(index.unique) && fields.length === 2 && key?.runId === 1 && key?.voterId === 1
+      if (legacyUnique && index.name) {
+        await mvpVotes.dropIndex(index.name)
+      }
+    }
+  } catch (error) {
+    const code = typeof error === 'object' && error !== null && 'code' in error ? (error as { code?: number }).code : undefined
+    if (code !== 26) throw error
+  }
+  await mvpVotes.createIndex(
+    { runId: 1, voterId: 1, category: 1 },
+    { unique: true, partialFilterExpression: { category: 'mvp' }, name: 'mvp_one_per_voter_run' }
+  )
+  await mvpVotes.createIndex(
+    { runId: 1, voterId: 1, selectedMembershipId: 1, category: 1 },
+    {
+      unique: true,
+      partialFilterExpression: { category: 'kudos' },
+      name: 'kudos_one_per_voter_run_target',
+    }
+  )
+  await mvpVotes.createIndex({ selectedUserId: 1, createdAt: -1 })
+  await mvpVotes.createIndex({ selectedMembershipId: 1, createdAt: -1 })
+  await mvpVotes.createIndex({ voterId: 1, createdAt: -1 })
+  await mvpVotes.createIndex({ createdAt: -1 })
+  await database
+    .collection(DESTINY_COLLECTIONS.pendingPlayers)
+    .createIndex({ bungieMembershipId: 1 }, { unique: true })
   await database.collection(DESTINY_COLLECTIONS.adminActivity).createIndex({ createdAt: -1 })
   await database.collection(DESTINY_COLLECTIONS.adminActivity).createIndex({ kind: 1, createdAt: -1 })
   await database.collection(DESTINY_COLLECTIONS.adminActivity).createIndex({ targetUserId: 1, createdAt: -1 })
@@ -101,13 +134,14 @@ async function ensureDestinyIndexesOnce(): Promise<void> {
   await database.collection(DESTINY_COLLECTIONS.weeklyLootIcons).createIndex({ builtAt: -1 })
 }
 
+/** MVP crowns used for sherpa credit. Kudos are excluded so they cannot crowd out crowns. */
 export async function loadAllMvpVotes(): Promise<MvpVote[]> {
   const database = await db()
   return (await database
     .collection(DESTINY_COLLECTIONS.mvpVotes)
-    .find({})
+    .find(mvpCategoryFilter())
     .sort({ createdAt: -1 })
-    .limit(2000)
+    .limit(5000)
     .toArray()) as unknown as MvpVote[]
 }
 
@@ -839,7 +873,7 @@ export async function getMvpVotesByReviewer(reviewerId: string): Promise<MvpVote
       .collection(DESTINY_COLLECTIONS.mvpVotes)
       .find({ voterId: reviewerId })
       .sort({ createdAt: -1 })
-      .limit(200)
+      .limit(500)
       .toArray()
     return rows as unknown as MvpVote[]
   } catch {
@@ -850,20 +884,99 @@ export async function getMvpVotesByReviewer(reviewerId: string): Promise<MvpVote
 export async function findMvpVote(reviewerId: string, runId: string): Promise<MvpVote | null> {
   try {
     const database = await db()
-    const row = await database.collection(DESTINY_COLLECTIONS.mvpVotes).findOne({ voterId: reviewerId, runId })
+    const row = await database.collection(DESTINY_COLLECTIONS.mvpVotes).findOne({
+      voterId: reviewerId,
+      runId,
+      ...mvpCategoryFilter(),
+    })
     return row as MvpVote | null
   } catch {
     return null
   }
 }
 
+export class DuplicateMvpVoteError extends Error {
+  constructor() {
+    super('Duplicate vote')
+    this.name = 'DuplicateMvpVoteError'
+  }
+}
+
+function isDuplicateKeyError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && (error as { code?: number }).code === 11000
+}
+
+function voteWrite(vote: MvpVote): { $set: Record<string, unknown>; $setOnInsert: { createdAt: string }; $unset?: { selectedUserId: '' } } {
+  const now = vote.updatedAt ?? new Date().toISOString()
+  const set: Record<string, unknown> = {
+    id: vote.id,
+    runId: vote.runId,
+    voterId: vote.voterId,
+    category: vote.category ?? 'mvp',
+    selectedMembershipId: vote.selectedMembershipId,
+    selectedDisplayName: vote.selectedDisplayName,
+    updatedAt: now,
+  }
+  if (vote.voterMembershipId) set.voterMembershipId = vote.voterMembershipId
+  if (vote.selectedUserId) set.selectedUserId = vote.selectedUserId
+  const update: { $set: Record<string, unknown>; $setOnInsert: { createdAt: string }; $unset?: { selectedUserId: '' } } = {
+    $set: set,
+    $setOnInsert: { createdAt: vote.createdAt },
+  }
+  if (!vote.selectedUserId) update.$unset = { selectedUserId: '' }
+  return update
+}
+
 export async function saveMvpVote(vote: MvpVote): Promise<void> {
   const database = await db()
-  await database.collection(DESTINY_COLLECTIONS.mvpVotes).updateOne(
-    { id: vote.id },
-    { $set: vote },
-    { upsert: true }
-  )
+  const collection = database.collection(DESTINY_COLLECTIONS.mvpVotes)
+  const category = vote.category ?? 'mvp'
+  const filter =
+    category === 'kudos'
+      ? {
+          voterId: vote.voterId,
+          runId: vote.runId,
+          category: 'kudos',
+          selectedMembershipId: vote.selectedMembershipId,
+        }
+      : {
+          voterId: vote.voterId,
+          runId: vote.runId,
+          ...mvpCategoryFilter(),
+        }
+  const update = voteWrite({ ...vote, category })
+  try {
+    await collection.updateOne(filter, update, { upsert: true })
+  } catch (error) {
+    if (!isDuplicateKeyError(error)) throw error
+    const retry = await collection.updateOne(filter, update, { upsert: false })
+    if (retry.matchedCount === 0) throw new DuplicateMvpVoteError()
+  }
+}
+
+export async function deleteKudosVote(voterId: string, runId: string, membershipId: string): Promise<void> {
+  const database = await db()
+  await database.collection(DESTINY_COLLECTIONS.mvpVotes).deleteOne({
+    voterId,
+    runId,
+    category: 'kudos',
+    selectedMembershipId: membershipId,
+  })
+}
+
+export async function countReceivedVotes(
+  userId: string,
+  membershipId: string | undefined,
+  category: MvpVoteCategory
+): Promise<number> {
+  try {
+    const database = await db()
+    return database.collection(DESTINY_COLLECTIONS.mvpVotes).countDocuments(
+      mvpVotesReceivedQuery(userId, membershipId, category)
+    )
+  } catch {
+    return 0
+  }
 }
 
 export async function getExternalBuildSources(): Promise<ExternalBuildSource[]> {

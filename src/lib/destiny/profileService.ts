@@ -12,7 +12,9 @@ import { fetchLiveClan, fetchLiveLoadout, refreshGuardianFromBungie } from '@/li
 import { seasonPrizesEnabled, NON_MONETARY_REWARD_SUMMARY } from '@/lib/destiny/featureFlags'
 import { loadFireteamProgress } from '@/lib/destiny/fireteamProgressService'
 import { buildPlayerProfileFromStored, emptyPlayerProfile } from '@/lib/destiny/profileBuilder'
+import { claimPendingPlayer } from '@/lib/destiny/pendingPlayers'
 import {
+  countReceivedVotes,
   getReputationReviewsForUser,
   getRunsForUser,
   getSeasonStandingForUser,
@@ -97,6 +99,16 @@ export async function buildUserProfile(
     }
   }
 
+  if (stored.bungieMembershipId) {
+    await claimPendingPlayer(stored.bungieMembershipId, siteUserId).catch((err) => {
+      console.warn('[profile] MVP credit attach failed', err)
+    })
+  }
+  const [mvpVotesReceived, kudosReceived] = await Promise.all([
+    countReceivedVotes(siteUserId, stored.bungieMembershipId, 'mvp'),
+    countReceivedVotes(siteUserId, stored.bungieMembershipId, 'kudos'),
+  ])
+
   const built = syncProfileWithActiveCharacter(
     buildPlayerProfileFromStored(stored, runs, {
       loadout,
@@ -107,6 +119,8 @@ export async function buildUserProfile(
       characters,
     })
   )
+  built.mvpVotesReceived = mvpVotesReceived
+  built.kudosReceived = kudosReceived
   const earnedTitles = passport?.titles.filter((title) => title.earned).map((title) => title.title) ?? []
   const sherpaTitle = progressSherpa && progressSherpa.title !== 'Unranked' ? [progressSherpa.title] : []
   const profile = {

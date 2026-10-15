@@ -26,6 +26,7 @@ import {
 import { defaultBungieReturnPath } from '@/lib/routing/tabUrl'
 import { sessionCookieSecure } from '@/lib/sessionCookie'
 import { bungieOAuthCallbackErrorCode } from '@/lib/destiny/bungieOAuthMessages'
+import { claimPendingPlayer } from '@/lib/destiny/pendingPlayers'
 
 export const dynamic = 'force-dynamic'
 
@@ -241,6 +242,10 @@ export async function GET(req: NextRequest) {
       const message = bungieOAuthCallbackErrorCode(detail, 'persist')
       return redirectAfterOAuth({ bungie: 'error', message }, req, returnPath)
     }
+
+    await claimPendingPlayer(primary.membershipId, siteUserId).catch((error) => {
+      console.warn('[destiny/auth/bungie/callback] MVP credit attach failed:', error)
+    })
 
     if (!getSessionSecret()) {
       return redirectAfterOAuth({ bungie: 'error', message: 'session_not_configured' }, req, returnPath)

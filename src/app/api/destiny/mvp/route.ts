@@ -4,62 +4,144 @@ import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { invalidateDestinySharedCaches, CACHE_TAGS } from '@/lib/destiny/dataCache'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
 import { usersByMembershipMap } from '@/lib/destiny/fireteamReputation'
-import { validateMvpVoteSubmission } from '@/lib/destiny/mvpVoting'
-import { findMvpVote, getRunsForParticipant, loadUsersMap, saveMvpVote } from '@/lib/destiny/store'
-import type { MvpVote } from '@/lib/destiny/types'
+import {
+  kudosVoteId,
+  mvpVoteId,
+  parseMvpVoteCategory,
+  resolveVoteTargetMembershipId,
+  validateMvpVoteSubmission,
+} from '@/lib/destiny/mvpVoting'
+import { takeMvpVoteRateLimit } from '@/lib/destiny/mvpVoteRateLimit'
+import { ensurePendingPlayerForUnlinkedMember } from '@/lib/destiny/pendingPlayers'
+import {
+  DuplicateMvpVoteError,
+  deleteKudosVote,
+  findMvpVote,
+  getRunsForParticipant,
+  loadUsersMap,
+  saveMvpVote,
+} from '@/lib/destiny/store'
+import type { MvpVote, MvpVoteCategory } from '@/lib/destiny/types'
 
 export const dynamic = 'force-dynamic'
+
+const VOTE_CACHE_TAGS = [CACHE_TAGS.mvp, CACHE_TAGS.overview, CACHE_TAGS.leaderboards]
 
 export async function POST(req: NextRequest) {
   return destinyAuthHandler(req, async () => {
     const authUser = await verifyAuth(req)
     const voterId = authUser.username.toLowerCase()
     const stored = await getDestinyUserBySiteUserId(voterId)
-    const body = (await req.json().catch(() => ({}))) as { runId?: string; selectedUserId?: string }
-
-    if (!body.runId || !body.selectedUserId) {
-      return NextResponse.json({ error: 'runId and selectedUserId are required' }, { status: 400 })
+    const body = (await req.json().catch(() => ({}))) as {
+      runId?: string
+      membershipId?: string
+      selectedMembershipId?: string
+      selectedUserId?: string
+      category?: string
+      action?: string
     }
 
-    const selectedUserId = body.selectedUserId.toLowerCase()
-    const [runs, usersById, existing] = await Promise.all([
+    const runId = body.runId?.trim()
+    if (!runId) {
+      return NextResponse.json({ error: 'runId is required' }, { status: 400 })
+    }
+
+    const category = parseMvpVoteCategory(body.category)
+    if (!category) {
+      return NextResponse.json({ error: 'category must be mvp or kudos' }, { status: 400 })
+    }
+
+    const action = body.action ?? 'set'
+    if (action !== 'set' && action !== 'clear') {
+      return NextResponse.json({ error: 'action must be set or clear' }, { status: 400 })
+    }
+
+    const limited = takeMvpVoteRateLimit({ userId: voterId })
+    if (!limited.ok) {
+      return NextResponse.json(
+        { error: 'Too many votes. Try again shortly.' },
+        { status: 429, headers: { 'Retry-After': String(limited.retryAfterSec) } }
+      )
+    }
+
+    const [runs, usersById, existingMvp] = await Promise.all([
       getRunsForParticipant(voterId, stored?.bungieMembershipId, 50),
       loadUsersMap(),
-      findMvpVote(voterId, body.runId),
+      category === 'mvp' ? findMvpVote(voterId, runId) : Promise.resolve(null),
     ])
-
     const usersByMembership = usersByMembershipMap(Array.from(usersById.values()))
-    const validation = validateMvpVoteSubmission(
+    const resolved = resolveVoteTargetMembershipId({
+      membershipId: body.membershipId ?? body.selectedMembershipId,
+      selectedUserId: body.selectedUserId,
+      usersByMembership,
+    })
+    if (!resolved.ok) {
+      return NextResponse.json({ error: resolved.error }, { status: 400 })
+    }
+
+    const validation = validateMvpVoteSubmission({
       voterId,
-      stored?.bungieMembershipId,
-      selectedUserId,
-      body.runId,
+      voterMembershipId: stored?.bungieMembershipId,
+      targetMembershipId: resolved.membershipId,
+      category,
+      action,
+      runId,
       runs,
       usersByMembership,
-      existing
-    )
-
+    })
     if (!validation.ok) {
       return NextResponse.json({ error: validation.error }, { status: 400 })
     }
 
-    const vote: MvpVote = {
-      id: `mvp-${voterId}-${body.runId}`,
-      runId: body.runId,
-      voterId,
-      selectedUserId,
-      selectedMembershipId: validation.member.membershipId,
-      selectedDisplayName: validation.member.displayName,
-      createdAt: new Date().toISOString(),
+    if (action === 'clear') {
+      await deleteKudosVote(voterId, runId, validation.target.membershipId)
+      invalidateDestinySharedCaches(VOTE_CACHE_TAGS)
+      return NextResponse.json({
+        ok: true,
+        vote: null,
+        message: `Kudos removed from ${validation.target.displayName}.`,
+      })
     }
 
-    await saveMvpVote(vote)
-    invalidateDestinySharedCaches([CACHE_TAGS.mvp, CACHE_TAGS.overview, CACHE_TAGS.leaderboards])
+    if (validation.pending) {
+      await ensurePendingPlayerForUnlinkedMember(validation.target)
+    }
 
-    return NextResponse.json({
-      ok: true,
-      vote,
-      message: `${validation.member.displayName} is your MVP for this run.`,
-    })
+    const now = new Date().toISOString()
+    const vote: MvpVote = {
+      id: category === 'mvp' ? mvpVoteId(voterId, runId) : kudosVoteId(voterId, runId, validation.target.membershipId),
+      runId,
+      voterId,
+      voterMembershipId: stored?.bungieMembershipId,
+      category: category satisfies MvpVoteCategory,
+      selectedUserId: validation.target.siteUserId,
+      selectedMembershipId: validation.target.membershipId,
+      selectedDisplayName: validation.target.displayName,
+      createdAt: existingMvp?.createdAt ?? now,
+      updatedAt: now,
+    }
+
+    try {
+      await saveMvpVote(vote)
+    } catch (error) {
+      if (error instanceof DuplicateMvpVoteError) {
+        return NextResponse.json({ error: 'You already voted in this category for this activity' }, { status: 409 })
+      }
+      throw error
+    }
+
+    invalidateDestinySharedCaches(VOTE_CACHE_TAGS)
+    const changedMvp =
+      category === 'mvp' &&
+      Boolean(existingMvp?.selectedMembershipId) &&
+      existingMvp?.selectedMembershipId !== validation.target.membershipId
+    const message =
+      category === 'kudos'
+        ? `Kudos sent to ${validation.target.displayName}.`
+        : changedMvp
+          ? `${validation.target.displayName} is now your MVP for this run.`
+          : `${validation.target.displayName} is your MVP for this run.`
+
+    return NextResponse.json({ ok: true, vote, message })
   })
 }

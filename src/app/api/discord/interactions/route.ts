@@ -14,6 +14,7 @@ import {
   loadUsersMap,
 } from '@/lib/destiny/store'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
+import { membershipIdsToClaimedUsers } from '@/lib/destiny/playerIdentity'
 import type { RunRecord } from '@/lib/destiny/types'
 
 export const dynamic = 'force-dynamic'
@@ -27,11 +28,7 @@ function unionRuns(groups: RunRecord[][]): RunRecord[] {
 }
 
 function membershipToUserId(users: Map<string, StoredDestinyUser>): Map<string, string> {
-  const map = new Map<string, string>()
-  for (const user of Array.from(users.values())) {
-    if (user.bungieMembershipId && user.userId) map.set(user.bungieMembershipId, user.userId)
-  }
-  return map
+  return membershipIdsToClaimedUsers(users.values())
 }
 
 function usersByName(users: Map<string, StoredDestinyUser>, name: string): StoredDestinyUser | undefined {
