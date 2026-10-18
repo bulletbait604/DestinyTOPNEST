@@ -1,7 +1,9 @@
 'use client'
 
 import { FormEvent, useEffect, useState, type ReactNode } from 'react'
-import { Columns2, Crosshair, Home, ScrollText, Search, Shield, Swords, Trophy, Users, type LucideIcon } from 'lucide-react'
+import { Home, Search, Shield, Swords, Trophy, Users, type LucideIcon } from 'lucide-react'
+import { FirstTimeGuide, GEAR_NAV, isGearTab, MORE_NAV, navHint, PRIMARY_NAV } from '@/app/components/hub/clarity'
+import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import {
@@ -15,21 +17,21 @@ import {
   parseTabFromSearch,
 } from '@/lib/routing/tabUrl'
 
-const NAV: { id: DestinyTopNestTab; label: string; icon: LucideIcon }[] = [
-  { id: 'overview', label: 'Home', icon: Home },
-  { id: 'guardians', label: 'Guardians', icon: Shield },
-  { id: 'leaderboards', label: 'Boards', icon: Trophy },
-  { id: 'loadouts', label: 'Builds', icon: Swords },
-  { id: 'compare', label: 'Compare', icon: Columns2 },
-  { id: 'lookup', label: 'Lookup', icon: Crosshair },
-  { id: 'quests', label: 'Quests', icon: ScrollText },
-  { id: 'fireteam', label: 'LFG', icon: Users },
-]
+const ICONS: Partial<Record<DestinyTopNestTab, LucideIcon>> = {
+  overview: Home,
+  guardians: Shield,
+  fireteam: Users,
+  leaderboards: Trophy,
+  loadouts: Swords,
+}
 
-/** Phone dock stays five items. Compare, Lookup, and LFG stay in More. */
-const MOBILE_NAV = NAV.filter((item) =>
-  ['overview', 'guardians', 'leaderboards', 'loadouts', 'quests'].includes(item.id)
-)
+const MOBILE_NAV: { id: DestinyTopNestTab; label: string }[] = [
+  { id: 'overview', label: 'Home' },
+  { id: 'guardians', label: 'People' },
+  { id: 'fireteam', label: 'Play' },
+  { id: 'leaderboards', label: 'Boards' },
+  { id: 'loadouts', label: 'Gear' },
+]
 
 function visibleTab(tab: DestinyTopNestTab): DestinyTopNestTab {
   if (tab === 'builds' || tab === 'loadouts') return 'loadouts'
@@ -70,6 +72,13 @@ export default function HubChrome({
     }
   }, [])
 
+  const go = (tabId: DestinyTopNestTab) => {
+    document.querySelectorAll('details.gh-more, details.gh-nav-group').forEach((node) => {
+      if (node instanceof HTMLDetailsElement) node.open = false
+    })
+    navigateDestinyTab(tabId)
+  }
+
   const submitSearch = (event: FormEvent) => {
     event.preventDefault()
     navigateGuardianSearch(query)
@@ -107,37 +116,27 @@ export default function HubChrome({
           <details className="gh-more">
             <summary>More</summary>
             <div className="gh-more-menu">
-              <button type="button" onClick={() => navigateDestinyTab('season')}>
-                Season prizes
-              </button>
-              <button type="button" onClick={() => navigateDestinyTab('contracts')}>
-                Contracts
-              </button>
-              <button type="button" onClick={() => navigateDestinyTab('clans')}>
-                Clans
-              </button>
-              <button type="button" onClick={() => navigateDestinyTab('sherpas')}>
-                Sherpas
-              </button>
-              <button type="button" onClick={() => navigateDestinyTab('events')}>
-                Night Ops
-              </button>
-              <button type="button" onClick={() => navigateDestinyTab('compare')}>
-                Compare
-              </button>
-              <button type="button" onClick={() => navigateDestinyTab('lookup')}>
-                Lookup
-              </button>
-              <button type="button" onClick={() => navigateDestinyTab('fireteam')}>
-                LFG
-              </button>
+              {GEAR_NAV.map((item) => (
+                <button key={item.id} type="button" onClick={() => go(item.id)}>
+                  {item.label}
+                  <small>{item.hint}</small>
+                </button>
+              ))}
+              {MORE_NAV.map((item) => (
+                <button key={item.id} type="button" onClick={() => go(item.id)}>
+                  {item.label}
+                  <small>{item.hint}</small>
+                </button>
+              ))}
               {signedIn ? (
                 <button type="button" onClick={() => navigateProfileSection('passport')}>
-                  Passport
+                  Your record
+                  <small>Stamps from verified clears.</small>
                 </button>
               ) : null}
               <button type="button" onClick={() => navigateSharedBuilds()}>
                 Shared builds
+                <small>The same list as Gear.</small>
               </button>
             </div>
           </details>
@@ -150,40 +149,64 @@ export default function HubChrome({
           )}
         </div>
       </header>
-      <nav className="gh-nav" aria-label="Guardian Hub">
-        {NAV.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className="gh-nav-link"
-            aria-current={tab === item.id ? 'page' : undefined}
-            onClick={() => navigateDestinyTab(item.id)}
-          >
-            <item.icon aria-hidden />
-            <span>{item.label}</span>
-          </button>
-        ))}
+      <nav className="gh-nav" aria-label="TopNest">
+        {PRIMARY_NAV.map((item) => {
+          const Icon = ICONS[item.id] ?? Home
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className="gh-nav-link"
+              aria-current={tab === item.id ? 'page' : undefined}
+              onClick={() => go(item.id)}
+            >
+              <Icon aria-hidden />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
+        <details className="gh-nav-group">
+          <summary className="gh-nav-link" aria-current={isGearTab(tab) ? 'page' : undefined}>
+            <Swords aria-hidden />
+            <span>Gear</span>
+          </summary>
+          <div className="gh-nav-menu">
+            {GEAR_NAV.map((item) => (
+              <button key={item.id} type="button" onClick={() => go(item.id)}>
+                {item.label}
+                <small>{item.hint}</small>
+              </button>
+            ))}
+          </div>
+        </details>
       </nav>
+      <p className="gh-nav-hint">{navHint(tab)}</p>
+      <SeasonPointsBar />
+      <FirstTimeGuide />
       <main id="hub-main" className="gh-main">
         {children}
       </main>
       <footer className="gh-footer">
-        Fan-made Destiny 2 hub for finding Guardians and rating them. Not affiliated with Bungie. USA and Canada: a
-        Destiny 2 3D print per leaderboard. UK: a $50 CAD Steam gift card. Other countries are not prize-eligible.{' '}
-        <a href="/rules">Rules &amp; prizes</a>
+        Fan-made Destiny 2 site for playing with new friends. Not affiliated with Bungie. US and Canada: a Destiny 2 3D
+        print for each season board. UK: a $50 CAD Steam gift card. Other countries can play and are not
+        prize-eligible. <a href="/rules">Prize rules</a>
       </footer>
-      <nav className="gh-bottom-nav" aria-label="Guardian Hub mobile">
-        {MOBILE_NAV.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-current={tab === item.id ? 'page' : undefined}
-            onClick={() => navigateDestinyTab(item.id)}
-          >
-            <item.icon aria-hidden />
-            <span>{item.label}</span>
-          </button>
-        ))}
+      <nav className="gh-bottom-nav" aria-label="TopNest mobile">
+        {MOBILE_NAV.map((item) => {
+          const Icon = ICONS[item.id] ?? Swords
+          const current = item.id === 'loadouts' ? isGearTab(tab) : tab === item.id
+          return (
+            <button
+              key={item.id}
+              type="button"
+              aria-current={current ? 'page' : undefined}
+              onClick={() => go(item.id)}
+            >
+              <Icon aria-hidden />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
       </nav>
     </div>
   )

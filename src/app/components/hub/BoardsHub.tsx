@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { filterLeaderboardEntries } from '@/lib/destiny/boardFilters'
-import { PRIZE_SUMMARY } from '@/lib/destiny/seasonConfig'
+import { NextStep } from '@/app/components/hub/clarity'
+import { PageHeader } from '@/app/components/hub/PageHeader'
 import type { LeaderboardCategory, LeaderboardEntry, LeaderboardPeriod } from '@/lib/destiny/types'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
@@ -68,11 +69,12 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
 
   return (
     <section className="gh-stack" aria-labelledby="gh-boards-title">
-      <header>
-        <p className="gh-kicker">Season boards</p>
-        <h1 id="gh-boards-title">Raid, Dungeon, and New Bonds</h1>
-        <p className="gh-lede">{PRIZE_SUMMARY}</p>
-      </header>
+      <PageHeader
+        kicker="Season boards"
+        title="Season boards"
+        subtitle="Points come from verified clears. Bonds add more when you play with someone new."
+        titleId="gh-boards-title"
+      />
 
       <div className="gh-tabs" role="tablist" aria-label="Leaderboard">
         {CATEGORIES.map((item) => (
@@ -130,15 +132,22 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
 
       {loading ? <p className="gh-muted">Loading the board…</p> : null}
       {error ? (
-        <p className="gh-alert" role="alert">
-          {error}
-        </p>
+        <NextStep
+          alert
+          title="The board did not load"
+          body="Try again in a moment. Raid, Dungeon, and New Bonds are the only boards."
+          actions={[{ label: 'Try again', onClick: () => setReload((value) => value + 1) }]}
+        />
       ) : null}
       {!loading && !error && visible.length === 0 ? (
-        <div className="gh-empty">
-          <p className="gh-card-title">No rows on this board</p>
-          <p className="gh-muted">Verified clears from the start of the season land here. Pantheon is not a board.</p>
-        </div>
+        <NextStep
+          title="No scores on this board yet"
+          body="A verified clear from the start of the activity shows up here."
+          actions={[
+            { label: 'Find people', onClick: () => navigateDestinyTab('guardians') },
+            { label: 'Read prize rules', onClick: () => navigateDestinyTab('season') },
+          ]}
+        />
       ) : null}
       {visible.length > 0 ? (
         <ol className="gh-board">
@@ -170,7 +179,7 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
         </button>
         {onLogin ? (
           <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
-            Sign in to vote MVP
+            Sign in so your clears count
           </button>
         ) : null}
       </div>

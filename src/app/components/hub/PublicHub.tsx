@@ -61,11 +61,11 @@ export default function PublicHub({ onLogin }: { onLogin: () => void }) {
     tab === 'profile'
       ? {
           title: 'Your Guardian',
-          body: 'Passport stamps, loadouts, and your weekly progress open after you sign in with Bungie.',
+          body: 'Sign in so your clears earn points, your stamps save, and you can share a build.',
         }
       : {
           title: 'Sign in to continue',
-          body: 'That part of the hub is available on your account.',
+          body: 'Sign in with Bungie so this page can use your characters and your clears.',
         }
 
   return <SignInGate title={gated.title} body={gated.body} onLogin={onLogin} />

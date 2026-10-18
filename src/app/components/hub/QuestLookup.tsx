@@ -1,6 +1,8 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
+import { NextStep, SignInPrompt } from '@/app/components/hub/clarity'
+import { PageHeader } from '@/app/components/hub/PageHeader'
 import { QUEST_KINDS, type QuestKind, type QuestWithProgress } from '@/lib/destiny/questCatalog'
 
 const KIND_LABEL: Record<QuestKind | 'all', string> = {
@@ -50,14 +52,12 @@ export default function QuestLookup({ onLogin }: { onLogin?: () => void }) {
 
   return (
     <section className="gh-stack" aria-labelledby="gh-quests-title">
-      <header>
-        <p className="gh-kicker">Manifest</p>
-        <h1 id="gh-quests-title">Quest lookup</h1>
-        <p className="gh-lede">
-          Search Destiny 2 quests, pursuits, exotic quests, and catalysts in the Bungie manifest. Sign in to see which
-          ones are on your characters.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Manifest"
+        title="Quests"
+        subtitle="Search quests, pursuits, and catalysts. Sign in to see which ones you already have."
+        titleId="gh-quests-title"
+      />
       <form className="gh-search" onSubmit={onSubmit}>
         <label className="gh-sr" htmlFor="quest-search">
           Search quests
@@ -88,15 +88,19 @@ export default function QuestLookup({ onLogin }: { onLogin?: () => void }) {
         ))}
       </div>
       {error ? (
-        <p className="gh-alert" role="alert">
-          {error}
-        </p>
+        <NextStep
+          alert
+          title="Quest search did not finish"
+          body={error}
+          actions={[{ label: 'Search again', onClick: () => void search() }]}
+        />
       ) : null}
       {searched && !loading && quests.length === 0 && !error ? (
-        <div className="gh-empty">
-          <p className="gh-card-title">No matching quests</p>
-          <p className="gh-muted">Try the item name from the manifest, such as a catalyst or exotic quest.</p>
-        </div>
+        <NextStep
+          title="No matching quests"
+          body="Try the item name, such as a catalyst."
+          actions={[{ label: 'Show catalysts', onClick: () => { setKind('catalyst'); void search('catalyst', q) } }]}
+        />
       ) : null}
       <ul className="gh-directory">
         {quests.map((quest) => (
@@ -122,10 +126,11 @@ export default function QuestLookup({ onLogin }: { onLogin?: () => void }) {
           </li>
         ))}
       </ul>
-      {!signedIn && onLogin ? (
-        <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
-          Sign in to see your progress
-        </button>
+      {!signedIn ? (
+        <SignInPrompt
+          onLogin={onLogin}
+          reason="Sign in to see which of these quests are already on your characters."
+        />
       ) : null}
     </section>
   )

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
 import SeasonRulesPanel from '@/app/components/nest/SeasonRulesPanel'
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default function RulesPage() {
           ← Back to Top Nest
         </a>
       </p>
+      <SeasonPointsBar />
       <SeasonRulesPanel />
     </main>
   )

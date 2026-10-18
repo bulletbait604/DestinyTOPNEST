@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { GuardianDirectoryCard, GuardianPublicProfile } from '@/lib/destiny/guardianDirectory'
 import { classLabel } from '@/lib/destiny/guardianDirectory'
-import { GUARDIAN_SEARCH_EVENT, navigateGuardianProfile, navigateGuardianSearch } from '@/lib/routing/tabUrl'
+import { NextStep } from '@/app/components/hub/clarity'
+import { PageHeader } from '@/app/components/hub/PageHeader'
+import { GUARDIAN_SEARCH_EVENT, navigateDestinyTab, navigateGuardianProfile, navigateGuardianSearch } from '@/lib/routing/tabUrl'
 
 function readLocation() {
   if (typeof window === 'undefined') {
@@ -142,14 +144,12 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
 
   return (
     <section className="gh-stack" aria-labelledby="gh-directory-title">
-      <header>
-        <p className="gh-kicker">Directory</p>
-        <h1 id="gh-directory-title">Find a Guardian</h1>
-        <p className="gh-lede">
-          Search a Bungie name. Players who have not signed in still show up when someone voted them MVP or kudos, or
-          when you search an exact name and code.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Directory"
+        title="People"
+        subtitle="Search a Bungie name. MVP is a teammate vote and kudos is a thank-you. Neither changes board points."
+        titleId="gh-directory-title"
+      />
       <form
         className="gh-search"
         role="search"
@@ -177,15 +177,19 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
       ) : null}
       {loading ? <p className="gh-muted">Searching…</p> : null}
       {error ? (
-        <p className="gh-alert" role="alert">
-          {error}
-        </p>
+        <NextStep
+          alert
+          title="Search did not finish"
+          body="Try the name again, or open the boards and pick someone there."
+          actions={[{ label: 'Open the boards', onClick: () => navigateDestinyTab('leaderboards') }]}
+        />
       ) : null}
       {!loading && query.trim().length >= 2 && cards.length === 0 && !error ? (
-        <div className="gh-empty">
-          <p className="gh-card-title">No guardians matched</p>
-          <p className="gh-muted">Try the full Bungie name with the four-digit code.</p>
-        </div>
+        <NextStep
+          title="No guardians matched"
+          body="Use the full Bungie name and four-digit code, like Ada#0042."
+          actions={[{ label: 'Open the boards', onClick: () => navigateDestinyTab('leaderboards') }]}
+        />
       ) : null}
       <ul className="gh-directory">
         {cards.map((card) => (

@@ -36,9 +36,11 @@ export function normalizePublicHub(value: unknown): PublicHubSnapshot | null {
 export function usePublicHub() {
   const [snapshot, setSnapshot] = useState<PublicHubSnapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let cancelled = false
+    setError(null)
     fetch('/api/destiny/hub', { cache: 'no-store' })
       .then(async (response) => {
         if (!response.ok) throw new Error('Hub unavailable')
@@ -60,9 +62,9 @@ export function usePublicHub() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [attempt])
 
-  return { snapshot, error, loading: !snapshot && !error }
+  return { snapshot, error, loading: !snapshot && !error, retry: () => setAttempt((value) => value + 1) }
 }
 
 export function openHubTab(tab: DestinyTopNestTab) {

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useBungieLink } from '@/contexts/BungieLinkContext'
 import { useProfileData } from '@/contexts/ProfileDataContext'
+import { PageHeader } from '@/app/components/hub/PageHeader'
 import { navigateDestinyTab, navigateProfileSection } from '@/lib/routing/tabUrl'
 
 export default function YourWeek() {
@@ -28,14 +29,12 @@ export default function YourWeek() {
 
   return (
     <section className="gh-stack" aria-labelledby="gh-your-week">
-      <header>
-        <p className="gh-kicker">Your week</p>
-        <h1 id="gh-your-week">What to do before Tuesday&apos;s reset</h1>
-        <p className="gh-lede">
-          Contracts, stamps, and people you already clear with. Leaderboard points stay on the boards. This view is
-          badges, titles, and frames.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Your week"
+        title="Before Tuesday's reset"
+        subtitle="Contracts and stamps. Leaderboard points stay on the boards."
+        titleId="gh-your-week"
+      />
 
       {needsLink ? (
         <div className="gh-card">

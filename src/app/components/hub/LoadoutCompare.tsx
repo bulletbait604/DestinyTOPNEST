@@ -15,6 +15,9 @@ import {
   type LoadoutSide,
 } from '@/lib/destiny/loadoutCompare'
 import type { DestinyCharacterClass } from '@/lib/destiny/types'
+import { NextStep } from '@/app/components/hub/clarity'
+import { PageHeader } from '@/app/components/hub/PageHeader'
+import { navigateDestinyTab } from '@/lib/routing/tabUrl'
 
 async function loadBuilds(q: string, characterClass: string, tag: string, subclass: string) {
   const params = new URLSearchParams({ sort: 'top', scope: 'public', limit: '8' })
@@ -59,14 +62,12 @@ export default function LoadoutCompare() {
 
   return (
     <section className="gh-stack" aria-labelledby="gh-compare-title">
-      <header>
-        <p className="gh-kicker">Loadouts</p>
-        <h1 id="gh-compare-title">Compare two builds</h1>
-        <p className="gh-lede">
-          Filter shared loadouts by class, subclass, and activity, then set one on each side. Likes are the upvote
-          count.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Loadouts"
+        title="Compare two builds"
+        subtitle="Pick one shared build for each side. Likes are upvotes from other players."
+        titleId="gh-compare-title"
+      />
       <form className="gh-filters" onSubmit={(event) => event.preventDefault()}>
         <label>
           Search
@@ -100,9 +101,15 @@ export default function LoadoutCompare() {
         </label>
       </form>
       {error ? (
-        <p className="gh-alert" role="alert">
-          {error}
-        </p>
+        <NextStep
+          alert
+          title="Builds did not load"
+          body="Try again, or open the shared build list."
+          actions={[
+            { label: 'Clear filters', onClick: () => { setQ(''); setCharacterClass('all'); setTag('all'); setSubclass('') } },
+            { label: 'Open shared builds', onClick: () => navigateDestinyTab('loadouts') },
+          ]}
+        />
       ) : null}
       <div className="gh-split">
         <Picker title="Left" builds={builds} selectedId={left?.id} onPick={(build) => setLeft(loadoutSideFromCommunityBuild(build))} />
@@ -150,7 +157,13 @@ function Picker({
   return (
     <section className="gh-card" aria-label={title}>
       <h2>{title}</h2>
-      {builds.length === 0 ? <p className="gh-muted">No shared builds match these filters.</p> : null}
+      {builds.length === 0 ? (
+        <NextStep
+          title="No builds match"
+          body="Clear a filter, or open the full list."
+          actions={[{ label: 'Open shared builds', onClick: () => navigateDestinyTab('loadouts') }]}
+        />
+      ) : null}
       <ul className="gh-list">
         {builds.map((build) => (
           <li key={`${title}-${build.id}`}>

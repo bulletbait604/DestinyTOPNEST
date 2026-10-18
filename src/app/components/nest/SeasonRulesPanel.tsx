@@ -14,20 +14,15 @@ export default function SeasonRulesPanel({ now = new Date() }: { now?: Date }) {
   const daysLeft = Math.max(0, Math.ceil((Date.parse(season.endDate) - now.getTime()) / 86400000))
   return (
     <div className="space-y-4">
-      <section className="nest-hero">
-        <div className="nest-kicker">Season {season.seasonNumber} · 3 months</div>
-        <h1>{season.name}</h1>
-        <p className="nest-muted">{season.tagline}</p>
-        <div className="nest-chip-row" style={{ marginTop: '0.8rem' }}>
-          <span className="nest-bond-pill">
-            {pt(season.startDate)} – {pt(season.endDate)} PT
-          </span>
-          <span className="nest-bond-pill">{daysLeft} days left</span>
-          <span className="nest-prize">
-            <Gift size={14} /> 3 prizes this season
-          </span>
+      <header className="gh-page-head">
+        <div>
+          <p className="gh-kicker">Season {season.seasonNumber} · {daysLeft} days left</p>
+          <h1>{season.name}</h1>
+          <p className="gh-lede">
+            {season.tagline} {pt(season.startDate)} – {pt(season.endDate)} PT.
+          </p>
         </div>
-      </section>
+      </header>
 
       <div className="nest-grid">
         {[
