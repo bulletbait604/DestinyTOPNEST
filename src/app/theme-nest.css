@@ -354,3 +354,84 @@ body {
   .gh-page-head,
   .gh-points-bar { align-items: flex-start; }
 }
+
+.gh-nav-hint {
+  margin: 0 0 0.45rem;
+  color: #c8cdd4;
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+.gh-nav-group { position: relative; flex: 1 1 7.25rem; }
+.gh-nav-group > summary { width: 100%; cursor: pointer; list-style: none; }
+.gh-nav-group > summary::-webkit-details-marker { display: none; }
+.gh-nav-menu {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  min-width: 16rem;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.4rem;
+  background: #12151c;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+.gh-nav-menu button,
+.gh-more-menu button {
+  display: grid;
+  gap: 0.1rem;
+  justify-items: start;
+  text-align: left;
+}
+.gh-nav-menu button {
+  border: 0;
+  background: transparent;
+  color: #f3f1ea;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+}
+.gh-nav-menu small,
+.gh-more-menu small {
+  display: block;
+  color: #c8cdd4;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.gh-how h2,
+.gh-guide h2 { margin: 0 0 0.2rem; font-size: 1.15rem; }
+.gh-how-steps {
+  list-style: none;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.gh-how-steps span,
+.gh-glossary dd { color: #d5dee8; margin: 0; }
+.gh-glossary {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.65rem 0;
+}
+.gh-glossary div {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.35rem;
+}
+.gh-glossary dt { font-weight: 750; }
+.gh-guide,
+.gh-signin {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0 0 0.55rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(245, 220, 86, 0.4);
+  background: rgba(245, 220, 86, 0.06);
+}
+.gh-signin p,
+.gh-guide p { margin: 0; }
+@media (max-width: 640px) {
+  .gh-glossary div { grid-template-columns: 1fr; gap: 0.05rem; }
+}

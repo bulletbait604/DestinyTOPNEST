@@ -10,6 +10,7 @@ import {
 } from '@/lib/destiny/communityBuildModel'
 import { pinLoadoutForCompare, type LoadoutSide } from '@/lib/destiny/loadoutCompare'
 import type { DestinyCharacterClass } from '@/lib/destiny/types'
+import { NextStep } from '@/app/components/hub/clarity'
 import { PageHeader } from '@/app/components/hub/PageHeader'
 import { navigateDestinyTab } from '@/lib/routing/tabUrl'
 
@@ -75,8 +76,8 @@ export default function BuildLookup() {
     <section className="gh-stack" aria-labelledby="gh-lookup-title">
       <PageHeader
         kicker="Builds"
-        title="Look up a build"
-        subtitle="Search shared builds, or a guardian's equipped weapons and exotic armor."
+        title="Find a build"
+        subtitle="Search builds people posted, or the weapons and armor a Guardian has equipped."
         titleId="gh-lookup-title"
       />
 
@@ -93,9 +94,12 @@ export default function BuildLookup() {
         <button type="submit">{looking ? 'Looking…' : 'Equipped'}</button>
       </form>
       {equippedError ? (
-        <p className="gh-alert" role="alert">
-          {equippedError}
-        </p>
+        <NextStep
+          alert
+          title="That loadout did not load"
+          body={equippedError}
+          actions={[{ label: 'Use a name and code', onClick: () => setGuardian('Name#1234') }]}
+        />
       ) : null}
       {equipped.length > 0 ? (
         <div className="gh-rotation">
@@ -155,9 +159,12 @@ export default function BuildLookup() {
         </label>
       </form>
       {listError ? (
-        <p className="gh-alert" role="alert">
-          {listError}
-        </p>
+        <NextStep
+          alert
+          title="Shared builds did not load"
+          body={listError}
+          actions={[{ label: 'Clear the search', onClick: () => setQ('') }]}
+        />
       ) : null}
       <p className="gh-muted">{total} shared builds match.</p>
       <ul className="gh-directory">

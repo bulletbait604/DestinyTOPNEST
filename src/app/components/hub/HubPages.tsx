@@ -4,14 +4,32 @@ import type { ReactNode } from 'react'
 import type { PublicFeaturedBuild, PublicHubSnapshot, PublicTopGuardian } from '@/lib/destiny/publicHub'
 import { navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import BoardsHub from '@/app/components/hub/BoardsHub'
+import { HowItWorks, NextStep } from '@/app/components/hub/clarity'
 import { PageHeader, PointsChip } from '@/app/components/hub/PageHeader'
 import { formatEventWhen, openHubTab, usePublicHub } from '@/app/components/hub/hubTypes'
 
-function EmptyNote({ title, children }: { title: string; children: ReactNode }) {
+function EmptyNote({
+  title,
+  children,
+  actions,
+}: {
+  title: string
+  children: ReactNode
+  actions?: { label: string; onClick: () => void }[]
+}) {
   return (
     <div className="gh-empty">
       <p className="gh-card-title">{title}</p>
       <p className="gh-muted">{children}</p>
+      {actions && actions.length > 0 ? (
+        <div className="gh-actions">
+          {actions.map((action) => (
+            <button key={action.label} type="button" className="gh-btn gh-btn-ghost" onClick={action.onClick}>
+              {action.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -43,18 +61,30 @@ export function SignInGate({
 function BoardState({
   loading,
   error,
+  onRetry,
   children,
 }: {
   loading: boolean
   error: string | null
+  onRetry?: () => void
   children: ReactNode
 }) {
-  if (loading) return <p className="gh-muted">Loading the public board…</p>
+  if (loading) return <p className="gh-muted">Loading…</p>
   if (error) {
     return (
-      <p className="gh-alert" role="alert">
-        {error}
-      </p>
+      <NextStep
+        alert
+        title="This page did not load"
+        body="Check your connection, then try again. You can still sign in and look up a Guardian."
+        actions={
+          onRetry
+            ? [
+                { label: 'Try again', onClick: onRetry },
+                { label: 'Find a Guardian', onClick: () => openHubTab('guardians') },
+              ]
+            : [{ label: 'Find a Guardian', onClick: () => openHubTab('guardians') }]
+        }
+      />
     )
   }
   return <>{children}</>
@@ -101,9 +131,12 @@ export function ContractList({
 export function SherpaList({ snapshot }: { snapshot: PublicHubSnapshot }) {
   if (!snapshot.sherpas.length) {
     return (
-      <EmptyNote title="No sherpas on the board yet">
-        Sherpa credit appears after a verified clear where a guide who already knows the activity helps someone
-        on their first clear. Sign in, sync a run, and teach a first-timer.
+      <EmptyNote
+        title="No teachers on the board yet"
+        actions={[{ label: 'Find a fireteam', onClick: () => openHubTab('fireteam') }]}
+      >
+        A sherpa is someone who already cleared the activity and then guided a first-timer. Sign in, finish a clear,
+        and teach the next one.
       </EmptyNote>
     )
   }
@@ -126,9 +159,11 @@ export function SherpaList({ snapshot }: { snapshot: PublicHubSnapshot }) {
 export function ClanList({ snapshot }: { snapshot: PublicHubSnapshot }) {
   if (!snapshot.clans.length) {
     return (
-      <EmptyNote title="No clan standings yet">
-        A clan shows up after two clanmates finish a verified clear together. Clan tags are saved when someone in
-        that clan syncs the run.
+      <EmptyNote
+        title="No clan standings yet"
+        actions={[{ label: 'Find a fireteam', onClick: () => openHubTab('fireteam') }]}
+      >
+        A clan shows up after two clanmates finish a verified clear together.
       </EmptyNote>
     )
   }
@@ -165,13 +200,13 @@ export function HubHome({
         <div>
           <p className="gh-kicker">Guardian Hub</p>
           <h1>Find your fireteam</h1>
-          <p className="gh-lede">This week&apos;s rotation, the guardians on the boards, and the builds people share.</p>
+          <p className="gh-lede">Play with new friends, earn points, and climb the season boards.</p>
           <div className="gh-actions">
             <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
               Sign in with Bungie
             </button>
             <button type="button" className="gh-btn gh-btn-ghost" onClick={() => openHubTab('guardians')}>
-              Browse guardians
+              Find people
             </button>
             <button type="button" className="gh-btn gh-btn-ghost" onClick={() => openHubTab('leaderboards')}>
               Open the boards
@@ -195,7 +230,9 @@ export function HubHome({
         </form>
       </section>
 
-      <BoardState loading={loading} error={error}>
+      <HowItWorks onLogin={onLogin} />
+
+      <BoardState loading={loading} error={error} onRetry={() => window.location.reload()}>
         {snapshot ? (
           <>
             <RotationStrip snapshot={snapshot} />
@@ -204,11 +241,18 @@ export function HubHome({
                 <div className="gh-section-head">
                   <h2 id="gh-live">Live fireteams</h2>
                   <button type="button" className="gh-text-btn" onClick={() => openHubTab('fireteam')}>
-                    LFG
+                    Find a fireteam
                   </button>
                 </div>
                 {snapshot.fireteams.length === 0 ? (
-                  <p className="gh-muted">No open rooms this hour. Post one after you sign in.</p>
+                  <NextStep
+                    title="No open fireteams"
+                    body="Be the first to post a raid or dungeon."
+                    actions={[
+                      { label: 'Sign in to post', onClick: onLogin },
+                      { label: 'Open Play', onClick: () => openHubTab('fireteam') },
+                    ]}
+                  />
                 ) : (
                   <ul className="gh-list">
                     {snapshot.fireteams.slice(0, 4).map((room) => (
@@ -234,7 +278,7 @@ export function HubHome({
                 <TopGuardianList rows={snapshot.topGuardians} />
               </section>
             </div>
-            <FeaturedBuilds builds={snapshot.featuredBuilds} />
+            <FeaturedBuilds builds={snapshot.featuredBuilds} onLogin={onLogin} />
             <section className="gh-section" aria-labelledby="gh-contracts-preview">
               <div className="gh-section-head">
                 <h2 id="gh-contracts-preview">This week&apos;s contracts</h2>
@@ -302,7 +346,13 @@ function RotationStrip({ snapshot }: { snapshot: PublicHubSnapshot }) {
 
 function TopGuardianList({ rows }: { rows: PublicTopGuardian[] }) {
   if (!rows.length) {
-    return <p className="gh-muted">Top guardians show up after a verified clear this season.</p>
+    return (
+      <NextStep
+        title="No leaders yet"
+        body="Names show up here after a verified clear this season."
+        actions={[{ label: 'Open the boards', onClick: () => openHubTab('leaderboards') }]}
+      />
+    )
   }
   return (
     <ul className="gh-list">
@@ -320,7 +370,7 @@ function TopGuardianList({ rows }: { rows: PublicTopGuardian[] }) {
   )
 }
 
-function FeaturedBuilds({ builds }: { builds: PublicFeaturedBuild[] }) {
+function FeaturedBuilds({ builds, onLogin }: { builds: PublicFeaturedBuild[]; onLogin: () => void }) {
   return (
     <section className="gh-section" aria-labelledby="gh-builds">
       <div className="gh-section-head">
@@ -330,10 +380,14 @@ function FeaturedBuilds({ builds }: { builds: PublicFeaturedBuild[] }) {
         </button>
       </div>
       {builds.length === 0 ? (
-        <div className="gh-empty">
-          <p className="gh-card-title">No shared builds yet</p>
-          <p className="gh-muted">Sign in and publish the loadout you are wearing.</p>
-        </div>
+        <NextStep
+          title="No shared builds yet"
+          body="A build is the gear a player chooses to post."
+          actions={[
+            { label: 'Sign in to share', onClick: onLogin },
+            { label: 'Browse builds', onClick: () => openHubTab('loadouts') },
+          ]}
+        />
       ) : (
         <div className="gh-rotation">
           {builds.map((build) => (
@@ -358,8 +412,8 @@ export function HubContracts() {
   return (
     <section className="gh-stack">
       <PageHeader
-        title="Weekly contracts"
-        subtitle="Finish one before Tuesday. Tier points do not change the boards."
+        title="Weekly goals"
+        subtitle="Finish one before Tuesday. These points unlock a title and frame. They do not change the boards."
       />
       <BoardState loading={loading} error={error}>
         {snapshot ? <ContractList snapshot={snapshot} featured /> : null}
@@ -373,8 +427,8 @@ export function HubSherpas() {
   return (
     <section className="gh-stack">
       <PageHeader
-        title="Sherpa hall of fame"
-        subtitle="One guided first clear is one point. An MVP vote adds one more."
+        title="Teachers"
+        subtitle="A sherpa already cleared the activity and guided someone through their first clear."
       />
       <BoardState loading={loading} error={error}>
         {snapshot ? (
@@ -392,8 +446,8 @@ export function HubClans() {
   return (
     <section className="gh-stack">
       <PageHeader
-        title="Clan Wars"
-        subtitle="Verified clears with two or more clanmates. Divisions run Ember, Ash, Iron, Steel."
+        title="Clans"
+        subtitle="A clan scores when two or more clanmates finish a verified clear together."
       />
       <BoardState loading={loading} error={error}>
         {snapshot ? (
@@ -411,14 +465,16 @@ export function HubEvents() {
   return (
     <section className="gh-stack">
       <PageHeader
-        title="Community Night Ops"
-        subtitle="A badge needs a verified clear inside the event window."
+        title="Events"
+        subtitle="Community sessions. You get the badge if your clear happens during the event."
       />
       <BoardState loading={loading} error={error}>
         {snapshot && snapshot.events.length === 0 ? (
-          <EmptyNote title="No Night Ops scheduled">
-            When the community posts an event, it will show up here with a Kick or Twitch link. Until then, grab a
-            weekly contract or post a fireteam.
+          <EmptyNote
+            title="No events scheduled"
+            actions={[{ label: 'See weekly goals', onClick: () => openHubTab('contracts') }]}
+          >
+            When the community posts a session, it shows up here with a watch link.
           </EmptyNote>
         ) : null}
         {snapshot && snapshot.events.length > 0 ? (
@@ -459,11 +515,14 @@ export function HubFireteams({ onLogin, signedIn }: { onLogin?: () => void; sign
   const { snapshot, loading, error } = usePublicHub()
   return (
     <section className="gh-stack">
-      <PageHeader title="Find a fireteam" subtitle="Open rooms. Sign in to join, apply, or post your own." />
+      <PageHeader title="Play" subtitle="Open fireteams. Sign in to join one or post your own." />
       <BoardState loading={loading} error={error}>
         {snapshot && snapshot.fireteams.length === 0 ? (
-          <EmptyNote title="No open fireteams right now">
-            Be the first to post a raid, dungeon, or teaching run after you sign in.
+          <EmptyNote
+            title="No open fireteams right now"
+            actions={onLogin ? [{ label: 'Sign in to post one', onClick: onLogin }] : undefined}
+          >
+            Be the first to post a raid, dungeon, or teaching run.
           </EmptyNote>
         ) : null}
         {snapshot && snapshot.fireteams.length > 0 ? (
@@ -483,8 +542,8 @@ export function HubFireteams({ onLogin, signedIn }: { onLogin?: () => void; sign
       </BoardState>
       {signedIn ? null : (
         <SignInGate
-          title="Post or join from your account"
-          body="The list above is public. Joining a room, inviting friends, and leaving a review happens after you sign in."
+          title="Sign in to join or post"
+          body="Signing in lets this clear count for points, lets you vote MVP for a teammate, and lets you post a fireteam."
           onLogin={onLogin}
         />
       )}

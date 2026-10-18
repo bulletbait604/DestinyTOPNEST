@@ -122,7 +122,7 @@ export default function CommunityBuildsBrowser({
       <GlassCard darkMode={darkMode}>
         <SectionTitle
           title="Shared builds"
-          subtitle="Shared raid, dungeon, and nightfall loadouts."
+          subtitle="Gear other players posted. Sign in to share yours or upvote one you like."
           darkMode={darkMode}
         />
         <div className="mt-4 flex flex-wrap gap-2">
