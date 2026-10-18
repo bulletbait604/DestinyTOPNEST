@@ -1,8 +1,11 @@
 import { evaluateClanWars } from '@/lib/destiny/clanWars'
+import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
+import { aggregateLeaderboard } from '@/lib/destiny/leaderboards'
 import { listOpenLobbies } from '@/lib/destiny/fireteamLobbyService'
 import { evaluateNightOps, resolveNightOpsCatalog } from '@/lib/destiny/nightOps'
 import { evaluateSherpaRanks } from '@/lib/destiny/sherpaRanks'
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
+import { listCommunityBuilds } from '@/lib/destiny/communityBuildStore'
 import { listVerifiedFullClears } from '@/lib/destiny/store'
 import type { FireteamLobby, NightOpsEvent, RunRecord } from '@/lib/destiny/types'
 import { resolveWeeklyContractCatalog } from '@/lib/destiny/weeklyContractCatalog'
@@ -61,6 +64,24 @@ export interface PublicScoringNote {
   body: string
 }
 
+export interface PublicTopGuardian {
+  board: 'raid' | 'dungeon' | 'new_bonds'
+  boardLabel: string
+  displayName: string
+  points: number
+  rank: number
+}
+
+export interface PublicFeaturedBuild {
+  id: string
+  name: string
+  characterClass: string
+  subclass: string
+  activity: string
+  likes: number
+  ownerDisplayName: string
+}
+
 export interface PublicHubSnapshot {
   weekLabel: string
   resetsInLabel: string
@@ -75,6 +96,8 @@ export interface PublicHubSnapshot {
   fireteams: PublicFireteamCard[]
   scoring: PublicScoringNote[]
   historyComplete: boolean
+  topGuardians: PublicTopGuardian[]
+  featuredBuilds: PublicFeaturedBuild[]
 }
 
 /** Plain-language rules. These do not award points; the evaluators do. */
@@ -122,6 +145,32 @@ function publicFireteams(lobbies: FireteamLobby[]): PublicFireteamCard[] {
     }))
 }
 
+const BOARD_LABEL = {
+  raid: 'Raid',
+  dungeon: 'Dungeon',
+  new_bonds: 'New Bonds',
+} as const
+
+/** Season leaders for the homepage. Names come from verified clears, not private profiles. */
+export function topGuardiansFromRuns(runs: RunRecord[], now: Date): PublicTopGuardian[] {
+  const season = getConfiguredActiveSeason(now)
+  const users = new Map<string, StoredDestinyUser>()
+  const rows: PublicTopGuardian[] = []
+  for (const board of ['raid', 'dungeon', 'new_bonds'] as const) {
+    const entries = aggregateLeaderboard(runs, users, board, 'season', season).slice(0, 3)
+    for (const entry of entries) {
+      rows.push({
+        board,
+        boardLabel: BOARD_LABEL[board],
+        displayName: entry.bungieDisplayName,
+        points: entry.points,
+        rank: entry.rank,
+      })
+    }
+  }
+  return rows
+}
+
 /** Build the logged-out boards from stored clears. No Bungie calls and no private profiles. */
 export function assemblePublicHub(input: {
   now?: Date
@@ -129,6 +178,7 @@ export function assemblePublicHub(input: {
   lobbies?: FireteamLobby[]
   events?: NightOpsEvent[]
   historyComplete?: boolean
+  featuredBuilds?: PublicFeaturedBuild[]
 }): PublicHubSnapshot {
   const now = input.now ?? new Date()
   const runs = input.runs ?? []
@@ -196,18 +246,46 @@ export function assemblePublicHub(input: {
     fireteams: publicFireteams(input.lobbies ?? []),
     scoring: HUB_SCORING,
     historyComplete: input.historyComplete !== false,
+    topGuardians: topGuardiansFromRuns(runs, now),
+    featuredBuilds: input.featuredBuilds ?? [],
+  }
+}
+
+async function loadFeaturedBuilds(): Promise<PublicFeaturedBuild[]> {
+  try {
+    const listed = await listCommunityBuilds({ sort: 'top', limit: 4, offset: 0, scope: 'public' })
+    return listed.builds
+      .filter((build) => build.status === 'published')
+      .slice(0, 3)
+      .map((build) => ({
+        id: build.id,
+        name: build.name,
+        characterClass: build.characterClass,
+        subclass: build.subclass,
+        activity: build.activityTags[0] ?? 'general',
+        likes: build.upvoteCount,
+        ownerDisplayName: build.ownerDisplayName,
+      }))
+  } catch (error) {
+    console.warn('[hub] featured builds unavailable', error)
+    return []
   }
 }
 
 export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHubSnapshot> {
   await refreshLiveWeeklyRotationBounded(now)
   try {
-    const [clears, lobbies] = await Promise.all([listVerifiedFullClears(2000), listOpenLobbies()])
+    const [clears, lobbies, featuredBuilds] = await Promise.all([
+      listVerifiedFullClears(2000),
+      listOpenLobbies(),
+      loadFeaturedBuilds(),
+    ])
     return assemblePublicHub({
       now,
       runs: clears.runs,
       lobbies,
       historyComplete: clears.complete,
+      featuredBuilds,
     })
   } catch (error) {
     console.warn('[hub] public snapshot fell back to the contract catalog', error)

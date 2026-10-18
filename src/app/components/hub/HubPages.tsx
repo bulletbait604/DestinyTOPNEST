@@ -1,8 +1,9 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import type { PublicHubSnapshot } from '@/lib/destiny/publicHub'
-import type { DestinyTopNestTab } from '@/lib/destiny/types'
+import type { PublicFeaturedBuild, PublicHubSnapshot, PublicTopGuardian } from '@/lib/destiny/publicHub'
+import { navigateGuardianSearch } from '@/lib/routing/tabUrl'
+import BoardsHub from '@/app/components/hub/BoardsHub'
 import { formatEventWhen, openHubTab, usePublicHub } from '@/app/components/hub/hubTypes'
 
 function EmptyNote({ title, children }: { title: string; children: ReactNode }) {
@@ -92,7 +93,6 @@ export function ContractList({
       {featured && snapshot.featuredDungeons.length ? (
         <p className="gh-muted">Featured dungeons: {snapshot.featuredDungeons.join(', ')}</p>
       ) : null}
-      {featured && snapshot.pantheon ? <p className="gh-muted">Pantheon: {snapshot.pantheon}</p> : null}
       {featured && snapshot.nightfall ? <p className="gh-muted">Nightfall: {snapshot.nightfall}</p> : null}
       <div className="gh-grid">
         {snapshot.contracts.map((contract) => (
@@ -172,48 +172,82 @@ export function HubHome({
     <div className="gh-stack">
       <section className="gh-hero">
         <div>
-          <p className="gh-kicker">Destiny&apos;s Top Nest</p>
-          <h1>A Guardian Hub for people you actually play with</h1>
+          <p className="gh-kicker">Guardian Hub</p>
+          <h1>Find your fireteam. Rate the run.</h1>
           <p className="gh-lede">
-            See this week&apos;s contracts, who is teaching, and which clans are clearing — then sign in to stamp
-            your own passport. Clear with new Guardians for New Bonds points — #1 on the Raid, Dungeon and New Bonds boards wins a prize each season.
+            This week&apos;s rotation, the Guardians climbing Raid, Dungeon, and New Bonds, and the builds people are
+            sharing. USA and Canada winners get a Destiny 2 3D print. UK winners get a $50 CAD Steam gift card. Other
+            countries can compete and are not eligible.
           </p>
           <div className="gh-actions">
             <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
               Sign in with Bungie
             </button>
-            <button type="button" className="gh-btn gh-btn-ghost" onClick={() => openHubTab('contracts')}>
-              See this week&apos;s contracts
+            <button type="button" className="gh-btn gh-btn-ghost" onClick={() => openHubTab('guardians')}>
+              Browse guardians
+            </button>
+            <button type="button" className="gh-btn gh-btn-ghost" onClick={() => openHubTab('leaderboards')}>
+              Open the boards
             </button>
           </div>
         </div>
-        <ul className="gh-feature-list">
-          <li>
-            <strong>Passport</strong>
-            <span>Stamps for verified clears and new teammates.</span>
-          </li>
-          <li>
-            <strong>Contracts</strong>
-            <span>Three weekly goals. They reset every Tuesday.</span>
-          </li>
-          <li>
-            <strong>Sherpas</strong>
-            <span>Credit for guiding a first clear, plus a learner MVP bonus.</span>
-          </li>
-          <li>
-            <strong>Clan Wars</strong>
-            <span>Clan standings from verified clears with your clanmates.</span>
-          </li>
-          <li>
-            <strong>Fireteam finder</strong>
-            <span>Open rooms for raids, dungeons, and teaching runs.</span>
-          </li>
-        </ul>
+        <form
+          className="gh-search gh-hero-search"
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault()
+            const data = new FormData(event.currentTarget)
+            navigateGuardianSearch(String(data.get('q') ?? ''))
+          }}
+        >
+          <label className="gh-sr" htmlFor="hub-home-search">
+            Search guardians
+          </label>
+          <input id="hub-home-search" name="q" placeholder="Search a Bungie name" autoComplete="off" />
+          <button type="submit">Search</button>
+        </form>
       </section>
 
       <BoardState loading={loading} error={error}>
         {snapshot ? (
           <>
+            <RotationStrip snapshot={snapshot} />
+            <div className="gh-split">
+              <section className="gh-card" aria-labelledby="gh-live">
+                <div className="gh-section-head">
+                  <h2 id="gh-live">Live fireteams</h2>
+                  <button type="button" className="gh-text-btn" onClick={() => openHubTab('fireteam')}>
+                    LFG
+                  </button>
+                </div>
+                {snapshot.fireteams.length === 0 ? (
+                  <p className="gh-muted">No open rooms this hour. Post one after you sign in.</p>
+                ) : (
+                  <ul className="gh-list">
+                    {snapshot.fireteams.slice(0, 4).map((room) => (
+                      <li key={room.id}>
+                        <span>
+                          {room.activityName} · {room.hostDisplayName}
+                        </span>
+                        <span className="gh-muted">
+                          {room.currentPlayers}/{room.maxPlayers}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+              <section className="gh-card" aria-labelledby="gh-top">
+                <div className="gh-section-head">
+                  <h2 id="gh-top">Top guardians</h2>
+                  <button type="button" className="gh-text-btn" onClick={() => openHubTab('leaderboards')}>
+                    Full boards
+                  </button>
+                </div>
+                <TopGuardianList rows={snapshot.topGuardians} />
+              </section>
+            </div>
+            <FeaturedBuilds builds={snapshot.featuredBuilds} />
             <section className="gh-section" aria-labelledby="gh-contracts-preview">
               <div className="gh-section-head">
                 <h2 id="gh-contracts-preview">This week&apos;s contracts</h2>
@@ -251,6 +285,85 @@ export function HubHome({
         ) : null}
       </BoardState>
     </div>
+  )
+}
+
+function RotationStrip({ snapshot }: { snapshot: PublicHubSnapshot }) {
+  const cards = [
+    { label: 'Featured raids', value: snapshot.featuredRaids.join(' · ') || 'Rotation loading' },
+    { label: 'Featured dungeons', value: snapshot.featuredDungeons.join(' · ') || 'Rotation loading' },
+    { label: 'Nightfall', value: snapshot.nightfall || 'Grandmaster not posted' },
+  ]
+  return (
+    <section className="gh-section" aria-labelledby="gh-rotation">
+      <div className="gh-section-head">
+        <h2 id="gh-rotation">This week&apos;s rotation</h2>
+        <p className="gh-kicker">
+          {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
+        </p>
+      </div>
+      <div className="gh-rotation">
+        {cards.map((card) => (
+          <article key={card.label} className="gh-card">
+            <p className="gh-kicker">{card.label}</p>
+            <h3>{card.value}</h3>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function TopGuardianList({ rows }: { rows: PublicTopGuardian[] }) {
+  if (!rows.length) {
+    return <p className="gh-muted">Top guardians show up after a verified clear this season.</p>
+  }
+  return (
+    <ul className="gh-list">
+      {rows.map((row) => (
+        <li key={`${row.board}-${row.rank}-${row.displayName}`}>
+          <button type="button" className="gh-text-btn" onClick={() => navigateGuardianSearch(row.displayName)}>
+            #{row.rank} {row.displayName}
+          </button>
+          <span className="gh-muted">
+            {row.boardLabel} · {row.points} pts
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function FeaturedBuilds({ builds }: { builds: PublicFeaturedBuild[] }) {
+  return (
+    <section className="gh-section" aria-labelledby="gh-builds">
+      <div className="gh-section-head">
+        <h2 id="gh-builds">Featured builds</h2>
+        <button type="button" className="gh-text-btn" onClick={() => openHubTab('loadouts')}>
+          All builds
+        </button>
+      </div>
+      {builds.length === 0 ? (
+        <div className="gh-empty">
+          <p className="gh-card-title">No shared builds yet</p>
+          <p className="gh-muted">Sign in and publish the loadout you are wearing.</p>
+        </div>
+      ) : (
+        <div className="gh-rotation">
+          {builds.map((build) => (
+            <a key={build.id} className="gh-card gh-build-card" href={`/builds/${build.id}`}>
+              <p className="gh-kicker">
+                {build.characterClass} · {build.activity}
+              </p>
+              <h3>{build.name}</h3>
+              <p className="gh-muted">
+                {build.subclass} · {build.likes} likes · {build.ownerDisplayName}
+              </p>
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -411,26 +524,7 @@ export function HubFireteams({ onLogin, signedIn }: { onLogin?: () => void; sign
 }
 
 export function HubLeaderboardPreview({ onLogin }: { onLogin?: () => void }) {
-  const { snapshot, loading, error } = usePublicHub()
-  return (
-    <section className="gh-stack">
-      <header>
-        <h1>Leaderboards</h1>
-        <p className="gh-lede">
-          Raid, Dungeon and New Bonds boards use verified full clears — #1 on each wins a season prize. Sign in to see the full rankings and
-          cast MVP votes.
-        </p>
-      </header>
-      <BoardState loading={loading} error={error}>
-        {snapshot ? <ScoringList notes={snapshot.scoring} /> : null}
-      </BoardState>
-      <SignInGate
-        title="Full boards are ready after sign-in"
-        body="Your rank, MVP votes, and season placement stay on your Bungie membership. Votes cast for you before you joined are already on your profile."
-        onLogin={onLogin}
-      />
-    </section>
-  )
+  return <BoardsHub onLogin={onLogin} />
 }
 
 export function ConnectedHome({ onLogin }: { onLogin: () => void }) {

@@ -28,6 +28,8 @@ export function normalizePublicHub(value: unknown): PublicHubSnapshot | null {
     fireteams: asArray(data.fireteams),
     scoring: data.scoring,
     historyComplete: data.historyComplete !== false,
+    topGuardians: asArray(data.topGuardians),
+    featuredBuilds: asArray(data.featuredBuilds),
   }
 }
 

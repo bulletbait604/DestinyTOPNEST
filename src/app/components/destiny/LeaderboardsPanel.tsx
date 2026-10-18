@@ -1,131 +1,13 @@
 ﻿'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { LeaderboardCategory, LeaderboardEntry, LeaderboardPeriod } from '@/lib/destiny/types'
-import LeaderboardGridCard from '@/app/components/destiny/LeaderboardGridCard'
+import BoardsHub from '@/app/components/hub/BoardsHub'
 import SeasonSection from '@/app/components/destiny/SeasonSection'
-import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 
-const PERIOD_OPTIONS: LeaderboardPeriod[] = ['weekly', 'monthly', 'season', 'all_time']
-
-const BOARDS: {
-  category: LeaderboardCategory
-  title: string
-  defaultPeriod: LeaderboardPeriod
-  footnote?: string
-}[] = [
-  {
-    category: 'new_bonds',
-    title: 'New Bonds',
-    defaultPeriod: 'season',
-    footnote: 'Points for clearing with Guardians you had never played with. #1 wins a prize (3D print US/CA · Steam card UK).',
-  },
-  {
-    category: 'raid',
-    title: 'Raids',
-    defaultPeriod: 'season',
-    footnote: 'Verified raid clears + bond bonuses. #1 wins a prize (3D print US/CA · Steam card UK).',
-  },
-  {
-    category: 'dungeon',
-    title: 'Dungeons',
-    defaultPeriod: 'season',
-    footnote: 'Verified dungeon clears + bond bonuses. #1 wins a prize (3D print US/CA · Steam card UK).',
-  },
-]
-
-type BoardState = {
-  entries: LeaderboardEntry[]
-  loading: boolean
-  period: LeaderboardPeriod
-}
-
-function initialBoardState(): Record<LeaderboardCategory, BoardState> {
-  return {
-    raid: { entries: [], loading: true, period: 'season' },
-    dungeon: { entries: [], loading: true, period: 'season' },
-    new_bonds: { entries: [], loading: true, period: 'season' },
-  }
-}
-
+/** Signed-in boards: the public hub plus the season prize track. */
 export default function LeaderboardsPanel({ darkMode }: { darkMode: boolean }) {
-  const [boards, setBoards] = useState<Record<LeaderboardCategory, BoardState>>(initialBoardState)
-  const boardsRef = useRef(boards)
-  boardsRef.current = boards
-
-  const fetchBoard = useCallback(async (category: LeaderboardCategory, period: LeaderboardPeriod) => {
-    setBoards((prev) => ({
-      ...prev,
-      [category]: { ...prev[category], loading: true },
-    }))
-
-    try {
-      const params = new URLSearchParams({ period, category })
-      const res = await fetch(`/api/destiny/leaderboards?${params}`, { credentials: 'include' })
-      const json = res.ok ? await res.json() : { entries: [] }
-      setBoards((prev) => ({
-        ...prev,
-        [category]: {
-          ...prev[category],
-          period,
-          entries: json.entries ?? [],
-          loading: false,
-        },
-      }))
-    } catch {
-      setBoards((prev) => ({
-        ...prev,
-        [category]: { ...prev[category], period, entries: [], loading: false },
-      }))
-    }
-  }, [])
-
-  useEffect(() => {
-    void Promise.all(BOARDS.map((board) => fetchBoard(board.category, board.defaultPeriod)))
-  }, [fetchBoard])
-
-  useEffect(() => {
-    const onRefresh = () => {
-      void Promise.all(
-        BOARDS.map((board) => {
-          const period = boardsRef.current[board.category]?.period ?? board.defaultPeriod
-          return fetchBoard(board.category, period)
-        })
-      )
-    }
-    window.addEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
-    return () => window.removeEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
-  }, [fetchBoard])
-
-  const handlePeriodChange = useCallback(
-    (category: LeaderboardCategory, period: LeaderboardPeriod) => {
-      void fetchBoard(category, period)
-    },
-    [fetchBoard]
-  )
-
   return (
     <div className="space-y-6">
-      <div className="tn-lb-wire-grid">
-        {BOARDS.map((board) => {
-          const state = boards[board.category]
-          return (
-            <LeaderboardGridCard
-              key={board.category}
-              title={board.title}
-              category={board.category}
-              period={state.period}
-              periodOptions={PERIOD_OPTIONS}
-              onPeriodChange={(period) => handlePeriodChange(board.category, period)}
-              entries={state.entries}
-              loading={state.loading}
-              darkMode={darkMode}
-              footnote={board.footnote}
-            />
-          )
-        })}
-      </div>
-
+      <BoardsHub />
       <SeasonSection darkMode={darkMode} />
     </div>
   )

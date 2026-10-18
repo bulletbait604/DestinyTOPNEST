@@ -6,11 +6,11 @@ export const BRAND_SHORT = 'Top Nest'
 export const HUB_NAME = 'Guardian Hub'
 
 export const BRAND_TAGLINE =
-  'Guardian Hub for verified Destiny clears, weekly contracts, sherpa ranks, clan standings, and fireteams. Fan-made and not affiliated with Bungie.'
+  'Guardian Hub for finding Destiny 2 players, rating teammates, sharing builds, and climbing the Raid, Dungeon, and New Bonds boards. Fan-made and not affiliated with Bungie.'
 
 /** Hero mission copy on the logged-in home shell. */
 export const BRAND_MISSION =
-  'Find a fireteam, finish verified clears, and earn stamps, sherpa ranks, and clan standing. Rewards are badges, titles, and frames.'
+  'Find a Guardian, check their rating, and climb the Raid, Dungeon, and New Bonds boards. Rewards are badges, titles, frames, and a season prize for #1.'
 
 /** Logo assets (public/) */
 export const BRAND_LOGO_PATH = '/brand/topnest-logo.png'

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import CommunityBuildsBrowser from '@/app/components/destiny/community/CommunityBuildsBrowser'
+import GuardianDirectory from '@/app/components/hub/GuardianDirectory'
 import {
   ConnectedHome,
   HubClans,
@@ -38,6 +39,7 @@ export default function PublicHub({ onLogin }: { onLogin: () => void }) {
   }, [])
 
   if (tab === 'overview') return <ConnectedHome onLogin={onLogin} />
+  if (tab === 'guardians') return <GuardianDirectory onLogin={onLogin} />
   if (tab === 'fireteam') return <HubFireteams onLogin={onLogin} />
   if (tab === 'contracts') return <HubContracts />
   if (tab === 'leaderboards') return <HubLeaderboardPreview onLogin={onLogin} />
