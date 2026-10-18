@@ -72,6 +72,13 @@ export default function HubChrome({
     }
   }, [])
 
+  const go = (tabId: DestinyTopNestTab) => {
+    document.querySelectorAll('details.gh-more, details.gh-nav-group').forEach((node) => {
+      if (node instanceof HTMLDetailsElement) node.open = false
+    })
+    navigateDestinyTab(tabId)
+  }
+
   const submitSearch = (event: FormEvent) => {
     event.preventDefault()
     navigateGuardianSearch(query)
@@ -110,13 +117,13 @@ export default function HubChrome({
             <summary>More</summary>
             <div className="gh-more-menu">
               {GEAR_NAV.map((item) => (
-                <button key={item.id} type="button" onClick={() => navigateDestinyTab(item.id)}>
+                <button key={item.id} type="button" onClick={() => go(item.id)}>
                   {item.label}
                   <small>{item.hint}</small>
                 </button>
               ))}
               {MORE_NAV.map((item) => (
-                <button key={item.id} type="button" onClick={() => navigateDestinyTab(item.id)}>
+                <button key={item.id} type="button" onClick={() => go(item.id)}>
                   {item.label}
                   <small>{item.hint}</small>
                 </button>
@@ -151,7 +158,7 @@ export default function HubChrome({
               type="button"
               className="gh-nav-link"
               aria-current={tab === item.id ? 'page' : undefined}
-              onClick={() => navigateDestinyTab(item.id)}
+              onClick={() => go(item.id)}
             >
               <Icon aria-hidden />
               <span>{item.label}</span>
@@ -165,7 +172,7 @@ export default function HubChrome({
           </summary>
           <div className="gh-nav-menu">
             {GEAR_NAV.map((item) => (
-              <button key={item.id} type="button" onClick={() => navigateDestinyTab(item.id)}>
+              <button key={item.id} type="button" onClick={() => go(item.id)}>
                 {item.label}
                 <small>{item.hint}</small>
               </button>
@@ -193,7 +200,7 @@ export default function HubChrome({
               key={item.id}
               type="button"
               aria-current={current ? 'page' : undefined}
-              onClick={() => navigateDestinyTab(item.id)}
+              onClick={() => go(item.id)}
             >
               <Icon aria-hidden />
               <span>{item.label}</span>
