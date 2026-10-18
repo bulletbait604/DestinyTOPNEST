@@ -19,7 +19,10 @@ export const TAB_PAGE_COPY: Record<
   | 'contracts'
   | 'sherpas'
   | 'events'
-  | 'guardians',
+  | 'guardians'
+  | 'compare'
+  | 'lookup'
+  | 'quests',
   TabPageCopy
 > = {
   overview: {
@@ -71,13 +74,35 @@ export const TAB_PAGE_COPY: Record<
     title: 'Guardians',
     description: 'Search Bungie names, including players who have not signed in yet, and open a public rating.',
   },
+  compare: {
+    title: 'Compare',
+    description: 'Put two shared builds, or a shared build and an equipped loadout, side by side.',
+  },
+  lookup: {
+    title: 'Lookup',
+    description: 'Search every shared build, or pull the loadout a guardian has equipped.',
+  },
+  quests: {
+    title: 'Quests',
+    description: 'Search Destiny 2 quests, pursuits, exotic quests, and catalysts from the Bungie manifest.',
+  },
 }
 
 /** Map route tab ids to hero copy keys. */
 export function tabPageCopyKey(tab: DestinyTopNestTab): keyof typeof TAB_PAGE_COPY {
   if (tab === 'builds' || tab === 'loadouts') return 'loadouts'
   if (tab === 'season') return 'leaderboards'
-  if (tab === 'contracts' || tab === 'sherpas' || tab === 'events' || tab === 'guardians') return tab
+  if (
+    tab === 'contracts' ||
+    tab === 'sherpas' ||
+    tab === 'events' ||
+    tab === 'guardians' ||
+    tab === 'compare' ||
+    tab === 'lookup' ||
+    tab === 'quests'
+  ) {
+    return tab
+  }
   return tab as keyof typeof TAB_PAGE_COPY
 }
 

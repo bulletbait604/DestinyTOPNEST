@@ -110,6 +110,9 @@ export type DestinyTopNestTab =
   | 'sherpas'
   | 'events'
   | 'guardians'
+  | 'compare'
+  | 'lookup'
+  | 'quests'
 
 export interface DestinyIconRef {
   name: string

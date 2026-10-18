@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useState, type ReactNode } from 'react'
-import { Home, Search, Shield, Swords, Trophy, Users, type LucideIcon } from 'lucide-react'
+import { Columns2, Crosshair, Home, ScrollText, Search, Shield, Swords, Trophy, Users, type LucideIcon } from 'lucide-react'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import {
@@ -20,8 +20,16 @@ const NAV: { id: DestinyTopNestTab; label: string; icon: LucideIcon }[] = [
   { id: 'guardians', label: 'Guardians', icon: Shield },
   { id: 'leaderboards', label: 'Boards', icon: Trophy },
   { id: 'loadouts', label: 'Builds', icon: Swords },
+  { id: 'compare', label: 'Compare', icon: Columns2 },
+  { id: 'lookup', label: 'Lookup', icon: Crosshair },
+  { id: 'quests', label: 'Quests', icon: ScrollText },
   { id: 'fireteam', label: 'LFG', icon: Users },
 ]
+
+/** Phone dock stays five items. Compare, Lookup, and LFG stay in More. */
+const MOBILE_NAV = NAV.filter((item) =>
+  ['overview', 'guardians', 'leaderboards', 'loadouts', 'quests'].includes(item.id)
+)
 
 function visibleTab(tab: DestinyTopNestTab): DestinyTopNestTab {
   if (tab === 'builds' || tab === 'loadouts') return 'loadouts'
@@ -114,6 +122,15 @@ export default function HubChrome({
               <button type="button" onClick={() => navigateDestinyTab('events')}>
                 Night Ops
               </button>
+              <button type="button" onClick={() => navigateDestinyTab('compare')}>
+                Compare
+              </button>
+              <button type="button" onClick={() => navigateDestinyTab('lookup')}>
+                Lookup
+              </button>
+              <button type="button" onClick={() => navigateDestinyTab('fireteam')}>
+                LFG
+              </button>
               {signedIn ? (
                 <button type="button" onClick={() => navigateProfileSection('passport')}>
                   Passport
@@ -156,7 +173,7 @@ export default function HubChrome({
         <a href="/rules">Rules &amp; prizes</a>
       </footer>
       <nav className="gh-bottom-nav" aria-label="Guardian Hub mobile">
-        {NAV.map((item) => (
+        {MOBILE_NAV.map((item) => (
           <button
             key={item.id}
             type="button"

@@ -45,6 +45,8 @@ export default function CommunityBuildsBrowser({
   const [q, setQ] = useState('')
   const [debouncedQ, setDebouncedQ] = useState('')
   const [characterClass, setCharacterClass] = useState<DestinyCharacterClass | 'all'>('all')
+  const [subclass, setSubclass] = useState('')
+  const [debouncedSubclass, setDebouncedSubclass] = useState('')
   const [tag, setTag] = useState<CommunityActivityTag | 'all'>('all')
   const [stat, setStat] = useState<string>('all')
   const [sort, setSort] = useState<CommunityBuildSort>('new')
@@ -59,13 +61,19 @@ export default function CommunityBuildsBrowser({
   }, [q])
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSubclass(subclass.trim()), 250)
+    return () => window.clearTimeout(timer)
+  }, [subclass])
+
+  useEffect(() => {
     setOffset(0)
-  }, [debouncedQ, characterClass, tag, stat, sort, scope])
+  }, [debouncedQ, debouncedSubclass, characterClass, tag, stat, sort, scope])
 
   useEffect(() => {
     const params = new URLSearchParams()
     if (debouncedQ) params.set('q', debouncedQ)
     if (characterClass !== 'all') params.set('class', characterClass)
+    if (debouncedSubclass) params.set('subclass', debouncedSubclass)
     if (tag !== 'all') params.set('tag', tag)
     if (stat !== 'all') params.set('stat', stat)
     params.set('sort', sort)
@@ -95,7 +103,7 @@ export default function CommunityBuildsBrowser({
     })()
 
     return () => controller.abort()
-  }, [debouncedQ, characterClass, tag, stat, sort, scope, offset])
+  }, [debouncedQ, debouncedSubclass, characterClass, tag, stat, sort, scope, offset])
 
   async function shareBuild(content: CommunityBuildContent) {
     const res = await fetch('/api/destiny/community-builds', {
@@ -165,7 +173,7 @@ export default function CommunityBuildsBrowser({
       </GlassCard>
 
       <GlassCard darkMode={darkMode}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <label>
             <span className={cn('block text-[11px] uppercase tracking-wide mb-1', t.caption)}>Search</span>
             <input
@@ -190,6 +198,16 @@ export default function CommunityBuildsBrowser({
                 </option>
               ))}
             </select>
+          </label>
+          <label>
+            <span className={cn('block text-[11px] uppercase tracking-wide mb-1', t.caption)}>Subclass</span>
+            <input
+              value={subclass}
+              onChange={(event) => setSubclass(event.target.value)}
+              placeholder="Nightstalker"
+              className={fieldClass}
+              maxLength={48}
+            />
           </label>
           <label>
             <span className={cn('block text-[11px] uppercase tracking-wide mb-1', t.caption)}>Activity</span>
