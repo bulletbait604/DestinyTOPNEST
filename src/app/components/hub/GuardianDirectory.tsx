@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { GuardianDirectoryCard, GuardianPublicProfile } from '@/lib/destiny/guardianDirectory'
 import { classLabel } from '@/lib/destiny/guardianDirectory'
+import { PageHeader } from '@/app/components/hub/PageHeader'
 import { GUARDIAN_SEARCH_EVENT, navigateGuardianProfile, navigateGuardianSearch } from '@/lib/routing/tabUrl'
 
 function readLocation() {
@@ -142,14 +143,12 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
 
   return (
     <section className="gh-stack" aria-labelledby="gh-directory-title">
-      <header>
-        <p className="gh-kicker">Directory</p>
-        <h1 id="gh-directory-title">Find a Guardian</h1>
-        <p className="gh-lede">
-          Search a Bungie name. Players who have not signed in still show up when someone voted them MVP or kudos, or
-          when you search an exact name and code.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Directory"
+        title="Find a Guardian"
+        subtitle="Search a Bungie name, including players who have not signed in."
+        titleId="gh-directory-title"
+      />
       <form
         className="gh-search"
         role="search"

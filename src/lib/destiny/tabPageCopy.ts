@@ -36,27 +36,23 @@ export const TAB_PAGE_COPY: Record<
   },
   profile: {
     title: 'Profile',
-    description:
-      'Your Guardian, Fireteam Passport, verified clears, weekly contracts, and emblem — synced from Bungie.',
+    description: 'Your Guardian, passport, verified clears, and weekly contracts.',
   },
   fireteam: {
-    title: 'FIRETEAMS',
-    description:
-      'Browse open raid and dungeon lobbies, find Guardians to play with, and leave fireteam reviews.',
+    title: 'Fireteams',
+    description: 'Open raid and dungeon lobbies, plus reviews from people you played with.',
   },
   clans: {
     title: 'Clan',
-    description:
-      'Your clan roster, weekly activity, and collective progress across Destiny’s endgame.',
+    description: 'Roster, weekly activity, and endgame progress.',
   },
   loadouts: {
     title: 'Builds',
-    description:
-      'Your live gear, saved loadouts, player-shared builds, and the loadout builder.',
+    description: 'Live gear, saved loadouts, and player-shared builds.',
   },
   admin: {
     title: 'Admin',
-    description: 'Review flagged runs, moderate users, adjust leaderboards, ban accounts, and monitor the staff activity feed.',
+    description: 'Review runs, moderate users, and adjust the boards.',
   },
   contracts: {
     title: 'Weekly contracts',

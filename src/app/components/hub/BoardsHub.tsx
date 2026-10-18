@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { filterLeaderboardEntries } from '@/lib/destiny/boardFilters'
-import { PRIZE_SUMMARY } from '@/lib/destiny/seasonConfig'
+import { PageHeader } from '@/app/components/hub/PageHeader'
 import type { LeaderboardCategory, LeaderboardEntry, LeaderboardPeriod } from '@/lib/destiny/types'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
@@ -68,11 +68,12 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
 
   return (
     <section className="gh-stack" aria-labelledby="gh-boards-title">
-      <header>
-        <p className="gh-kicker">Season boards</p>
-        <h1 id="gh-boards-title">Raid, Dungeon, and New Bonds</h1>
-        <p className="gh-lede">{PRIZE_SUMMARY}</p>
-      </header>
+      <PageHeader
+        kicker="Season boards"
+        title="Raid, Dungeon, and New Bonds"
+        subtitle="Season standings from verified clears. Prize rules stay on the season page."
+        titleId="gh-boards-title"
+      />
 
       <div className="gh-tabs" role="tablist" aria-label="Leaderboard">
         {CATEGORIES.map((item) => (

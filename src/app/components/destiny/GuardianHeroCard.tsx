@@ -65,7 +65,7 @@ export default function GuardianHeroCard({ profile, darkMode, linked = true }: P
               {profile.classRef && (
                 <ItemIcon item={profile.classRef} size={28} className="rounded-full" />
               )}
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white drop-shadow-sm">
+              <h2 className="text-xl font-bold tracking-tight text-white drop-shadow-sm">
                 {profile.bungieDisplayName}
               </h2>
             </div>

@@ -21,6 +21,7 @@ describe('guardian hub home', () => {
     )
 
     expect(html).toContain('Guardian Hub')
+    expect(html).toContain('Find your fireteam')
     expect(html).toContain('Sign in with Bungie')
     expect(html).toContain('gh-rotation')
     expect(html).toContain('Featured raids')
@@ -29,7 +30,8 @@ describe('guardian hub home', () => {
     expect(html).toContain('Search guardians')
     expect(html).toContain('Featured dungeon, new faces')
     expect(html).toContain('No sherpas on the board yet')
-    expect(html).toContain('How scoring works')
+    expect(html).toContain('Tier')
+    expect(html).toContain('gh-points-chip')
     expect(html.toLowerCase()).not.toContain('cash prize')
     expect(html.toLowerCase()).not.toContain('pantheon')
   })

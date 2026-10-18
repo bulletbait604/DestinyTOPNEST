@@ -15,6 +15,7 @@ import {
   type LoadoutSide,
 } from '@/lib/destiny/loadoutCompare'
 import type { DestinyCharacterClass } from '@/lib/destiny/types'
+import { PageHeader } from '@/app/components/hub/PageHeader'
 
 async function loadBuilds(q: string, characterClass: string, tag: string, subclass: string) {
   const params = new URLSearchParams({ sort: 'top', scope: 'public', limit: '8' })
@@ -59,14 +60,12 @@ export default function LoadoutCompare() {
 
   return (
     <section className="gh-stack" aria-labelledby="gh-compare-title">
-      <header>
-        <p className="gh-kicker">Loadouts</p>
-        <h1 id="gh-compare-title">Compare two builds</h1>
-        <p className="gh-lede">
-          Filter shared loadouts by class, subclass, and activity, then set one on each side. Likes are the upvote
-          count.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Loadouts"
+        title="Compare two builds"
+        subtitle="Filter by class, subclass, and activity, then set one build on each side."
+        titleId="gh-compare-title"
+      />
       <form className="gh-filters" onSubmit={(event) => event.preventDefault()}>
         <label>
           Search

@@ -10,6 +10,7 @@ import {
 } from '@/lib/destiny/communityBuildModel'
 import { pinLoadoutForCompare, type LoadoutSide } from '@/lib/destiny/loadoutCompare'
 import type { DestinyCharacterClass } from '@/lib/destiny/types'
+import { PageHeader } from '@/app/components/hub/PageHeader'
 import { navigateDestinyTab } from '@/lib/routing/tabUrl'
 
 export default function BuildLookup() {
@@ -72,13 +73,12 @@ export default function BuildLookup() {
 
   return (
     <section className="gh-stack" aria-labelledby="gh-lookup-title">
-      <header>
-        <p className="gh-kicker">Builds</p>
-        <h1 id="gh-lookup-title">Look up a build</h1>
-        <p className="gh-lede">
-          Search every shared build, or pull the weapons and exotic armor a guardian currently has equipped.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Builds"
+        title="Look up a build"
+        subtitle="Search shared builds, or a guardian's equipped weapons and exotic armor."
+        titleId="gh-lookup-title"
+      />
 
       <form className="gh-search" onSubmit={onEquipped}>
         <label className="gh-sr" htmlFor="equipped-lookup">

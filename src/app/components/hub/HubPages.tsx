@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import type { PublicFeaturedBuild, PublicHubSnapshot, PublicTopGuardian } from '@/lib/destiny/publicHub'
 import { navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import BoardsHub from '@/app/components/hub/BoardsHub'
+import { PageHeader, PointsChip } from '@/app/components/hub/PageHeader'
 import { formatEventWhen, openHubTab, usePublicHub } from '@/app/components/hub/hubTypes'
 
 function EmptyNote({ title, children }: { title: string; children: ReactNode }) {
@@ -35,22 +36,6 @@ export function SignInGate({
       ) : (
         <p className="gh-muted">Use Sign in with Bungie in the header to continue.</p>
       )}
-    </section>
-  )
-}
-
-export function ScoringList({ notes }: { notes: PublicHubSnapshot['scoring'] }) {
-  return (
-    <section className="gh-section" aria-labelledby="gh-scoring-title">
-      <h2 id="gh-scoring-title">How scoring works</h2>
-      <div className="gh-grid">
-        {notes.map((note) => (
-          <article key={note.title} className="gh-card">
-            <h3>{note.title}</h3>
-            <p className="gh-muted">{note.body}</p>
-          </article>
-        ))}
-      </div>
     </section>
   )
 }
@@ -97,8 +82,14 @@ export function ContractList({
       <div className="gh-grid">
         {snapshot.contracts.map((contract) => (
           <article key={contract.id} className="gh-card">
-            <p className="gh-kicker">{contract.tierPoints} tier points</p>
-            <h3>{contract.title}</h3>
+            <div className="gh-section-head">
+              <h3>{contract.title}</h3>
+              <PointsChip
+                label="Tier"
+                value={`+${contract.tierPoints}`}
+                hint="Finishing this contract adds season tier points for a title and a profile frame. It does not change leaderboard points."
+              />
+            </div>
             <p className="gh-muted">{contract.description}</p>
           </article>
         ))}
@@ -173,12 +164,8 @@ export function HubHome({
       <section className="gh-hero">
         <div>
           <p className="gh-kicker">Guardian Hub</p>
-          <h1>Find your fireteam. Rate the run.</h1>
-          <p className="gh-lede">
-            This week&apos;s rotation, the Guardians climbing Raid, Dungeon, and New Bonds, and the builds people are
-            sharing. USA and Canada winners get a Destiny 2 3D print. UK winners get a $50 CAD Steam gift card. Other
-            countries can compete and are not eligible.
-          </p>
+          <h1>Find your fireteam</h1>
+          <p className="gh-lede">This week&apos;s rotation, the guardians on the boards, and the builds people share.</p>
           <div className="gh-actions">
             <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
               Sign in with Bungie
@@ -280,7 +267,6 @@ export function HubHome({
             {!snapshot.historyComplete ? (
               <p className="gh-muted">Older clears are capped, so a long-time guide may be missing from this preview.</p>
             ) : null}
-            <ScoringList notes={snapshot.scoring} />
           </>
         ) : null}
       </BoardState>
@@ -371,13 +357,10 @@ export function HubContracts() {
   const { snapshot, loading, error } = usePublicHub()
   return (
     <section className="gh-stack">
-      <header>
-        <h1>Weekly contracts</h1>
-        <p className="gh-lede">
-          Finish any of these once before the Tuesday reset. Tier points unlock titles and frames. They never change
-          leaderboard points.
-        </p>
-      </header>
+      <PageHeader
+        title="Weekly contracts"
+        subtitle="Finish one before Tuesday. Tier points do not change the boards."
+      />
       <BoardState loading={loading} error={error}>
         {snapshot ? <ContractList snapshot={snapshot} featured /> : null}
       </BoardState>
@@ -389,13 +372,10 @@ export function HubSherpas() {
   const { snapshot, loading, error } = usePublicHub()
   return (
     <section className="gh-stack">
-      <header>
-        <h1>Sherpa hall of fame</h1>
-        <p className="gh-lede">
-          A sherpa already had a verified clear. The learner did not. One guided clear is one point. The learner&apos;s
-          MVP vote adds one more.
-        </p>
-      </header>
+      <PageHeader
+        title="Sherpa hall of fame"
+        subtitle="One guided first clear is one point. An MVP vote adds one more."
+      />
       <BoardState loading={loading} error={error}>
         {snapshot ? (
           <div className="gh-card">
@@ -411,13 +391,10 @@ export function HubClans() {
   const { snapshot, loading, error } = usePublicHub()
   return (
     <section className="gh-stack">
-      <header>
-        <h1>Clan Wars</h1>
-        <p className="gh-lede">
-          Standings count verified clears with at least two clanmates. A first clear for one of those clanmates adds a
-          recruit bonus. Ember starts at 0, Ash at 10, Iron at 25, and Steel at 50.
-        </p>
-      </header>
+      <PageHeader
+        title="Clan Wars"
+        subtitle="Verified clears with two or more clanmates. Divisions run Ember, Ash, Iron, Steel."
+      />
       <BoardState loading={loading} error={error}>
         {snapshot ? (
           <div className="gh-card">
@@ -433,13 +410,10 @@ export function HubEvents() {
   const { snapshot, loading, error } = usePublicHub()
   return (
     <section className="gh-stack">
-      <header>
-        <h1>Community Night Ops</h1>
-        <p className="gh-lede">
-          Scheduled streamer and clan sessions. A badge is yours when a verified clear finishes inside the event
-          window.
-        </p>
-      </header>
+      <PageHeader
+        title="Community Night Ops"
+        subtitle="A badge needs a verified clear inside the event window."
+      />
       <BoardState loading={loading} error={error}>
         {snapshot && snapshot.events.length === 0 ? (
           <EmptyNote title="No Night Ops scheduled">
@@ -485,12 +459,7 @@ export function HubFireteams({ onLogin, signedIn }: { onLogin?: () => void; sign
   const { snapshot, loading, error } = usePublicHub()
   return (
     <section className="gh-stack">
-      <header>
-        <h1>Find a fireteam</h1>
-        <p className="gh-lede">
-          Open rooms from Guardians who are looking for players. Sign in to join, apply, or post your own.
-        </p>
-      </header>
+      <PageHeader title="Find a fireteam" subtitle="Open rooms. Sign in to join, apply, or post your own." />
       <BoardState loading={loading} error={error}>
         {snapshot && snapshot.fireteams.length === 0 ? (
           <EmptyNote title="No open fireteams right now">

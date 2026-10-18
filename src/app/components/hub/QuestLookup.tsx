@@ -1,6 +1,7 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
+import { PageHeader } from '@/app/components/hub/PageHeader'
 import { QUEST_KINDS, type QuestKind, type QuestWithProgress } from '@/lib/destiny/questCatalog'
 
 const KIND_LABEL: Record<QuestKind | 'all', string> = {
@@ -50,14 +51,12 @@ export default function QuestLookup({ onLogin }: { onLogin?: () => void }) {
 
   return (
     <section className="gh-stack" aria-labelledby="gh-quests-title">
-      <header>
-        <p className="gh-kicker">Manifest</p>
-        <h1 id="gh-quests-title">Quest lookup</h1>
-        <p className="gh-lede">
-          Search Destiny 2 quests, pursuits, exotic quests, and catalysts in the Bungie manifest. Sign in to see which
-          ones are on your characters.
-        </p>
-      </header>
+      <PageHeader
+        kicker="Manifest"
+        title="Quest lookup"
+        subtitle="Search quests, pursuits, exotic quests, and catalysts. Sign in for your progress."
+        titleId="gh-quests-title"
+      />
       <form className="gh-search" onSubmit={onSubmit}>
         <label className="gh-sr" htmlFor="quest-search">
           Search quests

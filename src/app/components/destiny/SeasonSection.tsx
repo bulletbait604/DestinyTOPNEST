@@ -91,7 +91,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
       <GlassCard darkMode={darkMode}>
         <div className="flex flex-wrap items-center gap-4">
           <div>
-            <h3 className="text-2xl font-bold text-white">{season.name}</h3>
+            <h3 className="text-base font-bold text-white">{season.name}</h3>
             {season.tagline ? (
               <p className={cn('text-sm mt-1', t.body)}>{season.tagline}</p>
             ) : null}
@@ -130,7 +130,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
                     {CATEGORY_LABELS[track.category] ?? track.category}
                   </p>
                 </div>
-                <p className={cn('text-2xl font-semibold tabular-nums mt-1', t.gold)}>#{track.rank}</p>
+                <p className={cn('text-base font-semibold tabular-nums mt-1', t.gold)}>#{track.rank}</p>
                 <p className={cn('text-xs mt-1', t.muted)}>
                   {track.points} pts · {track.verifiedClears} clears
                 </p>

@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState, type ReactNode } from 'react'
 import { Columns2, Crosshair, Home, ScrollText, Search, Shield, Swords, Trophy, Users, type LucideIcon } from 'lucide-react'
+import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import {
@@ -164,6 +165,7 @@ export default function HubChrome({
           </button>
         ))}
       </nav>
+      <SeasonPointsBar />
       <main id="hub-main" className="gh-main">
         {children}
       </main>
