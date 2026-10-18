@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assemblePublicHub, HUB_SCORING } from '@/lib/destiny/publicHub'
+import { assemblePublicHub, HUB_SCORING, topGuardiansFromRuns } from '@/lib/destiny/publicHub'
 import type { FireteamLobby, RunRecord, RunTeamMember } from '@/lib/destiny/types'
 
 const NOW = new Date('2026-10-11T18:00:00.000Z')
@@ -97,5 +97,21 @@ describe('public guardian hub', () => {
     expect(hub.fireteams).toEqual([
       expect.objectContaining({ id: 'room-1', goal: 'teaching run', status: 'open' }),
     ])
+    expect(hub.topGuardians).toEqual([])
+    expect(hub.featuredBuilds).toEqual([])
+  })
+
+  it('names the season raid leader and skips pantheon boards', () => {
+    const raid = run({
+      id: 'ranked',
+      completedAt: '2026-10-08T18:00:00.000Z',
+      ownerUserId: 'owner-1',
+      ownerDisplayName: 'Nova',
+      pointsAwarded: 10,
+      type: 'raid',
+    })
+    const rows = topGuardiansFromRuns([raid], NOW)
+    expect(rows.find((row) => row.board === 'raid')).toMatchObject({ displayName: 'Nova', rank: 1, points: 10 })
+    expect(rows.map((row) => row.board)).not.toContain('pantheon')
   })
 })

@@ -13,6 +13,7 @@ const DESTINY_TABS = new Set<DestinyTopNestTab>([
   'contracts',
   'sherpas',
   'events',
+  'guardians',
 ])
 
 export function isDestinyTopNestTab(value: string): value is DestinyTopNestTab {
@@ -40,6 +41,12 @@ export function syncTabToUrl(tab: DestinyTopNestTab) {
     params.delete('tab')
   } else {
     params.set('tab', tab)
+  }
+
+  if (tab !== 'guardians') {
+    params.delete('q')
+    params.delete('guardian')
+    params.delete('membershipType')
   }
 
   const qs = params.toString()
@@ -133,6 +140,37 @@ export function navigateSharedBuilds() {
   const qs = params.toString()
   window.history.pushState(null, '', `${window.location.pathname}?${qs}`)
   window.dispatchEvent(new CustomEvent(DESTINY_TAB_NAV_EVENT, { detail: 'loadouts' }))
+}
+
+export const GUARDIAN_SEARCH_EVENT = 'destiny-topnest:guardian-search'
+
+function assignOrPush(next: string, tab: DestinyTopNestTab) {
+  if (typeof window === 'undefined') return
+  if (window.location.pathname.startsWith('/builds')) {
+    window.location.assign(next)
+    return
+  }
+  window.history.pushState(null, '', next)
+  window.dispatchEvent(new CustomEvent(DESTINY_TAB_NAV_EVENT, { detail: tab }))
+  window.dispatchEvent(new CustomEvent(GUARDIAN_SEARCH_EVENT))
+}
+
+/** Open the guardian directory, optionally with a Bungie name query. */
+export function navigateGuardianSearch(query: string) {
+  const params = new URLSearchParams()
+  params.set('tab', 'guardians')
+  const q = query.trim()
+  if (q) params.set('q', q)
+  assignOrPush(`/?${params.toString()}`, 'guardians')
+}
+
+/** Open one public guardian profile by Bungie membership id. */
+export function navigateGuardianProfile(membershipId: string, membershipType?: number) {
+  const params = new URLSearchParams()
+  params.set('tab', 'guardians')
+  params.set('guardian', membershipId)
+  if (membershipType) params.set('membershipType', String(membershipType))
+  assignOrPush(`/?${params.toString()}`, 'guardians')
 }
 
 export function defaultBungieReturnPath(): string {

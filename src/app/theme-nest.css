@@ -56,7 +56,7 @@ body {
   position: relative;
   z-index: 30;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: stretch;
   gap: 0.35rem;
   margin: 0.75rem 0 1rem;
@@ -65,6 +65,22 @@ body {
   border-radius: var(--nest-radius);
   background: var(--nest-panel);
   border: 1px solid var(--nest-line);
+}
+.gh-hero h1 {
+  font-size: clamp(2.15rem, 5vw, 3.45rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+.gh-kicker { color: var(--nest-gold); }
+.gh-search {
+  border-color: rgba(94, 231, 214, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+}
+.gh-search button { background: var(--nest-gold); color: #1a1404; }
+.gh-tab[aria-selected='true'] {
+  color: var(--nest-gold);
+  border-color: var(--nest-gold);
+  background: rgba(244, 201, 93, 0.12);
 }
 .gh-nav-link,
 .gh-nav .gh-more summary {
@@ -101,40 +117,21 @@ body {
   box-shadow: 0 0 24px var(--nest-light-glow);
 }
 
-/* Mobile: 5 primary tabs plus More, fixed to the bottom with the safe area. */
-@media (max-width: 720px) {
+/* Phones use the bottom dock. The header row keeps search, sign-in, and More. */
+@media (max-width: 799px) {
+  .gh-nav { display: none; }
   .gh-shell { padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)); }
-  .gh-nav {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 50;
-    margin: 0;
-    width: auto;
-    border-radius: 16px 16px 0 0;
-    padding: 0.4rem 0.25rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
-    grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
-    overflow: visible;
-    backdrop-filter: blur(14px);
-    background: rgba(7, 8, 15, 0.94);
+  .gh-bottom-nav {
+    display: grid;
+    z-index: 60;
+    background: rgba(7, 8, 15, 0.96);
+    border-top: 1px solid rgba(94, 231, 214, 0.35);
   }
-  .gh-nav-link,
-  .gh-nav .gh-more summary {
-    flex-direction: column;
-    font-size: 0.58rem;
-    letter-spacing: 0.01em;
-    padding: 0.45rem 0.08rem;
-    gap: 0.15rem;
-  }
-  .gh-more-menu {
-    top: auto;
-    bottom: calc(100% + 0.45rem);
-    right: 0.35rem;
-    left: auto;
-    max-height: min(60vh, 22rem);
-    overflow: auto;
-  }
+  .gh-bottom-nav button[aria-current='page'] { color: var(--nest-gold); }
+}
+@media (min-width: 800px) {
+  .gh-bottom-nav { display: none; }
+  .gh-nav { display: grid; }
 }
 
 .gh-card,

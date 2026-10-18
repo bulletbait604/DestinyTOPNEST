@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
-import { Award, Home, Trophy, User, Users, type LucideIcon } from 'lucide-react'
+import { FormEvent, useEffect, useState, type ReactNode } from 'react'
+import { Home, Search, Shield, Swords, Trophy, Users, type LucideIcon } from 'lucide-react'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import {
@@ -9,22 +9,22 @@ import {
   DESTINY_TAB_NAV_EVENT,
   isDestinyTopNestTab,
   navigateDestinyTab,
+  navigateGuardianSearch,
   navigateProfileSection,
   navigateSharedBuilds,
   parseTabFromSearch,
 } from '@/lib/routing/tabUrl'
 
-/** The five primary tabs. Everything else lives under "More" or inside Profile. */
 const NAV: { id: DestinyTopNestTab; label: string; icon: LucideIcon }[] = [
   { id: 'overview', label: 'Home', icon: Home },
+  { id: 'guardians', label: 'Guardians', icon: Shield },
+  { id: 'leaderboards', label: 'Boards', icon: Trophy },
+  { id: 'loadouts', label: 'Builds', icon: Swords },
   { id: 'fireteam', label: 'LFG', icon: Users },
-  { id: 'leaderboards', label: 'Leaderboards', icon: Trophy },
-  { id: 'profile', label: 'Profile', icon: User },
-  { id: 'season', label: 'Season', icon: Award },
 ]
 
 function visibleTab(tab: DestinyTopNestTab): DestinyTopNestTab {
-  if (tab === 'builds' || tab === 'loadouts') return 'profile'
+  if (tab === 'builds' || tab === 'loadouts') return 'loadouts'
   return tab
 }
 
@@ -42,6 +42,7 @@ export default function HubChrome({
   account?: ReactNode
 }) {
   const [tab, setTab] = useState<DestinyTopNestTab>('overview')
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     const read = () => setTab(visibleTab(parseTabFromSearch(window.location.search)))
@@ -61,6 +62,11 @@ export default function HubChrome({
     }
   }, [])
 
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault()
+    navigateGuardianSearch(query)
+  }
+
   return (
     <div className="gh-shell">
       <a className="gh-skip" href="#hub-main">
@@ -74,7 +80,50 @@ export default function HubChrome({
             <small>{BRAND_FULL}</small>
           </span>
         </button>
+        <form className="gh-search" role="search" onSubmit={submitSearch}>
+          <label className="gh-sr" htmlFor="hub-global-search">
+            Search guardians
+          </label>
+          <Search aria-hidden className="gh-search-icon" />
+          <input
+            id="hub-global-search"
+            name="q"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search a Bungie name"
+            autoComplete="off"
+          />
+          <button type="submit">Search</button>
+        </form>
         <div className="gh-top-actions">
+          <details className="gh-more">
+            <summary>More</summary>
+            <div className="gh-more-menu">
+              <button type="button" onClick={() => navigateDestinyTab('season')}>
+                Season prizes
+              </button>
+              <button type="button" onClick={() => navigateDestinyTab('contracts')}>
+                Contracts
+              </button>
+              <button type="button" onClick={() => navigateDestinyTab('clans')}>
+                Clans
+              </button>
+              <button type="button" onClick={() => navigateDestinyTab('sherpas')}>
+                Sherpas
+              </button>
+              <button type="button" onClick={() => navigateDestinyTab('events')}>
+                Night Ops
+              </button>
+              {signedIn ? (
+                <button type="button" onClick={() => navigateProfileSection('passport')}>
+                  Passport
+                </button>
+              ) : null}
+              <button type="button" onClick={() => navigateSharedBuilds()}>
+                Shared builds
+              </button>
+            </div>
+          </details>
           {signedIn ? (
             account
           ) : (
@@ -97,37 +146,28 @@ export default function HubChrome({
             <span>{item.label}</span>
           </button>
         ))}
-        <details className="gh-more">
-          <summary>More</summary>
-          <div className="gh-more-menu">
-            <button type="button" onClick={() => navigateDestinyTab('contracts')}>
-              Contracts
-            </button>
-            <button type="button" onClick={() => navigateDestinyTab('clans')}>
-              Clans
-            </button>
-            <button type="button" onClick={() => navigateDestinyTab('sherpas')}>
-              Sherpas
-            </button>
-            <button type="button" onClick={() => navigateDestinyTab('events')}>
-              Events
-            </button>
-            <button type="button" onClick={() => navigateProfileSection('passport')}>
-              Passport
-            </button>
-            <button type="button" onClick={() => navigateDestinyTab('loadouts')}>
-              Builds
-            </button>
-            <button type="button" onClick={() => navigateSharedBuilds()}>
-              Shared builds
-            </button>
-          </div>
-        </details>
       </nav>
       <main id="hub-main" className="gh-main">
         {children}
       </main>
-      <footer className="gh-footer">Fan-made hub for Destiny 2 players — clear with new Guardians, climb the boards. Not affiliated with Bungie. <a href="/rules">Rules &amp; prizes</a></footer>
+      <footer className="gh-footer">
+        Fan-made Destiny 2 hub for finding Guardians and rating them. Not affiliated with Bungie. USA and Canada: a
+        Destiny 2 3D print per leaderboard. UK: a $50 CAD Steam gift card. Other countries are not prize-eligible.{' '}
+        <a href="/rules">Rules &amp; prizes</a>
+      </footer>
+      <nav className="gh-bottom-nav" aria-label="Guardian Hub mobile">
+        {NAV.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            aria-current={tab === item.id ? 'page' : undefined}
+            onClick={() => navigateDestinyTab(item.id)}
+          >
+            <item.icon aria-hidden />
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   )
 }
