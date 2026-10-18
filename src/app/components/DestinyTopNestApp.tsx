@@ -38,7 +38,10 @@ import { cn } from '@/lib/utils'
 import HubErrorBoundary from '@/app/components/hub/HubErrorBoundary'
 import { HubClans, HubContracts, HubEvents, HubSherpas } from '@/app/components/hub/HubPages'
 import YourWeek from '@/app/components/hub/YourWeek'
+import BuildLookup from '@/app/components/hub/BuildLookup'
 import GuardianDirectory from '@/app/components/hub/GuardianDirectory'
+import LoadoutCompare from '@/app/components/hub/LoadoutCompare'
+import QuestLookup from '@/app/components/hub/QuestLookup'
 
 type ProfileView = 'guardian' | 'passport' | 'activities' | 'loadouts'
 type LoadoutSection = LoadoutSectionId
@@ -230,6 +233,12 @@ export default function DestinyTopNestApp({
         return <LeaderboardsPanel darkMode={darkMode} />
       case 'guardians':
         return <GuardianDirectory />
+      case 'compare':
+        return <LoadoutCompare />
+      case 'lookup':
+        return <BuildLookup />
+      case 'quests':
+        return <QuestLookup />
       case 'fireteam':
         return (
           <>
@@ -274,7 +283,10 @@ export default function DestinyTopNestApp({
     activeTab === 'events' ||
     activeTab === 'clans' ||
     activeTab === 'guardians' ||
-    activeTab === 'leaderboards'
+    activeTab === 'leaderboards' ||
+    activeTab === 'compare' ||
+    activeTab === 'lookup' ||
+    activeTab === 'quests'
   const showLeaderboardRules = activeTab === 'leaderboards'
   const showHero = !embedded || !hubTab
   const showPlayerCard = !embedded || PROFILE_TABS.has(activeTab)

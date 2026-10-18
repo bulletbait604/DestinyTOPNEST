@@ -14,6 +14,9 @@ const DESTINY_TABS = new Set<DestinyTopNestTab>([
   'sherpas',
   'events',
   'guardians',
+  'compare',
+  'lookup',
+  'quests',
 ])
 
 export function isDestinyTopNestTab(value: string): value is DestinyTopNestTab {

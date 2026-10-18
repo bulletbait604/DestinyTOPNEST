@@ -113,6 +113,7 @@ export interface CommunityBuildListQuery {
   characterClass?: DestinyCharacterClass
   tag?: CommunityActivityTag
   stat?: ArmorStatKey
+  subclass?: string
   sort: CommunityBuildSort
   limit: number
   offset: number
@@ -465,6 +466,12 @@ export function parseCommunityBuildListQuery(
     stat = statRaw
   }
 
+  const subclassRaw = sanitizePlainText(params.get('subclass') ?? '')
+  if (subclassRaw.length > SUBCLASS_MAX) {
+    return { ok: false, error: `Subclass filter must be ${SUBCLASS_MAX} characters or fewer.` }
+  }
+  const subclass = subclassRaw && subclassRaw.toLowerCase() !== 'all' ? subclassRaw : undefined
+
   const sortRaw = sanitizePlainText(params.get('sort') ?? 'new').toLowerCase()
   if (!(COMMUNITY_BUILD_SORTS as readonly string[]).includes(sortRaw)) {
     return { ok: false, error: 'Sort must be new, top, or saved.' }
@@ -485,6 +492,7 @@ export function parseCommunityBuildListQuery(
       characterClass,
       tag,
       stat,
+      subclass,
       sort: sortRaw as CommunityBuildSort,
       limit,
       offset,
@@ -519,6 +527,9 @@ export function communityBuildListFilter(
   if (query.characterClass) filter.characterClass = query.characterClass
   if (query.tag) filter.activityTags = query.tag
   if (query.stat) filter.statFocus = query.stat
+  if (query.subclass) {
+    filter.subclass = { $regex: `^${escapeRegExp(query.subclass)}$`, $options: 'i' }
+  }
 
   if (query.q) {
     const pattern = escapeRegExp(query.q)

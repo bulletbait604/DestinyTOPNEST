@@ -55,8 +55,8 @@ body {
 .gh-nav {
   position: relative;
   z-index: 30;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   align-items: stretch;
   gap: 0.35rem;
   margin: 0.75rem 0 1rem;
@@ -89,7 +89,8 @@ body {
   justify-content: center;
   gap: 0.45rem;
   min-width: 0;
-  width: 100%;
+  width: auto;
+  flex: 1 1 7.25rem;
   border-radius: 12px;
   padding: 0.65rem 0.5rem;
   font-weight: 700;
@@ -131,7 +132,7 @@ body {
 }
 @media (min-width: 800px) {
   .gh-bottom-nav { display: none; }
-  .gh-nav { display: grid; }
+  .gh-nav { display: flex; }
 }
 
 .gh-card,

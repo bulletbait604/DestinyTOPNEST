@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import CommunityBuildsBrowser from '@/app/components/destiny/community/CommunityBuildsBrowser'
+import BuildLookup from '@/app/components/hub/BuildLookup'
 import GuardianDirectory from '@/app/components/hub/GuardianDirectory'
+import LoadoutCompare from '@/app/components/hub/LoadoutCompare'
+import QuestLookup from '@/app/components/hub/QuestLookup'
 import {
   ConnectedHome,
   HubClans,
@@ -50,6 +53,9 @@ export default function PublicHub({ onLogin }: { onLogin: () => void }) {
   if (tab === 'loadouts' || tab === 'builds') {
     return <CommunityBuildsBrowser darkMode onLogin={onLogin} />
   }
+  if (tab === 'compare') return <LoadoutCompare />
+  if (tab === 'lookup') return <BuildLookup />
+  if (tab === 'quests') return <QuestLookup onLogin={onLogin} />
 
   const gated =
     tab === 'profile'

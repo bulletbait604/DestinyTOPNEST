@@ -284,6 +284,15 @@ describe('community build queries', () => {
     expect(saved).toMatchObject({ status: 'published', id: { $in: ['one'] } })
   })
 
+  it('filters by subclass without changing the public status rule', () => {
+    const parsed = parseCommunityBuildListQuery(new URLSearchParams('subclass=Nightstalker'))
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    const filter = communityBuildListFilter(parsed.query, {})
+    expect(filter.status).toBe('published')
+    expect(filter.subclass).toEqual({ $regex: '^Nightstalker$', $options: 'i' })
+  })
+
   it('rejects an unknown sort', () => {
     expect(parseCommunityBuildListQuery(new URLSearchParams('sort=hot')).ok).toBe(false)
   })
