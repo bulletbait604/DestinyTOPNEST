@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { GuardianDirectoryCard, GuardianPublicProfile } from '@/lib/destiny/guardianDirectory'
 import { classLabel } from '@/lib/destiny/guardianDirectory'
+import CharacterDossier from '@/app/components/hub/CharacterDossier'
 import { NextStep } from '@/app/components/hub/clarity'
 import { PageHeader } from '@/app/components/hub/PageHeader'
 import { GUARDIAN_SEARCH_EVENT, navigateDestinyTab, navigateGuardianProfile, navigateGuardianSearch } from '@/lib/routing/tabUrl'
@@ -224,34 +225,36 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
 
 function ProfileBody({ profile, onLogin }: { profile: GuardianPublicProfile; onLogin?: () => void }) {
   const { card } = profile
+  const meta = [
+    classLabel(card.characterClass),
+    card.platform,
+    card.clanTag ? `[${card.clanTag}]` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
   return (
     <div className="gh-stack">
-      <header className="gh-profile-head">
-        <div>
-          <p className="gh-kicker">{statusLabel(card.status)}</p>
-          <h1 id="gh-profile-title">{card.displayName}</h1>
-          <p className="gh-muted">
-            {classLabel(card.characterClass)}
-            {card.platform ? ` · ${card.platform}` : ''}
-            {card.clanTag ? ` · [${card.clanTag}]` : ''}
-          </p>
-        </div>
-        <div className="gh-rating">
-          <p>
-            <strong>{profile.teammateTitle}</strong>
-            <span>
-              Teammate {profile.teammateScore > 0 ? profile.teammateScore.toFixed(1) : '—'} · {profile.teammateReviews}{' '}
-              reviews
-            </span>
-          </p>
-          <p>
-            <strong>{profile.sherpaTitle}</strong>
-            <span>
-              {profile.sherpaGuided} guided · {profile.sherpaMarks} sherpa marks
-            </span>
-          </p>
-        </div>
-      </header>
+      <CharacterDossier
+        displayName={card.displayName}
+        meta={meta}
+        status={statusLabel(card.status)}
+        dossier={profile.dossier}
+      />
+      <div className="gh-rating gh-card">
+        <p>
+          <strong>{profile.teammateTitle}</strong>
+          <span>
+            Teammate {profile.teammateScore > 0 ? profile.teammateScore.toFixed(1) : '—'} · {profile.teammateReviews}{' '}
+            reviews
+          </span>
+        </p>
+        <p>
+          <strong>{profile.sherpaTitle}</strong>
+          <span>
+            {profile.sherpaGuided} guided · {profile.sherpaMarks} sherpa marks
+          </span>
+        </p>
+      </div>
 
       <div className="gh-badge-row">
         {card.badges.map((badge) => (
@@ -290,21 +293,23 @@ function ProfileBody({ profile, onLogin }: { profile: GuardianPublicProfile; onL
             </ul>
           )}
         </section>
-        <section className="gh-card" aria-labelledby="gh-characters">
-          <h2 id="gh-characters">Characters</h2>
-          {profile.characters.length === 0 ? (
-            <p className="gh-muted">Character cards appear when Bungie returns a public profile.</p>
-          ) : (
-            <ul className="gh-list">
-              {profile.characters.map((character) => (
-                <li key={character.characterId}>
-                  <span>{classLabel(character.className)}</span>
-                  <span className="gh-muted">{character.power ? `${character.power} power` : 'Power hidden'}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        {profile.dossier?.characters.length ? null : (
+          <section className="gh-card" aria-labelledby="gh-characters">
+            <h2 id="gh-characters">Characters</h2>
+            {profile.characters.length === 0 ? (
+              <p className="gh-muted">Character cards appear when Bungie returns a public profile.</p>
+            ) : (
+              <ul className="gh-list">
+                {profile.characters.map((character) => (
+                  <li key={character.characterId}>
+                    <span>{classLabel(character.className)}</span>
+                    <span className="gh-muted">{character.power ? `${character.power} power` : 'Power hidden'}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
       </div>
 
       <div className="gh-split">

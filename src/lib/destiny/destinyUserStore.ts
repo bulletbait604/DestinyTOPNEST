@@ -48,6 +48,25 @@ export async function getDestinyUsersBySiteUserIds(
   }
 }
 
+/** Linked accounts the snapshot cron can refresh. Oldest profiles first. */
+export async function listOauthDestinyUsers(limit: number): Promise<StoredDestinyUser[]> {
+  try {
+    const rows = await (await db())
+      .collection(DESTINY_COLLECTIONS.users)
+      .find({
+        bungieMembershipId: { $type: 'string', $ne: '' },
+        destinyMembershipType: { $type: 'number' },
+        'oauth.accessToken': { $exists: true },
+      })
+      .sort({ updatedAt: 1 })
+      .limit(limit)
+      .toArray()
+    return rows as unknown as StoredDestinyUser[]
+  } catch {
+    return []
+  }
+}
+
 export async function getDestinyUserByBungieMembershipId(
   membershipId: string
 ): Promise<StoredDestinyUser | null> {

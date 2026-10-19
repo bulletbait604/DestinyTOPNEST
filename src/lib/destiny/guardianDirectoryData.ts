@@ -19,6 +19,8 @@ import { resolveInventoryItem } from '@/lib/destiny/manifest'
 import { countReceivedVotes, getReputationReviewsForUser, listVerifiedFullClears } from '@/lib/destiny/store'
 import { computeReputationScore } from '@/lib/destiny/reputation'
 import { evaluateSherpaRanks } from '@/lib/destiny/sherpaRanks'
+import { dossierFromSnapshots } from '@/lib/destiny/characterSnapshot'
+import { loadSnapshotDocs } from '@/lib/destiny/characterSnapshotStore'
 import { parsePublicPresentation } from '@/lib/destiny/publicProfileParse'
 import { parseLifetimeStats } from '@/lib/destiny/fullProfileParse'
 import { computeTrustRank } from '@/lib/destiny/trustRank'
@@ -315,7 +317,7 @@ export async function loadGuardianProfile(
   if (!claimed && !pending && !membershipType) return null
 
   const status: GuardianListingStatus = claimed ? 'member' : pending ? 'pending' : 'bungie'
-  const [mvpCount, kudosCount, reviews, trust, activities, clears, live] = await Promise.all([
+  const [mvpCount, kudosCount, reviews, trust, activities, clears, live, snapshotDocs] = await Promise.all([
     countReceivedVotes(claimed ? user!.userId : '__none__', membershipId, 'mvp'),
     countReceivedVotes(claimed ? user!.userId : '__none__', membershipId, 'kudos'),
     claimed ? getReputationReviewsForUser(user!.userId) : Promise.resolve([] as ReputationReview[]),
@@ -323,6 +325,7 @@ export async function loadGuardianProfile(
     recentActivities(membershipId),
     listVerifiedFullClears(400),
     bungiePublicSlice(membershipType, membershipId),
+    loadSnapshotDocs(membershipId),
   ])
 
   const sherpa = evaluateSherpaRanks({
@@ -339,18 +342,22 @@ export async function loadGuardianProfile(
     live?.parsed.displayName ||
     'Guardian'
   const characters = live?.parsed.characters ?? []
-  const powerLevel = user?.powerLevel ?? characters[0]?.power
+  const dossier = dossierFromSnapshots(snapshotDocs, sherpa.points) ?? undefined
+  const powerLevel = user?.powerLevel ?? characters[0]?.power ?? dossier?.characters[0]?.light
+  const guardianRank = user?.guardianRank ?? dossier?.guardianRank
   const verifiedClears = activities.length
 
   const stats = [
     { label: 'Power', value: powerLevel ? String(powerLevel) : '—' },
-    { label: 'Guardian rank', value: user?.guardianRank ? String(user.guardianRank) : '—' },
+    { label: 'Guardian rank', value: guardianRank ? String(guardianRank) : '—' },
     { label: 'Raid clears', value: String(live?.lifetime.raidClears ?? 0) },
     { label: 'Dungeon clears', value: String(live?.lifetime.dungeonClears ?? 0) },
     { label: 'Nest activities', value: String(verifiedClears) },
     { label: 'MVP votes', value: String(mvpCount) },
     { label: 'Kudos', value: String(kudosCount) },
   ]
+  if (dossier?.triumphScore != null) stats.push({ label: 'Triumph score', value: dossier.triumphScore.toLocaleString('en-US') })
+  if (dossier?.collectionsOwned != null) stats.push({ label: 'Collections', value: dossier.collectionsOwned.toLocaleString('en-US') })
 
   const card: GuardianDirectoryCard = {
     membershipId,
@@ -375,7 +382,7 @@ export async function loadGuardianProfile(
 
   return {
     card,
-    guardianRank: user?.guardianRank,
+    guardianRank,
     powerLevel,
     reputationScore,
     reviewCount: reviews.length,
@@ -391,5 +398,6 @@ export async function loadGuardianProfile(
     vaultHighlights: live?.vaultHighlights ?? [],
     equippedHighlights: live?.equippedHighlights ?? [],
     stats,
+    dossier,
   }
 }
