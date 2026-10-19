@@ -9,11 +9,8 @@ import { getMongoDbName } from '@/lib/database'
 import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { isNightOpsEvent, resolveNightOpsCatalog } from '@/lib/destiny/nightOps'
-import {
-  DEFAULT_SEASON_PRIZE_RULES,
-  PRIZE_ELIGIBILITY,
-  SEASON_PRIZE_TEXT,
-} from '@/lib/destiny/seasonCatalog'
+import { DEFAULT_SEASON_PRIZE_RULES } from '@/lib/destiny/seasonCatalog'
+import { DEFAULT_PRIZE_COPY, type PrizeCopy } from '@/lib/destiny/prizeCopy'
 import { getSeasonData, saveSeasonData } from '@/lib/destiny/store'
 import type { NightOpsEvent, WeeklyContractDefinition } from '@/lib/destiny/types'
 import {
@@ -22,12 +19,8 @@ import {
   resolveWeeklyContractCatalog,
 } from '@/lib/destiny/weeklyContractCatalog'
 
-export interface PrizeCopy {
-  physicalPrize: string
-  giftCardPrize: string
-  cardLabel: string
-  firstPlace: string
-}
+export type { PrizeCopy } from '@/lib/destiny/prizeCopy'
+export { DEFAULT_PRIZE_COPY } from '@/lib/destiny/prizeCopy'
 
 export interface SiteContentRecord {
   contracts: WeeklyContractDefinition[] | null
@@ -36,13 +29,6 @@ export interface SiteContentRecord {
   prizesEnabled: boolean | null
   prizeCopy: PrizeCopy | null
   updatedAt?: string
-}
-
-export const DEFAULT_PRIZE_COPY: PrizeCopy = {
-  physicalPrize: PRIZE_ELIGIBILITY.physicalPrize,
-  giftCardPrize: PRIZE_ELIGIBILITY.giftCardPrize,
-  cardLabel: 'Destiny 2 3D print · or Steam card (UK)',
-  firstPlace: SEASON_PRIZE_TEXT,
 }
 
 const DOC_ID = 'live'

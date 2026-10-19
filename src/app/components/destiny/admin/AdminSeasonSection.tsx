@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Check, Gift, ImageIcon, Layers, Loader2, Trophy, X } from 'lucide-react'
 import type { PrizeClaim, Season, SeasonWinner } from '@/lib/destiny/types'
-import { DEFAULT_PRIZE_COPY, type PrizeCopy } from '@/lib/destiny/siteContent'
+import { DEFAULT_PRIZE_COPY, type PrizeCopy } from '@/lib/destiny/prizeCopy'
 import { GlassCard, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
