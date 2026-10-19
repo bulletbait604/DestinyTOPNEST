@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { Award, Gift, ShieldCheck, Sparkles, Users } from 'lucide-react'
 import { NEST_SEASON_CATALOG, PRIZE_ELIGIBILITY, resolveActiveSeasonByDate } from '@/lib/destiny/seasonCatalog'
 import { BOND_RULES } from '@/lib/destiny/bonds'
@@ -9,7 +12,25 @@ function pt(iso: string): string {
 
 /** Season, prize and rules page — shared by the Season tab and /rules. */
 export default function SeasonRulesPanel({ now = new Date() }: { now?: Date }) {
+  const [physicalPrize, setPhysicalPrize] = useState<string>(PRIZE_ELIGIBILITY.physicalPrize)
+  const [giftCardPrize, setGiftCardPrize] = useState<string>(PRIZE_ELIGIBILITY.giftCardPrize)
+  const [cardLabel, setCardLabel] = useState('Destiny 2 3D print · or Steam card (UK)')
   const season = resolveActiveSeasonByDate(now)
+
+  useEffect(() => {
+    void fetch('/api/destiny/site-content')
+      .then(async (res) => {
+        if (!res.ok) return null
+        return res.json() as Promise<{ physicalPrize?: string; giftCardPrize?: string; cardLabel?: string }>
+      })
+      .then((json) => {
+        if (!json) return
+        if (json.physicalPrize) setPhysicalPrize(json.physicalPrize)
+        if (json.giftCardPrize) setGiftCardPrize(json.giftCardPrize)
+        if (json.cardLabel) setCardLabel(json.cardLabel)
+      })
+      .catch(() => undefined)
+  }, [])
   const next = NEST_SEASON_CATALOG.find((s) => Date.parse(s.startDate) > Date.parse(season.endDate) - 1)
   const daysLeft = Math.max(0, Math.ceil((Date.parse(season.endDate) - now.getTime()) / 86400000))
   return (
@@ -37,7 +58,7 @@ export default function SeasonRulesPanel({ now = new Date() }: { now?: Date }) {
             <h3>{b.title}</h3>
             <p className="nest-muted">{b.body}</p>
             <p style={{ marginTop: '0.5rem' }}>
-              <span className="nest-prize">Destiny 2 3D print · or Steam card (UK)</span>
+              <span className="nest-prize">{cardLabel}</span>
             </p>
           </div>
         ))}
@@ -49,10 +70,10 @@ export default function SeasonRulesPanel({ now = new Date() }: { now?: Date }) {
         </h2>
         <ul className="nest-muted" style={{ paddingLeft: '1.1rem', lineHeight: 1.7 }}>
           <li>
-            <strong>USA &amp; Canada:</strong> {PRIZE_ELIGIBILITY.physicalPrize}.
+            <strong>USA &amp; Canada:</strong> {physicalPrize}.
           </li>
           <li>
-            <strong>United Kingdom:</strong> {PRIZE_ELIGIBILITY.giftCardPrize} instead of the print.
+            <strong>United Kingdom:</strong> {giftCardPrize} instead of the print.
           </li>
           <li>
             <strong>All other countries:</strong> you can play and rank, but you are not eligible for prizes.

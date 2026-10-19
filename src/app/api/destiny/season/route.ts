@@ -5,7 +5,7 @@ import { getCachedSeasonShared } from '@/lib/destiny/dataCache'
 import { prizeEligibleTracks } from '@/lib/destiny/fireteamReputation'
 import { buildUserPrizeTrack } from '@/lib/destiny/seasonPrizes'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
-import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
+import { resolvePrizesEnabled } from '@/lib/destiny/siteContent'
 import { loadFireteamProgress } from '@/lib/destiny/fireteamProgressService'
 import { getPrizeClaimsForUser, getSeasonStandingForUser } from '@/lib/destiny/store'
 import { cacheControlUntilWeeklyReset } from '@/lib/destiny/weeklyRotation'
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     ])
 
     const prizeTrack = buildUserPrizeTrack(myStandings, shared.season)
-    const prizesEnabled = seasonPrizesEnabled()
+    const prizesEnabled = await resolvePrizesEnabled()
     const prizeClaims = prizesEnabled ? await getPrizeClaimsForUser(siteUserId, shared.season.id) : []
     const prizeEligible = prizesEnabled
       ? prizeEligibleTracks(prizeTrack, shared.season, shared.hallOfFame, siteUserId)

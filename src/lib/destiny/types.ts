@@ -643,6 +643,8 @@ export interface Season {
   winners?: SeasonWinner[]
   /** Owner/admin edits applied on top of the generated quarterly catalog. */
   adminOverride?: { name?: string; tagline?: string; startDate?: string; endDate?: string }
+  /** When set, saved prize names win over the built-in prize text. */
+  prizeRulesEdited?: boolean
 }
 
 export interface AdminReviewRecord {
@@ -674,6 +676,7 @@ export type AdminActivityKind =
   | 'fireteam_room_delete'
   | 'fireteam_rooms_clear'
   | 'community_build_moderate'
+  | 'site_content'
 
 export interface AdminActivityEntry {
   id: string

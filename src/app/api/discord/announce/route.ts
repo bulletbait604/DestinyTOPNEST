@@ -5,7 +5,7 @@ import { authorizeDiscordCron } from '@/discord/guard'
 import { evaluateClanWars } from '@/lib/destiny/clanWars'
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
 import { getFireteamLobbies, listVerifiedFullClears } from '@/lib/destiny/store'
-import { DEFAULT_WEEKLY_CONTRACTS } from '@/lib/destiny/weeklyContractCatalog'
+import { loadWeeklyGoals } from '@/lib/destiny/siteContent'
 import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   const content = renderAnnouncement({
     weekLabel: week.weekLabel,
-    contractLines: DEFAULT_WEEKLY_CONTRACTS.map((contract) => `${contract.title} (+${contract.tierPoints} tier pts)`),
+    contractLines: (await loadWeeklyGoals()).map((contract) => `${contract.title} (+${contract.tierPoints} tier pts)`),
     lfgLines,
     topClan,
   })

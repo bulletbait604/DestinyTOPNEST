@@ -30,4 +30,5 @@ export const DESTINY_COLLECTIONS = {
   communityBuildVotes: 'destiny_community_build_votes',
   communityBuildSaves: 'destiny_community_build_saves',
   communityBuildComments: 'destiny_community_build_comments',
+  siteContent: 'destiny_site_content',
 } as const

@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization')
   if (!secret) {
     // Fail closed: without CRON_SECRET anyone could trigger this expensive sync.
-    return NextResponse.json({ error: 'CRON_SECRET is not configured' }, { status: 503 })
+    return NextResponse.json({ error: 'This scheduled job is not ready.' }, { status: 503 })
   }
   if (!auth || !safeEqual(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

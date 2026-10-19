@@ -45,7 +45,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
   const [nightOps, setNightOps] = useState<NightOpsBoard | null>(null)
   const [chemistry, setChemistry] = useState<ChemistryBoard | null>(null)
   const [loading, setLoading] = useState(true)
-  const showPrizes = seasonPrizesEnabled()
+  const [showPrizes, setShowPrizes] = useState(seasonPrizesEnabled())
   const t = getDestinyTheme(darkMode)
 
   const load = useCallback(async () => {
@@ -67,6 +67,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
         setClanWars(json.clanWars ?? null)
         setNightOps(json.nightOps ?? null)
         setChemistry(json.chemistry ?? null)
+        setShowPrizes(json.seasonPrizesEnabled !== false)
       }
     } finally {
       setLoading(false)

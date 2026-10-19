@@ -4,7 +4,7 @@ import { getGearCatalogMeta, listGearMods } from '@/lib/destiny/gearCatalog'
 
 export const dynamic = 'force-dynamic'
 
-/** Staff-only gear catalog status (synced via `npm run catalog:gear`). */
+/** Staff-only gear catalog status. Icons are refreshed from the admin season tools. */
 export async function GET(req: NextRequest) {
   return destinyStaffHandler(req, async () => {
     const meta = await getGearCatalogMeta()
@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       meta,
       sample,
-      syncCommand: 'npm run catalog:gear',
     })
   })
 }

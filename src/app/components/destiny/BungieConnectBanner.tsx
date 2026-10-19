@@ -34,7 +34,6 @@ export default function BungieConnectBanner({
     syncRuns,
     syncing,
     linkMessage,
-    copyRedirectUri,
   } = bungie
 
   if (loading) return null
@@ -68,7 +67,7 @@ export default function BungieConnectBanner({
         {!configured ? (
           <div className="p-5 sm:p-6">
             <p className={cn('text-sm leading-relaxed', t.muted)}>
-              Bungie sign-in is not configured on the server yet.
+              Bungie sign-in is not ready on this site yet. Try again later.
             </p>
           </div>
         ) : linked ? (
@@ -134,21 +133,6 @@ export default function BungieConnectBanner({
           </div>
         )}
 
-        {!linked && configured && status?.redirectUri && variant === 'overview' && (
-          <details className={cn('mx-5 mb-5 rounded-lg p-4', t.glassInset)}>
-            <summary className={cn('text-xs font-medium cursor-pointer select-none', t.muted)}>
-              Developer setup (redirect URL)
-            </summary>
-            <code className="block text-xs break-all mt-3 text-white/60">{status.redirectUri}</code>
-            <button
-              type="button"
-              onClick={() => void copyRedirectUri()}
-              className={cn(destinySecondaryBtn(darkMode), 'mt-3 text-xs py-1.5 px-3')}
-            >
-              Copy URL
-            </button>
-          </details>
-        )}
       </GlassCard>
     </div>
   )

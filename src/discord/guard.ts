@@ -17,7 +17,7 @@ export function authorizeDiscordCron(authorization: string | null): DiscordCronD
     return {
       ok: false,
       status: 200,
-      reason: 'DISCORD_BOT_TOKEN is not set. The Discord bot is idle.',
+      reason: 'The Discord bot is idle.',
     }
   }
   const secret = cronSecret()
@@ -25,7 +25,7 @@ export function authorizeDiscordCron(authorization: string | null): DiscordCronD
     return {
       ok: false,
       status: 503,
-      reason: 'Set CRON_SECRET before the Discord bot can post or register commands.',
+      reason: 'The Discord bot is not ready to post yet.',
     }
   }
   if (authorization !== `Bearer ${secret}`) {

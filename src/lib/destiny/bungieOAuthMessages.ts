@@ -45,7 +45,7 @@ export function bungieOAuthCallbackErrorCode(detail: string, phase: 'token' | 'm
 export function bungieOAuthErrorMessage(code: string): string {
   const lower = code.toLowerCase()
   if (lower.includes('redirect_uri') || lower.includes('redirect uri')) {
-    return 'Redirect URI mismatch. Copy the redirect URL shown below into your Bungie app settings exactly.'
+    return 'Bungie rejected the sign-in address for this site. Try again, or ask the site owner to check the Bungie connection.'
   }
   if (lower.includes('invalid_grant') || lower.includes('authorization code')) {
     return 'Authorization code expired or already used. Click Sign in and complete Bungie login in one try.'
@@ -62,25 +62,25 @@ export function bungieOAuthErrorMessage(code: string): string {
     case 'no_destiny_account':
       return 'No Destiny account is linked to this Bungie.net login.'
     case 'exchange_failed':
-      return 'Token exchange failed. Confirm your Bungie app redirect URI matches this site exactly.'
+      return 'Bungie sign-in did not finish. Try again.'
     case 'invalid_grant':
       return 'Authorization code expired or already used. Click Sign in and complete Bungie login in one try.'
     case 'invalid_client':
       return 'Bungie client ID, secret, or API key is wrong. All three must come from the same Bungie application.'
     case 'api_key_mismatch':
-      return 'DESTINY_API (X-API-Key) must be from the same Bungie application as your OAuth client ID and secret.'
+      return 'Bungie sign-in is not set up correctly. The site owner needs to check the Bungie connection.'
     case 'membership_lookup_failed':
-      return 'Bungie sign-in succeeded but we could not read your Destiny memberships. Check that DESTINY_API matches your OAuth app, then try again.'
+      return 'Bungie sign-in worked, but TopNest could not read your Destiny account. Try again.'
     case 'token_parse_failed':
-      return 'Bungie returned an unexpected token response. Confirm the app is a Confidential OAuth client and redeploy.'
+      return 'Bungie returned an unexpected sign-in response. Try again.'
     case 'redirect_uri_mismatch':
-      return 'Redirect URI mismatch. Copy the redirect URL from Profile (below) into Bungie OAuth settings exactly.'
+      return 'Bungie rejected the sign-in address for this site. Try again, or ask the site owner to check the Bungie connection.'
     case 'account_mismatch':
       return 'This Bungie account does not match your current session. Sign out and try again.'
     case 'session_not_configured':
-      return 'Server session secret is missing. Set SESSION_SECRET on Vercel and redeploy.'
+      return 'Sign-in is not ready on this site yet. Try again later.'
     case 'database_unavailable':
-      return 'Database connection failed. Check MONGODB_URI on Vercel and redeploy.'
+      return 'TopNest could not reach its database. Try again in a few minutes.'
     default:
       return code
   }
