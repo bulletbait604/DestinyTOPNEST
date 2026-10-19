@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ShieldAlert } from 'lucide-react'
 import AdminActivitySection from '@/app/components/destiny/admin/AdminActivitySection'
+import AdminContentSection from '@/app/components/destiny/admin/AdminContentSection'
 import AdminCommunityBuildsSection from '@/app/components/destiny/admin/AdminCommunityBuildsSection'
 import AdminFireteamSection from '@/app/components/destiny/admin/AdminFireteamSection'
 import AdminLeaderboardsSection from '@/app/components/destiny/admin/AdminLeaderboardsSection'
@@ -15,7 +16,7 @@ import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { cn } from '@/lib/utils'
 
-type AdminSection = 'activity' | 'runs' | 'users' | 'staff' | 'leaderboards' | 'season' | 'fireteam' | 'builds'
+type AdminSection = 'activity' | 'runs' | 'users' | 'staff' | 'leaderboards' | 'season' | 'content' | 'fireteam' | 'builds'
 
 const SECTIONS: { value: AdminSection; label: string; ownerOnly?: boolean }[] = [
   { value: 'activity', label: 'Activity feed' },
@@ -25,6 +26,7 @@ const SECTIONS: { value: AdminSection; label: string; ownerOnly?: boolean }[] = 
   { value: 'builds', label: 'Shared builds' },
   { value: 'staff', label: 'Admin access', ownerOnly: true },
   { value: 'leaderboards', label: 'Leaderboards' },
+  { value: 'content', label: 'Goals & events' },
   { value: 'season', label: 'Season & prizes' },
 ]
 
@@ -72,7 +74,7 @@ export default function AdminPanel({
       <GlassCard darkMode={darkMode}>
         <SectionTitle
           title="Admin console"
-          subtitle="Review runs, moderate users, adjust leaderboards, and monitor activity"
+          subtitle="Review runs, edit weekly goals and events, adjust boards, and set the season"
           darkMode={darkMode}
         />
         <div className="mt-4">
@@ -104,6 +106,9 @@ export default function AdminPanel({
       ) : null}
       {section === 'builds' ? (
         <AdminCommunityBuildsSection darkMode={darkMode} onAction={refreshFeed} />
+      ) : null}
+      {section === 'content' ? (
+        <AdminContentSection darkMode={darkMode} onAction={refreshFeed} />
       ) : null}
       {section === 'season' ? (
         <AdminSeasonSection darkMode={darkMode} onAction={refreshFeed} />

@@ -35,7 +35,7 @@ async function bungieFetch<T>(
 ): Promise<T> {
   const apiKey = destinyApiKey()
   if (!apiKey) {
-    throw new BungieApiError('DESTINY_API is not configured', 503)
+    throw new BungieApiError('Bungie sign-in is not ready on this site yet.', 503)
   }
 
   const { accessToken, rateLimitAttempt = 0, ...fetchOptions } = options
@@ -587,7 +587,7 @@ export async function checkBungieApiHealth(): Promise<{
     return {
       configured: false,
       reachable: false,
-      message: 'DESTINY_API is not set. Add your Bungie API key in Vercel env vars.',
+      message: 'Bungie sign-in is not ready on this site yet.',
     }
   }
   try {
@@ -597,12 +597,11 @@ export async function checkBungieApiHealth(): Promise<{
       reachable: true,
       message: 'Bungie API connected.',
     }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Unknown error'
+  } catch {
     return {
       configured: true,
       reachable: false,
-      message: `Bungie API key set but request failed: ${msg}`,
+      message: 'Bungie did not answer. Try again in a few minutes.',
     }
   }
 }

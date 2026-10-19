@@ -205,9 +205,9 @@ function useBungieLinkState(): BungieLinkValue {
     if (!status?.redirectUri) return
     try {
       await navigator.clipboard.writeText(status.redirectUri)
-      setLinkMessage('Redirect URL copied. Paste it into your Bungie app OAuth settings.')
+      setLinkMessage('Redirect address copied.')
     } catch {
-      setLinkMessage(`Copy this into Bungie: ${status.redirectUri}`)
+      setLinkMessage('Could not copy the redirect address.')
     }
   }, [status?.redirectUri])
 

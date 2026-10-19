@@ -24,6 +24,7 @@ import type {
 } from '@/lib/destiny/types'
 import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { evaluateWeeklyContracts } from '@/lib/destiny/weeklyContracts'
+import { loadNightOpsEvents, loadWeeklyGoals } from '@/lib/destiny/siteContent'
 
 const VIEWER_RUN_LIMIT = 2000
 const CLEAR_HISTORY_LIMIT = 5000
@@ -69,11 +70,13 @@ export async function loadFireteamProgress(stored: StoredDestinyUser, now = new 
     }
   }
 
-  const [corpus, globalClears, votes, users] = await Promise.all([
+  const [corpus, globalClears, votes, users, contracts, events] = await Promise.all([
     listVerifiedRunsForMembers(Array.from(teammateIds), CLEAR_HISTORY_LIMIT),
     listVerifiedFullClears(CLEAR_HISTORY_LIMIT),
     loadAllMvpVotes().catch(() => []),
     loadUsersMap().catch(() => new Map<string, StoredDestinyUser>()),
+    loadWeeklyGoals().catch(() => undefined),
+    loadNightOpsEvents().catch(() => undefined),
   ])
   const runs = unionRuns([viewerResult, corpus.runs, globalClears.runs])
   const season = getConfiguredActiveSeason(now)
@@ -89,6 +92,7 @@ export async function loadFireteamProgress(stored: StoredDestinyUser, now = new 
       season: seasonWindow,
       viewerHistoryComplete,
       clearHistoryComplete: corpus.complete,
+      contracts,
     }),
     sherpa: evaluateSherpaRanks({
       runs,
@@ -105,7 +109,7 @@ export async function loadFireteamProgress(stored: StoredDestinyUser, now = new 
       viewerClanId: stored.clanId,
       historyComplete: globalClears.complete,
     }),
-    nightOps: evaluateNightOps({ runs: viewerResult, viewer, now }),
+    nightOps: evaluateNightOps({ runs: viewerResult, viewer, now, events }),
     chemistry: evaluateFireteamChemistry(viewerResult, viewer),
   }
 }

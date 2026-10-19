@@ -10,7 +10,7 @@ import {
   saveSeasonData,
   updatePrizeClaimStatus,
 } from '@/lib/destiny/store'
-import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
+import { resolvePrizesEnabled } from '@/lib/destiny/siteContent'
 import { computeSeasonStandings } from '@/lib/destiny/seasonPrizes'
 
 export const dynamic = 'force-dynamic'
@@ -47,10 +47,10 @@ export async function POST(req: NextRequest) {
       const patch = body.season ?? {}
       const valid = (v?: string) => v === undefined || (typeof v === 'string' && !Number.isNaN(Date.parse(v)))
       if (!valid(patch.startDate) || !valid(patch.endDate)) {
-        return NextResponse.json({ error: 'startDate/endDate must be ISO dates' }, { status: 400 })
+        return NextResponse.json({ error: 'Enter a valid start and end.' }, { status: 400 })
       }
       if (patch.startDate && patch.endDate && Date.parse(patch.endDate) <= Date.parse(patch.startDate)) {
-        return NextResponse.json({ error: 'endDate must be after startDate' }, { status: 400 })
+        return NextResponse.json({ error: 'The end must be after the start.' }, { status: 400 })
       }
       const season = await getSeasonData()
       const adminOverride = {
@@ -92,9 +92,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.action === 'update_claim') {
-      if (!seasonPrizesEnabled()) {
+      if (!(await resolvePrizesEnabled())) {
         return NextResponse.json(
-          { error: 'Season prizes are turned off.' },
+          { error: 'Prize claims are turned off. Turn them on under Season, then try again.' },
           { status: 403 }
         )
       }

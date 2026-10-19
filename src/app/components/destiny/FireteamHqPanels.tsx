@@ -160,7 +160,7 @@ export function NightOpsPanel({ board, darkMode }: { board: NightOpsBoard; darkM
         </div>
       ) : (
         <p className={cn('text-sm mt-2', t.muted)}>
-          No Night Ops are scheduled. Add events with FIRETEAM_HQ_NIGHT_OPS_JSON.
+          No events are scheduled yet.
         </p>
       )}
     </GlassCard>

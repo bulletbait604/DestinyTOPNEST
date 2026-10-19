@@ -175,9 +175,22 @@ export function mergeSeasonWithDefinition(stored: Season, def: NestSeasonDefinit
     tagline: stored.adminOverride?.tagline || def.tagline,
     startDate: stored.adminOverride?.startDate || def.startDate,
     endDate: stored.adminOverride?.endDate || def.endDate,
-    prizeRules: {
-      ...(stored.prizeRules ?? {}),
-      ...DEFAULT_SEASON_PRIZE_RULES,
-    },
+    prizeRules: stored.prizeRulesEdited
+      ? {
+          raid: { ...DEFAULT_SEASON_PRIZE_RULES.raid, ...stored.prizeRules?.raid },
+          dungeon: { ...DEFAULT_SEASON_PRIZE_RULES.dungeon, ...stored.prizeRules?.dungeon },
+          newBonds: {
+            first: stored.prizeRules?.newBonds?.first ?? DEFAULT_SEASON_PRIZE_RULES.newBonds!.first,
+            second: stored.prizeRules?.newBonds?.second ?? DEFAULT_SEASON_PRIZE_RULES.newBonds!.second,
+            thirdToFifth:
+              stored.prizeRules?.newBonds?.thirdToFifth ?? DEFAULT_SEASON_PRIZE_RULES.newBonds!.thirdToFifth,
+            participation:
+              stored.prizeRules?.newBonds?.participation ?? DEFAULT_SEASON_PRIZE_RULES.newBonds!.participation,
+          },
+        }
+      : {
+          ...(stored.prizeRules ?? {}),
+          ...DEFAULT_SEASON_PRIZE_RULES,
+        },
   }
 }

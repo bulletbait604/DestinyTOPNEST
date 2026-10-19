@@ -1,9 +1,8 @@
 import type { PassportFrameId, SeasonTierStatus, WeeklyContractDefinition } from '@/lib/destiny/types'
 
 /**
- * Weekly co-op contracts. Edit this list, or set FIRETEAM_HQ_WEEKLY_CONTRACTS_JSON
- * to a JSON array of WeeklyContractDefinition objects, to change the rotation
- * without touching evaluation code.
+ * Built-in weekly goals. The admin console saves a replacement list in MongoDB.
+ * An environment list is only a fallback when nothing has been saved.
  *
  * Points are season tier points only — they do not change leaderboard scores.
  * Rewards stay non-monetary: titles, frames, and tiers.

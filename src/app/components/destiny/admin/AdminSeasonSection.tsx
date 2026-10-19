@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Check, Gift, ImageIcon, Layers, Loader2, Trophy, X } from 'lucide-react'
-import type { PrizeClaim, SeasonWinner } from '@/lib/destiny/types'
+import type { PrizeClaim, Season, SeasonWinner } from '@/lib/destiny/types'
+import { DEFAULT_PRIZE_COPY, type PrizeCopy } from '@/lib/destiny/prizeCopy'
 import { GlassCard, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
-import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { cn } from '@/lib/utils'
 
 export default function AdminSeasonSection({
@@ -42,7 +42,22 @@ export default function AdminSeasonSection({
     resetTimeLabel?: string
   } | null>(null)
   const [syncingMetaBuilds, setSyncingMetaBuilds] = useState(false)
+  const [season, setSeason] = useState<Season | null>(null)
+  const [seasonName, setSeasonName] = useState('')
+  const [seasonTagline, setSeasonTagline] = useState('')
+  const [seasonStart, setSeasonStart] = useState('')
+  const [seasonEnd, setSeasonEnd] = useState('')
+  const [seasonMessage, setSeasonMessage] = useState<string | null>(null)
+  const [seasonError, setSeasonError] = useState<string | null>(null)
+  const [savingSeason, setSavingSeason] = useState(false)
+  const [prizesEnabled, setPrizesEnabled] = useState(true)
+  const [prizeCopy, setPrizeCopy] = useState<PrizeCopy>(DEFAULT_PRIZE_COPY)
+  const [prizeMessage, setPrizeMessage] = useState<string | null>(null)
+  const [prizeError, setPrizeError] = useState<string | null>(null)
+  const [savingPrizes, setSavingPrizes] = useState(false)
   const t = getDestinyTheme(darkMode)
+  const fieldClass =
+    'w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-gray-500'
 
   const loadMetaBuildStatus = useCallback(async () => {
     const res = await fetch('/api/destiny/admin/meta-builds', { credentials: 'include' })
@@ -70,9 +85,21 @@ export default function AdminSeasonSection({
       ])
       if (seasonRes.ok) {
         const json = await seasonRes.json()
+        const nextSeason = (json.season ?? null) as Season | null
+        setSeason(nextSeason)
+        setSeasonName(nextSeason?.name ?? '')
+        setSeasonTagline(nextSeason?.tagline ?? '')
+        setSeasonStart(nextSeason?.startDate ? new Date(nextSeason.startDate).toISOString().slice(0, 16) : '')
+        setSeasonEnd(nextSeason?.endDate ? new Date(nextSeason.endDate).toISOString().slice(0, 16) : '')
         setPendingClaims(json.pendingClaims ?? [])
         setHallPreview(json.hallOfFamePreview ?? [])
         setCanFinalize(Boolean(json.canFinalize))
+      }
+      const contentRes = await fetch('/api/destiny/admin/site-content', { credentials: 'include' })
+      if (contentRes.ok) {
+        const content = await contentRes.json()
+        setPrizesEnabled(content.prizesEnabled !== false)
+        if (content.prizeCopy) setPrizeCopy(content.prizeCopy)
       }
     } finally {
       setLoading(false)
@@ -137,6 +164,61 @@ export default function AdminSeasonSection({
     }
   }
 
+  async function saveSeasonSettings() {
+    setSavingSeason(true)
+    setSeasonError(null)
+    setSeasonMessage(null)
+    try {
+      const res = await fetch('/api/destiny/admin/season', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_season',
+          season: {
+            name: seasonName.trim(),
+            tagline: seasonTagline.trim(),
+            startDate: seasonStart ? new Date(`${seasonStart}Z`).toISOString() : undefined,
+            endDate: seasonEnd ? new Date(`${seasonEnd}Z`).toISOString() : undefined,
+          },
+        }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setSeasonError(typeof json.error === 'string' ? json.error : 'Could not save the season.')
+        return
+      }
+      setSeasonMessage('Season settings saved.')
+      await load()
+      onAction?.()
+    } finally {
+      setSavingSeason(false)
+    }
+  }
+
+  async function savePrizes() {
+    setSavingPrizes(true)
+    setPrizeError(null)
+    setPrizeMessage(null)
+    try {
+      const res = await fetch('/api/destiny/admin/site-content', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'save_prizes', prizesEnabled, prizeCopy }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setPrizeError(typeof json.error === 'string' ? json.error : 'Could not save prizes.')
+        return
+      }
+      setPrizeMessage('Prize settings saved.')
+      onAction?.()
+    } finally {
+      setSavingPrizes(false)
+    }
+  }
+
   async function updateClaim(claimId: string, claimStatus: 'fulfilled' | 'rejected') {
     setActing(claimId)
     try {
@@ -192,6 +274,31 @@ export default function AdminSeasonSection({
             ))}
           </div>
         )}
+      </GlassCard>
+
+      <GlassCard darkMode={darkMode}>
+        <SectionTitle
+          title="Season settings"
+          subtitle={season ? `Season ${season.seasonNumber ?? ''} · times are UTC`.trim() : 'Name, tagline, and dates for the current season.'}
+          darkMode={darkMode}
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+          <input className={fieldClass} value={seasonName} aria-label="Season name" placeholder="Season name" onChange={(event) => setSeasonName(event.target.value)} />
+          <input className={fieldClass} value={seasonTagline} aria-label="Season tagline" placeholder="One-line tagline" onChange={(event) => setSeasonTagline(event.target.value)} />
+          <input className={fieldClass} type="datetime-local" value={seasonStart} aria-label="Season start" onChange={(event) => setSeasonStart(event.target.value)} />
+          <input className={fieldClass} type="datetime-local" value={seasonEnd} aria-label="Season end" onChange={(event) => setSeasonEnd(event.target.value)} />
+        </div>
+        {seasonError ? <p className="text-sm text-red-300 mt-3">{seasonError}</p> : null}
+        {seasonMessage ? <p className="text-sm text-emerald-300 mt-3">{seasonMessage}</p> : null}
+        <button
+          type="button"
+          disabled={savingSeason}
+          onClick={() => void saveSeasonSettings()}
+          className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-amber-400/20 text-amber-100 ring-1 ring-amber-400/30"
+        >
+          {savingSeason ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          Save season settings
+        </button>
       </GlassCard>
 
       <GlassCard darkMode={darkMode}>
@@ -285,7 +392,7 @@ export default function AdminSeasonSection({
         </button>
       </GlassCard>
 
-      {seasonPrizesEnabled() ? (
+      {prizesEnabled ? (
         <GlassCard darkMode={darkMode}>
           <div className="flex items-center gap-2 mb-2">
             <Gift className="w-5 h-5 text-purple-400" />
@@ -333,13 +440,41 @@ export default function AdminSeasonSection({
             <Gift className="w-5 h-5 text-purple-400" />
             <SectionTitle title="Prize claims" darkMode={darkMode} />
           </div>
-          <p className={cn('text-sm', t.muted)}>
-            Monetary and physical prizes are off. Fireteam HQ rewards are badges, titles, profile frames, and season tiers.
-            Claim fulfillment stays in the codebase and turns back on only if NEXT_PUBLIC_FIRETEAM_HQ_MONETARY_PRIZES is set
-            after written Bungie permission.
-          </p>
+          <p className={cn('text-sm', t.muted)}>Prize claims are off. Players still earn badges, titles, and frames.</p>
         </GlassCard>
       )}
+
+      <GlassCard darkMode={darkMode}>
+        <div className="flex items-center gap-2 mb-2">
+          <Gift className="w-5 h-5 text-purple-400" />
+          <SectionTitle
+            title="Prize names"
+            subtitle="What winners see for USA and Canada, the UK, and the short label on each board."
+            darkMode={darkMode}
+          />
+        </div>
+        <label className={cn('flex items-center gap-2 text-sm mb-3', t.body)}>
+          <input type="checkbox" checked={prizesEnabled} onChange={(event) => setPrizesEnabled(event.target.checked)} />
+          Let winners claim a prize in the app
+        </label>
+        <div className="grid grid-cols-1 gap-2">
+          <input className={fieldClass} aria-label="Print prize" value={prizeCopy.physicalPrize} onChange={(event) => setPrizeCopy((copy) => ({ ...copy, physicalPrize: event.target.value }))} />
+          <input className={fieldClass} aria-label="Gift card" value={prizeCopy.giftCardPrize} onChange={(event) => setPrizeCopy((copy) => ({ ...copy, giftCardPrize: event.target.value }))} />
+          <input className={fieldClass} aria-label="Board label" value={prizeCopy.cardLabel} onChange={(event) => setPrizeCopy((copy) => ({ ...copy, cardLabel: event.target.value }))} />
+          <input className={fieldClass} aria-label="First place prize" value={prizeCopy.firstPlace} onChange={(event) => setPrizeCopy((copy) => ({ ...copy, firstPlace: event.target.value }))} />
+        </div>
+        {prizeError ? <p className="text-sm text-red-300 mt-3">{prizeError}</p> : null}
+        {prizeMessage ? <p className="text-sm text-emerald-300 mt-3">{prizeMessage}</p> : null}
+        <button
+          type="button"
+          disabled={savingPrizes}
+          onClick={() => void savePrizes()}
+          className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-purple-400/20 text-purple-100 ring-1 ring-purple-400/30"
+        >
+          {savingPrizes ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          Save prize settings
+        </button>
+      </GlassCard>
     </div>
   )
 }

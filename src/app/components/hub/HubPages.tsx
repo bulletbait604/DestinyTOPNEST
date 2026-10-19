@@ -474,7 +474,7 @@ export function HubEvents() {
             title="No events scheduled"
             actions={[{ label: 'See weekly goals', onClick: () => openHubTab('contracts') }]}
           >
-            When the community posts a session, it shows up here with a watch link.
+            When a session is scheduled, it shows up here with a watch link.
           </EmptyNote>
         ) : null}
         {snapshot && snapshot.events.length > 0 ? (

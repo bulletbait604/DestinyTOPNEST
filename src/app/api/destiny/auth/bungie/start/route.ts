@@ -30,12 +30,12 @@ function requestOrigin(req: NextRequest): string {
 export async function GET(req: NextRequest) {
   if (!bungieOAuthConfigured()) {
     return startError(
-      'Bungie OAuth is not configured. Set DESTINY_API, BUNGIE_OAUTH_CLIENT_ID, and BUNGIE_OAUTH_CLIENT_SECRET on Vercel.'
+      'Bungie sign-in is not ready on this site yet.'
     )
   }
 
   if (!getSessionSecret()) {
-    return startError('SESSION_SECRET (or JWT_SECRET) is not configured on the server.')
+    return startError('Sign-in is not ready on this site yet.')
   }
 
   const redirectUri = bungieOAuthRedirectUriFromRequest(req)
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     console.error('[destiny/auth/bungie/start]', error)
     const detail = error instanceof Error ? error.message : 'unknown'
     if (detail.includes('SESSION_SECRET')) {
-      return startError('Session signing is not configured on the server.')
+      return startError('Sign-in is not ready on this site yet.')
     }
     return startError('Failed to start Bungie authorization', 500)
   }

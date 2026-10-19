@@ -57,7 +57,7 @@ async function readBungieJson<T>(res: Response): Promise<T> {
 
 async function bungieOAuthFetch<T>(url: string, init: RequestInit): Promise<T> {
   const apiKey = destinyApiKey()
-  if (!apiKey) throw new Error('DESTINY_API is not configured')
+  if (!apiKey) throw new Error('Bungie sign-in is not ready on this site yet.')
 
   const res = await fetch(url, {
     ...init,

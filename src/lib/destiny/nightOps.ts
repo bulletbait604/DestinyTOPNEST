@@ -42,7 +42,7 @@ export function isNightOpsEvent(value: unknown): value is NightOpsEvent {
   return true
 }
 
-/** Built-in list, replaced by FIRETEAM_HQ_NIGHT_OPS_JSON when that value is valid. */
+/** Saved events win. This env list is only a fallback when the schedule has not been saved. */
 export function resolveNightOpsCatalog(events?: NightOpsEvent[]): NightOpsEvent[] {
   if (events) return events.filter(isNightOpsEvent).map(sanitizeEvent)
   const raw = process.env.FIRETEAM_HQ_NIGHT_OPS_JSON?.trim()

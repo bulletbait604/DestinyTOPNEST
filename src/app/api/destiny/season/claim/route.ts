@@ -2,7 +2,7 @@ import { PRIZE_ELIGIBILITY, prizeForCountry } from '@/lib/destiny/seasonCatalog'
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
-import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
+import { resolvePrizesEnabled } from '@/lib/destiny/siteContent'
 import { canSubmitPrizeClaim, prizeEligibleTracks } from '@/lib/destiny/fireteamReputation'
 import { buildUserPrizeTrack } from '@/lib/destiny/seasonPrizes'
 import {
@@ -27,9 +27,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return destinyAuthHandler(req, async () => {
-    if (!seasonPrizesEnabled()) {
+    if (!(await resolvePrizesEnabled())) {
       return NextResponse.json(
-        { error: 'Season prizes are turned off.' },
+        { error: 'Prize claims are turned off right now.' },
         { status: 403 }
       )
     }

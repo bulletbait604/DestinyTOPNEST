@@ -2,13 +2,14 @@ import { evaluateClanWars } from '@/lib/destiny/clanWars'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { aggregateLeaderboard } from '@/lib/destiny/leaderboards'
 import { listOpenLobbies } from '@/lib/destiny/fireteamLobbyService'
-import { evaluateNightOps, resolveNightOpsCatalog } from '@/lib/destiny/nightOps'
+import { evaluateNightOps } from '@/lib/destiny/nightOps'
 import { evaluateSherpaRanks } from '@/lib/destiny/sherpaRanks'
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
 import { listCommunityBuilds } from '@/lib/destiny/communityBuildStore'
 import { listVerifiedFullClears } from '@/lib/destiny/store'
-import type { FireteamLobby, NightOpsEvent, RunRecord } from '@/lib/destiny/types'
+import type { FireteamLobby, NightOpsEvent, RunRecord, WeeklyContractDefinition } from '@/lib/destiny/types'
 import { resolveWeeklyContractCatalog } from '@/lib/destiny/weeklyContractCatalog'
+import { loadNightOpsEvents, loadWeeklyGoals } from '@/lib/destiny/siteContent'
 import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 
@@ -177,6 +178,7 @@ export function assemblePublicHub(input: {
   runs?: RunRecord[]
   lobbies?: FireteamLobby[]
   events?: NightOpsEvent[]
+  contracts?: WeeklyContractDefinition[]
   historyComplete?: boolean
   featuredBuilds?: PublicFeaturedBuild[]
 }): PublicHubSnapshot {
@@ -200,7 +202,7 @@ export function assemblePublicHub(input: {
     runs: [],
     viewer: PUBLIC_VIEWER,
     now,
-    events: input.events ?? resolveNightOpsCatalog(),
+    events: input.events,
   })
 
   return {
@@ -210,7 +212,7 @@ export function assemblePublicHub(input: {
     featuredRaids: week.featuredRaids.map((activity) => activity.name),
     pantheon: week.pantheon,
     nightfall: week.nightfall,
-    contracts: resolveWeeklyContractCatalog().map((contract) => ({
+    contracts: resolveWeeklyContractCatalog(input.contracts).map((contract) => ({
       id: contract.id,
       title: contract.title,
       description: contract.description,
@@ -274,6 +276,10 @@ async function loadFeaturedBuilds(): Promise<PublicFeaturedBuild[]> {
 
 export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHubSnapshot> {
   await refreshLiveWeeklyRotationBounded(now)
+  const [events, contracts] = await Promise.all([
+    loadNightOpsEvents().catch(() => []),
+    loadWeeklyGoals().catch(() => undefined),
+  ])
   try {
     const [clears, lobbies, featuredBuilds] = await Promise.all([
       listVerifiedFullClears(2000),
@@ -284,11 +290,13 @@ export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHub
       now,
       runs: clears.runs,
       lobbies,
+      events,
+      contracts,
       historyComplete: clears.complete,
       featuredBuilds,
     })
   } catch (error) {
     console.warn('[hub] public snapshot fell back to the contract catalog', error)
-    return assemblePublicHub({ now, runs: [], lobbies: [], historyComplete: false })
+    return assemblePublicHub({ now, runs: [], lobbies: [], events, contracts, historyComplete: false })
   }
 }

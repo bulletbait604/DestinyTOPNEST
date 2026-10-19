@@ -7,7 +7,7 @@ const globalForMongo = globalThis as typeof globalThis & {
 /** Trim whitespace and strip accidental wrapping quotes from Vercel/console paste. */
 export function normalizeMongoUri(raw: string | undefined): string {
   if (!raw?.trim()) {
-    throw new Error('Please set MONGODB_URI in your environment')
+    throw new Error('The database is not connected.')
   }
 
   let uri = raw.trim()
@@ -20,7 +20,7 @@ export function normalizeMongoUri(raw: string | undefined): string {
 
   if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
     throw new Error(
-      'MONGODB_URI must start with mongodb:// or mongodb+srv:// — copy the full Atlas connection string, not just the database name'
+      'The database address is not a valid connection string.'
     )
   }
 
