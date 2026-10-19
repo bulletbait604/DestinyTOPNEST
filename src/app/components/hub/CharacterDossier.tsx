@@ -6,7 +6,7 @@ import {
 } from '@/lib/destiny/characterSnapshot'
 import { classLabel } from '@/lib/destiny/guardianDirectory'
 
-const FALLBACK_BANNER = 'https://www.bungie.net/img/destiny_content/pgcr/raid_kings_fall.jpg'
+const FALLBACK_BANNER = 'https://www.bungie.net/img/destiny_content/pgcr/patrol_edz.jpg'
 
 function barPercent(value: number, max: number): number {
   if (max <= 0) return 0

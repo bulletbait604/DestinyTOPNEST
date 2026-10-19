@@ -57,7 +57,7 @@
 body {
   background-color: #07080f;
   background-image:
-    linear-gradient(180deg, rgba(7, 8, 15, 0.9) 0%, rgba(7, 8, 15, 0.82) 46%, rgba(7, 8, 15, 0.94) 100%),
+    linear-gradient(180deg, rgba(7, 8, 15, 0.78) 0%, rgba(7, 8, 15, 0.58) 42%, rgba(7, 8, 15, 0.84) 100%),
     url('https://www.bungie.net/img/destiny_content/pgcr/raid_kings_fall.jpg');
   background-size: cover;
   background-position: center top;
@@ -290,8 +290,11 @@ h1, h2, h3, .gh-brand strong {
   margin: 0 0 0.1rem;
 }
 .gh-hero {
-  padding: 0.75rem 0.85rem;
+  padding: 0.85rem 1rem;
   gap: 0.65rem;
+  background:
+    linear-gradient(100deg, rgba(7, 8, 15, 0.86) 0%, rgba(7, 8, 15, 0.55) 48%, rgba(7, 8, 15, 0.22) 100%),
+    url('https://www.bungie.net/img/destiny_content/pgcr/raid_root_of_nightmares.jpg') center / cover no-repeat;
 }
 .gh-hero h1 {
   font-size: clamp(1.7rem, 3.4vw, 2.25rem);
@@ -506,7 +509,7 @@ h1, h2, h3, .gh-brand strong {
   border: 1px solid rgba(244, 201, 93, 0.28);
   border-radius: var(--nest-radius);
   background:
-    linear-gradient(90deg, rgba(7, 8, 15, 0.92) 0%, rgba(7, 8, 15, 0.62) 58%, rgba(7, 8, 15, 0.4) 100%),
+    linear-gradient(90deg, rgba(7, 8, 15, 0.9) 0%, rgba(7, 8, 15, 0.5) 62%, rgba(7, 8, 15, 0.28) 100%),
     var(--banner-url) center / cover no-repeat;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
