@@ -9,6 +9,7 @@ import { buildClanRosterFromMemberRows } from '@/lib/destiny/clanRoster'
 import { fetchAllCharactersPresentation, fetchGuardianPresentation } from '@/lib/destiny/guardianPresentation'
 import { resolveActiveCharacterId } from '@/lib/destiny/activeCharacter'
 import { fetchGuardianBungieStats } from '@/lib/destiny/guardianBungieStats'
+import { captureCharacterSnapshot } from '@/lib/destiny/characterSnapshotFetch'
 import { fetchCharacterBuild } from '@/lib/destiny/guardianBuild'
 import { fetchSavedLoadouts } from '@/lib/destiny/guardianSavedLoadouts'
 import { tagLoadoutCompleteness } from '@/lib/destiny/loadoutCompleteness'
@@ -57,6 +58,13 @@ export async function refreshGuardianFromBungie(stored: StoredDestinyUser): Prom
       characterClass: presentation.characterClass,
       bungieDisplayName: stored.bungieDisplayName || presentation.displayName,
       bungieStats: bungieStats ?? undefined,
+    })
+    await captureCharacterSnapshot({
+      membershipType,
+      membershipId,
+      accessToken,
+    }).catch((error) => {
+      console.warn('[character-snapshots] login refresh failed', error)
     })
     return updated
   } catch {

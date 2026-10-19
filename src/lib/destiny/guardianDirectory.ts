@@ -1,3 +1,4 @@
+import type { GuardianDossier } from '@/lib/destiny/characterSnapshot'
 import { reputationBadges } from '@/lib/destiny/reputation'
 import { sherpaTitleForPoints } from '@/lib/destiny/sherpaRanks'
 import type { DestinyCharacterClass, ReputationReview } from '@/lib/destiny/types'
@@ -58,6 +59,8 @@ export interface GuardianPublicProfile {
   vaultHighlights: GuardianGearHighlight[]
   equippedHighlights: GuardianGearHighlight[]
   stats: { label: string; value: string }[]
+  /** Daily character history captured while this Guardian was signed in. */
+  dossier?: GuardianDossier
 }
 
 const CLASS_LABEL: Record<string, string> = {

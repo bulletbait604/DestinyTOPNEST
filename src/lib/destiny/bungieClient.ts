@@ -209,6 +209,19 @@ export async function getCharacterLoadout(
   return getCharacterLoadoutProfile(membershipType, membershipId, accessToken)
 }
 
+/** Unique weapon kill stats for one character. */
+export async function getUniqueWeaponStats(
+  membershipType: number,
+  membershipId: string,
+  characterId: string,
+  accessToken?: string
+) {
+  return bungieFetch(
+    `/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/UniqueWeapons/`,
+    { accessToken }
+  )
+}
+
 /** Activity history for a character. */
 export async function getActivityHistory(
   membershipType: number,
