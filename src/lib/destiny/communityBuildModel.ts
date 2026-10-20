@@ -80,6 +80,12 @@ export interface CommunityBuildRecord extends CommunityBuildContent {
   commentCount: number
   createdAt: string
   updatedAt: string
+  /** `featured` is a curated guide. Missing means a player post. */
+  listing?: 'player' | 'featured'
+  creditName?: string
+  creditUrl?: string
+  seedVersion?: string
+  featuredRank?: number
 }
 
 export interface CommunityBuildPublic extends CommunityBuildContent {
@@ -97,6 +103,9 @@ export interface CommunityBuildPublic extends CommunityBuildContent {
   canModerate: boolean
   viewerUpvoted: boolean
   viewerSaved: boolean
+  listing: 'player' | 'featured'
+  creditName?: string
+  creditUrl?: string
 }
 
 export interface CommunityBuildCommentPublic {
@@ -522,6 +531,7 @@ export function communityBuildListFilter(
     filter.id = { $in: options.savedIds ?? [] }
   } else {
     filter.status = 'published'
+    filter.listing = { $ne: 'featured' }
   }
 
   if (query.characterClass) filter.characterClass = query.characterClass
@@ -559,9 +569,10 @@ export function toCommunityBuildPublic(
   build: CommunityBuildRecord,
   viewer: { userId?: string; staff?: boolean; upvoted?: boolean; saved?: boolean }
 ): CommunityBuildPublic {
+  const featured = build.listing === 'featured'
   const owns = Boolean(viewer.userId && viewer.userId === build.ownerUserId)
   const canModerate = Boolean(viewer.staff)
-  const canEdit = owns || canModerate
+  const canEdit = featured ? false : owns || canModerate
   return {
     id: build.id,
     ownerDisplayName: build.ownerDisplayName,
@@ -592,6 +603,9 @@ export function toCommunityBuildPublic(
     canModerate,
     viewerUpvoted: Boolean(viewer.upvoted),
     viewerSaved: Boolean(viewer.saved),
+    listing: featured ? 'featured' : 'player',
+    ...(build.creditName ? { creditName: build.creditName } : {}),
+    ...(build.creditUrl ? { creditUrl: build.creditUrl } : {}),
   }
 }
 

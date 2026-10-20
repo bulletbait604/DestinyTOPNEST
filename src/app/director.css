@@ -814,3 +814,44 @@ h1, h2, h3, h4,
 @media (prefers-reduced-motion: reduce) {
   .gh-main > * { animation: none; }
 }
+
+.gh-hall { margin: 0.5rem 0 1.25rem; }
+.gh-hall h2 {
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0.15rem 0 0.45rem;
+}
+.gh-hall .gh-lede,
+.gh-hall > .gh-muted { max-width: 44rem; }
+.gh-hall > .gh-muted { margin-top: 0.45rem; }
+.gh-hall-boards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.1rem;
+}
+.gh-hall-board {
+  border-top: 1px solid var(--dir-gold-dim);
+  padding-top: 0.75rem;
+}
+.gh-hall-board h3 {
+  font-family: Rajdhani, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 1.15rem;
+  margin: 0 0 0.3rem;
+}
+.gh-hall-list { list-style: none; margin: 0.75rem 0 0; padding: 0; }
+.gh-hall-list li {
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--dir-line);
+}
+.gh-hall-list li p { margin: 0; }
+.gh-hall-list li p + p { margin-top: 0.2rem; }
+.gh-hall-rank { color: var(--dir-gold); font-family: Rajdhani, sans-serif; font-weight: 700; }
+.gh-hall-empty { margin: 0.75rem 0 0; color: var(--dir-muted); }
+@media (max-width: 799px) {
+  .gh-hall-boards { grid-template-columns: 1fr; }
+}

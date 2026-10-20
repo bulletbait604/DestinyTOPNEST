@@ -5,19 +5,16 @@ import type { FeaturedActivity, WeeklyActivityLootSnapshot } from '@/lib/destiny
 import HomeLeaderboardCard from '@/app/components/destiny/HomeLeaderboardCard'
 import {
   GlassCard,
-  ItemIcon,
   LoadingBlock,
   ResetCountdown,
   SectionTitle,
   StatusPill,
 } from '@/app/components/destiny/DestinyUi'
-import { cn } from '@/lib/utils'
-import { getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import SeasonHall from '@/app/components/destiny/SeasonHall'
 import TopLoadoutsByClass from '@/app/components/destiny/TopLoadoutsByClass'
 import PendingVotePrompt from '@/app/components/destiny/PendingVotePrompt'
 import WeeklyActivitySetCard from '@/app/components/destiny/WeeklyActivitySetCard'
 import { homeSectionArtUrl } from '@/lib/destiny/navArt'
-import { leaderboardCategoryIconUrl } from '@/lib/destiny/activityIconPaths'
 import { useOverviewData } from '@/contexts/OverviewDataContext'
 
 function countdownParts(ms: number) {
@@ -86,7 +83,6 @@ interface OverviewPanelProps {
 export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPanelProps) {
   const { data, loading, error } = useOverviewData()
   const [showVotePrompt, setShowVotePrompt] = useState(false)
-  const t = getDestinyTheme(darkMode)
 
   useEffect(() => {
     const pending = data?.pendingRunActions
@@ -205,43 +201,7 @@ export default function OverviewPanel({ darkMode, onGoToActivities }: OverviewPa
         </div>
       </GlassCard>
 
-      {data.hallOfFamePreview.length > 0 && (
-        <GlassCard darkMode={darkMode}>
-          <SectionTitle
-            title="Season Hall of Fame preview"
-            subtitle="Current leaders — see Leaderboards for full standings"
-            iconUrl={leaderboardCategoryIconUrl('raid')}
-            darkMode={darkMode}
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
-            {data.hallOfFamePreview.slice(0, 6).map((winner, i) => (
-              <div
-                key={`${winner.category}-${winner.rank}-${i}`}
-                className="d2-panel-inset px-3 py-2 rounded-lg flex items-center justify-between gap-2"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  {winner.emblemUrl ? (
-                    <ItemIcon iconUrl={winner.emblemUrl} name={winner.displayName} size={32} className="rounded-sm shrink-0" />
-                  ) : (
-                    <ItemIcon
-                      iconUrl={leaderboardCategoryIconUrl(winner.category)}
-                      name={winner.category}
-                      size={28}
-                      className="shrink-0"
-                    />
-                  )}
-                  <span className={cn('text-sm truncate', t.body)}>
-                    #{winner.rank} {winner.displayName} {winner.clanTag}
-                  </span>
-                </div>
-                <span className={cn('text-[10px] uppercase shrink-0', t.caption)}>
-                  {winner.category.replace(/_/g, ' ')}
-                </span>
-              </div>
-            ))}
-          </div>
-        </GlassCard>
-      )}
+      <SeasonHall season={data.season} winners={data.hallOfFamePreview} />
 
       <TopLoadoutsByClass
         darkMode={darkMode}

@@ -12,6 +12,12 @@ import {
   viewerFlagsForBuilds,
 } from '@/lib/destiny/communityBuildStore'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
+import { featuredBuildById } from '@/lib/destiny/featuredBuilds'
+
+function databaseUnavailable(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : ''
+  return /database is not connected|ECONNREFUSED|MongoServerSelection/i.test(message)
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -24,8 +30,17 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const id = buildId(params)
     if (!id) return communityBuildError('Build not found.', 404)
 
-    const build = await getCommunityBuild(id)
-    if (!build) return communityBuildError('Build not found.', 404)
+    let build = null
+    try {
+      build = await getCommunityBuild(id)
+    } catch (error) {
+      if (!databaseUnavailable(error)) throw error
+    }
+    if (!build) {
+      const curated = featuredBuildById(id)
+      if (!curated) return communityBuildError('Build not found.', 404)
+      return communityBuildJson({ build: toCommunityBuildPublic(curated, {}) })
+    }
 
     const viewer = await readCommunityBuildViewer(req)
     const userId = viewer.user?.username.toLowerCase()

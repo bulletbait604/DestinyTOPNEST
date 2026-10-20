@@ -5,7 +5,9 @@ import { listOpenLobbies } from '@/lib/destiny/fireteamLobbyService'
 import { evaluateNightOps } from '@/lib/destiny/nightOps'
 import { evaluateSherpaRanks } from '@/lib/destiny/sherpaRanks'
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
-import { listCommunityBuilds } from '@/lib/destiny/communityBuildStore'
+import { listFeaturedCommunityBuilds } from '@/lib/destiny/communityBuildStore'
+import { featuredBuildRecords } from '@/lib/destiny/featuredBuilds'
+import { ensureFeaturedBuildsSeed } from '@/lib/destiny/featuredBuildSeed'
 import { listVerifiedFullClears } from '@/lib/destiny/store'
 import type { FireteamLobby, NightOpsEvent, RunRecord, WeeklyContractDefinition } from '@/lib/destiny/types'
 import { resolveWeeklyContractCatalog } from '@/lib/destiny/weeklyContractCatalog'
@@ -81,6 +83,9 @@ export interface PublicFeaturedBuild {
   activity: string
   likes: number
   ownerDisplayName: string
+  listing?: 'featured' | 'player'
+  creditName?: string
+  creditUrl?: string
 }
 
 export interface PublicHubSnapshot {
@@ -253,25 +258,49 @@ export function assemblePublicHub(input: {
   }
 }
 
+function toPublicFeatured(build: {
+  id: string
+  name: string
+  characterClass: string
+  subclass: string
+  activityTags?: string[]
+  upvoteCount?: number
+  ownerDisplayName: string
+  listing?: 'featured' | 'player'
+  creditName?: string
+  creditUrl?: string
+}): PublicFeaturedBuild {
+  return {
+    id: build.id,
+    name: build.name,
+    characterClass: build.characterClass,
+    subclass: build.subclass,
+    activity: build.activityTags?.[0] ?? 'general',
+    likes: build.upvoteCount ?? 0,
+    ownerDisplayName: build.ownerDisplayName,
+    listing: build.listing === 'featured' ? 'featured' : 'player',
+    creditName: build.creditName,
+    creditUrl: build.creditUrl,
+  }
+}
+
 async function loadFeaturedBuilds(): Promise<PublicFeaturedBuild[]> {
   try {
-    const listed = await listCommunityBuilds({ sort: 'top', limit: 4, offset: 0, scope: 'public' })
-    return listed.builds
-      .filter((build) => build.status === 'published')
-      .slice(0, 3)
-      .map((build) => ({
-        id: build.id,
-        name: build.name,
-        characterClass: build.characterClass,
-        subclass: build.subclass,
-        activity: build.activityTags[0] ?? 'general',
-        likes: build.upvoteCount,
-        ownerDisplayName: build.ownerDisplayName,
-      }))
+    await ensureFeaturedBuildsSeed()
+    const rows = await listFeaturedCommunityBuilds({ sort: 'top', limit: 12, offset: 0, scope: 'public' })
+    if (rows.length) return previewByClass(rows).map((build) => toPublicFeatured(build))
   } catch (error) {
     console.warn('[hub] featured builds unavailable', error)
-    return []
   }
+  return previewByClass(featuredBuildRecords()).map((build) => toPublicFeatured(build))
+}
+
+function previewByClass<T extends { characterClass: string }>(rows: T[]): T[] {
+  const picked: T[] = []
+  for (const characterClass of ['hunter', 'titan', 'warlock']) {
+    picked.push(...rows.filter((row) => row.characterClass === characterClass).slice(0, 2))
+  }
+  return picked.length ? picked : rows.slice(0, 6)
 }
 
 export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHubSnapshot> {
@@ -297,6 +326,14 @@ export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHub
     })
   } catch (error) {
     console.warn('[hub] public snapshot fell back to the contract catalog', error)
-    return assemblePublicHub({ now, runs: [], lobbies: [], events, contracts, historyComplete: false })
+    return assemblePublicHub({
+      now,
+      runs: [],
+      lobbies: [],
+      events,
+      contracts,
+      historyComplete: false,
+      featuredBuilds: previewByClass(featuredBuildRecords()).map((build) => toPublicFeatured(build)),
+    })
   }
 }

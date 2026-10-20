@@ -275,6 +275,7 @@ export function HubHome({
                     Full boards
                   </button>
                 </div>
+                <p className="gh-muted">Season leaders. The Hall of Fame lists the top three on each prize board and why they are there.</p>
                 <TopGuardianList rows={snapshot.topGuardians} />
               </section>
             </div>
@@ -291,9 +292,9 @@ export function HubHome({
             <div className="gh-split">
               <section className="gh-card" aria-labelledby="gh-sherpa-preview">
                 <div className="gh-section-head">
-                  <h2 id="gh-sherpa-preview">Top sherpas</h2>
+                  <h2 id="gh-sherpa-preview">Teachers</h2>
                   <button type="button" className="gh-text-btn" onClick={() => openHubTab('sherpas')}>
-                    Hall of fame
+                    All teachers
                   </button>
                 </div>
                 <SherpaList snapshot={snapshot} />
@@ -381,8 +382,8 @@ function FeaturedBuilds({ builds, onLogin }: { builds: PublicFeaturedBuild[]; on
       </div>
       {builds.length === 0 ? (
         <NextStep
-          title="No shared builds yet"
-          body="A build is the gear a player chooses to post."
+          title="No builds yet"
+          body="Featured guides are curated loadouts from build sites. Player posts show up after someone shares their gear."
           actions={[
             { label: 'Sign in to share', onClick: onLogin },
             { label: 'Browse builds', onClick: () => openHubTab('loadouts') },
@@ -393,11 +394,12 @@ function FeaturedBuilds({ builds, onLogin }: { builds: PublicFeaturedBuild[]; on
           {builds.map((build) => (
             <a key={build.id} className="gh-card gh-build-card" href={`/builds/${build.id}`}>
               <p className="gh-kicker">
-                {build.characterClass} · {build.activity}
+                {build.listing === 'featured' ? 'Featured' : build.characterClass} · {build.characterClass} · {build.activity}
               </p>
               <h3>{build.name}</h3>
               <p className="gh-muted">
-                {build.subclass} · {build.likes} likes · {build.ownerDisplayName}
+                {build.subclass}
+                {build.creditName ? ` · ${build.creditName}` : ` · ${build.likes} likes · ${build.ownerDisplayName}`}
               </p>
             </a>
           ))}

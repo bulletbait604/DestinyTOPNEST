@@ -50,7 +50,7 @@ export function SherpaPanel({
       ) : null}
       {showHall && board.hallOfFame.length ? (
         <div className="mt-3 space-y-1">
-          <p className={cn('text-xs uppercase tracking-wide', t.caption)}>Hall of fame</p>
+          <p className={cn('text-xs uppercase tracking-wide', t.caption)}>Top teachers</p>
           {board.hallOfFame.map((row) => (
             <div key={row.membershipId} className="d2-profile-list-row">
               <span className={cn('text-sm', t.body)}>

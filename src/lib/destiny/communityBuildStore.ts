@@ -119,6 +119,22 @@ export async function listCommunityBuilds(
   }
 }
 
+export async function listFeaturedCommunityBuilds(
+  query: CommunityBuildListQuery
+): Promise<CommunityBuildRecord[]> {
+  await ensureCommunityBuildIndexes()
+  const database = await db()
+  const filter = communityBuildListFilter({ ...query, scope: 'public' }, {})
+  filter.listing = 'featured'
+  const rows = await database
+    .collection(DESTINY_COLLECTIONS.communityBuilds)
+    .find(filter)
+    .sort({ featuredRank: 1, name: 1 })
+    .limit(40)
+    .toArray()
+  return rows.map((row) => withoutMongoId(row as CommunityBuildRecord & { _id?: unknown }))
+}
+
 export async function listCommunityBuildsForStaff(limit = 40): Promise<CommunityBuildRecord[]> {
   await ensureCommunityBuildIndexes()
   const database = await db()
@@ -201,6 +217,9 @@ export async function updateCommunityBuildContent(
   await ensureCommunityBuildIndexes()
   const current = await getCommunityBuild(id)
   if (!current) return { ok: false, error: 'Build not found.', status: 404 }
+  if (current.listing === 'featured') {
+    return { ok: false, error: 'Featured guides are curated. They are not player posts.', status: 403 }
+  }
   const owns = current.ownerUserId === actorUserId.toLowerCase()
   if (!owns && !staff) return { ok: false, error: 'You can only edit your own builds.', status: 403 }
 

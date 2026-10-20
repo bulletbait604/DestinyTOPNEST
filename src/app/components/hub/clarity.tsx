@@ -27,6 +27,14 @@ export const GLOSSARY = [
   { word: 'MVP', meaning: 'Your vote for the most helpful teammate. It does not change board points.' },
   { word: 'Kudos', meaning: 'A thank-you on a profile. It does not change board points.' },
   { word: 'Sherpa', meaning: 'A player who already cleared an activity and helps someone get their first clear.' },
+  {
+    word: 'Hall of Fame',
+    meaning: 'The top three on each season prize board. #1 can win the prize. It is not the teachers list.',
+  },
+  {
+    word: 'Featured build',
+    meaning: 'A curated loadout from a build site, with a link to the source. It is not a player post.',
+  },
 ] as const
 
 export const PRIMARY_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
@@ -37,7 +45,7 @@ export const PRIMARY_NAV: { id: DestinyTopNestTab; label: string; hint: string }
 ]
 
 export const GEAR_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
-  { id: 'loadouts', label: 'Shared builds', hint: 'Gear other players posted.' },
+  { id: 'loadouts', label: 'Shared builds', hint: 'Featured guides from build sites, plus gear players post.' },
   { id: 'compare', label: 'Compare', hint: 'Two builds side by side.' },
   { id: 'lookup', label: 'Find a build', hint: 'Search builds or the gear someone has equipped.' },
   { id: 'quests', label: 'Quests', hint: 'Quests, pursuits, and catalysts.' },
@@ -48,7 +56,7 @@ export const MORE_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] 
   { id: 'sherpas', label: 'Teachers', hint: 'Sherpas: players who guided a first clear.' },
   { id: 'clans', label: 'Clans', hint: 'Standings when clanmates clear together.' },
   { id: 'events', label: 'Events', hint: 'Scheduled community sessions.' },
-  { id: 'season', label: 'Prize rules', hint: 'Who can win the 3D print or Steam card.' },
+  { id: 'season', label: 'Prize rules', hint: 'The Season Hall of Fame, and who can win the 3D print or Steam card.' },
 ]
 
 const GEAR_TABS = new Set<DestinyTopNestTab>(['loadouts', 'builds', 'compare', 'lookup', 'quests'])

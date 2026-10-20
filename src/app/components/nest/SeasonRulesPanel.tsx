@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Award, Gift, ShieldCheck, Sparkles, Users } from 'lucide-react'
+import SeasonHall from '@/app/components/destiny/SeasonHall'
+import type { SeasonWinner } from '@/lib/destiny/types'
 import { NEST_SEASON_CATALOG, PRIZE_ELIGIBILITY, resolveActiveSeasonByDate } from '@/lib/destiny/seasonCatalog'
 import { BOND_RULES } from '@/lib/destiny/bonds'
 import { LEADERBOARD_RULES_APPEALS_EMAIL } from '@/lib/destiny/leaderboardRules'
@@ -15,6 +17,7 @@ export default function SeasonRulesPanel({ now = new Date() }: { now?: Date }) {
   const [physicalPrize, setPhysicalPrize] = useState<string>(PRIZE_ELIGIBILITY.physicalPrize)
   const [giftCardPrize, setGiftCardPrize] = useState<string>(PRIZE_ELIGIBILITY.giftCardPrize)
   const [cardLabel, setCardLabel] = useState('Destiny 2 3D print · or Steam card (UK)')
+  const [hall, setHall] = useState<SeasonWinner[]>([])
   const season = resolveActiveSeasonByDate(now)
 
   useEffect(() => {
@@ -28,6 +31,15 @@ export default function SeasonRulesPanel({ now = new Date() }: { now?: Date }) {
         if (json.physicalPrize) setPhysicalPrize(json.physicalPrize)
         if (json.giftCardPrize) setGiftCardPrize(json.giftCardPrize)
         if (json.cardLabel) setCardLabel(json.cardLabel)
+      })
+      .catch(() => undefined)
+    void fetch('/api/destiny/hall')
+      .then(async (res) => {
+        if (!res.ok) return null
+        return res.json() as Promise<{ hallOfFame?: SeasonWinner[] }>
+      })
+      .then((json) => {
+        if (json?.hallOfFame) setHall(json.hallOfFame)
       })
       .catch(() => undefined)
   }, [])
@@ -44,6 +56,8 @@ export default function SeasonRulesPanel({ now = new Date() }: { now?: Date }) {
           </p>
         </div>
       </header>
+
+      <SeasonHall season={season} winners={hall} />
 
       <div className="nest-grid">
         {[

@@ -677,6 +677,7 @@ export type AdminActivityKind =
   | 'fireteam_rooms_clear'
   | 'community_build_moderate'
   | 'site_content'
+  | 'featured_builds_import'
 
 export interface AdminActivityEntry {
   id: string
