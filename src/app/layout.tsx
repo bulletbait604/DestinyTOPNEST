@@ -2,6 +2,7 @@
 import { BRAND_FULL, BRAND_LOGO_PATH, BRAND_TAGLINE } from '@/lib/destiny/branding'
 import './globals.css'
 import './theme-nest.css'
+import './director.css'
 
 export const metadata: Metadata = {
   title: BRAND_FULL,
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#07080f',
+  themeColor: '#070708',
   viewportFit: 'cover',
 }
 

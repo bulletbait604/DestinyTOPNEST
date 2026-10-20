@@ -1,0 +1,816 @@
+/*
+ * Director design system.
+ * In-game Destiny menus: near-black field, one gold accent, sharp panels,
+ * thin corner marks, and type that does the organizing.
+ * Loaded last so it replaces the earlier bronze/teal skins.
+ */
+:root {
+  --dir-bg: #070708;
+  --dir-ink: #f4f0e6;
+  --dir-muted: #a39e93;
+  --dir-gold: #e3c57a;
+  --dir-gold-dim: rgba(227, 197, 122, 0.45);
+  --dir-line: rgba(244, 240, 230, 0.14);
+  --dir-glass: rgba(8, 8, 10, 0.72);
+  --dir-hunter: #7f93ff;
+  --dir-titan: #e25b2a;
+  --dir-warlock: #f0d48a;
+  --tn-arc: var(--dir-gold);
+  --tn-solar: var(--dir-gold);
+  --tn-power: var(--dir-ink);
+  --nest-light: var(--dir-gold);
+  --nest-gold: var(--dir-gold);
+  --nest-text: var(--dir-ink);
+  --nest-muted: var(--dir-muted);
+  --nest-void: var(--dir-bg);
+  --nest-line: var(--dir-line);
+  --nest-panel: transparent;
+}
+
+body {
+  background: var(--dir-bg);
+  color: var(--dir-ink);
+  font-family: 'Source Sans 3', Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 17.5px;
+  line-height: 1.55;
+}
+
+h1, h2, h3, h4,
+.gh-brand strong,
+.gh-kicker,
+.gh-btn,
+.gh-nav-link,
+.gh-tab,
+.d2-panel-header-title,
+.d2-btn {
+  font-family: Rajdhani, 'Source Sans 3', sans-serif;
+}
+
+.dir-icon {
+  display: block;
+  flex: 0 0 auto;
+}
+
+/* Dim official art. Color washes stay off so the gold line can lead. */
+.d2-site-backdrop {
+  background:
+    linear-gradient(180deg, rgba(5, 5, 6, 0.84) 0%, rgba(5, 5, 6, 0.68) 42%, rgba(5, 5, 6, 0.9) 100%),
+    var(--d2-bg-image, none) center / cover no-repeat fixed;
+}
+.d2-site-element-wash { display: none; }
+.d2-site-grain { opacity: 0.04; }
+
+.gh-shell {
+  width: min(1080px, calc(100% - 2.75rem));
+  padding-bottom: 3rem;
+}
+
+.gh-top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'brand search actions';
+  gap: 1rem;
+  align-items: center;
+  margin: 0;
+  padding: 0.85rem 0 0.7rem;
+  background: rgba(7, 7, 8, 0.88);
+  border: 0;
+  border-bottom: 1px solid var(--dir-gold-dim);
+  border-radius: 0;
+  backdrop-filter: blur(16px);
+  box-shadow: none;
+}
+.gh-top .gh-brand { grid-area: brand; }
+.gh-top .gh-search { grid-area: search; }
+.gh-top .gh-top-actions { grid-area: actions; }
+.gh-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: transparent;
+  border: 0;
+  color: var(--dir-ink);
+  cursor: pointer;
+  text-align: left;
+}
+.gh-brand img {
+  width: 36px;
+  height: 36px;
+  border-radius: 0;
+  object-fit: cover;
+}
+.gh-brand strong {
+  display: block;
+  letter-spacing: 0.22em;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.gh-brand small {
+  color: var(--dir-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+.gh-search {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.4rem;
+  padding: 0 0.15rem;
+  border: 0;
+  border-bottom: 1px solid var(--dir-line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dir-muted);
+}
+.gh-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dir-ink);
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+}
+.gh-search input::placeholder { color: var(--dir-muted); }
+.gh-search button {
+  border: 0;
+  background: transparent;
+  color: var(--dir-gold);
+  font-family: Rajdhani, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.gh-top-actions { display: flex; align-items: center; gap: 0.6rem; }
+.d2-app-header {
+  background: transparent !important;
+  padding: 0 !important;
+  color: var(--dir-ink);
+}
+
+.gh-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--dir-line);
+  border-radius: 0;
+  overflow: visible;
+}
+.gh-nav-link,
+.gh-more summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 3rem;
+  padding: 0.4rem 0.95rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dir-muted);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.gh-nav-link[aria-current='page'],
+.gh-nav-group > summary[aria-current='page'] {
+  color: var(--dir-ink);
+  border-bottom-color: var(--dir-gold);
+  background: transparent;
+}
+.gh-nav-hint {
+  margin: 0.9rem 0 0;
+  max-width: 38rem;
+  color: var(--dir-muted);
+  font-size: 1.02rem;
+  line-height: 1.45;
+}
+.gh-nav-menu,
+.gh-more-menu {
+  background: rgba(10, 10, 12, 0.96);
+  border: 1px solid var(--dir-gold-dim);
+  border-radius: 0;
+  box-shadow: none;
+}
+.gh-nav-menu button,
+.gh-more-menu button {
+  border-radius: 0;
+  color: var(--dir-ink);
+  font-family: 'Source Sans 3', sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.gh-nav-menu small,
+.gh-more-menu small { color: var(--dir-muted); font-size: 0.92rem; }
+
+.gh-points-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+  min-height: 0;
+  background: transparent;
+  border: 0;
+}
+.gh-points-bar > .gh-kicker:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.gh-points-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  min-height: 0;
+  padding: 0 0 0 0.7rem;
+  border: 0;
+  border-left: 1px solid var(--dir-gold);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dir-muted);
+  font-family: Rajdhani, sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.gh-points-chip strong {
+  color: var(--dir-gold);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.gh-points-chip-info {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1px solid var(--dir-gold-dim);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dir-gold);
+  cursor: help;
+}
+.gh-points-tip {
+  background: #101014;
+  color: var(--dir-ink);
+  border: 1px solid var(--dir-gold-dim);
+  border-radius: 0;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.gh-main { display: grid; gap: 1.75rem; margin-top: 1.15rem; }
+.gh-stack,
+.gh-section { display: grid; gap: 1.6rem; }
+
+.gh-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--dir-gold);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.gh-hero {
+  position: relative;
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.6rem 1.45rem 1.4rem;
+  border: 1px solid var(--dir-line);
+  border-radius: 0;
+  background:
+    linear-gradient(105deg, rgba(7, 7, 8, 0.9) 0%, rgba(7, 7, 8, 0.62) 52%, rgba(7, 7, 8, 0.28) 100%),
+    url('https://www.bungie.net/img/destiny_content/pgcr/raid_root_of_nightmares.jpg') center / cover no-repeat;
+}
+.gh-stack .gh-hero h1 {
+  margin: 0 0 0.45rem;
+  font-size: clamp(2.7rem, 6vw, 4.4rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+.gh-hero .gh-lede,
+.gh-lede,
+.gh-muted {
+  color: var(--dir-muted);
+  font-size: 1.08rem;
+  line-height: 1.5;
+}
+.gh-hero .gh-lede { max-width: 36rem; color: #ebe6da; margin: 0; }
+.gh-page-head { margin: 0 0 0.2rem; padding: 0; }
+.gh-stack .gh-page-head h1,
+.gh-stack > header h1,
+.gh-gate h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+.gh-page-head .gh-lede { margin-top: 0.45rem; max-width: 40rem; font-size: 1.08rem; }
+
+/* Shared surfaces: open type, not a stack of boxes. */
+.gh-card,
+.gh-empty,
+.gh-gate,
+.gh-how,
+.gh-guide,
+.gh-signin,
+.gh-alert {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0;
+}
+.gh-card h2,
+.gh-card h3,
+.gh-section h2,
+.gh-card-title,
+.d2-panel-header-title {
+  margin: 0 0 0.55rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dir-ink);
+}
+.gh-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--dir-line);
+}
+
+/* The few panels that should read as glass over the art. */
+.gh-hero::after,
+.gh-rotation .gh-card::after,
+.gh-emblem-banner::after,
+.d2-panel::after,
+.tn-welcome-dialog::after,
+.d2-login-card::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--dir-gold), var(--dir-gold)) left top / 16px 1px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) left top / 1px 16px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) right top / 16px 1px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) right top / 1px 16px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) left bottom / 16px 1px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) left bottom / 1px 16px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) right bottom / 16px 1px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) right bottom / 1px 16px no-repeat;
+}
+.gh-rotation .gh-card,
+.d2-panel,
+.d2-login-card,
+.tn-welcome-dialog {
+  position: relative;
+  padding: 1rem 1.05rem;
+  border: 1px solid var(--dir-line);
+  border-radius: 0 !important;
+  background: var(--dir-glass);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+}
+.d2-panel::before,
+.d2-login-card::before,
+.tn-welcome-dialog::before { content: none; }
+.gh-rotation .gh-card h3 {
+  margin: 0.2rem 0 0;
+  font-size: 1.45rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  line-height: 1.15;
+}
+.d2-panel-inset,
+.d2-stat-card {
+  border-radius: 0 !important;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--dir-line);
+  box-shadow: none;
+}
+.d2-stat-card-value { color: var(--dir-ink); text-shadow: none; }
+.d2-stat-card-label { color: var(--dir-gold); letter-spacing: 0.16em; }
+
+.gh-btn,
+.d2-btn,
+.nest-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.55rem;
+  padding: 0.4rem 0.95rem;
+  border: 1px solid var(--dir-gold-dim);
+  border-radius: 0 !important;
+  background: transparent;
+  color: var(--dir-ink);
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: none;
+  transform: none;
+}
+.gh-btn-primary,
+.d2-btn-primary {
+  background: var(--dir-gold);
+  border-color: var(--dir-gold);
+  color: #16130d;
+}
+.gh-btn-ghost,
+.gh-text-btn,
+.d2-btn-secondary,
+.d2-btn-ghost {
+  background: transparent;
+  color: var(--dir-ink);
+}
+.gh-btn:hover,
+.d2-btn:hover,
+.gh-text-btn:hover {
+  border-color: var(--dir-gold);
+  background: rgba(227, 197, 122, 0.08);
+  transform: none;
+  box-shadow: none;
+}
+.gh-btn-primary:hover,
+.d2-btn-primary:hover {
+  background: #f0d9a0;
+  color: #16130d;
+}
+.gh-btn:disabled,
+.d2-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.gh-btn:focus-visible,
+.d2-btn:focus-visible,
+.gh-nav-link:focus-visible,
+.gh-search input:focus-visible {
+  outline: 1px solid var(--dir-gold);
+  outline-offset: 3px;
+}
+
+.gh-tabs { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid var(--dir-line); }
+.gh-tab,
+.d2-filter-chip,
+.d2-tab {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0 !important;
+  background: transparent;
+  box-shadow: none;
+  color: var(--dir-muted);
+  min-height: 2.6rem;
+  padding: 0.35rem 0.9rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.gh-tab[aria-selected='true'],
+.d2-filter-chip-active,
+.d2-tab-active {
+  color: var(--dir-ink);
+  background: transparent;
+  border-bottom-color: var(--dir-gold);
+  box-shadow: none;
+}
+.d2-tab-active::after { content: none; }
+
+.gh-stat-grid { gap: 1.1rem 1.5rem; }
+.gh-stat {
+  padding: 0.55rem 0 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--dir-gold-dim);
+  border-radius: 0;
+}
+.gh-stat span {
+  color: var(--dir-gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.gh-stat strong,
+.gh-points {
+  color: var(--dir-ink);
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.85rem;
+  font-weight: 700;
+}
+.gh-badge {
+  border: 1px solid var(--dir-line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dir-ink);
+  padding: 0.15rem 0.4rem;
+  font-family: Rajdhani, sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.gh-list,
+.gh-feature-list,
+.gh-directory,
+.gh-board { list-style: none; margin: 0; padding: 0; }
+.gh-list li,
+.gh-feature-list li,
+.gh-person,
+.gh-board-row,
+.gh-build-card {
+  border: 0;
+  border-bottom: 1px solid var(--dir-line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dir-ink);
+}
+.gh-person,
+.gh-board-row {
+  width: 100%;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.85rem 0.15rem;
+  text-align: left;
+  cursor: pointer;
+}
+.gh-person:hover,
+.gh-board-row:hover,
+.gh-list li:hover { background: rgba(227, 197, 122, 0.05); }
+.gh-person[data-class='hunter'],
+.gh-character-grid li[data-class='hunter'] { box-shadow: inset 2px 0 0 var(--dir-hunter); }
+.gh-person[data-class='titan'],
+.gh-character-grid li[data-class='titan'] { box-shadow: inset 2px 0 0 var(--dir-titan); }
+.gh-person[data-class='warlock'],
+.gh-character-grid li[data-class='warlock'] { box-shadow: inset 2px 0 0 var(--dir-warlock); }
+.gh-rank { color: var(--dir-gold); font-family: Rajdhani, sans-serif; font-size: 1.25rem; }
+.gh-rating strong { color: var(--dir-gold); }
+.gh-rating.gh-card { display: grid; gap: 0.8rem; }
+
+.gh-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.2rem;
+}
+.gh-filters label {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--dir-gold);
+  font-family: Rajdhani, sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.gh-shell input,
+.gh-shell select,
+.gh-shell textarea,
+.gh-filters input,
+.gh-filters select {
+  border: 0;
+  border-bottom: 1px solid var(--dir-line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dir-ink);
+  font: inherit;
+  font-size: 1rem;
+  min-height: 2.4rem;
+  padding: 0.25rem 0.1rem;
+}
+.gh-search input { border-bottom: 0; min-height: 0; }
+.gh-shell table { width: 100%; border-collapse: collapse; }
+.gh-shell th {
+  text-align: left;
+  padding: 0.55rem 0.4rem;
+  color: var(--dir-gold);
+  font-family: Rajdhani, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--dir-gold-dim);
+}
+.gh-shell td {
+  padding: 0.7rem 0.4rem;
+  border-bottom: 1px solid var(--dir-line);
+  color: var(--dir-ink);
+}
+
+.gh-how-steps {
+  display: grid;
+  gap: 1rem;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.gh-how-steps li { display: grid; gap: 0.2rem; }
+.gh-how-steps strong {
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.gh-glossary { display: grid; gap: 0.55rem; margin: 1.1rem 0; }
+.gh-glossary div { display: grid; grid-template-columns: 6.5rem 1fr; gap: 0.6rem; }
+.gh-glossary dt {
+  color: var(--dir-gold);
+  font-family: Rajdhani, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.gh-signin,
+.gh-guide,
+.gh-alert,
+.gh-empty { display: grid; gap: 0.45rem; }
+.gh-alert { color: #f0d0c4; }
+
+.gh-emblem-banner {
+  position: relative;
+  min-height: 168px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.2rem;
+  padding: 1.3rem 1.25rem;
+  border: 1px solid var(--dir-gold-dim);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(7, 7, 8, 0.9) 0%, rgba(7, 7, 8, 0.5) 62%, rgba(7, 7, 8, 0.22) 100%),
+    var(--banner-url) center / cover no-repeat;
+}
+.gh-emblem-banner h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  letter-spacing: 0.05em;
+  line-height: 0.92;
+  text-transform: uppercase;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.75);
+}
+.gh-banner-meta { margin: 0; color: #f4f0e6; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7); }
+.gh-dossier { display: grid; gap: 1.5rem; }
+.gh-dossier .gh-card { padding-top: 0.15rem; }
+.gh-character-grid { display: grid; gap: 1rem; list-style: none; margin: 0.4rem 0 0; padding: 0; }
+.gh-character-grid li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.15rem 0 0.15rem 0.7rem;
+  background: transparent;
+  border: 0;
+}
+.gh-character-grid strong {
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.gh-slot-list,
+.gh-bar-list { list-style: none; margin: 0.45rem 0 0; padding: 0; }
+.gh-bar-list { display: grid; gap: 0.55rem; }
+.gh-bar-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(4.5rem, 1fr) auto;
+  gap: 0.55rem;
+  align-items: center;
+  border: 0;
+  padding: 0;
+}
+.gh-bar-track {
+  height: 2px;
+  background: rgba(244, 240, 230, 0.16);
+  border-radius: 0;
+}
+.gh-bar-track > span {
+  display: block;
+  height: 100%;
+  background: var(--dir-gold);
+}
+.gh-trend {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  height: 88px;
+}
+.gh-trend span {
+  flex: 1;
+  background: var(--dir-gold);
+  border-radius: 0;
+  opacity: 0.9;
+}
+.gh-footer {
+  margin-top: 2.5rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--dir-line);
+  color: var(--dir-muted);
+  font-size: 0.95rem;
+}
+.gh-footer a { color: var(--dir-gold); }
+
+.gh-shell .rounded,
+.gh-shell .rounded-sm,
+.gh-shell .rounded-md,
+.gh-shell .rounded-lg,
+.gh-shell .rounded-xl,
+.gh-shell .rounded-2xl { border-radius: 0 !important; }
+[role='dialog'] {
+  border-radius: 0 !important;
+  background: rgba(10, 10, 12, 0.96);
+  border: 1px solid var(--dir-gold-dim);
+  color: var(--dir-ink);
+}
+
+@media (min-width: 800px) {
+  .gh-how-steps,
+  .gh-character-grid,
+  .gh-rating.gh-card { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gh-rotation { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gh-bottom-nav { display: none; }
+  .gh-nav { display: flex; }
+}
+@media (max-width: 799px) {
+  .gh-shell { width: min(100% - 1.4rem, 1080px); padding-bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px)); }
+  .gh-top {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'brand actions'
+      'search search';
+  }
+  .gh-nav { display: none; }
+  .gh-bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    background: rgba(7, 7, 8, 0.96);
+    border-top: 1px solid var(--dir-gold-dim);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .gh-bottom-nav button {
+    min-height: 58px;
+    border: 0;
+    background: transparent;
+    color: var(--dir-muted);
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 0.15rem;
+    font-family: Rajdhani, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .gh-bottom-nav button[aria-current='page'] {
+    color: var(--dir-gold);
+    box-shadow: inset 0 2px 0 var(--dir-gold);
+  }
+  .gh-bar-list li { grid-template-columns: 1fr auto; }
+  .gh-bar-track { grid-column: 1 / -1; }
+  .gh-glossary div { grid-template-columns: 1fr; }
+  .gh-hero { padding: 1.15rem 1rem; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gh-nav-link,
+  .gh-btn,
+  .d2-btn,
+  .gh-tab,
+  .gh-person,
+  .gh-board-row {
+    transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+  }
+  .gh-main > * {
+    animation: dir-rise 320ms ease both;
+  }
+}
+@keyframes dir-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gh-main > * { animation: none; }
+}

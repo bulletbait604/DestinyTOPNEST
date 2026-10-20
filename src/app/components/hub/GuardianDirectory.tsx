@@ -198,6 +198,7 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
             <button
               type="button"
               className="gh-person"
+              data-class={card.characterClass || undefined}
               onClick={() => navigateGuardianProfile(card.membershipId, card.membershipType)}
             >
               <span className="gh-person-name">
