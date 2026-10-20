@@ -74,7 +74,7 @@ export default function CharacterDossier({
           <h2 id="gh-dossier-characters">Characters</h2>
           <ul className="gh-character-grid">
             {dossier.characters.map((character) => (
-              <li key={character.characterId}>
+              <li key={character.characterId} data-class={character.className}>
                 <strong>
                   {character.light || '—'} {classLabel(character.className)}
                 </strong>

@@ -1,8 +1,8 @@
 'use client'
 
 import { FormEvent, useEffect, useState, type ReactNode } from 'react'
-import { Home, Search, Shield, Swords, Trophy, Users, type LucideIcon } from 'lucide-react'
 import { FirstTimeGuide, GEAR_NAV, isGearTab, MORE_NAV, navHint, PRIMARY_NAV } from '@/app/components/hub/clarity'
+import { DirectorIcon } from '@/app/components/hub/directorIcons'
 import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
@@ -17,12 +17,12 @@ import {
   parseTabFromSearch,
 } from '@/lib/routing/tabUrl'
 
-const ICONS: Partial<Record<DestinyTopNestTab, LucideIcon>> = {
-  overview: Home,
-  guardians: Shield,
-  fireteam: Users,
-  leaderboards: Trophy,
-  loadouts: Swords,
+const ICONS: Partial<Record<DestinyTopNestTab, 'home' | 'people' | 'play' | 'boards' | 'gear'>> = {
+  overview: 'home',
+  guardians: 'people',
+  fireteam: 'play',
+  leaderboards: 'boards',
+  loadouts: 'gear',
 }
 
 const MOBILE_NAV: { id: DestinyTopNestTab; label: string }[] = [
@@ -101,7 +101,7 @@ export default function HubChrome({
           <label className="gh-sr" htmlFor="hub-global-search">
             Search guardians
           </label>
-          <Search aria-hidden className="gh-search-icon" />
+          <DirectorIcon name="search" />
           <input
             id="hub-global-search"
             name="q"
@@ -151,7 +151,6 @@ export default function HubChrome({
       </header>
       <nav className="gh-nav" aria-label="TopNest">
         {PRIMARY_NAV.map((item) => {
-          const Icon = ICONS[item.id] ?? Home
           return (
             <button
               key={item.id}
@@ -160,14 +159,14 @@ export default function HubChrome({
               aria-current={tab === item.id ? 'page' : undefined}
               onClick={() => go(item.id)}
             >
-              <Icon aria-hidden />
+              <DirectorIcon name={ICONS[item.id] ?? 'home'} />
               <span>{item.label}</span>
             </button>
           )
         })}
         <details className="gh-nav-group">
           <summary className="gh-nav-link" aria-current={isGearTab(tab) ? 'page' : undefined}>
-            <Swords aria-hidden />
+            <DirectorIcon name="gear" />
             <span>Gear</span>
           </summary>
           <div className="gh-nav-menu">
@@ -193,7 +192,6 @@ export default function HubChrome({
       </footer>
       <nav className="gh-bottom-nav" aria-label="TopNest mobile">
         {MOBILE_NAV.map((item) => {
-          const Icon = ICONS[item.id] ?? Swords
           const current = item.id === 'loadouts' ? isGearTab(tab) : tab === item.id
           return (
             <button
@@ -202,7 +200,7 @@ export default function HubChrome({
               aria-current={current ? 'page' : undefined}
               onClick={() => go(item.id)}
             >
-              <Icon aria-hidden />
+              <DirectorIcon name={ICONS[item.id] ?? 'gear'} />
               <span>{item.label}</span>
             </button>
           )
