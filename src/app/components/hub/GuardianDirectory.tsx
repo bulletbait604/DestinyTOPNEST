@@ -148,7 +148,7 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
       <PageHeader
         kicker="Directory"
         title="People"
-        subtitle="Search a Bungie name. MVP is a teammate vote and kudos is a thank-you. Neither changes board points."
+        subtitle="Search a Bungie name to open a profile."
         titleId="gh-directory-title"
       />
       <form
@@ -313,15 +313,18 @@ function ProfileBody({ profile, onLogin }: { profile: GuardianPublicProfile; onL
         )}
       </div>
 
-      <div className="gh-split">
-        <GearList title="Equipped highlights" id="gh-equipped" items={profile.equippedHighlights} empty="Equipped weapons show up from the public profile." />
-        <GearList
-          title="Vault highlights"
-          id="gh-vault"
-          items={profile.vaultHighlights}
-          empty="The vault stays private until this Guardian signs in. Their own profile still pulls the full vault."
-        />
-      </div>
+      <details className="gh-disclosure">
+        <summary>Gear</summary>
+        <div className="gh-split">
+          <GearList title="Equipped highlights" id="gh-equipped" items={profile.equippedHighlights} empty="Equipped weapons show up from the public profile." />
+          <GearList
+            title="Vault highlights"
+            id="gh-vault"
+            items={profile.vaultHighlights}
+            empty="The vault stays private until this Guardian signs in. Their own profile still pulls the full vault."
+          />
+        </div>
+      </details>
 
       {card.status !== 'member' && onLogin ? (
         <div className="gh-card gh-gate">

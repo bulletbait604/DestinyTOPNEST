@@ -57,17 +57,20 @@ export default function CharacterDossier({
         ) : null}
       </header>
 
-      <section className="gh-card gh-bond-note" aria-labelledby="gh-new-bond">
-        <h2 id="gh-new-bond">Play with new friends</h2>
-        <p>You earn a new bond the first time you clear with this Guardian.</p>
-        {dossier?.guidesFirstClears ? (
-          <p>
-            <strong>Guides first clears.</strong> This Guardian has helped newer players finish activities on Top Nest.
-          </p>
-        ) : (
-          <p>A first clear together is worth more than running with the same group again.</p>
-        )}
-      </section>
+      <details className="gh-disclosure">
+        <summary>Play with new friends</summary>
+        <section className="gh-card gh-bond-note" aria-labelledby="gh-new-bond">
+          <h2 id="gh-new-bond">New bond</h2>
+          <p>You earn a new bond the first time you clear with this Guardian.</p>
+          {dossier?.guidesFirstClears ? (
+            <p>
+              <strong>Guides first clears.</strong> This Guardian has helped newer players finish activities on Top Nest.
+            </p>
+          ) : (
+            <p>A first clear together is worth more than running with the same group again.</p>
+          )}
+        </section>
+      </details>
 
       {dossier?.characters.length ? (
         <section className="gh-card" aria-labelledby="gh-dossier-characters">
@@ -121,7 +124,6 @@ export default function CharacterDossier({
                   </li>
                 ))}
               </ul>
-              <p className="gh-muted">Recent tracked clears from the last saved raids and dungeons, not a lifetime total.</p>
             </>
           ) : (
             <p className="gh-muted">Per-activity clears show up after this Guardian signs in and a day is saved.</p>

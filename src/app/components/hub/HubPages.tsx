@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import type { PublicFeaturedBuild, PublicHubSnapshot, PublicTopGuardian } from '@/lib/destiny/publicHub'
-import { navigateGuardianSearch } from '@/lib/routing/tabUrl'
+import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import BoardsHub from '@/app/components/hub/BoardsHub'
 import { HowItWorks, NextStep } from '@/app/components/hub/clarity'
 import { PageHeader, PointsChip } from '@/app/components/hub/PageHeader'
@@ -205,12 +205,6 @@ export function HubHome({
             <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
               Sign in with Bungie
             </button>
-            <button type="button" className="gh-btn gh-btn-ghost" onClick={() => openHubTab('guardians')}>
-              Find people
-            </button>
-            <button type="button" className="gh-btn gh-btn-ghost" onClick={() => openHubTab('leaderboards')}>
-              Open the boards
-            </button>
           </div>
         </div>
         <form
@@ -230,91 +224,37 @@ export function HubHome({
         </form>
       </section>
 
-      <HowItWorks onLogin={onLogin} />
-
       <BoardState loading={loading} error={error} onRetry={() => window.location.reload()}>
         {snapshot ? (
           <>
-            <RotationStrip snapshot={snapshot} />
-            <div className="gh-split">
-              <section className="gh-card" aria-labelledby="gh-live">
-                <div className="gh-section-head">
-                  <h2 id="gh-live">Live fireteams</h2>
-                  <button type="button" className="gh-text-btn" onClick={() => openHubTab('fireteam')}>
-                    Find a fireteam
-                  </button>
-                </div>
-                {snapshot.fireteams.length === 0 ? (
-                  <NextStep
-                    title="No open fireteams"
-                    body="Be the first to post a raid or dungeon."
-                    actions={[
-                      { label: 'Sign in to post', onClick: onLogin },
-                      { label: 'Open Play', onClick: () => openHubTab('fireteam') },
-                    ]}
-                  />
-                ) : (
-                  <ul className="gh-list">
-                    {snapshot.fireteams.slice(0, 4).map((room) => (
-                      <li key={room.id}>
-                        <span>
-                          {room.activityName} · {room.hostDisplayName}
-                        </span>
-                        <span className="gh-muted">
-                          {room.currentPlayers}/{room.maxPlayers}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-              <section className="gh-card" aria-labelledby="gh-top">
-                <div className="gh-section-head">
-                  <h2 id="gh-top">Top guardians</h2>
-                  <button type="button" className="gh-text-btn" onClick={() => openHubTab('leaderboards')}>
-                    Full boards
-                  </button>
-                </div>
-                <p className="gh-muted">Season leaders. The Hall of Fame lists the top three on each prize board and why they are there.</p>
-                <TopGuardianList rows={snapshot.topGuardians} />
-              </section>
-            </div>
-            <FeaturedBuilds builds={snapshot.featuredBuilds} onLogin={onLogin} />
-            <section className="gh-section" aria-labelledby="gh-contracts-preview">
+            <section className="gh-status" aria-label="This season">
+              <p>
+                <span className="gh-kicker">This season</span>
+                {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
+              </p>
+              <button type="button" className="gh-text-btn" onClick={() => navigateDestinyTab('season')}>
+                Prize rules
+              </button>
+            </section>
+            <section className="gh-card" aria-labelledby="gh-top">
               <div className="gh-section-head">
-                <h2 id="gh-contracts-preview">This week&apos;s contracts</h2>
-                <button type="button" className="gh-text-btn" onClick={() => openHubTab('contracts')}>
-                  All contracts
+                <h2 id="gh-top">Top guardians</h2>
+                <button type="button" className="gh-text-btn" onClick={() => openHubTab('leaderboards')}>
+                  Full boards
                 </button>
               </div>
-              <ContractList snapshot={snapshot} featured />
+              <TopGuardianList rows={snapshot.topGuardians} />
             </section>
-            <div className="gh-split">
-              <section className="gh-card" aria-labelledby="gh-sherpa-preview">
-                <div className="gh-section-head">
-                  <h2 id="gh-sherpa-preview">Teachers</h2>
-                  <button type="button" className="gh-text-btn" onClick={() => openHubTab('sherpas')}>
-                    All teachers
-                  </button>
-                </div>
-                <SherpaList snapshot={snapshot} />
-              </section>
-              <section className="gh-card" aria-labelledby="gh-clan-preview">
-                <div className="gh-section-head">
-                  <h2 id="gh-clan-preview">Clan standings</h2>
-                  <button type="button" className="gh-text-btn" onClick={() => openHubTab('clans')}>
-                    Divisions
-                  </button>
-                </div>
-                <ClanList snapshot={snapshot} />
-              </section>
-            </div>
-            {!snapshot.historyComplete ? (
-              <p className="gh-muted">Older clears are capped, so a long-time guide may be missing from this preview.</p>
-            ) : null}
+            <FeaturedBuilds builds={snapshot.featuredBuilds} onLogin={onLogin} />
+            <RotationStrip snapshot={snapshot} />
           </>
         ) : null}
       </BoardState>
+
+      <details className="gh-disclosure">
+        <summary>More about TopNest</summary>
+        <HowItWorks onLogin={onLogin} />
+      </details>
     </div>
   )
 }

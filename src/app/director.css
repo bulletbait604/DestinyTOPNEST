@@ -31,8 +31,8 @@ body {
   background: var(--dir-bg);
   color: var(--dir-ink);
   font-family: 'Source Sans 3', Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: 17.5px;
-  line-height: 1.55;
+  font-size: 15px;
+  line-height: 1.45;
 }
 
 h1, h2, h3, h4,
@@ -54,15 +54,15 @@ h1, h2, h3, h4,
 /* Dim official art. Color washes stay off so the gold line can lead. */
 .d2-site-backdrop {
   background:
-    linear-gradient(180deg, rgba(5, 5, 6, 0.84) 0%, rgba(5, 5, 6, 0.68) 42%, rgba(5, 5, 6, 0.9) 100%),
+    linear-gradient(180deg, rgba(5, 5, 6, 0.7) 0%, rgba(5, 5, 6, 0.46) 42%, rgba(5, 5, 6, 0.76) 100%),
     var(--d2-bg-image, none) center / cover no-repeat fixed;
 }
 .d2-site-element-wash { display: none; }
 .d2-site-grain { opacity: 0.04; }
 
 .gh-shell {
-  width: min(1080px, calc(100% - 2.75rem));
-  padding-bottom: 3rem;
+  width: min(1080px, calc(100% - 32px));
+  padding-bottom: 24px;
 }
 
 .gh-top {
@@ -72,10 +72,10 @@ h1, h2, h3, h4,
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas: 'brand search actions';
-  gap: 1rem;
+  gap: 8px;
   align-items: center;
   margin: 0;
-  padding: 0.85rem 0 0.7rem;
+  padding: 8px 0;
   background: rgba(7, 7, 8, 0.88);
   border: 0;
   border-bottom: 1px solid var(--dir-gold-dim);
@@ -89,7 +89,7 @@ h1, h2, h3, h4,
 .gh-brand {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 8px;
   background: transparent;
   border: 0;
   color: var(--dir-ink);
@@ -104,8 +104,8 @@ h1, h2, h3, h4,
 }
 .gh-brand strong {
   display: block;
-  letter-spacing: 0.22em;
-  font-size: 1rem;
+  letter-spacing: 0.12em;
+  font-size: 0.95rem;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -119,8 +119,8 @@ h1, h2, h3, h4,
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  min-height: 2.4rem;
-  padding: 0 0.15rem;
+  min-height: 32px;
+  padding: 0 4px;
   border: 0;
   border-bottom: 1px solid var(--dir-line);
   border-radius: 0;
@@ -134,7 +134,7 @@ h1, h2, h3, h4,
   background: transparent;
   color: var(--dir-ink);
   font: inherit;
-  font-size: 1rem;
+  font-size: 0.95rem;
   outline: none;
 }
 .gh-search input::placeholder { color: var(--dir-muted); }
@@ -148,7 +148,7 @@ h1, h2, h3, h4,
   text-transform: uppercase;
   cursor: pointer;
 }
-.gh-top-actions { display: flex; align-items: center; gap: 0.6rem; }
+.gh-top-actions { display: flex; align-items: center; gap: 8px; }
 .d2-app-header {
   background: transparent !important;
   padding: 0 !important;
@@ -159,7 +159,7 @@ h1, h2, h3, h4,
   display: flex;
   flex-wrap: wrap;
   gap: 0;
-  margin: 0.35rem 0 0;
+  margin: 0;
   padding: 0;
   background: transparent;
   border: 0;
@@ -171,17 +171,17 @@ h1, h2, h3, h4,
 .gh-more summary {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  min-height: 3rem;
-  padding: 0.4rem 0.95rem;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 12px;
   border: 0;
   border-bottom: 2px solid transparent;
   border-radius: 0;
   background: transparent;
   color: var(--dir-muted);
-  font-size: 1rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -192,11 +192,11 @@ h1, h2, h3, h4,
   background: transparent;
 }
 .gh-nav-hint {
-  margin: 0.9rem 0 0;
+  margin: 4px 0 0;
   max-width: 38rem;
   color: var(--dir-muted);
-  font-size: 1.02rem;
-  line-height: 1.45;
+  font-size: 0.85rem;
+  line-height: 1.35;
 }
 .gh-nav-menu,
 .gh-more-menu {
@@ -220,8 +220,8 @@ h1, h2, h3, h4,
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 0.75rem;
-  margin: 1rem 0 0;
+  gap: 8px;
+  margin: 8px 0 0;
   min-height: 0;
   background: transparent;
   border: 0;
@@ -252,7 +252,7 @@ h1, h2, h3, h4,
 }
 .gh-points-chip strong {
   color: var(--dir-gold);
-  font-size: 1.35rem;
+  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -276,57 +276,58 @@ h1, h2, h3, h4,
   text-transform: none;
 }
 
-.gh-main { display: grid; gap: 1.75rem; margin-top: 1.15rem; }
+.gh-main { display: grid; gap: 16px; margin-top: 8px; }
 .gh-stack,
-.gh-section { display: grid; gap: 1.6rem; }
+.gh-section { display: grid; gap: 16px; }
 
 .gh-kicker {
-  margin: 0 0 0.35rem;
+  margin: 0 0 4px;
   color: var(--dir-gold);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 .gh-hero {
   position: relative;
   display: grid;
-  gap: 1.25rem;
-  padding: 1.6rem 1.45rem 1.4rem;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 16px;
   border: 1px solid var(--dir-line);
   border-radius: 0;
   background:
-    linear-gradient(105deg, rgba(7, 7, 8, 0.9) 0%, rgba(7, 7, 8, 0.62) 52%, rgba(7, 7, 8, 0.28) 100%),
+    linear-gradient(105deg, rgba(7, 7, 8, 0.82) 0%, rgba(7, 7, 8, 0.5) 58%, rgba(7, 7, 8, 0.22) 100%),
     url('https://www.bungie.net/img/destiny_content/pgcr/raid_root_of_nightmares.jpg') center / cover no-repeat;
 }
 .gh-stack .gh-hero h1 {
-  margin: 0 0 0.45rem;
-  font-size: clamp(2.7rem, 6vw, 4.4rem);
+  margin: 0 0 4px;
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
   font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 0.9;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
   text-transform: uppercase;
 }
 .gh-hero .gh-lede,
 .gh-lede,
 .gh-muted {
   color: var(--dir-muted);
-  font-size: 1.08rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 .gh-hero .gh-lede { max-width: 36rem; color: #ebe6da; margin: 0; }
-.gh-page-head { margin: 0 0 0.2rem; padding: 0; }
+.gh-page-head { margin: 0; padding: 0; }
 .gh-stack .gh-page-head h1,
 .gh-stack > header h1,
 .gh-gate h1 {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-size: clamp(1.4rem, 2.6vw, 1.75rem);
   font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 0.95;
+  letter-spacing: 0.04em;
+  line-height: 1.05;
   text-transform: uppercase;
 }
-.gh-page-head .gh-lede { margin-top: 0.45rem; max-width: 40rem; font-size: 1.08rem; }
+.gh-page-head .gh-lede { margin-top: 4px; max-width: 40rem; font-size: 0.95rem; }
 
 /* Shared surfaces: open type, not a stack of boxes. */
 .gh-card,
@@ -348,10 +349,10 @@ h1, h2, h3, h4,
 .gh-section h2,
 .gh-card-title,
 .d2-panel-header-title {
-  margin: 0 0 0.55rem;
-  font-size: 1.35rem;
+  margin: 0 0 4px;
+  font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--dir-ink);
 }
@@ -359,9 +360,9 @@ h1, h2, h3, h4,
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.35rem;
-  padding-bottom: 0.35rem;
+  gap: 8px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--dir-line);
 }
 
@@ -374,24 +375,24 @@ h1, h2, h3, h4,
 .d2-login-card::after {
   content: '';
   position: absolute;
-  inset: 7px;
+  inset: 4px;
   pointer-events: none;
   background:
-    linear-gradient(var(--dir-gold), var(--dir-gold)) left top / 16px 1px no-repeat,
-    linear-gradient(var(--dir-gold), var(--dir-gold)) left top / 1px 16px no-repeat,
-    linear-gradient(var(--dir-gold), var(--dir-gold)) right top / 16px 1px no-repeat,
-    linear-gradient(var(--dir-gold), var(--dir-gold)) right top / 1px 16px no-repeat,
-    linear-gradient(var(--dir-gold), var(--dir-gold)) left bottom / 16px 1px no-repeat,
-    linear-gradient(var(--dir-gold), var(--dir-gold)) left bottom / 1px 16px no-repeat,
-    linear-gradient(var(--dir-gold), var(--dir-gold)) right bottom / 16px 1px no-repeat,
-    linear-gradient(var(--dir-gold), var(--dir-gold)) right bottom / 1px 16px no-repeat;
+    linear-gradient(var(--dir-gold), var(--dir-gold)) left top / 10px 1px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) left top / 1px 10px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) right top / 10px 1px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) right top / 1px 10px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) left bottom / 10px 1px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) left bottom / 1px 10px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) right bottom / 10px 1px no-repeat,
+    linear-gradient(var(--dir-gold), var(--dir-gold)) right bottom / 1px 10px no-repeat;
 }
 .gh-rotation .gh-card,
 .d2-panel,
 .d2-login-card,
 .tn-welcome-dialog {
   position: relative;
-  padding: 1rem 1.05rem;
+  padding: 8px 12px;
   border: 1px solid var(--dir-line);
   border-radius: 0 !important;
   background: var(--dir-glass);
@@ -403,7 +404,7 @@ h1, h2, h3, h4,
 .tn-welcome-dialog::before { content: none; }
 .gh-rotation .gh-card h3 {
   margin: 0.2rem 0 0;
-  font-size: 1.45rem;
+  font-size: 1.05rem;
   letter-spacing: 0.03em;
   text-transform: none;
   line-height: 1.15;
@@ -425,16 +426,16 @@ h1, h2, h3, h4,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  min-height: 2.55rem;
-  padding: 0.4rem 0.95rem;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 12px;
   border: 1px solid var(--dir-gold-dim);
   border-radius: 0 !important;
   background: transparent;
   color: var(--dir-ink);
-  font-size: 0.98rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
   box-shadow: none;
@@ -486,9 +487,9 @@ h1, h2, h3, h4,
   background: transparent;
   box-shadow: none;
   color: var(--dir-muted);
-  min-height: 2.6rem;
-  padding: 0.35rem 0.9rem;
-  letter-spacing: 0.14em;
+  min-height: 32px;
+  padding: 4px 12px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .gh-tab[aria-selected='true'],
@@ -501,7 +502,7 @@ h1, h2, h3, h4,
 }
 .d2-tab-active::after { content: none; }
 
-.gh-stat-grid { gap: 1.1rem 1.5rem; }
+.gh-stat-grid { gap: 8px 16px; }
 .gh-stat {
   padding: 0.55rem 0 0;
   background: transparent;
@@ -519,7 +520,7 @@ h1, h2, h3, h4,
 .gh-points {
   color: var(--dir-ink);
   font-family: Rajdhani, sans-serif;
-  font-size: 1.85rem;
+  font-size: 1.25rem;
   font-weight: 700;
 }
 .gh-badge {
@@ -553,7 +554,7 @@ h1, h2, h3, h4,
   width: 100%;
   display: grid;
   gap: 0.15rem;
-  padding: 0.85rem 0.15rem;
+  padding: 8px 4px;
   text-align: left;
   cursor: pointer;
 }
@@ -573,7 +574,7 @@ h1, h2, h3, h4,
 .gh-filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem 1.2rem;
+  gap: 8px 16px;
 }
 .gh-filters label {
   display: grid;
@@ -595,15 +596,15 @@ h1, h2, h3, h4,
   background: transparent;
   color: var(--dir-ink);
   font: inherit;
-  font-size: 1rem;
-  min-height: 2.4rem;
-  padding: 0.25rem 0.1rem;
+  font-size: 0.95rem;
+  min-height: 32px;
+  padding: 4px 2px;
 }
 .gh-search input { border-bottom: 0; min-height: 0; }
 .gh-shell table { width: 100%; border-collapse: collapse; }
 .gh-shell th {
   text-align: left;
-  padding: 0.55rem 0.4rem;
+  padding: 4px 8px;
   color: var(--dir-gold);
   font-family: Rajdhani, sans-serif;
   font-size: 0.78rem;
@@ -613,26 +614,26 @@ h1, h2, h3, h4,
   border-bottom: 1px solid var(--dir-gold-dim);
 }
 .gh-shell td {
-  padding: 0.7rem 0.4rem;
+  padding: 8px;
   border-bottom: 1px solid var(--dir-line);
   color: var(--dir-ink);
 }
 
 .gh-how-steps {
   display: grid;
-  gap: 1rem;
-  margin: 0.8rem 0 0;
+  gap: 8px;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
 }
 .gh-how-steps li { display: grid; gap: 0.2rem; }
 .gh-how-steps strong {
   font-family: Rajdhani, sans-serif;
-  font-size: 1.2rem;
+  font-size: 0.95rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.gh-glossary { display: grid; gap: 0.55rem; margin: 1.1rem 0; }
+.gh-glossary { display: grid; gap: 4px; margin: 8px 0; }
 .gh-glossary div { display: grid; grid-template-columns: 6.5rem 1fr; gap: 0.6rem; }
 .gh-glossary dt {
   color: var(--dir-gold);
@@ -648,30 +649,30 @@ h1, h2, h3, h4,
 
 .gh-emblem-banner {
   position: relative;
-  min-height: 168px;
+  min-height: 96px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 0.2rem;
-  padding: 1.3rem 1.25rem;
+  gap: 2px;
+  padding: 12px;
   border: 1px solid var(--dir-gold-dim);
   border-radius: 0;
   background:
-    linear-gradient(90deg, rgba(7, 7, 8, 0.9) 0%, rgba(7, 7, 8, 0.5) 62%, rgba(7, 7, 8, 0.22) 100%),
+    linear-gradient(90deg, rgba(7, 7, 8, 0.78) 0%, rgba(7, 7, 8, 0.38) 68%, rgba(7, 7, 8, 0.16) 100%),
     var(--banner-url) center / cover no-repeat;
 }
 .gh-emblem-banner h1 {
   margin: 0;
-  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
   letter-spacing: 0.05em;
   line-height: 0.92;
   text-transform: uppercase;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.75);
 }
 .gh-banner-meta { margin: 0; color: #f4f0e6; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7); }
-.gh-dossier { display: grid; gap: 1.5rem; }
+.gh-dossier { display: grid; gap: 12px; }
 .gh-dossier .gh-card { padding-top: 0.15rem; }
-.gh-character-grid { display: grid; gap: 1rem; list-style: none; margin: 0.4rem 0 0; padding: 0; }
+.gh-character-grid { display: grid; gap: 8px; list-style: none; margin: 4px 0 0; padding: 0; }
 .gh-character-grid li {
   display: grid;
   gap: 0.2rem;
@@ -681,7 +682,7 @@ h1, h2, h3, h4,
 }
 .gh-character-grid strong {
   font-family: Rajdhani, sans-serif;
-  font-size: 1.35rem;
+  font-size: 1.05rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -719,8 +720,8 @@ h1, h2, h3, h4,
   opacity: 0.9;
 }
 .gh-footer {
-  margin-top: 2.5rem;
-  padding-top: 0.8rem;
+  margin-top: 16px;
+  padding-top: 8px;
   border-top: 1px solid var(--dir-line);
   color: var(--dir-muted);
   font-size: 0.95rem;
@@ -744,12 +745,12 @@ h1, h2, h3, h4,
   .gh-how-steps,
   .gh-character-grid,
   .gh-rating.gh-card { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .gh-rotation { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gh-rotation { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .gh-bottom-nav { display: none; }
   .gh-nav { display: flex; }
 }
 @media (max-width: 799px) {
-  .gh-shell { width: min(100% - 1.4rem, 1080px); padding-bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px)); }
+  .gh-shell { width: min(100% - 16px, 1080px); padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
   .gh-top {
     grid-template-columns: 1fr auto;
     grid-template-areas:
@@ -770,7 +771,7 @@ h1, h2, h3, h4,
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   .gh-bottom-nav button {
-    min-height: 58px;
+    min-height: 48px;
     border: 0;
     background: transparent;
     color: var(--dir-muted);
@@ -781,7 +782,7 @@ h1, h2, h3, h4,
     font-family: Rajdhani, sans-serif;
     font-size: 0.68rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
   .gh-bottom-nav button[aria-current='page'] {
@@ -791,7 +792,8 @@ h1, h2, h3, h4,
   .gh-bar-list li { grid-template-columns: 1fr auto; }
   .gh-bar-track { grid-column: 1 / -1; }
   .gh-glossary div { grid-template-columns: 1fr; }
-  .gh-hero { padding: 1.15rem 1rem; }
+  .gh-hero { padding: 12px; }
+  .gh-segments { top: 88px; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -815,13 +817,13 @@ h1, h2, h3, h4,
   .gh-main > * { animation: none; }
 }
 
-.gh-hall { margin: 0.5rem 0 1.25rem; }
+.gh-hall { margin: 4px 0 12px; }
 .gh-hall h2 {
   font-family: Rajdhani, sans-serif;
-  font-size: 1.8rem;
-  letter-spacing: 0.06em;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  margin: 0.15rem 0 0.45rem;
+  margin: 0 0 4px;
 }
 .gh-hall .gh-lede,
 .gh-hall > .gh-muted { max-width: 44rem; }
@@ -829,12 +831,12 @@ h1, h2, h3, h4,
 .gh-hall-boards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.25rem;
-  margin-top: 1.1rem;
+  gap: 12px;
+  margin-top: 8px;
 }
 .gh-hall-board {
   border-top: 1px solid var(--dir-gold-dim);
-  padding-top: 0.75rem;
+  padding-top: 8px;
 }
 .gh-hall-board h3 {
   font-family: Rajdhani, sans-serif;
@@ -843,9 +845,9 @@ h1, h2, h3, h4,
   font-size: 1.15rem;
   margin: 0 0 0.3rem;
 }
-.gh-hall-list { list-style: none; margin: 0.75rem 0 0; padding: 0; }
+.gh-hall-list { list-style: none; margin: 8px 0 0; padding: 0; }
 .gh-hall-list li {
-  padding: 0.65rem 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--dir-line);
 }
 .gh-hall-list li p { margin: 0; }
@@ -855,3 +857,96 @@ h1, h2, h3, h4,
 @media (max-width: 799px) {
   .gh-hall-boards { grid-template-columns: 1fr; }
 }
+
+/* Compact rows, sticky segments, and an 8px rhythm over leftover utility spacing. */
+.gh-list li,
+.gh-feature-list li {
+  padding: 8px 0;
+  gap: 8px;
+}
+.gh-rotation,
+.gh-actions { gap: 8px; }
+.gh-segments {
+  position: sticky;
+  top: 56px;
+  z-index: 25;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 0;
+  background: rgba(7, 7, 8, 0.92);
+  backdrop-filter: blur(12px);
+}
+.gh-segments .gh-tabs {
+  border: 1px solid var(--dir-line);
+  border-bottom: 1px solid var(--dir-line);
+}
+.gh-segments .gh-tab {
+  border-bottom-width: 0;
+  min-height: 28px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+}
+.gh-segments .gh-tab[aria-selected='true'] {
+  background: rgba(227, 197, 122, 0.14);
+  color: var(--dir-ink);
+}
+.gh-disclosure {
+  border-top: 1px solid var(--dir-line);
+  padding-top: 4px;
+}
+.gh-disclosure > summary {
+  cursor: pointer;
+  list-style: none;
+  color: var(--dir-gold);
+  font-family: Rajdhani, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 0;
+}
+.gh-disclosure > summary::-webkit-details-marker { display: none; }
+.gh-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--dir-line);
+  border-bottom: 1px solid var(--dir-line);
+}
+.gh-status p { margin: 0; }
+.gh-row-card {
+  display: grid;
+  gap: 2px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--dir-line);
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+}
+.gh-row-card:hover { background: rgba(227, 197, 122, 0.05); }
+.gh-shell .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 12px !important; }
+.gh-shell .space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: 8px !important; }
+.gh-shell .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 8px !important; }
+.gh-shell .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 4px !important; }
+.gh-shell .gap-6 { gap: 12px !important; }
+.gh-shell .gap-5,
+.gh-shell .gap-4,
+.gh-shell .gap-3 { gap: 8px !important; }
+.gh-shell .p-6 { padding: 12px !important; }
+.gh-shell .p-5,
+.gh-shell .p-4 { padding: 8px !important; }
+.gh-shell .py-8,
+.gh-shell .py-6 { padding-top: 8px !important; padding-bottom: 8px !important; }
+.gh-shell .mt-5,
+.gh-shell .mt-4 { margin-top: 8px !important; }
+.gh-shell .mb-5,
+.gh-shell .mb-4 { margin-bottom: 8px !important; }
+.gh-compare-row { padding: 8px 0; gap: 8px; }

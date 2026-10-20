@@ -55,7 +55,7 @@ export default function QuestLookup({ onLogin }: { onLogin?: () => void }) {
       <PageHeader
         kicker="Manifest"
         title="Quests"
-        subtitle="Search quests, pursuits, and catalysts. Sign in to see which ones you already have."
+        subtitle="Search quests, pursuits, and catalysts."
         titleId="gh-quests-title"
       />
       <form className="gh-search" onSubmit={onSubmit}>
@@ -70,6 +70,7 @@ export default function QuestLookup({ onLogin }: { onLogin?: () => void }) {
         />
         <button type="submit">{loading ? 'Searching…' : 'Search'}</button>
       </form>
+      <div className="gh-segments">
       <div className="gh-tabs" role="tablist" aria-label="Quest kind">
         {(['all', ...QUEST_KINDS] as const).map((value) => (
           <button
@@ -86,6 +87,7 @@ export default function QuestLookup({ onLogin }: { onLogin?: () => void }) {
             {KIND_LABEL[value]}
           </button>
         ))}
+      </div>
       </div>
       {error ? (
         <NextStep

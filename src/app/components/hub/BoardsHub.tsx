@@ -70,65 +70,69 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
   return (
     <section className="gh-stack" aria-labelledby="gh-boards-title">
       <PageHeader
-        kicker="Season boards"
-        title="Season boards"
-        subtitle="Points come from verified clears. Bonds add more when you play with someone new."
+        title="Boards"
+        subtitle="Season standings from verified clears."
         titleId="gh-boards-title"
       />
 
-      <div className="gh-tabs" role="tablist" aria-label="Leaderboard">
-        {CATEGORIES.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={category === item.id}
-            className="gh-tab"
-            onClick={() => setCategory(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-      <div className="gh-tabs" role="tablist" aria-label="Time range">
-        {PERIODS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={period === item.id}
-            className="gh-tab"
-            onClick={() => setPeriod(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="gh-segments">
+        <div className="gh-tabs" role="tablist" aria-label="Leaderboard">
+          {CATEGORIES.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={category === item.id}
+              className="gh-tab"
+              onClick={() => setCategory(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <div className="gh-tabs" role="tablist" aria-label="Time range">
+          {PERIODS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={period === item.id}
+              className="gh-tab"
+              onClick={() => setPeriod(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <form className="gh-filters" onSubmit={(event) => event.preventDefault()}>
-        <label>
-          Name
-          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Filter guardians" />
-        </label>
-        <label>
-          Platform
-          <select value={platform} onChange={(event) => setPlatform(event.target.value)}>
-            <option value="all">All</option>
-            <option value="steam">Steam</option>
-            <option value="playstation">PlayStation</option>
-            <option value="xbox">Xbox</option>
-            <option value="epic">Epic</option>
-          </select>
-        </label>
-        <label>
-          Fastest activity
-          <input
-            value={activity}
-            onChange={(event) => setActivity(event.target.value)}
-            placeholder="Vault, Prophecy…"
-          />
-        </label>
-      </form>
+      <details className="gh-disclosure">
+        <summary>Filter</summary>
+        <form className="gh-filters" onSubmit={(event) => event.preventDefault()}>
+          <label>
+            Name
+            <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Filter guardians" />
+          </label>
+          <label>
+            Platform
+            <select value={platform} onChange={(event) => setPlatform(event.target.value)}>
+              <option value="all">All</option>
+              <option value="steam">Steam</option>
+              <option value="playstation">PlayStation</option>
+              <option value="xbox">Xbox</option>
+              <option value="epic">Epic</option>
+            </select>
+          </label>
+          <label>
+            Fastest activity
+            <input
+              value={activity}
+              onChange={(event) => setActivity(event.target.value)}
+              placeholder="Vault, Prophecy…"
+            />
+          </label>
+        </form>
+      </details>
 
       {loading ? <p className="gh-muted">Loading the board…</p> : null}
       {error ? (

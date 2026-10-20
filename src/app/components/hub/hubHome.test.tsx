@@ -5,7 +5,7 @@ import { HubHome } from '@/app/components/hub/HubPages'
 import { assemblePublicHub } from '@/lib/destiny/publicHub'
 
 describe('guardian hub home', () => {
-  it('explains the hub, lists contracts, and offers Bungie sign-in', () => {
+  it('keeps a short home with sign-in, boards, builds, and the weekly rotation', () => {
     const snapshot = assemblePublicHub({
       now: new Date('2026-10-11T18:00:00.000Z'),
       runs: [],
@@ -28,14 +28,15 @@ describe('guardian hub home', () => {
     expect(html).toContain('Top guardians')
     expect(html).toContain('Featured builds')
     expect(html).toContain('Search guardians')
-    expect(html).toContain('Featured dungeon, new faces')
+    expect(html).toContain('This season')
+    expect(html).toContain('More about TopNest')
     expect(html).toContain('What is TopNest?')
     expect(html).toContain('Play with new friends')
     expect(html).toContain('Earn points')
     expect(html).toContain('3D print')
     expect(html).toContain('A sherpa is')
-    expect(html).toContain('Tier')
-    expect(html).toContain('gh-points-chip')
+    expect(html).not.toContain('This week\'s contracts')
+    expect(html).not.toContain('Live fireteams')
     expect(html.toLowerCase()).not.toContain('cash prize')
     expect(html.toLowerCase()).not.toContain('pantheon')
   })

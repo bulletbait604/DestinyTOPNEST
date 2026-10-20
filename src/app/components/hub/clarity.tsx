@@ -26,7 +26,7 @@ export const GLOSSARY = [
   { word: 'Bonds', meaning: 'Extra points for clearing with someone new to you.' },
   { word: 'MVP', meaning: 'Your vote for the most helpful teammate. It does not change board points.' },
   { word: 'Kudos', meaning: 'A thank-you on a profile. It does not change board points.' },
-  { word: 'Sherpa', meaning: 'A player who already cleared an activity and helps someone get their first clear.' },
+  { word: 'Sherpa', meaning: 'A sherpa is a player who already cleared an activity and helps someone get their first clear.' },
   {
     word: 'Hall of Fame',
     meaning: 'The top three on each season prize board. #1 can win the prize. It is not the teachers list.',
@@ -182,18 +182,8 @@ export function FirstTimeGuide() {
       <div>
         <p className="gh-kicker">First visit</p>
         <h2 id="gh-guide-title">New to TopNest?</h2>
-        <p className="gh-lede">Three steps. You can close this and open Home any time.</p>
+        <p className="gh-lede">Play with new friends, earn points, and climb the season boards.</p>
       </div>
-      <ol className="gh-how-steps">
-        {HOW_STEPS.map((step, index) => (
-          <li key={step.title}>
-            <strong>
-              {index + 1}. {step.title}
-            </strong>
-            <span>{step.body}</span>
-          </li>
-        ))}
-      </ol>
       <div className="gh-actions">
         <button
           type="button"
