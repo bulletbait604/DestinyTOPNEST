@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useState, type ReactNode } from 'react'
-import { FirstTimeGuide, GEAR_NAV, isGearTab, MORE_NAV, navHint, PRIMARY_NAV } from '@/app/components/hub/clarity'
+import { FirstTimeGuide, GEAR_NAV, isGearTab, MORE_NAV, PRIMARY_NAV } from '@/app/components/hub/clarity'
 import { DirectorIcon } from '@/app/components/hub/directorIcons'
 import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
@@ -179,7 +179,6 @@ export default function HubChrome({
           </div>
         </details>
       </nav>
-      <p className="gh-nav-hint">{navHint(tab)}</p>
       <SeasonPointsBar />
       <FirstTimeGuide />
       <main id="hub-main" className="gh-main">

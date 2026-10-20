@@ -64,42 +64,59 @@ export default function LoadoutCompare() {
     <section className="gh-stack" aria-labelledby="gh-compare-title">
       <PageHeader
         kicker="Loadouts"
-        title="Compare two builds"
-        subtitle="Pick one shared build for each side. Likes are upvotes from other players."
+        title="Compare"
+        subtitle="Two builds, side by side."
         titleId="gh-compare-title"
       />
-      <form className="gh-filters" onSubmit={(event) => event.preventDefault()}>
-        <label>
-          Search
-          <input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Name or exotic" />
-        </label>
-        <label>
-          Class
-          <select value={characterClass} onChange={(event) => setCharacterClass(event.target.value as DestinyCharacterClass | 'all')}>
-            <option value="all">All</option>
-            {COMMUNITY_CLASSES.map((value) => (
-              <option key={value} value={value}>
-                {communityClassLabel(value)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Subclass
-          <input value={subclass} onChange={(event) => setSubclass(event.target.value)} placeholder="Nightstalker" />
-        </label>
-        <label>
-          Activity
-          <select value={tag} onChange={(event) => setTag(event.target.value as CommunityActivityTag | 'all')}>
-            <option value="all">All</option>
-            {COMMUNITY_ACTIVITY_TAG_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </form>
+      <div className="gh-segments" role="tablist" aria-label="Class">
+        <div className="gh-tabs">
+          <button
+            type="button"
+            role="tab"
+            className="gh-tab"
+            aria-selected={characterClass === 'all'}
+            onClick={() => setCharacterClass('all')}
+          >
+            All
+          </button>
+          {COMMUNITY_CLASSES.map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              className="gh-tab"
+              aria-selected={characterClass === value}
+              onClick={() => setCharacterClass(value)}
+            >
+              {communityClassLabel(value)}
+            </button>
+          ))}
+        </div>
+      </div>
+      <details className="gh-disclosure">
+        <summary>Filter</summary>
+        <form className="gh-filters" onSubmit={(event) => event.preventDefault()}>
+          <label>
+            Search
+            <input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Name or exotic" />
+          </label>
+          <label>
+            Subclass
+            <input value={subclass} onChange={(event) => setSubclass(event.target.value)} placeholder="Nightstalker" />
+          </label>
+          <label>
+            Activity
+            <select value={tag} onChange={(event) => setTag(event.target.value as CommunityActivityTag | 'all')}>
+              <option value="all">All</option>
+              {COMMUNITY_ACTIVITY_TAG_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </form>
+      </details>
       {error ? (
         <NextStep
           alert

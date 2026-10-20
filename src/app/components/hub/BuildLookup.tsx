@@ -77,7 +77,7 @@ export default function BuildLookup() {
       <PageHeader
         kicker="Builds"
         title="Find a build"
-        subtitle="Search builds people posted, or the weapons and armor a Guardian has equipped."
+        subtitle="Search shared builds, or the gear a Guardian has equipped."
         titleId="gh-lookup-title"
       />
 
@@ -126,38 +126,49 @@ export default function BuildLookup() {
         </div>
       ) : null}
 
-      <form className="gh-filters" onSubmit={(event) => event.preventDefault()}>
-        <label>
-          Shared builds
-          <input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Name, exotic, subclass" />
-        </label>
-        <label>
-          Class
-          <select value={characterClass} onChange={(event) => setCharacterClass(event.target.value as DestinyCharacterClass | 'all')}>
-            <option value="all">All</option>
-            {COMMUNITY_CLASSES.map((value) => (
-              <option key={value} value={value}>
-                {communityClassLabel(value)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Subclass
-          <input value={subclass} onChange={(event) => setSubclass(event.target.value)} placeholder="Any subclass" />
-        </label>
-        <label>
-          Activity
-          <select value={tag} onChange={(event) => setTag(event.target.value as CommunityActivityTag | 'all')}>
-            <option value="all">All</option>
-            {COMMUNITY_ACTIVITY_TAG_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </form>
+      <div className="gh-segments" role="tablist" aria-label="Class">
+        <div className="gh-tabs">
+          <button type="button" role="tab" className="gh-tab" aria-selected={characterClass === 'all'} onClick={() => setCharacterClass('all')}>
+            All
+          </button>
+          {COMMUNITY_CLASSES.map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              className="gh-tab"
+              aria-selected={characterClass === value}
+              onClick={() => setCharacterClass(value)}
+            >
+              {communityClassLabel(value)}
+            </button>
+          ))}
+        </div>
+      </div>
+      <details className="gh-disclosure">
+        <summary>Filter</summary>
+        <form className="gh-filters" onSubmit={(event) => event.preventDefault()}>
+          <label>
+            Shared builds
+            <input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Name, exotic, subclass" />
+          </label>
+          <label>
+            Subclass
+            <input value={subclass} onChange={(event) => setSubclass(event.target.value)} placeholder="Any subclass" />
+          </label>
+          <label>
+            Activity
+            <select value={tag} onChange={(event) => setTag(event.target.value as CommunityActivityTag | 'all')}>
+              <option value="all">All</option>
+              {COMMUNITY_ACTIVITY_TAG_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </form>
+      </details>
       {listError ? (
         <NextStep
           alert

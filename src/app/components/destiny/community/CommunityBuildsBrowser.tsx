@@ -29,7 +29,7 @@ function BuildCard({ build, darkMode }: { build: CommunityBuildPublic; darkMode:
   return (
     <Link
       href={`/builds/${build.id}`}
-      className="d2-panel-inset p-4 rounded-lg space-y-3 block hover:bg-white/[0.03]"
+      className="gh-row-card block"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -172,7 +172,7 @@ export default function CommunityBuildsBrowser({
       <GlassCard darkMode={darkMode}>
         <SectionTitle
           title="Shared builds"
-          subtitle="Featured guides are curated from build sites and credited with a link. Everything else is a player post."
+          subtitle="Featured guides are curated. Everything else is a player post."
           darkMode={darkMode}
         />
         <div className="mt-4 flex flex-wrap gap-2">
@@ -222,8 +222,54 @@ export default function CommunityBuildsBrowser({
         ) : null}
       </GlassCard>
 
-      <GlassCard darkMode={darkMode}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="gh-segments">
+        <div className="gh-tabs" role="tablist" aria-label="Class">
+          <button
+            type="button"
+            role="tab"
+            className="gh-tab"
+            aria-selected={characterClass === 'all'}
+            onClick={() => setCharacterClass('all')}
+          >
+            All
+          </button>
+          {COMMUNITY_CLASSES.map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              className="gh-tab"
+              aria-selected={characterClass === value}
+              onClick={() => setCharacterClass(value)}
+            >
+              {communityClassLabel(value)}
+            </button>
+          ))}
+        </div>
+        <div className="gh-tabs" role="tablist" aria-label="Sort">
+          {(
+            [
+              ['new', 'Newest'],
+              ['top', 'Top'],
+              ['saved', 'Saved'],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              className="gh-tab"
+              aria-selected={sort === value}
+              onClick={() => setSort(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <details className="gh-disclosure">
+        <summary>Filter</summary>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <label>
             <span className={cn('block text-[11px] uppercase tracking-wide mb-1', t.caption)}>Search</span>
             <input
@@ -233,21 +279,6 @@ export default function CommunityBuildsBrowser({
               className={fieldClass}
               maxLength={80}
             />
-          </label>
-          <label>
-            <span className={cn('block text-[11px] uppercase tracking-wide mb-1', t.caption)}>Class</span>
-            <select
-              value={characterClass}
-              onChange={(event) => setCharacterClass(event.target.value as DestinyCharacterClass | 'all')}
-              className={fieldClass}
-            >
-              <option value="all">All classes</option>
-              {COMMUNITY_CLASSES.map((value) => (
-                <option key={value} value={value}>
-                  {communityClassLabel(value)}
-                </option>
-              ))}
-            </select>
           </label>
           <label>
             <span className={cn('block text-[11px] uppercase tracking-wide mb-1', t.caption)}>Subclass</span>
@@ -274,57 +305,32 @@ export default function CommunityBuildsBrowser({
               ))}
             </select>
           </label>
-          <label>
-            <span className={cn('block text-[11px] uppercase tracking-wide mb-1', t.caption)}>Sort</span>
-            <select
-              value={sort}
-              onChange={(event) => setSort(event.target.value as CommunityBuildSort)}
-              className={fieldClass}
-            >
-              <option value="new">Newest</option>
-              <option value="top">Top voted</option>
-              <option value="saved">Most saved</option>
-            </select>
-          </label>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            aria-pressed={stat === 'all'}
-            onClick={() => setStat('all')}
-            className={cn(
-              'px-3 py-1.5 rounded-lg text-xs border min-h-[36px]',
-              stat === 'all' ? 'border-white/40 text-white' : 'border-white/10 text-white/60'
-            )}
-          >
+        <div className="mt-2 gh-tabs" role="tablist" aria-label="Armor stat">
+          <button type="button" role="tab" className="gh-tab" aria-selected={stat === 'all'} onClick={() => setStat('all')}>
             Any stat
           </button>
           {ARMOR_STAT_ORDER.map((item) => (
             <button
               key={item.key}
               type="button"
-              aria-pressed={stat === item.key}
+              role="tab"
+              className="gh-tab"
+              aria-selected={stat === item.key}
               onClick={() => setStat(item.key)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-xs border min-h-[36px]',
-                stat === item.key ? 'border-[var(--tn-arc)] text-white' : 'border-white/10 text-white/60'
-              )}
             >
               {item.label}
             </button>
           ))}
         </div>
-      </GlassCard>
+      </details>
 
       {!loading && featured.length > 0 ? (
         <section className="space-y-3" aria-labelledby="featured-builds-title">
           <h2 id="featured-builds-title" className={cn('text-lg font-semibold', t.gold)}>
             Featured
           </h2>
-          <p className={cn('text-sm', t.muted)}>
-            Curated loadouts. Each one names the site it came from. These are not player posts.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
             {featured.map((build) => (
               <BuildCard key={build.id} build={build} darkMode={darkMode} />
             ))}
