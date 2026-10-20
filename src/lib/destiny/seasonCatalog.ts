@@ -38,20 +38,20 @@ export function prizeForCountry(countryCode: string): string | null {
 export const DEFAULT_SEASON_PRIZE_RULES: SeasonPrizeRules = {
   raid: {
     first: SEASON_PRIZE_TEXT,
-    second: 'Hall of Fame mention',
-    thirdToFifth: 'Hall of Fame mention',
+    second: 'Listed on the season Hall',
+    thirdToFifth: 'Listed on the season Hall',
     participation: 'Season history',
   },
   dungeon: {
     first: SEASON_PRIZE_TEXT,
-    second: 'Hall of Fame mention',
-    thirdToFifth: 'Hall of Fame mention',
+    second: 'Listed on the season Hall',
+    thirdToFifth: 'Listed on the season Hall',
     participation: 'Season history',
   },
   newBonds: {
     first: SEASON_PRIZE_TEXT,
-    second: 'Hall of Fame mention',
-    thirdToFifth: 'Hall of Fame mention',
+    second: 'Listed on the season Hall',
+    thirdToFifth: 'Listed on the season Hall',
     participation: 'Season history',
   },
 }

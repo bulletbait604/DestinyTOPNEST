@@ -22,6 +22,7 @@ export default function AdminCommunityBuildsSection({
   const [builds, setBuilds] = useState<StaffBuild[]>([])
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<string | null>(null)
+  const [importing, setImporting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -40,6 +41,35 @@ export default function AdminCommunityBuildsSection({
   useEffect(() => {
     void load()
   }, [load])
+
+  async function importFeatured() {
+    setImporting(true)
+    setMessage(null)
+    try {
+      const res = await fetch('/api/destiny/admin/featured-builds', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'import' }),
+      })
+      const json = (await res.json().catch(() => ({}))) as {
+        error?: string
+        inserted?: number
+        updated?: number
+        unchanged?: number
+      }
+      if (!res.ok) throw new Error(json.error || 'Import failed')
+      setMessage(
+        `Featured guides imported. ${json.inserted ?? 0} new, ${json.updated ?? 0} updated, ${json.unchanged ?? 0} already current.`
+      )
+      await load()
+      onAction?.()
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Import failed')
+    } finally {
+      setImporting(false)
+    }
+  }
 
   async function moderate(buildId: string, action: 'hide' | 'restore' | 'remove' | 'delete') {
     if (action === 'delete' && !window.confirm('Delete this shared build permanently?')) return
@@ -70,9 +100,13 @@ export default function AdminCommunityBuildsSection({
     <GlassCard darkMode={darkMode}>
       <SectionTitle
         title="Shared builds"
-        subtitle="Hide, restore, or delete player-shared loadouts"
+        subtitle="Hide player posts, or import the curated featured guides. Import is owner-only and safe to run again."
         darkMode={darkMode}
       />
+      <button type="button" className={cn(destinySecondaryBtn(darkMode), 'mt-3')} disabled={importing} onClick={() => void importFeatured()}>
+        {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+        Import featured builds
+      </button>
       {message ? <p className={cn('text-sm mt-3', t.muted)}>{message}</p> : null}
       <div className="mt-4 space-y-3">
         {builds.length === 0 ? <p className={cn('text-sm', t.muted)}>No shared builds yet.</p> : null}

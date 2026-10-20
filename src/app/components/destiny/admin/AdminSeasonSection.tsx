@@ -244,7 +244,7 @@ export default function AdminSeasonSection({
           <Trophy className="w-5 h-5 text-amber-400" />
           <SectionTitle
             title="Season finalization"
-            subtitle="Lock hall of fame winners and stop live season scoring"
+            subtitle="Save the top three on each prize board and stop live season scoring"
             darkMode={darkMode}
           />
         </div>

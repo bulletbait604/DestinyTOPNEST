@@ -9,6 +9,7 @@ import type {
   NightOpsBoard,
   PrizeClaim,
   Season,
+  SeasonWinner,
   SherpaBoard,
   WeeklyContractsSnapshot,
   WeeklyResetInfo,
@@ -17,6 +18,7 @@ import type { UserPrizeTrackEntry } from '@/lib/destiny/seasonPrizes'
 import SeasonPrizeClaimSection from '@/app/components/destiny/SeasonPrizeClaimSection'
 import { ChemistryPanel, ClanWarsPanel, NightOpsPanel, SherpaPanel } from '@/app/components/destiny/FireteamHqPanels'
 import WeeklyContractsPanel from '@/app/components/destiny/WeeklyContractsPanel'
+import SeasonHall from '@/app/components/destiny/SeasonHall'
 import { seasonPrizesEnabled } from '@/lib/destiny/featureFlags'
 import { ActivityBadge, GlassCard, ItemIcon, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
@@ -24,9 +26,9 @@ import { leaderboardCategoryIconUrl } from '@/lib/destiny/activityIconPaths'
 import { cn } from '@/lib/utils'
 
 const CATEGORY_LABELS: Record<string, string> = {
-  raid: 'Raid leaders',
-  dungeon: 'Dungeon leaders',
-  new_bonds: 'New Bonds',
+  raid: 'Raid board',
+  dungeon: 'Dungeon board',
+  new_bonds: 'New friends board',
 }
 
 /** Season prizes and standings — rendered below Leaderboards grid. */
@@ -44,6 +46,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
   const [clanWars, setClanWars] = useState<ClanWarsBoard | null>(null)
   const [nightOps, setNightOps] = useState<NightOpsBoard | null>(null)
   const [chemistry, setChemistry] = useState<ChemistryBoard | null>(null)
+  const [hallOfFame, setHallOfFame] = useState<SeasonWinner[]>([])
   const [loading, setLoading] = useState(true)
   const [showPrizes, setShowPrizes] = useState(seasonPrizesEnabled())
   const t = getDestinyTheme(darkMode)
@@ -67,6 +70,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
         setClanWars(json.clanWars ?? null)
         setNightOps(json.nightOps ?? null)
         setChemistry(json.chemistry ?? null)
+        setHallOfFame(json.hallOfFame ?? [])
         setShowPrizes(json.seasonPrizesEnabled !== false)
       }
     } finally {
@@ -83,9 +87,10 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
 
   return (
     <div className="space-y-4 pt-2 border-t border-white/[0.08]">
+      <SeasonHall season={season} winners={hallOfFame} />
       <SectionTitle
-        title="Season standings"
-        subtitle="Verified clears decide who leads each board"
+        title="Your place"
+        subtitle="Your rank on each prize board. The Hall above is everyone in the top three."
         darkMode={darkMode}
       />
 
@@ -116,7 +121,7 @@ export default function SeasonSection({ darkMode }: { darkMode: boolean }) {
         <GlassCard darkMode={darkMode}>
           <div className="flex items-center gap-2 mb-3">
             <Target className="w-4 h-4 text-amber-400" />
-            <SectionTitle title="Your standings" subtitle="Current ranks across active boards" darkMode={darkMode} />
+            <SectionTitle title="Your ranks" subtitle="Where you sit on the three prize boards" darkMode={darkMode} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {prizeTrack.map((track) => (

@@ -12,9 +12,17 @@ import { takeCommunityBuildRateLimit } from '@/lib/destiny/communityBuildRateLim
 import {
   createCommunityBuild,
   listCommunityBuilds,
+  listFeaturedCommunityBuilds,
   viewerFlagsForBuilds,
 } from '@/lib/destiny/communityBuildStore'
+import { featuredBuildRecords } from '@/lib/destiny/featuredBuilds'
+import { ensureFeaturedBuildsSeed } from '@/lib/destiny/featuredBuildSeed'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
+
+function databaseUnavailable(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : ''
+  return /database is not connected|ECONNREFUSED|MongoServerSelection/i.test(message)
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -29,26 +37,49 @@ export async function GET(req: NextRequest) {
     }
 
     const userId = viewer.user?.username.toLowerCase()
+    try {
+      await ensureFeaturedBuildsSeed()
+    } catch (error) {
+      if (!databaseUnavailable(error)) throw error
+      console.warn('[community-builds] featured seed skipped', error)
+    }
+
     const { builds, total } = await listCommunityBuilds(parsed.query, userId)
+    const featuredRows =
+      parsed.query.scope === 'public' ? await listFeaturedCommunityBuilds(parsed.query) : []
     const flags = await viewerFlagsForBuilds(
-      builds.map((build) => build.id),
+      [...builds, ...featuredRows].map((build) => build.id),
       userId
     )
+    const present = (build: (typeof builds)[number]) =>
+      toCommunityBuildPublic(build, {
+        userId,
+        staff: viewer.staff,
+        upvoted: flags.upvoted.has(build.id),
+        saved: flags.saved.has(build.id),
+      })
 
     return communityBuildJson({
-      builds: builds.map((build) =>
-        toCommunityBuildPublic(build, {
-          userId,
-          staff: viewer.staff,
-          upvoted: flags.upvoted.has(build.id),
-          saved: flags.saved.has(build.id),
-        })
-      ),
+      builds: builds.map(present),
+      featured: featuredRows.map(present),
       total,
       limit: parsed.query.limit,
       offset: parsed.query.offset,
     })
   } catch (error) {
+    if (databaseUnavailable(error)) {
+      const parsed = parseCommunityBuildListQuery(req.nextUrl.searchParams)
+      const featured = featuredBuildRecords().map((build) => toCommunityBuildPublic(build, {}))
+      const classFilter = parsed.ok ? parsed.query.characterClass : undefined
+      return communityBuildJson({
+        builds: [],
+        featured: classFilter ? featured.filter((build) => build.characterClass === classFilter) : featured,
+        total: 0,
+        limit: 12,
+        offset: 0,
+        degraded: true,
+      })
+    }
     console.error('[community-builds GET]', error)
     return communityBuildError('Internal server error', 500)
   }

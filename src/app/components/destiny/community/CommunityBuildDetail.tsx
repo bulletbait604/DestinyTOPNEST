@@ -245,7 +245,11 @@ export default function CommunityBuildDetail({
         <div className="flex items-start justify-between gap-3">
           <SectionTitle
             title={build.name}
-            subtitle={`${communityClassLabel(build.characterClass)} · ${build.subclass} · ${build.ownerDisplayName}`}
+            subtitle={
+              build.listing === 'featured'
+                ? `${communityClassLabel(build.characterClass)} · ${build.subclass} · Featured / curated`
+                : `${communityClassLabel(build.characterClass)} · ${build.subclass} · ${build.ownerDisplayName}`
+            }
             iconUrl={build.ownerEmblemUrl}
             darkMode={darkMode}
           />
@@ -254,6 +258,15 @@ export default function CommunityBuildDetail({
           ) : null}
         </div>
         {build.moderationNote ? <p className={cn('text-sm mt-3', t.muted)}>Moderator note: {build.moderationNote}</p> : null}
+        {build.listing === 'featured' && build.creditName && build.creditUrl ? (
+          <p className={cn('text-sm mt-3', t.body)}>
+            Featured / curated from{' '}
+            <a className="underline underline-offset-2" href={build.creditUrl} target="_blank" rel="noreferrer">
+              {build.creditName}
+            </a>
+            . This is not a player post.
+          </p>
+        ) : null}
         {build.source === 'equipped' ? (
           <p className={cn('text-xs mt-3', t.caption)}>Started from an equipped character loadout.</p>
         ) : null}

@@ -23,6 +23,54 @@ import { cn } from '@/lib/utils'
 const fieldClass =
   'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/35'
 
+function BuildCard({ build, darkMode }: { build: CommunityBuildPublic; darkMode: boolean }) {
+  const t = getDestinyTheme(darkMode)
+  const featured = build.listing === 'featured'
+  return (
+    <Link
+      href={`/builds/${build.id}`}
+      className="d2-panel-inset p-4 rounded-lg space-y-3 block hover:bg-white/[0.03]"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="d2-panel-header-title text-sm truncate">{build.name}</p>
+          <p className={cn('text-xs mt-1', t.muted)}>
+            {communityClassLabel(build.characterClass)} · {build.subclass}
+            {featured ? ' · Featured' : ''}
+          </p>
+        </div>
+        {build.ownerEmblemUrl ? <ItemIcon iconUrl={build.ownerEmblemUrl} name={build.ownerDisplayName} size={36} /> : null}
+      </div>
+      <p className={cn('text-sm', t.body)}>
+        {build.exoticArmor || 'Exotic armor is on the source page'}
+        {build.exoticWeapon ? ` · ${build.exoticWeapon}` : ''}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {featured ? (
+          <span className="rounded-md border border-[var(--dir-gold-dim,rgba(227,197,122,0.45))] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--dir-gold,#e3c57a)]">
+            Featured / curated
+          </span>
+        ) : null}
+        {build.activityTags.map((activity) => (
+          <span key={activity} className="rounded-md border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white/70">
+            {communityActivityTagLabel(activity)}
+          </span>
+        ))}
+      </div>
+      <p className={cn('text-xs', t.caption)}>
+        {featured && build.creditName ? (
+          <>Curated from {build.creditName}</>
+        ) : (
+          <>
+            {build.upvoteCount} upvotes · {build.saveCount} saves · {build.ownerDisplayName}
+            {build.status !== 'published' ? ` · ${build.status}` : ''}
+          </>
+        )}
+      </p>
+    </Link>
+  )
+}
+
 async function errorMessage(res: Response, fallback: string): Promise<string> {
   const json = (await res.json().catch(() => ({}))) as { error?: string }
   return json.error || fallback
@@ -39,6 +87,7 @@ export default function CommunityBuildsBrowser({
 }) {
   const t = getDestinyTheme(darkMode)
   const [builds, setBuilds] = useState<CommunityBuildPublic[]>([])
+  const [featured, setFeatured] = useState<CommunityBuildPublic[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -91,8 +140,9 @@ export default function CommunityBuildsBrowser({
           signal: controller.signal,
         })
         if (!res.ok) throw new Error(await errorMessage(res, 'Could not load shared builds.'))
-        const json = (await res.json()) as { builds: CommunityBuildPublic[]; total: number }
+        const json = (await res.json()) as { builds: CommunityBuildPublic[]; featured?: CommunityBuildPublic[]; total: number }
         setBuilds(json.builds ?? [])
+        setFeatured(json.featured ?? [])
         setTotal(json.total ?? 0)
       } catch (err) {
         if ((err as { name?: string }).name === 'AbortError') return
@@ -122,7 +172,7 @@ export default function CommunityBuildsBrowser({
       <GlassCard darkMode={darkMode}>
         <SectionTitle
           title="Shared builds"
-          subtitle="Gear other players posted. Sign in to share yours or upvote one you like."
+          subtitle="Featured guides are curated from build sites and credited with a link. Everything else is a player post."
           darkMode={darkMode}
         />
         <div className="mt-4 flex flex-wrap gap-2">
@@ -266,6 +316,22 @@ export default function CommunityBuildsBrowser({
         </div>
       </GlassCard>
 
+      {!loading && featured.length > 0 ? (
+        <section className="space-y-3" aria-labelledby="featured-builds-title">
+          <h2 id="featured-builds-title" className={cn('text-lg font-semibold', t.gold)}>
+            Featured
+          </h2>
+          <p className={cn('text-sm', t.muted)}>
+            Curated loadouts. Each one names the site it came from. These are not player posts.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {featured.map((build) => (
+              <BuildCard key={build.id} build={build} darkMode={darkMode} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {loading ? <LoadingBlock darkMode={darkMode} label="Loading shared builds…" /> : null}
       {!loading && error ? (
         <GlassCard darkMode={darkMode}>
@@ -274,47 +340,18 @@ export default function CommunityBuildsBrowser({
           </p>
         </GlassCard>
       ) : null}
-      {!loading && !error && builds.length === 0 ? (
+      {!loading && !error && builds.length === 0 && (featured.length === 0 || debouncedQ || characterClass !== 'all' || tag !== 'all' || stat !== 'all' || debouncedSubclass) ? (
         <EmptyBlock
           darkMode={darkMode}
-          message="No shared builds match"
+          message={featured.length ? 'No player posts match' : 'No shared builds match'}
           hint="Try another filter, or share a loadout from your equipped gear."
         />
       ) : null}
       {!loading && !error && builds.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <h2 className={cn('md:col-span-2 text-lg font-semibold', t.gold)}>Player posts</h2>
           {builds.map((build) => (
-            <Link
-              key={build.id}
-              href={`/builds/${build.id}`}
-              className="d2-panel-inset p-4 rounded-lg space-y-3 block hover:bg-white/[0.03]"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="d2-panel-header-title text-sm truncate">{build.name}</p>
-                  <p className={cn('text-xs mt-1', t.muted)}>
-                    {communityClassLabel(build.characterClass)} · {build.subclass}
-                  </p>
-                </div>
-                {build.ownerEmblemUrl ? <ItemIcon iconUrl={build.ownerEmblemUrl} name={build.ownerDisplayName} size={36} /> : null}
-              </div>
-              <p className={cn('text-sm', t.body)}>
-                {build.exoticArmor || 'No exotic armor'}
-                {' · '}
-                {build.exoticWeapon || 'No exotic weapon'}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {build.activityTags.map((activity) => (
-                  <span key={activity} className="rounded-md border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white/70">
-                    {communityActivityTagLabel(activity)}
-                  </span>
-                ))}
-              </div>
-              <p className={cn('text-xs', t.caption)}>
-                {build.upvoteCount} upvotes · {build.saveCount} saves · {build.ownerDisplayName}
-                {build.status !== 'published' ? ` · ${build.status}` : ''}
-              </p>
-            </Link>
+            <BuildCard key={build.id} build={build} darkMode={darkMode} />
           ))}
         </div>
       ) : null}
