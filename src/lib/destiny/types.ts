@@ -113,6 +113,7 @@ export type DestinyTopNestTab =
   | 'compare'
   | 'lookup'
   | 'quests'
+  | 'ask'
 
 export interface DestinyIconRef {
   name: string

@@ -760,7 +760,7 @@ h1, h2, h3, h4,
   .gh-nav { display: none; }
   .gh-bottom-nav {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     position: fixed;
     left: 0;
     right: 0;
@@ -950,3 +950,20 @@ h1, h2, h3, h4,
 .gh-shell .mb-5,
 .gh-shell .mb-4 { margin-bottom: 8px !important; }
 .gh-compare-row { padding: 8px 0; gap: 8px; }
+.gh-ask { display: grid; gap: 8px; }
+.gh-ask form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--dir-gold);
+}
+.gh-ask input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--dir-ink);
+  font: inherit;
+}
+.gh-ask-answer { margin: 0; white-space: pre-wrap; }

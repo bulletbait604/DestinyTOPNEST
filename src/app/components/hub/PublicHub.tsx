@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import AskGuide from '@/app/components/hub/AskGuide'
 import CommunityBuildsBrowser from '@/app/components/destiny/community/CommunityBuildsBrowser'
 import BuildLookup from '@/app/components/hub/BuildLookup'
 import GuardianDirectory from '@/app/components/hub/GuardianDirectory'
@@ -42,6 +43,7 @@ export default function PublicHub({ onLogin }: { onLogin: () => void }) {
   }, [])
 
   if (tab === 'overview') return <ConnectedHome onLogin={onLogin} />
+  if (tab === 'ask') return <AskGuide />
   if (tab === 'guardians') return <GuardianDirectory onLogin={onLogin} />
   if (tab === 'fireteam') return <HubFireteams onLogin={onLogin} />
   if (tab === 'contracts') return <HubContracts />

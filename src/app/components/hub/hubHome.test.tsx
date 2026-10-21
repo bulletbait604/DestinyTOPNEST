@@ -27,7 +27,7 @@ describe('guardian hub home', () => {
     expect(html).toContain('Featured raids')
     expect(html).toContain('Top guardians')
     expect(html).toContain('Featured builds')
-    expect(html).toContain('Search guardians')
+    expect(html).toContain('Ask TopNest')
     expect(html).toContain('This season')
     expect(html).toContain('More about TopNest')
     expect(html).toContain('What is TopNest?')
