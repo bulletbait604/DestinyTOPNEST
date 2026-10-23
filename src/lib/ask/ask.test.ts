@@ -9,6 +9,7 @@ import {
   askGatewayConfigured,
   askProvider,
   extractArticleText,
+  wikitextToPlain,
   hostAllowed,
   normalizeQuestion,
   parseFandomSearch,
@@ -204,6 +205,12 @@ describe('ask answers', () => {
     expect(article).toContain('Lost City')
     expect(article).not.toContain('Red War')
 
+    const wiki = wikitextToPlain(
+      '{{Infobox|name=Weaver}}\n==Unlock==\nRun [[Lost City|the Lost City]] adventures on this character. Not the [[Red War]].'
+    )
+    expect(wiki).toContain('Lost City adventures')
+    expect(wiki).not.toContain('Infobox')
+
     const excerpt = redditThreadExcerpt([
       { data: { children: [{ data: { selftext: 'Do the six adventures on this character.' } }] } },
       { data: { children: [{ data: { body: 'Ghost vendor is after those missions.' } }, { data: { body: '[deleted]' } }] } },
@@ -211,5 +218,30 @@ describe('ask answers', () => {
     expect(excerpt).toContain('six adventures')
     expect(excerpt).toContain('Ghost vendor')
     expect(excerpt).not.toContain('[deleted]')
+  })
+
+  it('reads the wiki article body instead of an empty search snippet', async () => {
+    const fetchImpl = async (url: string) => {
+      if (url.includes('action=query&list=search')) {
+        return new Response(
+          JSON.stringify({ query: { search: [{ title: "Weaver's Call", snippet: '' }] } })
+        )
+      }
+      if (url.includes('action=parse')) {
+        return new Response(
+          JSON.stringify({
+            parse: {
+              wikitext: {
+                '*': '==Unlock==\nOn this Warlock, run the Lost City Replayable Adventures: Home Part I and Home Part II.',
+              },
+            },
+          })
+        )
+      }
+      return new Response('', { status: 404 })
+    }
+    const sources = await retrieveTrustedSources("How do I get Weaver's Call on this Warlock?", fetchImpl)
+    expect(sources[0]?.excerpt).toContain('Lost City Replayable Adventures')
+    expect(sources[0]?.excerpt).toContain('Home Part II')
   })
 })

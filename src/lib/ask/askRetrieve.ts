@@ -1,6 +1,7 @@
 import {
   dedupeSources,
   extractArticleText,
+  fandomWikitextExcerpt,
   parseFandomSearch,
   parseHtmlLinks,
   parseRedditSearch,
@@ -74,12 +75,27 @@ export async function retrieveTrustedSources(question: string, fetchImpl: FetchL
 
 async function enrichSource(fetchImpl: FetchLike, source: AskSource): Promise<AskSource> {
   const reddit = source.url.includes('reddit.com')
-  const url = reddit ? `${source.url.replace(/\/$/, '')}.json?limit=6` : source.url
+  const fandomTitle = source.url.includes('destiny.fandom.com/wiki/')
+    ? decodeURIComponent(source.url.split('/wiki/')[1] || '').split('#')[0]
+    : ''
+  const url = reddit
+    ? `${source.url.replace(/\/$/, '')}.json?limit=6`
+    : fandomTitle
+      ? `https://destiny.fandom.com/api.php?action=parse&page=${encodeURIComponent(fandomTitle)}&prop=wikitext&format=json`
+      : source.url
   const raw = await readText(fetchImpl, url)
   if (!raw) return source
   if (reddit) {
     try {
       const excerpt = redditThreadExcerpt(JSON.parse(raw))
+      return excerpt ? { ...source, excerpt } : source
+    } catch {
+      return source
+    }
+  }
+  if (fandomTitle) {
+    try {
+      const excerpt = fandomWikitextExcerpt(JSON.parse(raw))
       return excerpt ? { ...source, excerpt } : source
     } catch {
       return source

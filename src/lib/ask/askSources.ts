@@ -163,6 +163,28 @@ export function parseRedditSearch(
   return sources
 }
 
+export function wikitextToPlain(wikitext: string, max = 2500): string {
+  let text = wikitext
+  for (let i = 0; i < 24; i += 1) {
+    const next = text.replace(/\{\{[^{}]*\}\}/g, ' ')
+    if (next === text) break
+    text = next
+  }
+  text = text
+    .replace(/\[\[(?:File|Image):[^\]]+\]\]/gi, ' ')
+    .replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, '$2')
+    .replace(/\[\[([^\]]+)\]\]/g, '$1')
+    .replace(/<ref[\s\S]*?<\/ref>/gi, ' ')
+    .replace(/'''|''/g, '')
+    .replace(/={2,}/g, ' ')
+  return clip(text, max)
+}
+
+export function fandomWikitextExcerpt(payload: unknown, max = 2500): string {
+  const raw = (payload as { parse?: { wikitext?: { '*'?: unknown } } })?.parse?.wikitext?.['*']
+  return typeof raw === 'string' ? wikitextToPlain(raw, max) : ''
+}
+
 export function extractArticleText(html: string, max = 2500): string {
   const withoutScripts = html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
