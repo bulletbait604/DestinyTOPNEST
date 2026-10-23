@@ -223,6 +223,7 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
                 membershipId={card.membershipId}
                 displayName={card.displayName}
                 membershipType={card.membershipType}
+                mvpVotes={card.mvpCount}
               />
             </div>
           </li>
@@ -282,7 +283,12 @@ function ProfileBody({ profile, onLogin }: { profile: GuardianPublicProfile; onL
           </span>
         </p>
         <QuickRateSummary membershipId={card.membershipId} />
-        <RateButton membershipId={card.membershipId} displayName={card.displayName} membershipType={card.membershipType} />
+        <RateButton
+          membershipId={card.membershipId}
+          displayName={card.displayName}
+          membershipType={card.membershipType}
+          mvpVotes={card.mvpCount}
+        />
       </div>
 
       <div className="gh-badge-row">

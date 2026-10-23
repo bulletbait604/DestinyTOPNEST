@@ -196,8 +196,9 @@ export interface DestinyUser {
   characterClass?: DestinyCharacterClass
   connectedAt?: string
   /**
-   * `pending` marks a lightweight unclaimed placeholder. Those records must not
-   * appear on leaderboards. Real sign-ins stay `active` or unset.
+   * `pending` marks a lightweight unclaimed placeholder. That user id is not a
+   * leaderboard key. A qualifying fireteam member is ranked as `bungie:` plus
+   * their membership id until they sign in. Real sign-ins stay `active` or unset.
    */
   accountStatus?: 'active' | 'pending'
   profileFlexStats?: ProfileFlexStatId[]
@@ -318,6 +319,8 @@ export interface LeaderboardEntry {
   hasManualAdjustment?: boolean
   /** Bungie membership id when the row is a linked Guardian. */
   bungieMembershipId?: string
+  /** MVP crowns stored for this membership, including votes from before sign-in. */
+  mvpVotes?: number
 }
 
 export interface LeaderboardAdjustment {

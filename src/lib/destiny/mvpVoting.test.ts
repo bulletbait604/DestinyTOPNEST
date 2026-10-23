@@ -315,7 +315,7 @@ describe('fireteam MVP votes', () => {
       })
     )
     expect(html).toContain('Vote MVP')
-    expect(html).toContain('Kudos')
+    expect(html).not.toContain('Kudos')
     expect(html).toContain('not on Top Nest yet')
     expect(html).toContain('Ada')
     expect(html).toContain('Bex')
@@ -338,13 +338,18 @@ describe('mvp vote rate limit', () => {
   })
 })
 
-describe('leaderboards ignore unclaimed players', () => {
-  it('skips runs owned by a pending placeholder and still ranks claimed players', () => {
+describe('leaderboards include qualifying unregistered players', () => {
+  it('does not use a pending account id as the board key', () => {
     const rows = aggregateLeaderboard(
       [
-        run({ id: 'real', ownerUserId: 'ada', pointsAwarded: 10, type: 'raid' }),
-        run({ id: 'ghost-run', ownerUserId: 'ghost', pointsAwarded: 40, type: 'raid' }),
-        run({ id: 'unknown', ownerUserId: 'stranger', pointsAwarded: 4, type: 'raid' }),
+        run({
+          id: 'ghost-run',
+          pgcrId: 'ghost-pgcr',
+          ownerUserId: 'ghost',
+          ownerMembershipId: 'ghost',
+          pointsAwarded: 40,
+          teamMembers: [member('ghost', { displayName: 'Ghost' }), member('ada', { displayName: 'Ada' })],
+        }),
       ],
       new Map([
         ['ada', user({ userId: 'ada', bungieMembershipId: 'ada', bungieDisplayName: 'Ada' })],
@@ -362,7 +367,9 @@ describe('leaderboards ignore unclaimed players', () => {
       'all_time',
       season
     )
-    expect(rows.map((row) => row.userId)).toEqual(['ada', 'stranger'])
     expect(rows.find((row) => row.userId === 'ghost')).toBeUndefined()
+    expect(rows.find((row) => row.userId === 'bungie:ghost')?.points).toBe(40)
+    expect(rows.find((row) => row.userId === 'ada')?.points).toBe(40)
+    expect(rows.find((row) => row.userId === 'bungie:ghost')?.bungieDisplayName).toBe('Ghost')
   })
 })

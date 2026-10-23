@@ -189,23 +189,22 @@ describe('quick guardian rating', () => {
     expect(takeQuickRateLimit({ userId: 'voter', now: 2_000 }).ok).toBe(false)
   })
 
-  it('shows the one-screen form and the sign-in vote button', () => {
+  it('shows one MVP button and the sign-in line', () => {
     const signedOut = renderToStaticMarkup(
       createElement(QuickRateForm, {
         signedIn: false,
         target: { membershipId: '222', displayName: 'Ada' },
       })
     )
-    expect(signedOut).toContain('Chill')
-    expect(signedOut).toContain('Cast MVP Vote')
-    expect(signedOut).toContain('Sherpa / Teacher')
-    expect(signedOut).toContain('Great Comms')
+    expect(signedOut).toContain('Vote MVP')
     expect(signedOut).toContain('Sign in with Bungie to submit your vote')
-    expect(signedOut).toContain('Optional one-line note')
+    expect(signedOut).not.toContain('Cast MVP Vote')
+    expect(signedOut).not.toContain('Sherpa / Teacher')
+    expect(signedOut).not.toContain('Optional one-line note')
 
     const page = renderToStaticMarkup(createElement(RatePage))
-    expect(page).toContain('Rate a Guardian')
-    expect(page).toContain('Recent teammates')
-    expect(page).toContain('Great Comms')
+    expect(page).toContain('Vote MVP')
+    expect(page).toContain('Search')
+    expect(page).not.toContain('Great Comms')
   })
 })

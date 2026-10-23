@@ -259,6 +259,18 @@ export async function getClan(clanId: string, accessToken?: string) {
   return bungieFetch(`/GroupV2/${clanId}/`, { accessToken })
 }
 
+/** Look up a clan by its exact name. groupType 1 is a clan. */
+export async function searchClanByName(groupName: string, accessToken?: string) {
+  const name = groupName.trim()
+  return bungieFetch<{
+    detail?: {
+      groupId?: string | number
+      name?: string
+      clanInfo?: { clanCallsign?: string }
+    }
+  }>(`/GroupV2/Name/${encodeURIComponent(name)}/1/`, { accessToken })
+}
+
 /** Clan members (50 per page). Bungie expects currentpage as a query param, not a path segment. */
 export async function getClanMembers(clanId: string, page = 1, accessToken?: string) {
   type ClanMembersPage = {

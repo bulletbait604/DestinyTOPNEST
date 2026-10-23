@@ -450,7 +450,11 @@ function LeaderboardRow({
         )}
       </div>
       {!heroCompact && !entry.isSquadEntry ? (
-        <RateButton membershipId={entry.bungieMembershipId} displayName={entry.bungieDisplayName} />
+        <RateButton
+          membershipId={entry.bungieMembershipId}
+          displayName={entry.bungieDisplayName}
+          mvpVotes={entry.mvpVotes}
+        />
       ) : null}
     </div>
   )

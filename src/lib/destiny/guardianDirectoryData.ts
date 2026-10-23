@@ -16,6 +16,8 @@ import {
   type GuardianRecentActivity,
 } from '@/lib/destiny/guardianDirectory'
 import { resolveInventoryItem } from '@/lib/destiny/manifest'
+import { isKickGuardiansClan } from '@/lib/destiny/kickGuardians'
+import { withScoredRuns } from '@/lib/destiny/runDates'
 import { countReceivedVotes, getReputationReviewsForUser, listVerifiedFullClears } from '@/lib/destiny/store'
 import { computeReputationScore } from '@/lib/destiny/reputation'
 import { evaluateSherpaRanks } from '@/lib/destiny/sherpaRanks'
@@ -192,14 +194,66 @@ function platformLabel(membershipType?: number): DestinyPlatform | undefined {
   return undefined
 }
 
-/** Search claimed accounts, pending players, and an exact Bungie name#code. */
+async function searchRunTeammates(query: string, existing: Set<string>): Promise<GuardianDirectoryCard[]> {
+  const pattern = escapeRegExp(query.trim())
+  if (pattern.length < 2) return []
+  try {
+    const runs = (await (await db())
+      .collection(DESTINY_COLLECTIONS.runRecords)
+      .find(
+        withScoredRuns({
+          verificationStatus: 'verified',
+          teamMembers: { $elemMatch: { displayName: { $regex: pattern, $options: 'i' } } },
+        })
+      )
+      .project({ teamMembers: 1 })
+      .limit(40)
+      .toArray()) as unknown as Pick<RunRecord, 'teamMembers'>[]
+    const matched = new Map<string, { displayName: string; platform?: DestinyPlatform; clanName?: string }>()
+    const name = new RegExp(pattern, 'i')
+    for (const run of runs) {
+      for (const member of run.teamMembers ?? []) {
+        const membershipId = member.membershipId?.trim() ?? ''
+        if (!isMembershipId(membershipId) || existing.has(membershipId) || matched.has(membershipId)) continue
+        if (!name.test(member.displayName ?? '')) continue
+        matched.set(membershipId, {
+          displayName: member.displayName || membershipId,
+          platform: member.platform,
+          clanName: member.clanName,
+        })
+      }
+    }
+    const votes = await voteCounts(Array.from(matched.keys()))
+    return Array.from(matched.entries()).map(([membershipId, member]) => {
+      const counts = votes.get(membershipId) ?? { mvp: 0, kudos: 0 }
+      const status: GuardianListingStatus = 'bungie'
+      return {
+        membershipId,
+        displayName: member.displayName,
+        status,
+        platform: member.platform,
+        clanTag: isKickGuardiansClan(member.clanName) ? 'KICK' : undefined,
+        mvpCount: counts.mvp,
+        kudosCount: counts.kudos,
+        badges: guardianBadges({ status, verifiedClears: 0, mvpCount: counts.mvp, kudosCount: counts.kudos }),
+      }
+    })
+  } catch (error) {
+    console.warn('[guardians] run teammate search unavailable', error)
+    return []
+  }
+}
+
+/** Search claimed accounts, pending players, fireteam teammates, and an exact Bungie name#code. */
 export async function searchGuardians(query: string): Promise<GuardianDirectoryCard[]> {
   const trimmed = query.trim()
   if (trimmed.length < 2 || trimmed.length > 40) return []
   try {
     const local = await searchLocal(trimmed)
-    const remote = await searchBungie(trimmed, new Set(local.map((card) => card.membershipId)))
-    return sortGuardianCards([...local, ...remote], trimmed)
+    const fromRuns = await searchRunTeammates(trimmed, new Set(local.map((card) => card.membershipId)))
+    const known = new Set([...local, ...fromRuns].map((card) => card.membershipId))
+    const remote = await searchBungie(trimmed, known)
+    return sortGuardianCards([...local, ...fromRuns, ...remote], trimmed)
   } catch (error) {
     console.warn('[guardians] search failed', error)
     return []

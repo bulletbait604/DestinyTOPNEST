@@ -4,7 +4,7 @@ import { dismissGuide, isGearTab, isGuideDismissed, MAIN_NAV, navHint } from '@/
 describe('plain-language navigation', () => {
   it('describes the current page in one line', () => {
     expect(navHint('overview')).toContain('how TopNest works')
-    expect(navHint('guardians')).toContain('rating')
+    expect(navHint('guardians')).toContain('vote')
     expect(navHint('leaderboards')).toContain('3D print')
     expect(navHint('compare')).toContain('side by side')
     expect(navHint('sherpas').toLowerCase()).toContain('sherpa')
@@ -14,7 +14,7 @@ describe('plain-language navigation', () => {
     expect(MAIN_NAV.map((item) => item.label)).toEqual([
       'Home',
       'Score a Run',
-      'Rate a Guardian',
+      'Vote MVP',
       'Leaderboards',
       'Ask AI',
     ])

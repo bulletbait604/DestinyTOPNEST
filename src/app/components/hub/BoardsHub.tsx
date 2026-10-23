@@ -175,7 +175,11 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
                   </span>
                 </button>
                 {entry.isSquadEntry ? null : (
-                  <RateButton membershipId={entry.bungieMembershipId} displayName={entry.bungieDisplayName} />
+                  <RateButton
+                    membershipId={entry.bungieMembershipId}
+                    displayName={entry.bungieDisplayName}
+                    mvpVotes={entry.mvpVotes}
+                  />
                 )}
               </div>
             </li>

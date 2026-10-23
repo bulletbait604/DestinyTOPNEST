@@ -68,7 +68,7 @@ export const TAB_PAGE_COPY: Record<
   },
   guardians: {
     title: 'Guardians',
-    description: 'Search Bungie names, including players who have not signed in yet, and open a public rating.',
+    description: 'Search Bungie names, including players who have not signed in yet, and vote them MVP.',
   },
   compare: {
     title: 'Compare',

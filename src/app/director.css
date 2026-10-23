@@ -579,6 +579,18 @@ h1, h2, h3, h4,
   width: 100%;
 }
 .gh-rate-btn { white-space: nowrap; }
+.gh-vote {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gh-mvp-count {
+  color: var(--dir-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.gh-vote .gh-alert { flex-basis: 100%; }
 .gh-row-with-rate {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

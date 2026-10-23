@@ -21,6 +21,7 @@ import { listQuickRatings, saveQuickRating } from '@/lib/destiny/quickRateStore'
 import {
   findReputationReview,
   findTrustReview,
+  countReceivedVotes,
   getMvpVotesByReviewer,
   getReputationReviewsByReviewer,
   getRunsForParticipant,
@@ -60,9 +61,11 @@ export async function GET(req: NextRequest) {
   const rows = await listQuickRatings(membershipId)
   const user = await optionalAuth(req).catch(() => null)
   const mine = user ? rows.find((row) => row.voterId === user.username.toLowerCase()) : undefined
+  const mvpVotes = await countReceivedVotes('__none__', membershipId, 'mvp').catch(() => 0)
   return NextResponse.json({
     counts: countTags(rows),
     total: rows.length,
+    mvpVotes,
     mine: mine ? { tags: mine.tags, note: mine.note ?? '' } : null,
   })
 }

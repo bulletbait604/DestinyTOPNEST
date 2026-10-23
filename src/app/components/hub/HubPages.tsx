@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import type { PublicFeaturedBuild, PublicHubSnapshot, PublicTopGuardian } from '@/lib/destiny/publicHub'
 import { navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import { recentRunLines, scoreBoardLines, scorePointsLine, type ScoreRunRow, type ScoreStanding } from '@/lib/destiny/scoreStatus'
-import { RateButton } from '@/app/components/hub/QuickRate'
+import { VoteMvpButton } from '@/app/components/hub/QuickRate'
 import BoardsHub from '@/app/components/hub/BoardsHub'
 import AskGuide from '@/app/components/hub/AskGuide'
 import { NextStep } from '@/app/components/hub/clarity'
@@ -197,6 +197,7 @@ type LookupRow = {
   pointsAwarded: number
   bondPoints: number
   membershipId: string
+  membershipType?: number
   displayName: string
 }
 
@@ -205,7 +206,7 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
   const [busy, setBusy] = useState(false)
   const [points, setPoints] = useState<string | null>(null)
   const [ranks, setRanks] = useState<string[]>([])
-  const [runs, setRuns] = useState<{ id: string; line: string }[]>([])
+  const [runs, setRuns] = useState<{ id: string; line: string; teammates: { membershipId: string; displayName: string }[] }[]>([])
   const [refreshKey, setRefreshKey] = useState(0)
   const [query, setQuery] = useState('')
   const [found, setFound] = useState<LookupRow[]>([])
@@ -230,7 +231,12 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
               raidPoints?: number
               dungeonPoints?: number
               verifiedClears?: number
-              recentRuns?: Array<ScoreRunRow & { teamMembers?: unknown[]; bondPoints?: number }>
+              recentRuns?: Array<
+                ScoreRunRow & {
+                  teamMembers?: { membershipId?: string; displayName?: string }[]
+                  bondPoints?: number
+                }
+              >
             }
           } | null
         )?.profile
@@ -320,6 +326,8 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           membershipId: pending[0]?.membershipId,
+          membershipType: pending[0]?.membershipType,
+          displayName: pending[0]?.displayName,
           runs: pending.map((row) => ({ instanceId: row.instanceId, type: row.type })),
         }),
       })
@@ -449,9 +457,7 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
                       Add to Scoring
                     </button>
                   )}
-                  <a className="gh-text-btn" href="/rate">
-                    Rate Teammates
-                  </a>
+                  <VoteMvpButton membershipId={row.membershipId} displayName={row.displayName} membershipType={row.membershipType} />
                 </div>
               </li>
             ))}
@@ -463,11 +469,22 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
           <h2 id="recent-runs">Scored runs</h2>
           <ul className="gh-list">
             {runs.map((run) => (
-              <li key={run.id} className="gh-row-with-rate">
+              <li key={run.id}>
                 <span>{run.line}</span>
-                <a className="gh-text-btn" href="/rate">
-                  Rate Teammates
-                </a>
+                {run.teammates.length ? (
+                  <ul className="gh-list">
+                    {run.teammates.map((teammate) => (
+                      <li key={`${run.id}-${teammate.membershipId}`} className="gh-row-with-rate">
+                        <span>{teammate.displayName}</span>
+                        <VoteMvpButton membershipId={teammate.membershipId} displayName={teammate.displayName} runId={run.id} />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <a className="gh-text-btn" href="/rate">
+                    Vote MVP
+                  </a>
+                )}
               </li>
             ))}
           </ul>
@@ -519,10 +536,10 @@ export function HubHome({
           )}
         </article>
         <article className="gh-action-card">
-          <h2>2. Rate and Vote MVP</h2>
-          <p>Commend helpful Guardians you played with and cast your season MVP vote.</p>
+          <h2>2. Vote MVP</h2>
+          <p>Pick a Guardian from your fireteam or the boards and send one MVP vote.</p>
           <a className="gh-btn gh-btn-primary" href="/rate">
-            Rate a Guardian
+            Vote MVP
           </a>
         </article>
         <article className="gh-action-card">
@@ -584,7 +601,7 @@ function TopGuardianList({ rows }: { rows: PublicTopGuardian[] }) {
           <button type="button" className="gh-text-btn" onClick={() => navigateGuardianSearch(row.displayName)}>
             #{row.rank} {row.displayName}
           </button>
-          <RateButton displayName={row.displayName} />
+          <VoteMvpButton membershipId={row.bungieMembershipId} displayName={row.displayName} mvpVotes={row.mvpVotes} />
           <span className="gh-muted">
             {row.boardLabel} · {row.points} pts
           </span>

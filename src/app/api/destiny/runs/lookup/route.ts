@@ -12,6 +12,7 @@ import {
   syncHistoryDepth,
   type HistoryActivity,
 } from '@/lib/destiny/runLookup'
+import { resolveUnregisteredKickOwner } from '@/lib/destiny/kickGuardians'
 import { scoreSelectedRuns } from '@/lib/destiny/runIngestion'
 import { getRunRecordsByPgcrIds } from '@/lib/destiny/store'
 import type { ActivityType } from '@/lib/destiny/types'
@@ -153,6 +154,8 @@ export async function POST(req: NextRequest) {
   return destinyAuthHandler(req, async () => {
     const body = (await req.json().catch(() => ({}))) as {
       membershipId?: string
+      membershipType?: number
+      displayName?: string
       runs?: { instanceId?: string; type?: ActivityType }[]
       instanceIds?: string[]
     }
@@ -166,7 +169,17 @@ export async function POST(req: NextRequest) {
     const authUser = await verifyAuth(req)
     const viewer = await getDestinyUserBySiteUserId(authUser.username.toLowerCase())
     const membershipId = body.membershipId?.trim() || viewer?.bungieMembershipId || ''
-    const target = membershipId ? await getDestinyUserByBungieMembershipId(membershipId) : viewer
+    const registered = membershipId ? await getDestinyUserByBungieMembershipId(membershipId) : viewer
+    const displayName = typeof body.displayName === 'string' ? body.displayName.trim() : ''
+    const kickOwner =
+      registered?.bungieMembershipId
+        ? null
+        : await resolveUnregisteredKickOwner({
+            membershipId,
+            displayName,
+            membershipType: Number(body.membershipType) || viewer?.destinyMembershipType || 3,
+          })
+    const target = registered?.bungieMembershipId ? registered : kickOwner
     if (!target?.bungieMembershipId) {
       return NextResponse.json(
         { error: 'That Guardian is not on TopNest yet. They can sign in, then these clears can be scored.' },

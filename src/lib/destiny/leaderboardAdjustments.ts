@@ -3,6 +3,7 @@ import clientPromise from '@/lib/mongodb'
 import { getMongoDbName } from '@/lib/database'
 import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
+import { loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
 import { aggregateLeaderboard } from '@/lib/destiny/leaderboards'
 import type {
   LeaderboardAdjustment,
@@ -103,18 +104,36 @@ export function applyLeaderboardAdjustments(
   return merged.slice(0, 10).map((entry, index) => ({ ...entry, rank: index + 1 }))
 }
 
+function attachMvpVotes(entries: LeaderboardEntry[], votes: MvpVote[]): LeaderboardEntry[] {
+  const counts = new Map<string, number>()
+  for (const vote of votes) {
+    if (vote.category === 'kudos') continue
+    const membershipId = vote.selectedMembershipId?.trim()
+    if (!membershipId) continue
+    counts.set(membershipId, (counts.get(membershipId) ?? 0) + 1)
+  }
+  return entries.map((entry) => ({
+    ...entry,
+    mvpVotes: entry.bungieMembershipId ? (counts.get(entry.bungieMembershipId) ?? 0) : (entry.mvpVotes ?? 0),
+  }))
+}
+
 export async function buildLeaderboardWithAdjustments(
   category: LeaderboardCategory,
   period: LeaderboardPeriod,
   season: Season,
   runs: RunRecord[],
   usersById: Map<string, StoredDestinyUser>,
-  _votes: MvpVote[]
+  votes: MvpVote[]
 ): Promise<LeaderboardEntry[]> {
-  const base = aggregateLeaderboard(runs, usersById, category, period, season)
+  const kickMembershipIds = await loadKickGuardianMembershipIds()
+  const base = aggregateLeaderboard(runs, usersById, category, period, season, kickMembershipIds)
 
   const adjustments = await loadLeaderboardAdjustments(category, period, season.id)
-  return applyLeaderboardAdjustments(base, adjustments, usersById, category, period, season)
+  return attachMvpVotes(
+    applyLeaderboardAdjustments(base, adjustments, usersById, category, period, season),
+    votes
+  )
 }
 
 export async function upsertLeaderboardAdjustment(input: {
