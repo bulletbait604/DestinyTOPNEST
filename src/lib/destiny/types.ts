@@ -310,6 +310,8 @@ export interface LeaderboardEntry {
   isSquadEntry?: boolean
   /** Set when staff manual adjustment affects this row. */
   hasManualAdjustment?: boolean
+  /** Bungie membership id when the row is a linked Guardian. */
+  bungieMembershipId?: string
 }
 
 export interface LeaderboardAdjustment {

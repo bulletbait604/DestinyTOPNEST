@@ -37,11 +37,18 @@ export const GLOSSARY = [
   },
 ] as const
 
+export const MAIN_NAV: { href: string; label: string; icon: 'home' | 'play' | 'people' | 'boards' | 'ask' }[] = [
+  { href: '/', label: 'Home', icon: 'home' },
+  { href: '/score', label: 'Score a Run', icon: 'play' },
+  { href: '/rate', label: 'Rate a Guardian', icon: 'people' },
+  { href: '/boards', label: 'Leaderboards', icon: 'boards' },
+  { href: '/ask', label: 'Ask AI', icon: 'ask' },
+]
+
 export const PRIMARY_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
-  { id: 'overview', label: 'Home', hint: 'This week, and how TopNest works.' },
-  { id: 'fireteam', label: 'Play', hint: 'Open fireteams you can join.' },
-  { id: 'leaderboards', label: 'Boards', hint: 'Season rankings. Leaders can win a 3D print.' },
-  { id: 'ask', label: 'Ask', hint: 'Step-by-step answers with source links.' },
+  { id: 'overview', label: 'Home', hint: 'Score a run, rate a Guardian, and see how TopNest works.' },
+  { id: 'leaderboards', label: 'Leaderboards', hint: 'Season rankings. Leaders can win a 3D print.' },
+  { id: 'ask', label: 'Ask AI', hint: 'Current step-by-step Destiny answers.' },
 ]
 
 export const GEAR_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
@@ -52,6 +59,7 @@ export const GEAR_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] 
 ]
 
 export const MORE_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
+  { id: 'fireteam', label: 'Find a fireteam', hint: 'Open raids and dungeons you can join.' },
   { id: 'guardians', label: 'People', hint: 'Find a Guardian and read their rating.' },
   { id: 'contracts', label: 'Weekly goals', hint: 'Three goals that reset Tuesday. They do not change board points.' },
   { id: 'sherpas', label: 'Teachers', hint: 'Sherpas: players who guided a first clear.' },

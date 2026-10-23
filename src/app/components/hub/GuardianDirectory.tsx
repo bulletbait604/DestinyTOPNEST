@@ -7,6 +7,8 @@ import CharacterDossier from '@/app/components/hub/CharacterDossier'
 import { NextStep } from '@/app/components/hub/clarity'
 import { PageHeader } from '@/app/components/hub/PageHeader'
 import { GUARDIAN_SEARCH_EVENT, navigateDestinyTab, navigateGuardianProfile, navigateGuardianSearch } from '@/lib/routing/tabUrl'
+import { RateButton } from '@/app/components/hub/QuickRate'
+import { rateTagLine, type RateTag } from '@/lib/destiny/quickRate'
 
 function readLocation() {
   if (typeof window === 'undefined') {
@@ -195,33 +197,57 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
       <ul className="gh-directory">
         {cards.map((card) => (
           <li key={card.membershipId}>
-            <button
-              type="button"
-              className="gh-person"
-              data-class={card.characterClass || undefined}
-              onClick={() => navigateGuardianProfile(card.membershipId, card.membershipType)}
-            >
-              <span className="gh-person-name">
-                {card.displayName}
-                {card.clanTag ? <small>[{card.clanTag}]</small> : null}
-              </span>
-              <span className="gh-muted">
-                {statusLabel(card.status)} · {classLabel(card.characterClass)}
-                {card.platform ? ` · ${card.platform}` : ''}
-              </span>
-              <span className="gh-badge-row">
-                {card.badges.map((badge) => (
-                  <span key={badge} className="gh-badge">
-                    {badge}
-                  </span>
-                ))}
-              </span>
-            </button>
+            <div className="gh-person" data-class={card.characterClass || undefined}>
+              <button
+                type="button"
+                className="gh-person-main"
+                onClick={() => navigateGuardianProfile(card.membershipId, card.membershipType)}
+              >
+                <span className="gh-person-name">
+                  {card.displayName}
+                  {card.clanTag ? <small>[{card.clanTag}]</small> : null}
+                </span>
+                <span className="gh-muted">
+                  {statusLabel(card.status)} · {classLabel(card.characterClass)}
+                  {card.platform ? ` · ${card.platform}` : ''}
+                </span>
+                <span className="gh-badge-row">
+                  {card.badges.map((badge) => (
+                    <span key={badge} className="gh-badge">
+                      {badge}
+                    </span>
+                  ))}
+                </span>
+              </button>
+              <RateButton
+                membershipId={card.membershipId}
+                displayName={card.displayName}
+                membershipType={card.membershipType}
+              />
+            </div>
           </li>
         ))}
       </ul>
     </section>
   )
+}
+
+function QuickRateSummary({ membershipId }: { membershipId: string }) {
+  const [line, setLine] = useState('')
+  useEffect(() => {
+    let cancelled = false
+    void fetch(`/api/destiny/rate?membershipId=${encodeURIComponent(membershipId)}`)
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((json: { counts?: Record<RateTag, number> } | null) => {
+        if (!cancelled && json?.counts) setLine(rateTagLine(json.counts))
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [membershipId])
+  if (!line) return null
+  return <p className="gh-muted">{line}</p>
 }
 
 function ProfileBody({ profile, onLogin }: { profile: GuardianPublicProfile; onLogin?: () => void }) {
@@ -255,6 +281,8 @@ function ProfileBody({ profile, onLogin }: { profile: GuardianPublicProfile; onL
             {profile.sherpaGuided} guided · {profile.sherpaMarks} sherpa marks
           </span>
         </p>
+        <QuickRateSummary membershipId={card.membershipId} />
+        <RateButton membershipId={card.membershipId} displayName={card.displayName} membershipType={card.membershipType} />
       </div>
 
       <div className="gh-badge-row">

@@ -70,7 +70,7 @@ export default function UnrankedRunsSection({ darkMode }: Props) {
         <Users className="w-4 h-4 text-violet-400/80" />
         <SectionTitle
           title="Unranked Runs"
-          subtitle="Rate every fireteam member on Knowledge + Vibes. Individual votes stay private — only Trust Rank shows."
+          subtitle="Tap tags for each teammate. Individual votes stay private — only Trust Rank shows."
           darkMode={darkMode}
         />
       </div>

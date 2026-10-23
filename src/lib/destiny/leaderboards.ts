@@ -121,6 +121,7 @@ export function aggregateLeaderboard(
       rank: index + 1,
       fastestClearSeconds: row.fastestClearSeconds,
       fastestActivityName: row.fastestActivityName,
+      bungieMembershipId: user?.bungieMembershipId,
     }
   })
 }

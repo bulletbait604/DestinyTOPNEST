@@ -1,11 +1,13 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { PublicFeaturedBuild, PublicHubSnapshot, PublicTopGuardian } from '@/lib/destiny/publicHub'
-import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
+import { navigateGuardianSearch } from '@/lib/routing/tabUrl'
+import { recentRunLines, scoreBoardLines, scorePointsLine, type ScoreRunRow, type ScoreStanding } from '@/lib/destiny/scoreStatus'
+import { RateButton } from '@/app/components/hub/QuickRate'
 import BoardsHub from '@/app/components/hub/BoardsHub'
 import AskGuide from '@/app/components/hub/AskGuide'
-import { HowItWorks, NextStep } from '@/app/components/hub/clarity'
+import { NextStep } from '@/app/components/hub/clarity'
 import { PageHeader, PointsChip } from '@/app/components/hub/PageHeader'
 import { formatEventWhen, openHubTab, usePublicHub } from '@/app/components/hub/hubTypes'
 
@@ -184,67 +186,191 @@ export function ClanList({ snapshot }: { snapshot: PublicHubSnapshot }) {
   )
 }
 
+export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: () => void }) {
+  const [status, setStatus] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [points, setPoints] = useState<string | null>(null)
+  const [ranks, setRanks] = useState<string[]>([])
+  const [runs, setRuns] = useState<{ id: string; line: string }[]>([])
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  useEffect(() => {
+    if (!signedIn) return
+    let cancelled = false
+    void Promise.all([
+      fetch('/api/destiny/profile?scope=summary', { credentials: 'include' }).then(async (response) =>
+        response.ok ? response.json() : null
+      ),
+      fetch('/api/destiny/season', { credentials: 'include' }).then(async (response) =>
+        response.ok ? response.json() : null
+      ),
+    ])
+      .then(([profileJson, seasonJson]) => {
+        if (cancelled) return
+        const profile = (profileJson as { profile?: { raidPoints?: number; dungeonPoints?: number; verifiedClears?: number; recentRuns?: ScoreRunRow[] } } | null)?.profile
+        if (profile) {
+          setPoints(scorePointsLine(profile))
+          setRuns(recentRunLines(profile.recentRuns ?? []))
+        }
+        const standings = (seasonJson as { myStandings?: ScoreStanding[] } | null)?.myStandings ?? []
+        if (standings.length || profile) setRanks(scoreBoardLines(standings))
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [signedIn, refreshKey])
+
+  const sync = async () => {
+    setBusy(true)
+    setStatus(null)
+    try {
+      const response = await fetch('/api/destiny/runs/sync', { method: 'POST', credentials: 'include' })
+      const json = (await response.json().catch(() => ({}))) as { message?: string; error?: string }
+      setStatus(json.message || json.error || (response.ok ? 'Runs synced.' : 'Sync did not finish.'))
+      if (response.ok) setRefreshKey((value) => value + 1)
+    } catch {
+      setStatus('Sync did not finish. Try again in a moment.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="gh-stack" aria-labelledby="score-title">
+      <header className="gh-hero">
+        <div>
+          <p className="gh-kicker">Score a Run</p>
+          <h1 id="score-title">Score your runs</h1>
+          <ul className="gh-score-points">
+            <li>Clear raids or dungeons in Destiny 2.</li>
+            <li>Playing with Guardians you have not run with before earns bonus points.</li>
+            <li>Click Sync My Runs to pull your recent clears from Bungie and update your leaderboard score.</li>
+          </ul>
+        </div>
+      </header>
+      {points ? <p className="gh-status">{points}</p> : null}
+      {ranks.length ? (
+        <ul className="gh-score-points">
+          {ranks.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      ) : null}
+      {runs.length ? (
+        <section className="gh-card" aria-labelledby="recent-runs">
+          <h2 id="recent-runs">Recent runs</h2>
+          <ul className="gh-list">
+            {runs.map((run) => (
+              <li key={run.id}>{run.line}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      <div className="gh-actions">
+        {signedIn ? (
+          <button type="button" className="gh-btn gh-btn-primary" onClick={() => void sync()} disabled={busy}>
+            {busy ? 'Syncing…' : 'Sync My Recent Runs'}
+          </button>
+        ) : (
+          <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
+            Sign in with Bungie to Score Runs
+          </button>
+        )}
+        <a className="gh-btn gh-btn-ghost" href="/boards">
+          Leaderboards
+        </a>
+      </div>
+      {status ? (
+        <p className="gh-confirm" role="status">
+          {status}
+        </p>
+      ) : null}
+    </section>
+  )
+}
+
 export function HubHome({
   snapshot,
   loading,
   error,
   onLogin,
+  signedIn = false,
 }: {
   snapshot: PublicHubSnapshot | null
   loading: boolean
   error: string | null
   onLogin: () => void
+  signedIn?: boolean
 }) {
   return (
     <div className="gh-stack">
-      <section className="gh-hero">
+      <header className="gh-hero">
         <div>
-          <p className="gh-kicker">Guardian Hub</p>
-          <h1>Find your fireteam</h1>
-          <p className="gh-lede">Play with new friends.</p>
-          <div className="gh-actions">
-            <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
-              Sign in with Bungie
-            </button>
-          </div>
+          <p className="gh-kicker">TopNest</p>
+          <h1>Play with new friends. Score the clear.</h1>
+          <p className="gh-lede">Three things to do. Each one is one click.</p>
         </div>
-      </section>
-      <AskGuide compact />
+      </header>
+      <div className="gh-action-cards">
+        <article className="gh-action-card">
+          <h2>1. Score Your Runs</h2>
+          <p>Sync your Bungie raids and dungeons with new teammates to climb the season boards and win the 3D print prize.</p>
+          {signedIn ? (
+            <a className="gh-btn gh-btn-primary" href="/score">
+              Score / Sync Runs Now
+            </a>
+          ) : (
+            <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
+              Sign in with Bungie to Score Runs
+            </button>
+          )}
+        </article>
+        <article className="gh-action-card">
+          <h2>2. Rate and Vote MVP</h2>
+          <p>Commend helpful Guardians you played with and cast your season MVP vote.</p>
+          <a className="gh-btn gh-btn-primary" href="/rate">
+            Rate a Guardian
+          </a>
+        </article>
+        <article className="gh-action-card">
+          <h2>3. Ask Destiny AI</h2>
+          <p>Stuck on a quest, aspect, or unlock? Type what you are trying to do and get current step-by-step instructions.</p>
+          <AskGuide compact />
+        </article>
+      </div>
+      <p className="gh-prize-line">
+        Season leaders in the US and Canada can win a Destiny 2 3D print. UK leaders can win a $50 CAD Steam gift card.
+      </p>
 
       <BoardState loading={loading} error={error} onRetry={() => window.location.reload()}>
         {snapshot ? (
           <>
-            <section className="gh-status" aria-label="This season">
-              <p>
-                <span className="gh-kicker">This season</span>
-                {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
-              </p>
-              <p className="gh-rotation">
-                Featured raids: {snapshot.featuredRaids.join(' · ') || 'Rotation loading'}. Featured dungeons:{' '}
-                {snapshot.featuredDungeons.join(' · ') || 'Rotation loading'}.
-              </p>
-              <button type="button" className="gh-text-btn" onClick={() => navigateDestinyTab('season')}>
-                Prize rules
-              </button>
-            </section>
             <section className="gh-card" aria-labelledby="gh-top">
               <div className="gh-section-head">
-                <h2 id="gh-top">Top guardians</h2>
-                <button type="button" className="gh-text-btn" onClick={() => openHubTab('leaderboards')}>
+                <h2 id="gh-top">Live season leaderboards</h2>
+                <a className="gh-text-btn" href="/boards">
                   Full boards
-                </button>
+                </a>
               </div>
               <TopGuardianList rows={snapshot.topGuardians} />
             </section>
-            <FeaturedBuilds builds={snapshot.featuredBuilds} onLogin={onLogin} />
+            <div className="gh-split">
+              <section className="gh-status" aria-label="This week">
+                <p>
+                  <span className="gh-kicker">This week</span>
+                  {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
+                </p>
+                <p className="gh-rotation">
+                  Featured raids: {snapshot.featuredRaids.join(' · ') || 'Rotation loading'}. Featured dungeons:{' '}
+                  {snapshot.featuredDungeons.join(' · ') || 'Rotation loading'}.
+                </p>
+              </section>
+              <FeaturedBuilds builds={snapshot.featuredBuilds} onLogin={onLogin} />
+            </div>
           </>
         ) : null}
       </BoardState>
-
-      <details className="gh-disclosure">
-        <summary>More about TopNest</summary>
-        <HowItWorks onLogin={onLogin} />
-      </details>
     </div>
   )
 }
@@ -262,10 +388,11 @@ function TopGuardianList({ rows }: { rows: PublicTopGuardian[] }) {
   return (
     <ul className="gh-list">
       {rows.map((row) => (
-        <li key={`${row.board}-${row.rank}-${row.displayName}`}>
+        <li key={`${row.board}-${row.rank}-${row.displayName}`} className="gh-row-with-rate">
           <button type="button" className="gh-text-btn" onClick={() => navigateGuardianSearch(row.displayName)}>
             #{row.rank} {row.displayName}
           </button>
+          <RateButton displayName={row.displayName} />
           <span className="gh-muted">
             {row.boardLabel} · {row.points} pts
           </span>
@@ -461,7 +588,7 @@ export function HubLeaderboardPreview({ onLogin }: { onLogin?: () => void }) {
   return <BoardsHub onLogin={onLogin} />
 }
 
-export function ConnectedHome({ onLogin }: { onLogin: () => void }) {
+export function ConnectedHome({ onLogin, signedIn = false }: { onLogin: () => void; signedIn?: boolean }) {
   const state = usePublicHub()
-  return <HubHome {...state} onLogin={onLogin} />
+  return <HubHome {...state} onLogin={onLogin} signedIn={signedIn} />
 }

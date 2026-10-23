@@ -7,7 +7,7 @@ type AskSource = { title: string; url: string; site: string }
 type AskEvent =
   | { type: 'meta'; sources: AskSource[]; answerId: string }
   | { type: 'delta'; text: string }
-  | { type: 'done' }
+  | { type: 'done'; sources?: AskSource[] }
   | { type: 'error'; message: string }
 
 export default function AskGuide({ compact = false }: { compact?: boolean }) {
@@ -57,6 +57,8 @@ export default function AskGuide({ compact = false }: { compact?: boolean }) {
             setAnswerId(payload.answerId || 'live')
           } else if (payload.type === 'delta') {
             setAnswer((current) => current + payload.text)
+          } else if (payload.type === 'done' && payload.sources?.length) {
+            setSources(payload.sources)
           } else if (payload.type === 'error') {
             setError(payload.message)
           }
@@ -84,12 +86,12 @@ export default function AskGuide({ compact = false }: { compact?: boolean }) {
     <section className={compact ? 'gh-ask' : 'gh-stack gh-ask'} aria-labelledby="gh-ask-title">
       {compact ? null : (
         <header className="gh-page-head">
-          <p className="gh-kicker">Ask TopNest</p>
-          <h1 id="gh-ask-title">Ask a Destiny question</h1>
-          <p className="gh-lede">Short steps, with links to the pages they came from.</p>
+          <p className="gh-kicker">Ask AI</p>
+          <h1 id="gh-ask-title">Ask Destiny AI</h1>
+          <p className="gh-lede">Current steps for what you are trying to do, with the pages they came from.</p>
         </header>
       )}
-      {compact ? <h2 id="gh-ask-title">Ask TopNest</h2> : null}
+      {compact ? <h2 id="gh-ask-title">Ask Destiny AI</h2> : null}
       <form onSubmit={(event) => void onSubmit(event)}>
         <label className="gh-sr" htmlFor={compact ? 'ask-home' : 'ask-page'}>
           Ask TopNest
@@ -106,21 +108,17 @@ export default function AskGuide({ compact = false }: { compact?: boolean }) {
         </button>
       </form>
       {error ? <p className="gh-alert">{error}</p> : null}
-      {answer ? <p className="gh-ask-answer">{answer}</p> : null}
+      {answer ? <div className="gh-ask-answer">{answer}</div> : null}
       {sources.length > 0 ? (
-        <details className="gh-disclosure" open>
-          <summary>Sources</summary>
-          <ul className="gh-list">
-            {sources.map((source) => (
-              <li key={source.url}>
-                <a href={source.url} rel="noreferrer">
-                  {source.title}
-                </a>
-                <span className="gh-muted">{source.site}</span>
-              </li>
-            ))}
-          </ul>
-        </details>
+        <ul className="gh-source-pills">
+          {sources.map((source) => (
+            <li key={source.url}>
+              <a href={source.url} rel="noreferrer">
+                {source.title}
+              </a>
+            </li>
+          ))}
+        </ul>
       ) : null}
       {answer && !busy ? (
         <div className="gh-actions">

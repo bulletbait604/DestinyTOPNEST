@@ -1,4 +1,15 @@
-import { dedupeSources, parseFandomSearch, parseHtmlLinks, parseRedditSearch, type AskSource } from '@/lib/ask/askSources'
+import {
+  dedupeSources,
+  extractArticleText,
+  fandomWikitextExcerpt,
+  parseFandomSearch,
+  parseHtmlLinks,
+  parseRedditSearch,
+  questionMentionsVaulted,
+  redditThreadExcerpt,
+  textLooksVaulted,
+  type AskSource,
+} from '@/lib/ask/askSources'
 
 type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
 
@@ -25,7 +36,10 @@ export async function retrieveTrustedSources(question: string, fetchImpl: FetchL
   const q = encodeURIComponent(question)
   const [fandom, reddit, help, light, berries, foundry] = await Promise.all([
     readText(fetchImpl, `https://destiny.fandom.com/api.php?action=query&list=search&srsearch=${q}&format=json&srlimit=3`),
-    readText(fetchImpl, `https://www.reddit.com/r/DestinyTheGame/search.json?q=${q}&restrict_sr=1&sort=relevance&limit=3`),
+    readText(
+      fetchImpl,
+      `https://www.reddit.com/r/DestinyTheGame/search.json?q=${q}&restrict_sr=1&sort=relevance&t=year&limit=5`
+    ),
     readText(fetchImpl, `https://help.bungie.net/hc/en-us/search?query=${q}`),
     readText(fetchImpl, `https://www.light.gg/db/search/?q=${q}`),
     readText(fetchImpl, `https://www.blueberries.gg/?s=${q}`),
@@ -42,7 +56,7 @@ export async function retrieveTrustedSources(question: string, fetchImpl: FetchL
   }
   if (reddit) {
     try {
-      sources.push(...parseRedditSearch(JSON.parse(reddit)))
+      sources.push(...parseRedditSearch(JSON.parse(reddit), { question }))
     } catch {
       /* ignore malformed reddit payload */
     }
@@ -51,5 +65,42 @@ export async function retrieveTrustedSources(question: string, fetchImpl: FetchL
   if (light) sources.push(...parseHtmlLinks(light, 'light.gg'))
   if (berries) sources.push(...parseHtmlLinks(berries, 'Blueberries'))
   if (foundry) sources.push(...parseHtmlLinks(foundry, 'd2foundry'))
-  return dedupeSources(sources)
+  const current = questionMentionsVaulted(question)
+    ? sources
+    : sources.filter((source) => !textLooksVaulted(`${source.title} ${source.snippet}`))
+  const unique = dedupeSources(current)
+  const enriched = await Promise.all(unique.map((source) => enrichSource(fetchImpl, source)))
+  return enriched
+}
+
+async function enrichSource(fetchImpl: FetchLike, source: AskSource): Promise<AskSource> {
+  const reddit = source.url.includes('reddit.com')
+  const fandomTitle = source.url.includes('destiny.fandom.com/wiki/')
+    ? decodeURIComponent(source.url.split('/wiki/')[1] || '').split('#')[0]
+    : ''
+  const url = reddit
+    ? `${source.url.replace(/\/$/, '')}.json?limit=6`
+    : fandomTitle
+      ? `https://destiny.fandom.com/api.php?action=parse&page=${encodeURIComponent(fandomTitle)}&prop=wikitext&format=json`
+      : source.url
+  const raw = await readText(fetchImpl, url)
+  if (!raw) return source
+  if (reddit) {
+    try {
+      const excerpt = redditThreadExcerpt(JSON.parse(raw))
+      return excerpt ? { ...source, excerpt } : source
+    } catch {
+      return source
+    }
+  }
+  if (fandomTitle) {
+    try {
+      const excerpt = fandomWikitextExcerpt(JSON.parse(raw))
+      return excerpt ? { ...source, excerpt } : source
+    } catch {
+      return source
+    }
+  }
+  const excerpt = extractArticleText(raw)
+  return excerpt ? { ...source, excerpt } : source
 }

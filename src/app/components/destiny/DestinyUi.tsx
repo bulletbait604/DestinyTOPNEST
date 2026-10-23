@@ -7,6 +7,7 @@ import type { DestinyIconRef, LeaderboardEntry } from '@/lib/destiny/types'
 import { activityWalkthroughLinkTitle, activityWalkthroughUrl } from '@/lib/destiny/activityWalkthroughLinks'
 import { TopNestLogoMark } from '@/app/components/destiny/TopNestBrandBanner'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
+import { RateButton } from '@/app/components/hub/QuickRate'
 import {
   destinyChip,
   elementBorderClass,
@@ -448,6 +449,9 @@ function LeaderboardRow({
           </p>
         )}
       </div>
+      {!heroCompact && !entry.isSquadEntry ? (
+        <RateButton membershipId={entry.bungieMembershipId} displayName={entry.bungieDisplayName} />
+      ) : null}
     </div>
   )
 }
