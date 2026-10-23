@@ -1,8 +1,8 @@
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { usersByMembershipMap, validateReviewSubmission } from '@/lib/destiny/fireteamReputation'
-import { kudosVoteId, mvpVoteId, validateMvpVoteSubmission } from '@/lib/destiny/mvpVoting'
+import { kudosVoteId, mvpVoteId, quickVoteId, validateMvpVoteSubmission } from '@/lib/destiny/mvpVoting'
 import { clampKnowledge, computeCompositeTrustScore, type KnowledgeScore } from '@/lib/destiny/trustRank'
-import type { MvpVote, ReputationReview, RunRecord, TrustReview } from '@/lib/destiny/types'
+import type { GuardianVoteType, MvpVote, ReputationReview, RunRecord, TrustReview } from '@/lib/destiny/types'
 
 export const RATE_TAGS = ['chill', 'helpful', 'sherpa', 'clutch', 'good_comms', 'mvp'] as const
 export type RateTag = (typeof RATE_TAGS)[number]
@@ -243,6 +243,7 @@ export function buildQuickRateWrite(input: {
           voterId,
           voterMembershipId,
           category: 'mvp',
+          voteType: 'mvp',
           selectedUserId: validation.target.siteUserId,
           selectedMembershipId: validation.target.membershipId,
           selectedDisplayName: validation.target.displayName,
@@ -347,6 +348,72 @@ export function buildQuickRateWrite(input: {
   return {
     ok: true,
     draft: { rating, mvpVote, kudosVote, trustReview, reputationReview, mvpStatus, message },
+  }
+}
+
+const VOTE_LABEL: Record<Exclude<GuardianVoteType, 'mvp'>, string> = {
+  new_light: 'New Light',
+  useless: 'Useless',
+}
+
+/** New Light and Useless are one vote per Guardian, attached to a shared clear when one exists. */
+export function buildLabeledGuardianVote(input: {
+  voteType: 'new_light' | 'useless'
+  voterId: string
+  voterMembershipId?: string
+  targetMembershipId: string
+  targetDisplayName: string
+  now: string
+  preferredRunId?: string
+  runs: RunRecord[]
+  users?: StoredDestinyUser[]
+  already?: boolean
+}): { ok: true; vote?: MvpVote; already: boolean; message: string } | { ok: false; error: string } {
+  const label = VOTE_LABEL[input.voteType]
+  const voterId = input.voterId.trim().toLowerCase()
+  const targetMembershipId = input.targetMembershipId.trim()
+  if (!voterId) return { ok: false, error: 'Sign in with Bungie to submit your vote' }
+  if (!isBungieMembershipId(targetMembershipId)) return { ok: false, error: 'Pick a Guardian with a Bungie membership id' }
+  const voterMembershipId = input.voterMembershipId?.trim() || undefined
+  if (voterMembershipId && voterMembershipId === targetMembershipId) {
+    return { ok: false, error: 'You cannot vote for yourself' }
+  }
+  const displayName = input.targetDisplayName.trim() || targetMembershipId
+  if (input.already) {
+    return { ok: true, already: true, message: `${label} is already saved for ${displayName}.` }
+  }
+  const run = pickSharedRun(input.runs, voterId, voterMembershipId, targetMembershipId, input.preferredRunId)
+  if (!run) {
+    return { ok: false, error: `${label} votes count after you clear a raid or dungeon with ${displayName}.` }
+  }
+  const usersByMembership = usersByMembershipMap(input.users ?? [])
+  const validation = validateMvpVoteSubmission({
+    voterId,
+    voterMembershipId,
+    targetMembershipId,
+    category: 'mvp',
+    action: 'set',
+    runId: run.id,
+    runs: input.runs,
+    usersByMembership,
+  })
+  if (!validation.ok) return validation
+  return {
+    ok: true,
+    already: false,
+    message: `${label} saved for ${validation.target.displayName}.`,
+    vote: {
+      id: quickVoteId(voterId, validation.target.membershipId, input.voteType),
+      runId: run.id,
+      voterId,
+      voterMembershipId,
+      voteType: input.voteType,
+      selectedUserId: validation.target.siteUserId,
+      selectedMembershipId: validation.target.membershipId,
+      selectedDisplayName: validation.target.displayName,
+      createdAt: input.now,
+      updatedAt: input.now,
+    },
   }
 }
 

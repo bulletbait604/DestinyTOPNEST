@@ -1,6 +1,7 @@
 import type {
   ActivityRunForVote,
   ActivityRunGuardian,
+  GuardianVoteType,
   MvpVote,
   MvpVoteCategory,
   RunRecord,
@@ -30,12 +31,65 @@ export interface ResolvedVoteTarget {
   platform?: RunTeamMember['platform']
 }
 
-export function isMvpCategoryVote(vote: { category?: string | null }): boolean {
+export function isMvpCategoryVote(vote: { category?: string | null; voteType?: string | null }): boolean {
+  if (vote.voteType === 'new_light' || vote.voteType === 'useless') return false
   return vote.category == null || vote.category === 'mvp'
 }
 
-export function mvpCategoryFilter(): { $or: Array<Record<string, unknown>> } {
-  return { $or: [{ category: 'mvp' }, { category: { $exists: false } }, { category: null }] }
+/** Crowns only. New Light and Useless votes stay out of sherpa credit. */
+export function mvpCategoryFilter(): { $and: Array<Record<string, unknown>> } {
+  return {
+    $and: [
+      { $or: [{ category: 'mvp' }, { category: { $exists: false } }, { category: null }] },
+      { $or: [{ voteType: 'mvp' }, { voteType: { $exists: false } }, { voteType: null }] },
+    ],
+  }
+}
+
+export function parseGuardianVoteType(value: unknown, fallback: GuardianVoteType | null = null): GuardianVoteType | null {
+  if (value == null || value === '') return fallback
+  if (value === 'mvp' || value === 'new_light' || value === 'useless') return value
+  return null
+}
+
+export function voteTypeOf(vote: { voteType?: string | null; category?: string | null }): GuardianVoteType | 'kudos' | null {
+  if (vote.voteType === 'mvp' || vote.voteType === 'new_light' || vote.voteType === 'useless') return vote.voteType
+  if (vote.category === 'kudos') return 'kudos'
+  if (vote.category == null || vote.category === 'mvp') return 'mvp'
+  return null
+}
+
+export interface VoteCountBucket {
+  mvpVotes: number
+  newLightVotes: number
+  uselessVotes: number
+}
+
+export function emptyVoteCounts(): VoteCountBucket {
+  return { mvpVotes: 0, newLightVotes: 0, uselessVotes: 0 }
+}
+
+/** Count MVP, New Light, and Useless votes per Bungie membership id. */
+export function tallyVoteCounts(
+  rows: Array<{ selectedMembershipId?: string | null; voteType?: string | null; category?: string | null }>
+): Map<string, VoteCountBucket> {
+  const map = new Map<string, VoteCountBucket>()
+  for (const row of rows) {
+    const membershipId = normalizeMembershipId(row.selectedMembershipId)
+    if (!membershipId) continue
+    const kind = voteTypeOf(row)
+    if (kind !== 'mvp' && kind !== 'new_light' && kind !== 'useless') continue
+    const bucket = map.get(membershipId) ?? emptyVoteCounts()
+    if (kind === 'mvp') bucket.mvpVotes += 1
+    else if (kind === 'new_light') bucket.newLightVotes += 1
+    else bucket.uselessVotes += 1
+    map.set(membershipId, bucket)
+  }
+  return map
+}
+
+export function quickVoteId(voterId: string, membershipId: string, voteType: GuardianVoteType): string {
+  return `vote-${voteType}-${voterId.trim().toLowerCase()}-${membershipId.trim()}`
 }
 
 export function parseMvpVoteCategory(value: unknown): MvpVoteCategory | null {

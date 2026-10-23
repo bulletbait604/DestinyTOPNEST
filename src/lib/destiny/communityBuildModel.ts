@@ -4,7 +4,14 @@
  */
 
 import { ARMOR_STAT_ORDER, type ArmorStatKey } from '@/lib/destiny/armorStats'
-import type { ArmorSlotLabel, BuildSnapshot, DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
+import type {
+  ArmorSlotLabel,
+  BuildSnapshot,
+  DestinyCharacterClass,
+  DestinyIconRef,
+  InGameLoadoutSummary,
+  InventoryItemSummary,
+} from '@/lib/destiny/types'
 
 export const COMMUNITY_ACTIVITY_TAGS = [
   'raid',
@@ -775,4 +782,140 @@ export function communityBuildDraftFromSnapshot(build: BuildSnapshot, characterI
     source: 'equipped',
     characterId,
   }
+}
+
+const CLASS_FROM_TITLE: Record<InGameLoadoutSummary['classType'], DestinyCharacterClass> = {
+  Titan: 'titan',
+  Hunter: 'hunter',
+  Warlock: 'warlock',
+}
+
+function namedPlugs(names: string[] | undefined, max: number): CommunityBuildPlug[] {
+  const plugs: CommunityBuildPlug[] = []
+  for (const raw of names ?? []) {
+    const name = sanitizePlainText(raw).slice(0, PLUG_NAME_MAX)
+    if (!name || isIgnoredLoadoutSocketName(name)) continue
+    plugs.push({ name })
+    if (plugs.length >= max) break
+  }
+  return plugs
+}
+
+function fitName(value: string, fallback: string): string {
+  const text = sanitizePlainText(value)
+  const chosen = text.length >= NAME_MIN ? text : fallback
+  return chosen.length > NAME_MAX ? chosen.slice(0, NAME_MAX).trim() : chosen
+}
+
+export interface InGameLoadoutPublishOverrides {
+  name?: string
+  description?: string
+  activityTags?: CommunityActivityTag[]
+  statFocus?: ArmorStatKey[]
+}
+
+/** Turn one resolved in-game loadout into a shared-build post. */
+export function communityBuildFromInGameLoadout(
+  loadout: InGameLoadoutSummary,
+  overrides?: InGameLoadoutPublishOverrides
+): { ok: true; value: CommunityBuildContent } | { ok: false; error: string } {
+  const characterClass = CLASS_FROM_TITLE[loadout.classType]
+  if (!characterClass) return { ok: false, error: 'Class must be Titan, Hunter, or Warlock.' }
+
+  const fallbackName = `Loadout ${loadout.index + 1}`
+  const name = fitName(overrides?.name || loadout.name || fallbackName, fallbackName)
+  const inferred = inferActivityTags(overrides?.name?.trim() || loadout.name)
+  const activityTags = overrides?.activityTags?.length
+    ? overrides.activityTags
+    : inferred.length
+      ? inferred
+      : (['general'] as CommunityActivityTag[])
+  const statFocus = overrides?.statFocus?.length ? overrides.statFocus : (['Weapons'] as ArmorStatKey[])
+  const description =
+    sanitizePlainText(overrides?.description, { multiline: true }) ||
+    `In-game loadout: ${sanitizePlainText(loadout.name) || fallbackName}`
+
+  return validateCommunityBuildInput({
+    name,
+    characterClass,
+    subclass: loadout.subclass ?? '',
+    aspects: namedPlugs(loadout.aspects, ASPECT_MAX),
+    fragments: namedPlugs(loadout.fragments, FRAGMENT_MAX),
+    exoticArmor: loadout.exoticArmor ?? '',
+    exoticWeapon: loadout.exoticWeapon ?? '',
+    mods: namedPlugs(loadout.mods, MOD_MAX),
+    statFocus,
+    activityTags,
+    description,
+    source: 'equipped',
+  })
+}
+
+/** Read a loadout card posted from the builds page. */
+export function parseInGameLoadoutSummary(value: unknown): InGameLoadoutSummary | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const row = value as Record<string, unknown>
+  const classType = typeof row.classType === 'string' ? row.classType : ''
+  if (classType !== 'Titan' && classType !== 'Hunter' && classType !== 'Warlock') return null
+  const characterId = typeof row.characterId === 'string' ? row.characterId.trim() : ''
+  if (!/^\d{1,22}$/.test(characterId)) return null
+  const indexRaw = typeof row.index === 'number' ? row.index : 0
+  const index = Number.isInteger(indexRaw) ? Math.max(0, Math.min(15, indexRaw)) : 0
+  const strings = (input: unknown): string[] =>
+    Array.isArray(input) ? input.filter((item): item is string => typeof item === 'string').slice(0, 40) : []
+  const items: InventoryItemSummary[] = []
+  if (Array.isArray(row.items)) {
+    for (const item of row.items.slice(0, 20)) {
+      if (!item || typeof item !== 'object') continue
+      const entry = item as Record<string, unknown>
+      const itemHash = typeof entry.itemHash === 'number' ? entry.itemHash : 0
+      const name = typeof entry.name === 'string' ? entry.name : ''
+      if (!itemHash || !name) continue
+      items.push({
+        itemHash,
+        name,
+        itemInstanceId: typeof entry.itemInstanceId === 'string' ? entry.itemInstanceId : undefined,
+        iconUrl: typeof entry.iconUrl === 'string' ? entry.iconUrl : undefined,
+        slot: typeof entry.slot === 'string' ? entry.slot : undefined,
+        tier: typeof entry.tier === 'string' ? entry.tier : undefined,
+        exotic: entry.exotic === true,
+      })
+    }
+  }
+  return {
+    index,
+    name: typeof row.name === 'string' && row.name.trim() ? row.name : `Loadout ${index + 1}`,
+    characterId,
+    classType,
+    subclass: typeof row.subclass === 'string' ? row.subclass : undefined,
+    exoticArmor: typeof row.exoticArmor === 'string' ? row.exoticArmor : undefined,
+    exoticWeapon: typeof row.exoticWeapon === 'string' ? row.exoticWeapon : undefined,
+    weapons: strings(row.weapons),
+    armor: strings(row.armor),
+    aspects: strings(row.aspects),
+    fragments: strings(row.fragments),
+    mods: strings(row.mods),
+    items,
+  }
+}
+
+/** Fill stat and activity defaults so an equipped import can publish in one click. */
+export function communityBuildFromEquippedDraft(
+  draft: CommunityBuildDraft,
+  overrides?: InGameLoadoutPublishOverrides
+): { ok: true; value: CommunityBuildContent } | { ok: false; error: string } {
+  const name = fitName(overrides?.name || draft.name, 'Currently Equipped')
+  const activityTags = overrides?.activityTags?.length
+    ? overrides.activityTags
+    : draft.activityTags.length
+      ? draft.activityTags
+      : (['general'] as CommunityActivityTag[])
+  return validateCommunityBuildInput({
+    ...draft,
+    name,
+    statFocus: overrides?.statFocus?.length ? overrides.statFocus : draft.statFocus.length ? draft.statFocus : ['Weapons'],
+    activityTags,
+    description: sanitizePlainText(overrides?.description, { multiline: true }) || draft.description || 'Currently equipped gear.',
+    source: 'equipped',
+  })
 }

@@ -8,6 +8,8 @@ export type ScoreRunRow = {
   id: string
   activityName: string
   pointsAwarded?: number
+  bondPoints?: number
+  teammateCount?: number
   completedAt: string
 }
 
@@ -28,11 +30,29 @@ export function scoreBoardLines(entries: ScoreStanding[]): string[] {
   })
 }
 
-export function recentRunLines(runs: ScoreRunRow[]): { id: string; line: string }[] {
-  return runs.slice(0, 5).map((run) => ({
-    id: run.id,
-    line: `${run.activityName} · ${run.pointsAwarded ?? 0} pts`,
-  }))
+export function recentRunLines(
+  runs: Array<ScoreRunRow & { teamMembers?: { membershipId?: string; displayName?: string }[] }>
+): { id: string; line: string; teammates: { membershipId: string; displayName: string }[] }[] {
+  return runs.slice(0, 8).map((run) => {
+    const when = run.completedAt
+      ? new Date(run.completedAt).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })
+      : ''
+    const mates = run.teammateCount ?? run.teamMembers?.length ?? 0
+    const bond = run.bondPoints ? ` · +${run.bondPoints} new teammates` : ''
+    const seen = new Set<string>()
+    const teammates: { membershipId: string; displayName: string }[] = []
+    for (const member of run.teamMembers ?? []) {
+      const membershipId = member.membershipId?.trim() ?? ''
+      if (!/^\d{1,22}$/.test(membershipId) || seen.has(membershipId)) continue
+      seen.add(membershipId)
+      teammates.push({ membershipId, displayName: member.displayName || membershipId })
+    }
+    return {
+      id: run.id,
+      line: `${run.activityName}${when ? ` · ${when}` : ''} · ${mates} teammates · +${run.pointsAwarded ?? 0} pts${bond}`,
+      teammates,
+    }
+  })
 }
 
 export function scorePointsLine(input: {

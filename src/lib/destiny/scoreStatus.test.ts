@@ -19,8 +19,27 @@ describe('score status', () => {
     expect(scorePointsLine({ raidPoints: 12, dungeonPoints: 4, verifiedClears: 3 })).toContain('12')
     expect(
       recentRunLines([
-        { id: 'a', activityName: 'Vault of Glass', pointsAwarded: 8, completedAt: '2026-10-20T00:00:00.000Z' },
-      ])
-    ).toEqual([{ id: 'a', line: 'Vault of Glass · 8 pts' }])
+        {
+          id: 'a',
+          activityName: 'Vault of Glass',
+          pointsAwarded: 8,
+          bondPoints: 15,
+          teammateCount: 6,
+          completedAt: '2026-10-20T00:00:00.000Z',
+        },
+      ])[0]?.line
+    ).toContain('Vault of Glass')
+    expect(
+      recentRunLines([
+        {
+          id: 'a',
+          activityName: 'Vault of Glass',
+          pointsAwarded: 8,
+          bondPoints: 15,
+          teammateCount: 6,
+          completedAt: '2026-10-20T00:00:00.000Z',
+        },
+      ])[0]?.line
+    ).toContain('+15 new teammates')
   })
 })

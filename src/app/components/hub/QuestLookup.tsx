@@ -13,7 +13,7 @@ const KIND_LABEL: Record<QuestKind | 'all', string> = {
   catalyst: 'Catalysts',
 }
 
-export default function QuestLookup({ onLogin }: { onLogin?: () => void }) {
+export default function QuestLookup({ onLogin, bare = false }: { onLogin?: () => void; bare?: boolean }) {
   const [q, setQ] = useState('')
   const [kind, setKind] = useState<QuestKind | 'all'>('all')
   const [quests, setQuests] = useState<QuestWithProgress[]>([])
@@ -52,12 +52,16 @@ export default function QuestLookup({ onLogin }: { onLogin?: () => void }) {
 
   return (
     <section className="gh-stack" aria-labelledby="gh-quests-title">
-      <PageHeader
-        kicker="Manifest"
-        title="Quests"
-        subtitle="Search quests, pursuits, and catalysts."
-        titleId="gh-quests-title"
-      />
+      {bare ? (
+        <h2 id="gh-quests-title">Quest search</h2>
+      ) : (
+        <PageHeader
+          kicker="Manifest"
+          title="Quests"
+          subtitle="Search quests, pursuits, and catalysts."
+          titleId="gh-quests-title"
+        />
+      )}
       <form className="gh-search" onSubmit={onSubmit}>
         <label className="gh-sr" htmlFor="quest-search">
           Search quests

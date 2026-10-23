@@ -13,7 +13,7 @@ import {
 } from '@/app/components/destiny/DestinyUi'
 import { ItemExternalLink, ItemLink } from '@/app/components/destiny/ItemLink'
 import TrustReviewVoteForm from '@/app/components/destiny/TrustReviewVoteForm'
-import { destinyPrimaryBtn, destinySecondaryBtn, formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import { destinyPrimaryBtn, formatDuration, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { useBungieLink } from '@/contexts/BungieLinkContext'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { cn } from '@/lib/utils'
@@ -44,7 +44,7 @@ export function ActivityFireteamVoteList({
         MVP — crown any fireteam member
       </p>
       <p className={cn('text-[11px]', t.muted)}>
-        One MVP per run. You can change it. Kudos are optional, one per teammate, and still count if they join Top Nest later.
+        One MVP per run. You can change it. The vote stays on their Bungie membership if they join Top Nest later.
       </p>
       {run.guardians.map((guardian) => {
         const state = guardianVoteState(run, guardian)
@@ -83,27 +83,6 @@ export function ActivityFireteamVoteList({
                   ) : (
                     'Vote MVP'
                   )}
-                </button>
-              ) : null}
-              {state.kudosButton === 'give' ? (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => onVote(run.runId, guardian.membershipId, 'kudos', 'set')}
-                  className={cn(destinySecondaryBtn(darkMode), 'text-xs px-3 py-1.5 shrink-0')}
-                >
-                  Kudos
-                </button>
-              ) : null}
-              {state.kudosButton === 'clear' ? (
-                <button
-                  type="button"
-                  disabled={busy}
-                  aria-pressed="true"
-                  onClick={() => onVote(run.runId, guardian.membershipId, 'kudos', 'clear')}
-                  className={cn(destinySecondaryBtn(darkMode), 'text-xs px-3 py-1.5 shrink-0')}
-                >
-                  Kudos given
                 </button>
               ) : null}
               {guardian.isSelf ? <StatusPill label="You" tone="neutral" /> : null}
@@ -185,7 +164,7 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
     <div className="space-y-4">
       <SectionTitle
         title="Previous Activities"
-        subtitle="Crown one MVP per run. Kudos are optional. Tags save a private rank without a long form."
+        subtitle="Crown one MVP per run. The vote is one click."
         darkMode={darkMode}
       />
 

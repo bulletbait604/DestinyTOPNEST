@@ -416,13 +416,17 @@ h1, h2, h3, .gh-brand strong {
   border: 1px solid rgba(255, 255, 255, 0.16);
 }
 .gh-nav-menu button,
-.gh-more-menu button {
+.gh-nav-menu a,
+.gh-more-menu button,
+.gh-more-menu a {
   display: grid;
   gap: 0.1rem;
   justify-items: start;
   text-align: left;
+  text-decoration: none;
 }
-.gh-nav-menu button {
+.gh-nav-menu button,
+.gh-nav-menu a {
   border: 0;
   background: transparent;
   color: #f3f1ea;

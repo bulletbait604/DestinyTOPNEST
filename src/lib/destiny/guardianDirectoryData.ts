@@ -16,6 +16,8 @@ import {
   type GuardianRecentActivity,
 } from '@/lib/destiny/guardianDirectory'
 import { resolveInventoryItem } from '@/lib/destiny/manifest'
+import { isKickGuardiansClan } from '@/lib/destiny/kickGuardians'
+import { withScoredRuns } from '@/lib/destiny/runDates'
 import { countReceivedVotes, getReputationReviewsForUser, listVerifiedFullClears } from '@/lib/destiny/store'
 import { computeReputationScore } from '@/lib/destiny/reputation'
 import { evaluateSherpaRanks } from '@/lib/destiny/sherpaRanks'
@@ -41,7 +43,23 @@ function membershipTypeFromPlatform(platform?: string): number | undefined {
   return undefined
 }
 
-function cardFromUser(user: StoredDestinyUser, votes: { mvp: number; kudos: number }): GuardianDirectoryCard | null {
+type VoteTotals = { mvp: number; kudos: number; newLight: number; useless: number }
+
+function emptyTotals(): VoteTotals {
+  return { mvp: 0, kudos: 0, newLight: 0, useless: 0 }
+}
+
+function withVoteTotals(votes: VoteTotals) {
+  return {
+    mvpCount: votes.mvp,
+    kudosCount: votes.kudos,
+    mvpVotes: votes.mvp,
+    newLightVotes: votes.newLight,
+    uselessVotes: votes.useless,
+  }
+}
+
+function cardFromUser(user: StoredDestinyUser, votes: VoteTotals): GuardianDirectoryCard | null {
   if (!isMembershipId(user.bungieMembershipId)) return null
   return {
     membershipId: user.bungieMembershipId,
@@ -52,8 +70,7 @@ function cardFromUser(user: StoredDestinyUser, votes: { mvp: number; kudos: numb
     characterClass: user.characterClass,
     emblemUrl: user.emblemUrl,
     clanTag: user.clanTag,
-    mvpCount: votes.mvp,
-    kudosCount: votes.kudos,
+    ...withVoteTotals(votes),
     badges: guardianBadges({
       status: 'member',
       verifiedClears: 0,
@@ -63,7 +80,7 @@ function cardFromUser(user: StoredDestinyUser, votes: { mvp: number; kudos: numb
   }
 }
 
-function cardFromPending(row: PendingPlayer, votes: { mvp: number; kudos: number }): GuardianDirectoryCard | null {
+function cardFromPending(row: PendingPlayer, votes: VoteTotals): GuardianDirectoryCard | null {
   if (!isMembershipId(row.bungieMembershipId) || row.claimedUserId) return null
   return {
     membershipId: row.bungieMembershipId,
@@ -71,8 +88,7 @@ function cardFromPending(row: PendingPlayer, votes: { mvp: number; kudos: number
     status: 'pending',
     platform: row.platform,
     characterClass: row.characterClass,
-    mvpCount: votes.mvp,
-    kudosCount: votes.kudos,
+    ...withVoteTotals(votes),
     badges: guardianBadges({
       status: 'pending',
       verifiedClears: 0,
@@ -82,8 +98,8 @@ function cardFromPending(row: PendingPlayer, votes: { mvp: number; kudos: number
   }
 }
 
-async function voteCounts(ids: string[]): Promise<Map<string, { mvp: number; kudos: number }>> {
-  const map = new Map<string, { mvp: number; kudos: number }>()
+async function voteCounts(ids: string[]): Promise<Map<string, VoteTotals>> {
+  const map = new Map<string, VoteTotals>()
   if (!ids.length) return map
   try {
     const rows = await (await db())
@@ -92,19 +108,32 @@ async function voteCounts(ids: string[]): Promise<Map<string, { mvp: number; kud
         { $match: { selectedMembershipId: { $in: ids } } },
         {
           $group: {
-            _id: { id: '$selectedMembershipId', category: { $ifNull: ['$category', 'mvp'] } },
+            _id: {
+              id: '$selectedMembershipId',
+              voteType: {
+                $ifNull: [
+                  '$voteType',
+                  {
+                    $cond: [{ $eq: [{ $ifNull: ['$category', 'mvp'] }, 'kudos'] }, 'kudos', 'mvp'],
+                  },
+                ],
+              },
+            },
             n: { $sum: 1 },
           },
         },
       ])
       .toArray()
     for (const row of rows) {
-      const grouped = row._id as { id?: string; category?: string }
+      const grouped = row._id as { id?: string; voteType?: string }
       const id = String(grouped?.id ?? '')
       if (!id) continue
-      const current = map.get(id) ?? { mvp: 0, kudos: 0 }
-      if (grouped.category === 'kudos') current.kudos += Number(row.n ?? 0)
-      else current.mvp += Number(row.n ?? 0)
+      const current = map.get(id) ?? emptyTotals()
+      const count = Number(row.n ?? 0)
+      if (grouped.voteType === 'kudos') current.kudos += count
+      else if (grouped.voteType === 'new_light') current.newLight += count
+      else if (grouped.voteType === 'useless') current.useless += count
+      else current.mvp += count
       map.set(id, current)
     }
   } catch (error) {
@@ -142,15 +171,16 @@ async function searchLocal(query: string): Promise<GuardianDirectoryCard[]> {
     .map((row) => row.bungieMembershipId)
     .filter((id) => isMembershipId(id) && !memberIds.includes(id))
   const votes = await voteCounts([...memberIds, ...pendingIds])
+  const blank = emptyTotals()
 
   const cards: GuardianDirectoryCard[] = []
   for (const row of users) {
-    const card = cardFromUser(row as unknown as StoredDestinyUser, votes.get(String((row as { bungieMembershipId?: string }).bungieMembershipId)) ?? { mvp: 0, kudos: 0 })
+    const card = cardFromUser(row as unknown as StoredDestinyUser, votes.get(String((row as { bungieMembershipId?: string }).bungieMembershipId)) ?? blank)
     if (card) cards.push(card)
   }
   for (const row of pending as unknown as PendingPlayer[]) {
     if (memberIds.includes(row.bungieMembershipId)) continue
-    const card = cardFromPending(row, votes.get(row.bungieMembershipId) ?? { mvp: 0, kudos: 0 })
+    const card = cardFromPending(row, votes.get(row.bungieMembershipId) ?? blank)
     if (card) cards.push(card)
   }
   return cards
@@ -173,8 +203,7 @@ async function searchBungie(query: string, existing: Set<string>): Promise<Guard
           displayName,
           status,
           platform: platformLabel(hit.membershipType),
-          mvpCount: 0,
-          kudosCount: 0,
+          ...withVoteTotals(emptyTotals()),
           badges: guardianBadges({ status, verifiedClears: 0, mvpCount: 0, kudosCount: 0 }),
         }
       })
@@ -192,14 +221,65 @@ function platformLabel(membershipType?: number): DestinyPlatform | undefined {
   return undefined
 }
 
-/** Search claimed accounts, pending players, and an exact Bungie name#code. */
+async function searchRunTeammates(query: string, existing: Set<string>): Promise<GuardianDirectoryCard[]> {
+  const pattern = escapeRegExp(query.trim())
+  if (pattern.length < 2) return []
+  try {
+    const runs = (await (await db())
+      .collection(DESTINY_COLLECTIONS.runRecords)
+      .find(
+        withScoredRuns({
+          verificationStatus: 'verified',
+          teamMembers: { $elemMatch: { displayName: { $regex: pattern, $options: 'i' } } },
+        })
+      )
+      .project({ teamMembers: 1 })
+      .limit(40)
+      .toArray()) as unknown as Pick<RunRecord, 'teamMembers'>[]
+    const matched = new Map<string, { displayName: string; platform?: DestinyPlatform; clanName?: string }>()
+    const name = new RegExp(pattern, 'i')
+    for (const run of runs) {
+      for (const member of run.teamMembers ?? []) {
+        const membershipId = member.membershipId?.trim() ?? ''
+        if (!isMembershipId(membershipId) || existing.has(membershipId) || matched.has(membershipId)) continue
+        if (!name.test(member.displayName ?? '')) continue
+        matched.set(membershipId, {
+          displayName: member.displayName || membershipId,
+          platform: member.platform,
+          clanName: member.clanName,
+        })
+      }
+    }
+    const votes = await voteCounts(Array.from(matched.keys()))
+    return Array.from(matched.entries()).map(([membershipId, member]) => {
+      const counts = votes.get(membershipId) ?? emptyTotals()
+      const status: GuardianListingStatus = 'bungie'
+      return {
+        membershipId,
+        displayName: member.displayName,
+        status,
+        platform: member.platform,
+        clanTag: isKickGuardiansClan(member.clanName) ? 'KICK' : undefined,
+        ...withVoteTotals(counts),
+        badges: guardianBadges({ status, verifiedClears: 0, mvpCount: counts.mvp, kudosCount: counts.kudos }),
+      }
+    })
+  } catch (error) {
+    console.warn('[guardians] run teammate search unavailable', error)
+    return []
+  }
+}
+
+/** Search claimed accounts, pending players, fireteam teammates, and an exact Bungie name#code. */
 export async function searchGuardians(query: string): Promise<GuardianDirectoryCard[]> {
   const trimmed = query.trim()
   if (trimmed.length < 2 || trimmed.length > 40) return []
   try {
     const local = await searchLocal(trimmed)
-    const remote = await searchBungie(trimmed, new Set(local.map((card) => card.membershipId)))
-    return sortGuardianCards([...local, ...remote], trimmed)
+    const fromRuns = await searchRunTeammates(trimmed, new Set(local.map((card) => card.membershipId)))
+    const known = new Set([...local, ...fromRuns].map((card) => card.membershipId))
+    const remote = await searchBungie(trimmed, known)
+    return sortGuardianCards([...local, ...fromRuns, ...remote], trimmed)
   } catch (error) {
     console.warn('[guardians] search failed', error)
     return []

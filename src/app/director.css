@@ -207,12 +207,15 @@ h1, h2, h3, h4,
   box-shadow: none;
 }
 .gh-nav-menu button,
-.gh-more-menu button {
+.gh-nav-menu a,
+.gh-more-menu button,
+.gh-more-menu a {
   border-radius: 0;
   color: var(--dir-ink);
   font-family: 'Source Sans 3', sans-serif;
   letter-spacing: 0;
   text-transform: none;
+  text-decoration: none;
 }
 .gh-nav-menu small,
 .gh-more-menu small { color: var(--dir-muted); font-size: 0.92rem; }
@@ -579,6 +582,33 @@ h1, h2, h3, h4,
   width: 100%;
 }
 .gh-rate-btn { white-space: nowrap; }
+.gh-vote {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gh-vote-pill {
+  border: 1px solid var(--dir-line);
+  background: transparent;
+  color: var(--dir-ink);
+  min-height: 32px;
+  padding: 2px 10px;
+  font-family: Rajdhani, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.gh-vote-pill[aria-pressed='true'] {
+  border-color: var(--dir-gold);
+  color: var(--dir-gold);
+}
+.gh-mvp-count {
+  color: var(--dir-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.gh-vote .gh-alert { flex-basis: 100%; }
 .gh-row-with-rate {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -618,8 +648,71 @@ h1, h2, h3, h4,
 .gh-action-card h2 { margin: 0; font-size: 1.15rem; }
 .gh-action-card p { margin: 0; }
 .gh-prize-line { margin: 0; color: var(--dir-gold); }
+.gh-home-boards { display: grid; gap: 12px; }
+.gh-home-board {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 12px;
+  border: 1px solid var(--dir-gold-dim);
+  background: rgba(227, 197, 122, 0.04);
+}
+.gh-home-board-head h3 {
+  margin: 0;
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.gh-prize-badge {
+  display: inline-block;
+  margin: 6px 0 0;
+  padding: 2px 8px;
+  border: 1px solid var(--dir-gold);
+  color: var(--dir-gold);
+  font-family: Rajdhani, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+.gh-leader-callout {
+  margin: 0;
+  padding: 8px;
+  border-left: 2px solid var(--dir-gold);
+}
+.gh-leader-callout .gh-kicker { display: block; margin-bottom: 2px; }
+.gh-home-board-list { list-style: none; margin: 0; padding: 0; }
+.gh-home-board-list li {
+  display: grid;
+  gap: 6px;
+  padding: 8px 0;
+  border-top: 1px solid var(--dir-line);
+}
+.gh-home-rank {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+.gh-board-switch {
+  display: inline-flex;
+  border: 1px solid var(--dir-gold-dim);
+}
+.gh-board-switch .gh-tab[aria-selected='true'] {
+  background: var(--dir-gold);
+  color: #16130d;
+}
 .gh-score-points { margin: 8px 0 0; padding-left: 1.1rem; }
 .gh-score-points li { margin: 4px 0; }
+.gh-lookup { display: grid; gap: 8px; }
+.gh-lookup input { width: 100%; }
+.gh-lookup-row {
+  display: grid;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--dir-line);
+}
+.gh-lookup-row h3 { margin: 0; font-size: 1rem; }
 .gh-ask-answer { white-space: pre-wrap; line-height: 1.45; margin: 0; }
 .gh-source-pills { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
 .gh-source-pills a {
@@ -834,7 +927,8 @@ h1, h2, h3, h4,
 }
 
 @media (min-width: 800px) {
-  .gh-action-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gh-action-cards,
+  .gh-home-boards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .gh-how-steps,
   .gh-character-grid,
   .gh-rating.gh-card { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -853,7 +947,7 @@ h1, h2, h3, h4,
   .gh-nav { display: none; }
   .gh-bottom-nav {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     position: fixed;
     left: 0;
     right: 0;
@@ -874,10 +968,10 @@ h1, h2, h3, h4,
     align-content: center;
     gap: 0.15rem;
     font-family: Rajdhani, sans-serif;
-    font-size: 0.58rem;
+    font-size: 0.52rem;
     text-decoration: none;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
   }
   .gh-bottom-nav a[aria-current='page'],
@@ -988,6 +1082,10 @@ h1, h2, h3, h4,
 .gh-segments .gh-tab[aria-selected='true'] {
   background: rgba(227, 197, 122, 0.14);
   color: var(--dir-ink);
+}
+.gh-segments .gh-board-switch .gh-tab[aria-selected='true'] {
+  background: var(--dir-gold);
+  color: #16130d;
 }
 .gh-disclosure {
   border-top: 1px solid var(--dir-line);

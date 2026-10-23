@@ -196,8 +196,9 @@ export interface DestinyUser {
   characterClass?: DestinyCharacterClass
   connectedAt?: string
   /**
-   * `pending` marks a lightweight unclaimed placeholder. Those records must not
-   * appear on leaderboards. Real sign-ins stay `active` or unset.
+   * `pending` marks a lightweight unclaimed placeholder. That user id is not a
+   * leaderboard key. A qualifying fireteam member is ranked as `bungie:` plus
+   * their membership id until they sign in. Real sign-ins stay `active` or unset.
    */
   accountStatus?: 'active' | 'pending'
   profileFlexStats?: ProfileFlexStatId[]
@@ -284,6 +285,12 @@ export interface RunRecord {
   newBondMembershipIds?: string[]
   /** Owner's Destiny membership id at ingest time. */
   ownerMembershipId?: string
+  /**
+   * Set when a player looks up an older clear and adds it to scoring.
+   * Those runs count on the active season boards even when completedAt is
+   * before the season or the Oct 1 2026 launch.
+   */
+  scoredInActiveSeason?: boolean
 }
 
 export interface LeaderboardEntry {
@@ -312,7 +319,21 @@ export interface LeaderboardEntry {
   hasManualAdjustment?: boolean
   /** Bungie membership id when the row is a linked Guardian. */
   bungieMembershipId?: string
+  /** MVP crowns stored for this membership, including votes from before sign-in. */
+  mvpVotes?: number
+  /** New Light votes for this membership. */
+  newLightVotes?: number
+  /** Useless votes for this membership. */
+  uselessVotes?: number
 }
+
+/** Leaderboard row returned by the public and signed-in board APIs. */
+export type LeaderboardStandingEntry = LeaderboardEntry
+/** Same row after it is rendered for a board response. */
+export type LeaderboardEntryView = LeaderboardEntry
+
+/** Stored fireteam vote. Legacy documents without `voteType` are MVP crowns. */
+export type MvpVoteRecord = MvpVote
 
 export interface LeaderboardAdjustment {
   id: string
@@ -550,6 +571,9 @@ export interface SeasonPrizeRules {
 /** mvp = one crown per voter per run. kudos = optional, one per other participant. */
 export type MvpVoteCategory = 'mvp' | 'kudos'
 
+/** One-click Guardian vote. Legacy rows omit this and count as mvp. */
+export type GuardianVoteType = 'mvp' | 'new_light' | 'useless'
+
 /**
  * Fireteam commend stored by the target's Bungie membership id from the PGCR.
  * `selectedUserId` is filled once that guardian has a Top Nest account.
@@ -562,6 +586,11 @@ export interface MvpVote {
   voterMembershipId?: string
   /** Missing on legacy rows, which count as the run MVP. */
   category?: MvpVoteCategory
+  /**
+   * Quick vote. Missing on legacy rows, which count as `mvp`.
+   * `new_light` and `useless` are separate from the run crown.
+   */
+  voteType?: GuardianVoteType
   /** Site user id once the target has claimed a Top Nest account. */
   selectedUserId?: string
   /** Canonical recipient — Bungie membership id from the post-game carnage report. */
@@ -730,6 +759,34 @@ export interface AdminUserDetail extends AdminUserSummary {
   bungieLinked?: boolean
 }
 
+/** One resolved weapon, armor piece, or subclass from a profile or in-game loadout. */
+export interface InventoryItemSummary {
+  itemHash: number
+  itemInstanceId?: string
+  name: string
+  iconUrl?: string
+  slot?: string
+  tier?: string
+  exotic?: boolean
+}
+
+/** One non-empty Destiny 2 in-game loadout slot. */
+export interface InGameLoadoutSummary {
+  index: number
+  name: string
+  characterId: string
+  classType: 'Titan' | 'Hunter' | 'Warlock'
+  subclass?: string
+  exoticArmor?: string
+  exoticWeapon?: string
+  weapons: string[]
+  armor: string[]
+  aspects?: string[]
+  fragments?: string[]
+  mods?: string[]
+  items: InventoryItemSummary[]
+}
+
 /** One guardian slot — DIM-style horizontal character tile data. */
 export interface CharacterSummary {
   characterId: string
@@ -741,6 +798,8 @@ export interface CharacterSummary {
   classRef?: DestinyIconRef
   /** Equipped title / seal name when available from Bungie. */
   title?: string
+  /** Saved in-game loadouts for this character. Equipped gear stays on the live loadout. */
+  inGameLoadouts?: InGameLoadoutSummary[]
 }
 
 export interface PlayerProfile extends DestinyUser {

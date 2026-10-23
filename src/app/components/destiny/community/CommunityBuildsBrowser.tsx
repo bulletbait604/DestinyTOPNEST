@@ -45,6 +45,11 @@ function BuildCard({ build, darkMode }: { build: CommunityBuildPublic; darkMode:
         {build.exoticArmor || 'Exotic armor is on the source page'}
         {build.exoticWeapon ? ` · ${build.exoticWeapon}` : ''}
       </p>
+      {build.aspects.length || build.fragments.length ? (
+        <p className={cn('text-xs', t.muted)}>
+          {build.aspects.concat(build.fragments).slice(0, 4).map((plug) => plug.name).join(' · ')}
+        </p>
+      ) : null}
       <div className="flex flex-wrap gap-1.5">
         {featured ? (
           <span className="rounded-md border border-[var(--dir-gold-dim,rgba(227,197,122,0.45))] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--dir-gold,#e3c57a)]">
@@ -67,6 +72,7 @@ function BuildCard({ build, darkMode }: { build: CommunityBuildPublic; darkMode:
           </>
         )}
       </p>
+      <p className={cn('text-xs', t.caption)}>Inspect</p>
     </Link>
   )
 }

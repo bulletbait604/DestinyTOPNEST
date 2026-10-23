@@ -74,7 +74,7 @@ export async function buildUserProfile(
   }
 
   const [runs, reviews, trustReviews, seasonLeaderboardEntries] = await Promise.all([
-    getRunsForUser(siteUserId),
+    getRunsForUser(siteUserId, 200),
     scope === 'full' ? getReputationReviewsForUser(siteUserId) : Promise.resolve([]),
     getTrustReviewsForUser(siteUserId, stored?.bungieMembershipId),
     scope === 'full' ? getSeasonStandingForUser(siteUserId) : Promise.resolve([]),

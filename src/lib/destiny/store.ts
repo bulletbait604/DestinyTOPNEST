@@ -35,7 +35,8 @@ import {
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
 import { mvpCategoryFilter, mvpVotesReceivedQuery } from '@/lib/destiny/mvpVoting'
-import { recentRunsFrom, nestLaunchMongoFilter } from '@/lib/destiny/runDates'
+export { findGuardianVote, getVoteCountsMap, voteCountsForMembership } from '@/lib/destiny/voteCounts'
+import { recentRunsFrom, withScoredRuns } from '@/lib/destiny/runDates'
 import type { AdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
 import { logAdminActivity } from '@/lib/destiny/adminActivityLog'
 import type {
@@ -118,6 +119,14 @@ async function ensureDestinyIndexesOnce(): Promise<void> {
       name: 'kudos_one_per_voter_run_target',
     }
   )
+  await mvpVotes.createIndex(
+    { voterId: 1, selectedMembershipId: 1, voteType: 1 },
+    {
+      unique: true,
+      partialFilterExpression: { voteType: { $in: ['new_light', 'useless'] } },
+      name: 'quick_vote_one_per_guardian',
+    }
+  )
   await mvpVotes.createIndex({ selectedUserId: 1, createdAt: -1 })
   await mvpVotes.createIndex({ selectedMembershipId: 1, createdAt: -1 })
   await mvpVotes.createIndex({ voterId: 1, createdAt: -1 })
@@ -150,13 +159,14 @@ export async function loadAllMvpVotes(): Promise<MvpVote[]> {
     .toArray()) as unknown as MvpVote[]
 }
 
+/** Season boards and overview. Includes history-page clears from before launch. */
 async function loadAllRuns(): Promise<RunRecord[]> {
   const database = await db()
   return (await database
     .collection(DESTINY_COLLECTIONS.runRecords)
-    .find(nestLaunchMongoFilter())
+    .find(withScoredRuns())
     .sort({ completedAt: -1 })
-    .limit(500)
+    .limit(2000)
     .toArray()) as unknown as RunRecord[]
 }
 
@@ -200,7 +210,7 @@ export async function getRunsForUser(userId: string, limit = 25): Promise<RunRec
     const database = await db()
     const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
-      .find({ ownerUserId: userId, ...nestLaunchMongoFilter() })
+      .find(withScoredRuns({ ownerUserId: userId }))
       .sort({ completedAt: -1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
@@ -224,7 +234,7 @@ export async function getRunsForParticipant(
     }
     const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
-      .find({ $or: or, ...nestLaunchMongoFilter() })
+      .find(withScoredRuns({ $or: or }))
       .sort({ completedAt: -1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
@@ -250,12 +260,13 @@ export async function listVerifiedRunsForMembers(
     const database = await db()
     const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
-      .find({
-        verificationStatus: 'verified',
-        completed: true,
-        'teamMembers.membershipId': { $in: ids },
-        ...nestLaunchMongoFilter(),
-      })
+      .find(
+        withScoredRuns({
+          verificationStatus: 'verified',
+          completed: true,
+          'teamMembers.membershipId': { $in: ids },
+        })
+      )
       .sort({ completedAt: 1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
@@ -275,11 +286,12 @@ export async function listVerifiedFullClears(limit = 5000): Promise<{ runs: RunR
     const database = await db()
     const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
-      .find({
-        verificationStatus: 'verified',
-        completed: true,
-        ...nestLaunchMongoFilter(),
-      })
+      .find(
+        withScoredRuns({
+          verificationStatus: 'verified',
+          completed: true,
+        })
+      )
       .sort({ completedAt: -1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
@@ -572,7 +584,7 @@ export async function getAdminRunsList(query: AdminRunsListQuery = {}): Promise<
     const database = await db()
     const limit = Math.min(Math.max(query.limit ?? 40, 1), 100)
     const offset = Math.max(query.offset ?? 0, 0)
-    const filter: Record<string, unknown> = { ...nestLaunchMongoFilter() }
+    const filter: Record<string, unknown> = {}
 
     if (query.status && query.status !== 'all') {
       filter.verificationStatus = query.status
@@ -591,10 +603,11 @@ export async function getAdminRunsList(query: AdminRunsListQuery = {}): Promise<
       ]
     }
 
+    const mongoFilter = withScoredRuns(filter)
     const collection = database.collection(DESTINY_COLLECTIONS.runRecords)
     const [runs, total] = await Promise.all([
-      collection.find(filter).sort({ completedAt: -1 }).skip(offset).limit(limit).toArray(),
-      collection.countDocuments(filter),
+      collection.find(mongoFilter).sort({ completedAt: -1 }).skip(offset).limit(limit).toArray(),
+      collection.countDocuments(mongoFilter),
     ])
 
     return { runs: (runs as unknown as RunRecord[]).map(normalizeRunRecord), total }
@@ -913,15 +926,17 @@ function isDuplicateKeyError(error: unknown): boolean {
 
 function voteWrite(vote: MvpVote): { $set: Record<string, unknown>; $setOnInsert: { createdAt: string }; $unset?: { selectedUserId: '' } } {
   const now = vote.updatedAt ?? new Date().toISOString()
+  const labeled = vote.voteType === 'new_light' || vote.voteType === 'useless'
   const set: Record<string, unknown> = {
     id: vote.id,
     runId: vote.runId,
     voterId: vote.voterId,
-    category: vote.category ?? 'mvp',
     selectedMembershipId: vote.selectedMembershipId,
     selectedDisplayName: vote.selectedDisplayName,
     updatedAt: now,
+    voteType: labeled ? vote.voteType : (vote.voteType ?? 'mvp'),
   }
+  if (!labeled) set.category = vote.category ?? 'mvp'
   if (vote.voterMembershipId) set.voterMembershipId = vote.voterMembershipId
   if (vote.selectedUserId) set.selectedUserId = vote.selectedUserId
   const update: { $set: Record<string, unknown>; $setOnInsert: { createdAt: string }; $unset?: { selectedUserId: '' } } = {
@@ -935,9 +950,15 @@ function voteWrite(vote: MvpVote): { $set: Record<string, unknown>; $setOnInsert
 export async function saveMvpVote(vote: MvpVote): Promise<void> {
   const database = await db()
   const collection = database.collection(DESTINY_COLLECTIONS.mvpVotes)
-  const category = vote.category ?? 'mvp'
-  const filter =
-    category === 'kudos'
+  const labeled = vote.voteType === 'new_light' || vote.voteType === 'useless'
+  const category = labeled ? undefined : (vote.category ?? 'mvp')
+  const filter = labeled
+    ? {
+        voterId: vote.voterId,
+        selectedMembershipId: vote.selectedMembershipId,
+        voteType: vote.voteType,
+      }
+    : category === 'kudos'
       ? {
           voterId: vote.voterId,
           runId: vote.runId,
@@ -949,7 +970,7 @@ export async function saveMvpVote(vote: MvpVote): Promise<void> {
           runId: vote.runId,
           ...mvpCategoryFilter(),
         }
-  const update = voteWrite({ ...vote, category })
+  const update = voteWrite(labeled ? vote : { ...vote, category, voteType: vote.voteType ?? 'mvp' })
   try {
     await collection.updateOne(filter, update, { upsert: true })
   } catch (error) {
@@ -1059,6 +1080,21 @@ export async function getRunRecordById(id: string): Promise<RunRecord | null> {
     return doc ? (doc as unknown as RunRecord) : null
   } catch {
     return null
+  }
+}
+
+export async function getRunRecordsByPgcrIds(pgcrIds: string[]): Promise<RunRecord[]> {
+  const ids = Array.from(new Set(pgcrIds.filter(Boolean))).slice(0, 200)
+  if (!ids.length) return []
+  try {
+    const database = await db()
+    const rows = await database
+      .collection(DESTINY_COLLECTIONS.runRecords)
+      .find({ pgcrId: { $in: ids } })
+      .toArray()
+    return (rows as unknown as RunRecord[]).map(normalizeRunRecord)
+  } catch {
+    return []
   }
 }
 

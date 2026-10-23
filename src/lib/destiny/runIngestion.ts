@@ -17,7 +17,13 @@ import {
 } from '@/lib/destiny/pgcrStats'
 import { calculateRunPoints } from '@/lib/destiny/scoring'
 import { computeRunBondScore, recordRunBonds } from '@/lib/destiny/bondStore'
-import { isRunInActiveSeasonPacific } from '@/lib/destiny/runDates'
+import {
+  HISTORY_PAGE_SIZE,
+  RECENT_HISTORY_PAGES,
+  shouldImportActivity,
+  syncHistoryDepth,
+  type SyncDepthOptions,
+} from '@/lib/destiny/runLookup'
 import { isPantheonActivityName, squadKeyFromMembers } from '@/lib/destiny/pantheonActivities'
 import {
   ensureDestinyIndexes,
@@ -201,18 +207,26 @@ async function fetchActivityList(
   membershipId: string,
   characterId: string,
   mode: number,
-  accessToken: string
+  accessToken: string | undefined,
+  pages: number,
+  countPerPage: number
 ): Promise<ActivityHistoryRow[]> {
-  const response = (await getActivityHistory(
-    membershipType,
-    membershipId,
-    characterId,
-    mode,
-    SYNC_COUNT,
-    accessToken
-  )) as { activities?: ActivityHistoryRow[] }
-
-  return response?.activities ?? []
+  const rows: ActivityHistoryRow[] = []
+  for (let page = 0; page < pages; page += 1) {
+    const response = (await getActivityHistory(
+      membershipType,
+      membershipId,
+      characterId,
+      mode,
+      countPerPage,
+      accessToken,
+      page
+    )) as { activities?: ActivityHistoryRow[] }
+    const batch = response?.activities ?? []
+    rows.push(...batch)
+    if (batch.length < countPerPage) break
+  }
+  return rows
 }
 
 async function pgcrToRunRecord(
@@ -224,7 +238,7 @@ async function pgcrToRunRecord(
   options: {
     pantheonOnly?: boolean
     historyRow?: ActivityHistoryRow
-    accessToken: string
+    accessToken?: string
     clanMembershipIds?: Set<string>
     clanName?: string
     ownerMembershipId?: string
@@ -361,7 +375,7 @@ async function loadClanMembershipIds(clanId?: string): Promise<Set<string>> {
   }
 }
 
-export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
+type SyncResult = {
   synced: number
   imported: number
   flagged: number
@@ -373,13 +387,14 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
     pointsAwarded: number
     verificationStatus: RunRecord['verificationStatus']
   }[]
-}> {
+}
+
+export type ScoreRunRequest = { instanceId: string; type: 'raid' | 'dungeon' }
+
+export async function syncRunsForUser(stored: StoredDestinyUser, options: SyncDepthOptions = {}): Promise<SyncResult> {
   await ensureDestinyIndexes()
 
-  const accessToken = await getValidAccessToken(stored)
-  if (!accessToken) {
-    throw new Error('Bungie session expired — reconnect your account from Overview.')
-  }
+  const accessToken = (await getValidAccessToken(stored)) ?? undefined
 
   const membershipType = stored.destinyMembershipType
   const membershipId = stored.bungieMembershipId
@@ -398,18 +413,14 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
     throw new Error('No characters found on linked Bungie account.')
   }
 
+  const depth = syncHistoryDepth(options)
   const seen = new Set<string>()
   let synced = 0
   let imported = 0
   let flagged = 0
   let skipped = 0
   let builds = 0
-  const newRuns: {
-    activityName: string
-    activityType: ActivityType
-    pointsAwarded: number
-    verificationStatus: RunRecord['verificationStatus']
-  }[] = []
+  const newRuns: SyncResult['newRuns'] = []
 
   for (const characterId of characterIds) {
     for (const [mode, activityTypeHint, pantheonOnly] of [
@@ -417,6 +428,8 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
       [DUNGEON_MODE, 'dungeon', false],
       [ALL_PVE_MODE, 'pantheon', true],
     ] as const) {
+      const deep = mode === RAID_MODE || mode === DUNGEON_MODE
+      const includePrevious = depth.includePrevious && deep
       let activities: ActivityHistoryRow[] = []
       try {
         activities = await fetchActivityList(
@@ -424,7 +437,9 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
           membershipId,
           characterId,
           mode,
-          accessToken
+          accessToken,
+          deep ? depth.pages : 1,
+          deep ? depth.countPerPage : SYNC_COUNT
         )
       } catch (err) {
         console.warn('[runIngestion] activity history failed', { mode, characterId, err })
@@ -434,7 +449,8 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
       for (const row of activities) {
         const instanceId = row.activityDetails?.instanceId
         if (!instanceId || seen.has(instanceId)) continue
-        if (row.period && !isRunInActiveSeasonPacific(row.period)) continue
+        const activityKind = activityTypeHint === 'pantheon' ? 'pantheon' : activityTypeHint
+        if (!shouldImportActivity(row.period, includePrevious, activityKind)) continue
         seen.add(instanceId)
 
         try {
@@ -459,16 +475,18 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
           }
 
           let { record, pgcr } = result
-          if (!isRunInActiveSeasonPacific(record.completedAt)) {
+          if (!shouldImportActivity(record.completedAt, includePrevious, activityKind)) {
             skipped++
             continue
           }
+          if (activityKind !== 'pantheon') record.scoredInActiveSeason = true
 
           const existing = await getRunRecordById(record.id)
           if (existing) {
             const review = await getAdminReviewByRunId(record.id)
             record = await mergeRunRecordOnResync(existing, record, review)
           }
+          if (activityKind !== 'pantheon' || existing?.scoredInActiveSeason) record.scoredInActiveSeason = true
 
           const isNew = !(await runRecordExists(record.id))
           await saveRunRecord(record)
@@ -524,6 +542,99 @@ export async function syncRunsForUser(stored: StoredDestinyUser): Promise<{
           skipped++
         }
       }
+    }
+  }
+
+  return { synced, imported, flagged, skipped, builds, newRuns }
+}
+
+/** Score specific raid or dungeon PGCRs, including clears from before this season. */
+export async function scoreSelectedRuns(stored: StoredDestinyUser, runs: ScoreRunRequest[]): Promise<SyncResult> {
+  await ensureDestinyIndexes()
+  const accessToken = (await getValidAccessToken(stored)) ?? undefined
+  const membershipId = stored.bungieMembershipId
+  if (!membershipId) throw new Error('That Guardian is not linked on TopNest yet.')
+
+  const clanMembershipIds = await loadClanMembershipIds(stored.clanId)
+  let synced = 0
+  let imported = 0
+  let flagged = 0
+  let skipped = 0
+  let builds = 0
+  const newRuns: SyncResult['newRuns'] = []
+  const seen = new Set<string>()
+
+  for (const requested of runs.slice(0, RECENT_HISTORY_PAGES * HISTORY_PAGE_SIZE * 2)) {
+    if (!/^\d{1,22}$/.test(requested.instanceId) || seen.has(requested.instanceId)) continue
+    seen.add(requested.instanceId)
+    try {
+      const result = await pgcrToRunRecord(
+        requested.instanceId,
+        requested.type,
+        stored.userId,
+        stored.bungieDisplayName,
+        stored.clanId,
+        {
+          accessToken,
+          clanMembershipIds,
+          clanName: stored.clanName,
+          ownerMembershipId: membershipId,
+        }
+      )
+      if (!result || (result.record.type !== 'raid' && result.record.type !== 'dungeon')) {
+        skipped++
+        continue
+      }
+      let { record, pgcr } = result
+      record.scoredInActiveSeason = true
+      const existing = await getRunRecordById(record.id)
+      if (existing) {
+        const review = await getAdminReviewByRunId(record.id)
+        record = await mergeRunRecordOnResync(existing, record, review)
+        record.scoredInActiveSeason = true
+      }
+      const isNew = !(await runRecordExists(record.id))
+      await saveRunRecord(record)
+      if (record.verificationStatus === 'verified' && (record.pointsAwarded ?? 0) > 0) {
+        await recordRunBonds(record, membershipId).catch((err) =>
+          console.warn('[runIngestion] bond persist failed', { runId: record.id, err })
+        )
+      }
+      if (isNew) {
+        imported++
+        newRuns.push({
+          activityName: record.activityName,
+          activityType: record.type,
+          pointsAwarded: record.pointsAwarded ?? 0,
+          verificationStatus: record.verificationStatus,
+        })
+      }
+      if (record.verificationStatus === 'verified' || record.verificationStatus === 'flagged') {
+        const memberBuilds = await extractAllBuildsFromPgcr(pgcr, record, membershipId)
+        for (const build of memberBuilds) {
+          await saveBuildSnapshot(build)
+          builds++
+        }
+      }
+      if (record.verificationStatus === 'flagged') {
+        const review = await getAdminReviewByRunId(record.id)
+        const reviewClosed = review?.status === 'approved' || review?.status === 'rejected'
+        if (!reviewClosed) {
+          flagged++
+          await queueAdminReview({
+            id: `review-${record.id}`,
+            runId: record.id,
+            suspiciousScore: record.suspiciousScore,
+            aiSummary: record.aiReview?.summary ?? 'Flagged for manual review',
+            status: 'pending',
+            run: record,
+          })
+        }
+      }
+      synced++
+    } catch (err) {
+      console.warn('[runIngestion] selected PGCR failed', requested.instanceId, err)
+      skipped++
     }
   }
 

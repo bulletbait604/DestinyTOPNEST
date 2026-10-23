@@ -156,6 +156,14 @@ export async function searchPlayer(displayName: string, displayNameCode: number)
   >(`/User/Search/GlobalName/${encoded}/${displayNameCode}/`)
 }
 
+/** Profiles, vault, characters, equipment, inventories, in-game loadouts, and item plugs. */
+export const DESTINY_PROFILE_COMPONENTS = [100, 102, 200, 201, 205, 206, 300, 302, 304, 305, 800, 900, 1100] as const
+
+/** Full profile used for in-game loadouts. Component 206 is CharacterLoadouts. Component 102 is the vault. */
+export async function getDestinyProfile(membershipType: number, membershipId: string, accessToken?: string) {
+  return getPlayerProfile(membershipType, membershipId, [...DESTINY_PROFILE_COMPONENTS], accessToken)
+}
+
 /** Profile + characters — requires membershipType + membershipId. */
 export async function getPlayerProfile(
   membershipType: number,
@@ -193,10 +201,7 @@ export async function getCharacterLoadoutProfile(
   membershipId: string,
   accessToken?: string
 ) {
-  return bungieFetch(
-    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=200,201,205,102,206,300,304,305`,
-    { accessToken }
-  )
+  return getDestinyProfile(membershipType, membershipId, accessToken)
 }
 
 /** Character equipment + item sockets/stats for live build parsing. */
@@ -222,6 +227,18 @@ export async function getUniqueWeaponStats(
   )
 }
 
+/** Activity history path. `page` walks backward through older clears. */
+export function activityHistoryPath(
+  membershipType: number,
+  membershipId: string,
+  characterId: string,
+  mode: number,
+  count = 25,
+  page = 0
+): string {
+  return `/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=${count}&page=${page}`
+}
+
 /** Activity history for a character. */
 export async function getActivityHistory(
   membershipType: number,
@@ -229,12 +246,12 @@ export async function getActivityHistory(
   characterId: string,
   mode: number,
   count = 25,
-  accessToken?: string
+  accessToken?: string,
+  page = 0
 ) {
-  return bungieFetch(
-    `/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=${count}`,
-    { accessToken }
-  )
+  return bungieFetch(activityHistoryPath(membershipType, membershipId, characterId, mode, count, page), {
+    accessToken,
+  })
 }
 
 /** Post-game carnage report — core for run verification. */
@@ -245,6 +262,18 @@ export async function getPostGameCarnageReport(activityId: string, accessToken?:
 /** Clan info. */
 export async function getClan(clanId: string, accessToken?: string) {
   return bungieFetch(`/GroupV2/${clanId}/`, { accessToken })
+}
+
+/** Look up a clan by its exact name. groupType 1 is a clan. */
+export async function searchClanByName(groupName: string, accessToken?: string) {
+  const name = groupName.trim()
+  return bungieFetch<{
+    detail?: {
+      groupId?: string | number
+      name?: string
+      clanInfo?: { clanCallsign?: string }
+    }
+  }>(`/GroupV2/Name/${encodeURIComponent(name)}/1/`, { accessToken })
 }
 
 /** Clan members (50 per page). Bungie expects currentpage as a query param, not a path segment. */

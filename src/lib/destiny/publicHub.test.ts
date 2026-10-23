@@ -114,4 +114,20 @@ describe('public guardian hub', () => {
     expect(rows.find((row) => row.board === 'raid')).toMatchObject({ displayName: 'Nova', rank: 1, points: 10 })
     expect(rows.map((row) => row.board)).not.toContain('pantheon')
   })
+
+  it('keeps the homepage preview to five names on each board', () => {
+    const raids = [1, 2, 3, 4, 5, 6].map((rank) =>
+      run({
+        id: `raid-${rank}`,
+        completedAt: '2026-10-08T18:00:00.000Z',
+        ownerUserId: `owner-${rank}`,
+        ownerDisplayName: `Raider ${rank}`,
+        pointsAwarded: 70 - rank,
+        type: 'raid',
+      })
+    )
+    const rows = topGuardiansFromRuns(raids, NOW).filter((row) => row.board === 'raid')
+    expect(rows).toHaveLength(5)
+    expect(rows.map((row) => row.displayName)).toEqual(['Raider 1', 'Raider 2', 'Raider 3', 'Raider 4', 'Raider 5'])
+  })
 })

@@ -12,7 +12,9 @@ import AskGuide from '@/app/components/hub/AskGuide'
 import { RatePage } from '@/app/components/hub/QuickRate'
 import BoardsHub from '@/app/components/hub/BoardsHub'
 import { ConnectedHome, ScoreRuns } from '@/app/components/hub/HubPages'
+import { BuildsHub, CommunityHub, ProfileHub, WeeklyHub } from '@/app/components/hub/SimplePages'
 import PublicHub from '@/app/components/hub/PublicHub'
+import { routeForTab, type BuildsSection, type CommunitySection, type ProfileSection } from '@/lib/destiny/pageCatalog'
 import SignedInHubFrame from '@/app/components/hub/SignedInHubFrame'
 import SiteBackdrop from '@/app/components/SiteBackdrop'
 import { useAppSession } from '@/hooks/useAppSession'
@@ -27,6 +29,12 @@ function SignedHome({
   fallback: ReactNode
 }) {
   const [tab, setTab] = useState<DestinyTopNestTab>('overview')
+  useEffect(() => {
+    if (window.location.pathname !== '/') return
+    const target = routeForTab(parseTabFromSearch(window.location.search))
+    if (target && target !== '/') window.location.replace(target)
+  }, [])
+
   useEffect(() => {
     const read = () => setTab(parseTabFromSearch(window.location.search))
     read()
@@ -45,7 +53,60 @@ function SignedHome({
   return fallback
 }
 
-export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' | 'score' | 'boards' }) {
+type HubView = 'home' | 'ask' | 'rate' | 'score' | 'boards' | 'people' | 'builds' | 'community' | 'weekly' | 'profile'
+
+function HubViewBody({
+  view,
+  section,
+  signedIn,
+  onLogin,
+  isAdmin,
+  isOwner,
+  userId,
+}: {
+  view: HubView
+  section?: string
+  signedIn: boolean
+  onLogin: () => void
+  isAdmin: boolean
+  isOwner: boolean
+  userId?: string
+}) {
+  if (view === 'rate') return <RatePage />
+  if (view === 'score') return <ScoreRuns signedIn={signedIn} onLogin={onLogin} />
+  if (view === 'boards') return <BoardsHub onLogin={onLogin} />
+  if (view === 'ask') return <AskGuide />
+  if (view === 'builds') {
+    const initial: BuildsSection = section === 'mine' || section === 'compare' ? section : 'shared'
+    return <BuildsHub initial={initial} signedIn={signedIn} onLogin={onLogin} />
+  }
+  if (view === 'community' || view === 'people') {
+    const community: CommunitySection = section === 'teachers' || section === 'clans' ? section : 'players'
+    return <CommunityHub section={community} onLogin={onLogin} />
+  }
+  if (view === 'weekly') return <WeeklyHub onLogin={onLogin} />
+  if (view === 'profile') {
+    const profile: ProfileSection = section === 'passport' || section === 'prizes' ? section : 'guardian'
+    return <ProfileHub section={profile} signedIn={signedIn} onLogin={onLogin} />
+  }
+  if (signedIn) {
+    return (
+      <SignedHome
+        onLogin={onLogin}
+        fallback={<DestinyTopNestApp embedded darkMode isAdmin={isAdmin} isOwner={isOwner} userId={userId} />}
+      />
+    )
+  }
+  return <PublicHub onLogin={onLogin} />
+}
+
+export default function HubScreen({
+  view,
+  section,
+}: {
+  view: HubView
+  section?: string
+}) {
   const { mounted, user, loading, login, logout, refresh, isAdmin, isOwner } = useAppSession()
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginPending, setLoginPending] = useState(false)
@@ -137,20 +198,15 @@ export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' | 's
               {loginError}
             </p>
           ) : null}
-          {view === 'rate' ? (
-            <RatePage />
-          ) : view === 'score' ? (
-            <ScoreRuns signedIn onLogin={handleLogin} />
-          ) : view === 'boards' ? (
-            <BoardsHub onLogin={handleLogin} />
-          ) : view === 'ask' ? (
-            <AskGuide />
-          ) : (
-            <SignedHome
-              onLogin={handleLogin}
-              fallback={<DestinyTopNestApp embedded darkMode isAdmin={isAdmin} isOwner={isOwner} userId={user.id} />}
-            />
-          )}
+          <HubViewBody
+            view={view}
+            section={section}
+            signedIn
+            onLogin={handleLogin}
+            isAdmin={isAdmin}
+            isOwner={isOwner}
+            userId={user.id}
+          />
         </SignedInHubFrame>
       </SiteBackdrop>
     )
@@ -165,17 +221,14 @@ export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' | 's
           </p>
         ) : null}
         <HubErrorBoundary label="public hub">
-          {view === 'ask' ? (
-            <AskGuide />
-          ) : view === 'rate' ? (
-            <RatePage />
-          ) : view === 'score' ? (
-            <ScoreRuns signedIn={false} onLogin={handleLogin} />
-          ) : view === 'boards' ? (
-            <BoardsHub onLogin={handleLogin} />
-          ) : (
-            <PublicHub onLogin={handleLogin} />
-          )}
+          <HubViewBody
+            view={view}
+            section={section}
+            signedIn={false}
+            onLogin={handleLogin}
+            isAdmin={false}
+            isOwner={false}
+          />
         </HubErrorBoundary>
       </HubChrome>
     </SiteBackdrop>

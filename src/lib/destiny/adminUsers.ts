@@ -11,7 +11,7 @@ import {
   getRunsForUser,
   getTrustReviewsForUser,
 } from '@/lib/destiny/store'
-import { nestLaunchMongoFilter } from '@/lib/destiny/runDates'
+import { withScoredRuns } from '@/lib/destiny/runDates'
 import type { AdminUserDetail, AdminUserSummary } from '@/lib/destiny/types'
 
 function escapeRegex(value: string): string {
@@ -31,16 +31,18 @@ async function siteRoleForUser(userId: string): Promise<string | undefined> {
 async function runCountsForUser(userId: string): Promise<{ verified: number; flagged: number }> {
   const database = await db()
   const [verified, flagged] = await Promise.all([
-    database.collection(DESTINY_COLLECTIONS.runRecords).countDocuments({
-      ownerUserId: userId,
-      verificationStatus: 'verified',
-      ...nestLaunchMongoFilter(),
-    }),
-    database.collection(DESTINY_COLLECTIONS.runRecords).countDocuments({
-      ownerUserId: userId,
-      verificationStatus: 'flagged',
-      ...nestLaunchMongoFilter(),
-    }),
+    database.collection(DESTINY_COLLECTIONS.runRecords).countDocuments(
+      withScoredRuns({
+        ownerUserId: userId,
+        verificationStatus: 'verified',
+      })
+    ),
+    database.collection(DESTINY_COLLECTIONS.runRecords).countDocuments(
+      withScoredRuns({
+        ownerUserId: userId,
+        verificationStatus: 'flagged',
+      })
+    ),
   ])
   return { verified, flagged }
 }

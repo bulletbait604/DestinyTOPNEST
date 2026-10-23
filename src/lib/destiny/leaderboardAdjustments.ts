@@ -3,7 +3,10 @@ import clientPromise from '@/lib/mongodb'
 import { getMongoDbName } from '@/lib/database'
 import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
+import { loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
 import { aggregateLeaderboard } from '@/lib/destiny/leaderboards'
+import { emptyVoteCounts, tallyVoteCounts } from '@/lib/destiny/mvpVoting'
+import { getVoteCountsMap } from '@/lib/destiny/voteCounts'
 import type {
   LeaderboardAdjustment,
   LeaderboardCategory,
@@ -103,18 +106,38 @@ export function applyLeaderboardAdjustments(
   return merged.slice(0, 10).map((entry, index) => ({ ...entry, rank: index + 1 }))
 }
 
+async function attachVoteCounts(entries: LeaderboardEntry[], votes: MvpVote[]): Promise<LeaderboardEntry[]> {
+  const ids = entries.map((entry) => entry.bungieMembershipId?.trim() ?? '').filter(Boolean)
+  let counts = ids.length ? await getVoteCountsMap(ids) : new Map()
+  if (counts.size === 0 && votes.length) counts = tallyVoteCounts(votes)
+  return entries.map((entry) => {
+    const bucket = entry.bungieMembershipId ? counts.get(entry.bungieMembershipId) : undefined
+    const fallback = bucket ?? emptyVoteCounts()
+    return {
+      ...entry,
+      mvpVotes: fallback.mvpVotes,
+      newLightVotes: fallback.newLightVotes,
+      uselessVotes: fallback.uselessVotes,
+    }
+  })
+}
+
 export async function buildLeaderboardWithAdjustments(
   category: LeaderboardCategory,
   period: LeaderboardPeriod,
   season: Season,
   runs: RunRecord[],
   usersById: Map<string, StoredDestinyUser>,
-  _votes: MvpVote[]
+  votes: MvpVote[]
 ): Promise<LeaderboardEntry[]> {
-  const base = aggregateLeaderboard(runs, usersById, category, period, season)
+  const kickMembershipIds = await loadKickGuardianMembershipIds()
+  const base = aggregateLeaderboard(runs, usersById, category, period, season, kickMembershipIds)
 
   const adjustments = await loadLeaderboardAdjustments(category, period, season.id)
-  return applyLeaderboardAdjustments(base, adjustments, usersById, category, period, season)
+  return attachVoteCounts(
+    applyLeaderboardAdjustments(base, adjustments, usersById, category, period, season),
+    votes
+  )
 }
 
 export async function upsertLeaderboardAdjustment(input: {

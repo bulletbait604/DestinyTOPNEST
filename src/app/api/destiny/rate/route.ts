@@ -7,7 +7,9 @@ import { getDestinyUserByBungieMembershipId, getDestinyUserBySiteUserId } from '
 import { searchGuardians } from '@/lib/destiny/guardianDirectoryData'
 import { isMvpCategoryVote } from '@/lib/destiny/mvpVoting'
 import { ensurePendingPlayerForUnlinkedMember } from '@/lib/destiny/pendingPlayers'
+import { parseGuardianVoteType } from '@/lib/destiny/mvpVoting'
 import {
+  buildLabeledGuardianVote,
   buildQuickRateWrite,
   countTags,
   isBungieMembershipId,
@@ -21,6 +23,7 @@ import { listQuickRatings, saveQuickRating } from '@/lib/destiny/quickRateStore'
 import {
   findReputationReview,
   findTrustReview,
+  findGuardianVote,
   getMvpVotesByReviewer,
   getReputationReviewsByReviewer,
   getRunsForParticipant,
@@ -30,6 +33,7 @@ import {
   saveReputationReview,
   saveTrustReview,
 } from '@/lib/destiny/store'
+import { voteCountsForMembership } from '@/lib/destiny/voteCounts'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,9 +64,13 @@ export async function GET(req: NextRequest) {
   const rows = await listQuickRatings(membershipId)
   const user = await optionalAuth(req).catch(() => null)
   const mine = user ? rows.find((row) => row.voterId === user.username.toLowerCase()) : undefined
+  const received = await voteCountsForMembership(membershipId)
   return NextResponse.json({
     counts: countTags(rows),
     total: rows.length,
+    mvpVotes: received.mvpVotes,
+    newLightVotes: received.newLightVotes,
+    uselessVotes: received.uselessVotes,
     mine: mine ? { tags: mine.tags, note: mine.note ?? '' } : null,
   })
 }
@@ -85,9 +93,14 @@ export async function POST(req: NextRequest) {
       tags?: unknown
       note?: unknown
       runId?: string
+      voteType?: unknown
     }
     const targetMembershipId = body.membershipId?.trim() ?? ''
     const tags = parseRateTags(body.tags)
+    if (body.voteType != null && body.voteType !== '' && parseGuardianVoteType(body.voteType) == null) {
+      return NextResponse.json({ error: 'voteType must be mvp, new_light, or useless' }, { status: 400 })
+    }
+    const voteType = parseGuardianVoteType(body.voteType, tags.includes('mvp') || tags.length === 0 ? 'mvp' : null)
     const note = normalizeRateNote(body.note)
     const displayName = typeof body.displayName === 'string' ? body.displayName.trim().slice(0, 80) : ''
     const preferredRunId = body.runId?.trim() || undefined
@@ -110,6 +123,43 @@ export async function POST(req: NextRequest) {
         ? votes.filter((vote) => vote.runId === run.id && vote.category === 'kudos').map((vote) => vote.selectedMembershipId)
         : []
       const targetSiteUserId = linked?.userId && linked.accountStatus !== 'pending' ? linked.userId : undefined
+      if (voteType === 'new_light' || voteType === 'useless') {
+        const already = Boolean(await findGuardianVote(voterId, targetMembershipId, voteType))
+        const labeled = buildLabeledGuardianVote({
+          voteType,
+          voterId,
+          voterMembershipId: stored?.bungieMembershipId,
+          targetMembershipId,
+          targetDisplayName: linked?.bungieDisplayName || displayName,
+          now: new Date().toISOString(),
+          preferredRunId,
+          runs,
+          users: Array.from(usersById.values()),
+          already,
+        })
+        if (!labeled.ok) return NextResponse.json({ error: labeled.error }, { status: 400 })
+        if (labeled.vote) {
+          if (!labeled.vote.selectedUserId) {
+            await ensurePendingPlayerForUnlinkedMember({
+              membershipId: labeled.vote.selectedMembershipId,
+              displayName: labeled.vote.selectedDisplayName,
+            })
+          }
+          await saveMvpVote(labeled.vote)
+        }
+        const received = await voteCountsForMembership(labeled.vote?.selectedMembershipId || targetMembershipId)
+        invalidateDestinySharedCaches(VOTE_CACHE_TAGS)
+        return NextResponse.json({
+          ok: true,
+          already: labeled.already,
+          voteType,
+          message: labeled.message,
+          mvpVotes: received.mvpVotes,
+          newLightVotes: received.newLightVotes,
+          uselessVotes: received.uselessVotes,
+        })
+      }
+      const rateTags = voteType === 'mvp' && !tags.includes('mvp') ? (['mvp', ...tags] as typeof tags) : tags
       const existingTrust = run ? await findTrustReview(voterId, run.id, targetMembershipId) : null
       const existingReputation =
         run && targetSiteUserId ? await findReputationReview(voterId, targetSiteUserId, run.id) : null
@@ -120,7 +170,7 @@ export async function POST(req: NextRequest) {
         targetMembershipId,
         targetDisplayName: linked?.bungieDisplayName || displayName,
         targetSiteUserId,
-        tags,
+        tags: rateTags,
         note,
         now: new Date().toISOString(),
         preferredRunId,
@@ -159,11 +209,17 @@ export async function POST(req: NextRequest) {
       if (built.draft.trustReview) await saveTrustReview(built.draft.trustReview)
       if (built.draft.reputationReview) await saveReputationReview(built.draft.reputationReview)
       invalidateDestinySharedCaches(VOTE_CACHE_TAGS)
+      const received = await voteCountsForMembership(targetMembershipId)
       return NextResponse.json({
         ok: true,
         message: built.draft.message,
         mvpStatus: built.draft.mvpStatus,
+        already: built.draft.mvpStatus === 'already',
+        voteType: 'mvp',
         tags: built.draft.rating.tags,
+        mvpVotes: received.mvpVotes,
+        newLightVotes: received.newLightVotes,
+        uselessVotes: received.uselessVotes,
       })
     } catch (error) {
       const text = error instanceof Error ? error.message : ''

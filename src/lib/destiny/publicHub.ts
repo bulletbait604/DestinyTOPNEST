@@ -14,6 +14,8 @@ import { resolveWeeklyContractCatalog } from '@/lib/destiny/weeklyContractCatalo
 import { loadNightOpsEvents, loadWeeklyGoals } from '@/lib/destiny/siteContent'
 import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
+import { loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
+import { getVoteCountsMap } from '@/lib/destiny/voteCounts'
 
 export interface PublicContractCard {
   id: string
@@ -73,6 +75,10 @@ export interface PublicTopGuardian {
   displayName: string
   points: number
   rank: number
+  bungieMembershipId?: string
+  mvpVotes?: number
+  newLightVotes?: number
+  uselessVotes?: number
 }
 
 export interface PublicFeaturedBuild {
@@ -158,12 +164,16 @@ const BOARD_LABEL = {
 } as const
 
 /** Season leaders for the homepage. Names come from verified clears, not private profiles. */
-export function topGuardiansFromRuns(runs: RunRecord[], now: Date): PublicTopGuardian[] {
+export function topGuardiansFromRuns(
+  runs: RunRecord[],
+  now: Date,
+  kickMembershipIds?: ReadonlySet<string>
+): PublicTopGuardian[] {
   const season = getConfiguredActiveSeason(now)
   const users = new Map<string, StoredDestinyUser>()
   const rows: PublicTopGuardian[] = []
   for (const board of ['raid', 'dungeon', 'new_bonds'] as const) {
-    const entries = aggregateLeaderboard(runs, users, board, 'season', season).slice(0, 3)
+    const entries = aggregateLeaderboard(runs, users, board, 'season', season, kickMembershipIds).slice(0, 5)
     for (const entry of entries) {
       rows.push({
         board,
@@ -171,6 +181,10 @@ export function topGuardiansFromRuns(runs: RunRecord[], now: Date): PublicTopGua
         displayName: entry.bungieDisplayName,
         points: entry.points,
         rank: entry.rank,
+        bungieMembershipId: entry.bungieMembershipId,
+        mvpVotes: entry.mvpVotes,
+        newLightVotes: entry.newLightVotes,
+        uselessVotes: entry.uselessVotes,
       })
     }
   }
@@ -186,6 +200,7 @@ export function assemblePublicHub(input: {
   contracts?: WeeklyContractDefinition[]
   historyComplete?: boolean
   featuredBuilds?: PublicFeaturedBuild[]
+  kickMembershipIds?: ReadonlySet<string>
 }): PublicHubSnapshot {
   const now = input.now ?? new Date()
   const runs = input.runs ?? []
@@ -253,7 +268,7 @@ export function assemblePublicHub(input: {
     fireteams: publicFireteams(input.lobbies ?? []),
     scoring: HUB_SCORING,
     historyComplete: input.historyComplete !== false,
-    topGuardians: topGuardiansFromRuns(runs, now),
+    topGuardians: topGuardiansFromRuns(runs, now, input.kickMembershipIds),
     featuredBuilds: input.featuredBuilds ?? [],
   }
 }
@@ -305,9 +320,10 @@ function previewByClass<T extends { characterClass: string }>(rows: T[]): T[] {
 
 export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHubSnapshot> {
   await refreshLiveWeeklyRotationBounded(now)
-  const [events, contracts] = await Promise.all([
+  const [events, contracts, kickMembershipIds] = await Promise.all([
     loadNightOpsEvents().catch(() => []),
     loadWeeklyGoals().catch(() => undefined),
+    loadKickGuardianMembershipIds(),
   ])
   try {
     const [clears, lobbies, featuredBuilds] = await Promise.all([
@@ -315,7 +331,7 @@ export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHub
       listOpenLobbies(),
       loadFeaturedBuilds(),
     ])
-    return assemblePublicHub({
+    const snapshot = assemblePublicHub({
       now,
       runs: clears.runs,
       lobbies,
@@ -323,7 +339,17 @@ export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHub
       contracts,
       historyComplete: clears.complete,
       featuredBuilds,
+      kickMembershipIds,
     })
+    const ids = snapshot.topGuardians.map((row) => row.bungieMembershipId ?? '').filter(Boolean)
+    if (ids.length) {
+      const counts = await getVoteCountsMap(ids)
+      snapshot.topGuardians = snapshot.topGuardians.map((row) => {
+        const bucket = row.bungieMembershipId ? counts.get(row.bungieMembershipId) : undefined
+        return bucket ? { ...row, ...bucket } : row
+      })
+    }
+    return snapshot
   } catch (error) {
     console.warn('[hub] public snapshot fell back to the contract catalog', error)
     return assemblePublicHub({
