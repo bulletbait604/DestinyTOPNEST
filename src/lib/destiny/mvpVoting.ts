@@ -32,7 +32,7 @@ export interface ResolvedVoteTarget {
 }
 
 export function isMvpCategoryVote(vote: { category?: string | null; voteType?: string | null }): boolean {
-  if (vote.voteType === 'new_light' || vote.voteType === 'useless') return false
+  if (vote.voteType === 'new_light' || vote.voteType === 'useless' || vote.category === 'kudos') return false
   return vote.category == null || vote.category === 'mvp'
 }
 
@@ -48,12 +48,13 @@ export function mvpCategoryFilter(): { $and: Array<Record<string, unknown>> } {
 
 export function parseGuardianVoteType(value: unknown, fallback: GuardianVoteType | null = null): GuardianVoteType | null {
   if (value == null || value === '') return fallback
-  if (value === 'mvp' || value === 'new_light' || value === 'useless') return value
+  if (value === 'mvp') return 'mvp'
   return null
 }
 
 export function voteTypeOf(vote: { voteType?: string | null; category?: string | null }): GuardianVoteType | 'kudos' | null {
-  if (vote.voteType === 'mvp' || vote.voteType === 'new_light' || vote.voteType === 'useless') return vote.voteType
+  if (vote.voteType === 'new_light' || vote.voteType === 'useless') return null
+  if (vote.voteType === 'mvp') return 'mvp'
   if (vote.category === 'kudos') return 'kudos'
   if (vote.category == null || vote.category === 'mvp') return 'mvp'
   return null
@@ -69,7 +70,7 @@ export function emptyVoteCounts(): VoteCountBucket {
   return { mvpVotes: 0, newLightVotes: 0, uselessVotes: 0 }
 }
 
-/** Count MVP, New Light, and Useless votes per Bungie membership id. */
+/** Count run MVP crowns per Bungie membership id. Ranks and kudos stay out. */
 export function tallyVoteCounts(
   rows: Array<{ selectedMembershipId?: string | null; voteType?: string | null; category?: string | null }>
 ): Map<string, VoteCountBucket> {
@@ -77,12 +78,9 @@ export function tallyVoteCounts(
   for (const row of rows) {
     const membershipId = normalizeMembershipId(row.selectedMembershipId)
     if (!membershipId) continue
-    const kind = voteTypeOf(row)
-    if (kind !== 'mvp' && kind !== 'new_light' && kind !== 'useless') continue
+    if (voteTypeOf(row) !== 'mvp') continue
     const bucket = map.get(membershipId) ?? emptyVoteCounts()
-    if (kind === 'mvp') bucket.mvpVotes += 1
-    else if (kind === 'new_light') bucket.newLightVotes += 1
-    else bucket.uselessVotes += 1
+    bucket.mvpVotes += 1
     map.set(membershipId, bucket)
   }
   return map
@@ -223,7 +221,7 @@ export function guardianVoteState(run: ActivityRunForVote, guardian: ActivityRun
   return {
     showMvpBadge: crowned,
     mvpButton: crowned ? 'hidden' : run.userHasVoted ? 'change' : 'vote',
-    kudosButton: guardian.kudosGiven ? 'clear' : 'give',
+    kudosButton: 'hidden',
   }
 }
 

@@ -1,19 +1,19 @@
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { usersByMembershipMap, validateReviewSubmission } from '@/lib/destiny/fireteamReputation'
-import { kudosVoteId, mvpVoteId, quickVoteId, validateMvpVoteSubmission } from '@/lib/destiny/mvpVoting'
 import { clampKnowledge, computeCompositeTrustScore, type KnowledgeScore } from '@/lib/destiny/trustRank'
-import type { GuardianVoteType, MvpVote, ReputationReview, RunRecord, TrustReview } from '@/lib/destiny/types'
+import type { MvpVote, ReputationReview, RunRecord, TrustReview, VibesLabel } from '@/lib/destiny/types'
 
-export const RATE_TAGS = ['chill', 'helpful', 'sherpa', 'clutch', 'good_comms', 'mvp'] as const
+export const RATE_TAGS = ['sherpa', 'clutch', 'helpful', 'chill', 'good_comms', 'new_light', 'useless'] as const
 export type RateTag = (typeof RATE_TAGS)[number]
 
 export const RATE_TAG_LABELS: Record<RateTag, string> = {
-  chill: 'Chill',
-  helpful: 'Helpful',
   sherpa: 'Sherpa / Teacher',
   clutch: 'Clutch',
+  helpful: 'Helpful',
+  chill: 'Chill',
   good_comms: 'Great Comms',
-  mvp: 'MVP vote',
+  new_light: 'New Light',
+  useless: 'Useless',
 }
 
 const NOTE_MAX = 120
@@ -80,7 +80,15 @@ export function tagSummary(tags: RateTag[]): string {
 }
 
 export function emptyTagCounts(): Record<RateTag, number> {
-  return { chill: 0, helpful: 0, sherpa: 0, clutch: 0, good_comms: 0, mvp: 0 }
+  return { sherpa: 0, clutch: 0, helpful: 0, chill: 0, good_comms: 0, new_light: 0, useless: 0 }
+}
+
+/** Add a rank the voter does not have yet, or remove it if they already saved it. */
+export function toggleRateTag(current: RateTag[], tag: RateTag): RateTag[] {
+  const next = new Set(current)
+  if (next.has(tag)) next.delete(tag)
+  else next.add(tag)
+  return RATE_TAGS.filter((item) => next.has(item))
 }
 
 export function countTags(rows: Array<{ tags?: unknown }>): Record<RateTag, number> {
@@ -92,7 +100,7 @@ export function countTags(rows: Array<{ tags?: unknown }>): Record<RateTag, numb
 }
 
 export function rateTagLine(counts: Record<RateTag, number>): string {
-  return RATE_TAGS.filter((tag) => tag !== 'mvp' && counts[tag] > 0)
+  return RATE_TAGS.filter((tag) => counts[tag] > 0)
     .map((tag) => `${RATE_TAG_LABELS[tag]} ${counts[tag]}`)
     .join(' · ')
 }
@@ -121,12 +129,13 @@ export function recentTeammatesFromRuns(
   return rows
 }
 
-export function trustFromTags(tags: RateTag[]): { knowledge: KnowledgeScore; vibes: 'good' | 'sherpa' } | null {
-  const positive = tags.filter((tag) => tag !== 'mvp')
-  if (!positive.length) return null
-  if (positive.includes('sherpa')) return { knowledge: 5, vibes: 'sherpa' }
-  if (positive.includes('clutch')) return { knowledge: 5, vibes: 'good' }
-  if (positive.includes('helpful') || positive.includes('good_comms')) return { knowledge: 4, vibes: 'good' }
+export function trustFromTags(tags: RateTag[]): { knowledge: KnowledgeScore; vibes: VibesLabel } | null {
+  if (!tags.length) return null
+  if (tags.includes('useless')) return { knowledge: 1, vibes: 'useless' }
+  if (tags.includes('sherpa')) return { knowledge: 5, vibes: 'sherpa' }
+  if (tags.includes('clutch')) return { knowledge: 5, vibes: 'good' }
+  if (tags.includes('helpful') || tags.includes('good_comms')) return { knowledge: 4, vibes: 'good' }
+  if (tags.includes('new_light')) return { knowledge: 2, vibes: 'new_light' }
   return { knowledge: 3, vibes: 'good' }
 }
 
@@ -171,6 +180,14 @@ function reputationScores(tags: RateTag[]) {
   if (tags.includes('clutch') || tags.includes('sherpa')) scores.mechanics = 5
   if (tags.includes('chill') || tags.includes('helpful')) scores.friendly = 5
   if (tags.includes('sherpa')) scores.teaching = 5
+  if (tags.includes('new_light')) scores.teaching = 2
+  if (tags.includes('useless')) {
+    scores.communication = 1
+    scores.reliability = 1
+    scores.mechanics = 1
+    scores.friendly = 2
+    scores.teaching = 1
+  }
   return scores
 }
 
@@ -188,8 +205,6 @@ export function buildQuickRateWrite(input: {
   users?: StoredDestinyUser[]
   existingTrustRunIds?: string[]
   existingReputationRunIds?: string[]
-  existingMvpMembershipId?: string
-  existingKudosMembershipIds?: string[]
   createdAt?: string
 }): { ok: true; draft: QuickRateDraft } | { ok: false; error: string } {
   const voterId = input.voterId.trim().toLowerCase()
@@ -211,76 +226,11 @@ export function buildQuickRateWrite(input: {
   const displayName = input.targetDisplayName.trim() || targetMembershipId
   const run = pickSharedRun(input.runs, voterId, voterMembershipId, targetMembershipId, input.preferredRunId)
   const usersByMembership = usersByMembershipMap(input.users ?? [])
-  const wantsMvp = input.tags.includes('mvp')
-  let mvpStatus: QuickRateDraft['mvpStatus'] = wantsMvp ? 'needs_run' : 'skipped'
-  let mvpVote: MvpVote | undefined
-  let kudosVote: MvpVote | undefined
+  const mvpStatus: QuickRateDraft['mvpStatus'] = 'skipped'
+  const mvpVote: MvpVote | undefined = undefined
+  const kudosVote: MvpVote | undefined = undefined
   let trustReview: TrustReview | undefined
   let reputationReview: ReputationReview | undefined
-  let mvpRunId: string | undefined
-
-  if (run && wantsMvp) {
-    if (input.existingMvpMembershipId === targetMembershipId) {
-      mvpStatus = 'already'
-      mvpRunId = run.id
-    } else {
-      const validation = validateMvpVoteSubmission({
-        voterId,
-        voterMembershipId,
-        targetMembershipId,
-        category: 'mvp',
-        action: 'set',
-        runId: run.id,
-        runs: input.runs,
-        usersByMembership,
-      })
-      if (validation.ok) {
-        mvpStatus = 'saved'
-        mvpRunId = run.id
-        mvpVote = {
-          id: mvpVoteId(voterId, run.id),
-          runId: run.id,
-          voterId,
-          voterMembershipId,
-          category: 'mvp',
-          voteType: 'mvp',
-          selectedUserId: validation.target.siteUserId,
-          selectedMembershipId: validation.target.membershipId,
-          selectedDisplayName: validation.target.displayName,
-          createdAt: input.now,
-          updatedAt: input.now,
-        }
-      }
-    }
-  }
-
-  const wantsKudos = input.tags.includes('helpful') || input.tags.includes('good_comms')
-  if (run && wantsKudos && !(input.existingKudosMembershipIds ?? []).includes(targetMembershipId)) {
-    const validation = validateMvpVoteSubmission({
-      voterId,
-      voterMembershipId,
-      targetMembershipId,
-      category: 'kudos',
-      action: 'set',
-      runId: run.id,
-      runs: input.runs,
-      usersByMembership,
-    })
-    if (validation.ok) {
-      kudosVote = {
-        id: kudosVoteId(voterId, run.id, validation.target.membershipId),
-        runId: run.id,
-        voterId,
-        voterMembershipId,
-        category: 'kudos',
-        selectedUserId: validation.target.siteUserId,
-        selectedMembershipId: validation.target.membershipId,
-        selectedDisplayName: validation.target.displayName,
-        createdAt: input.now,
-        updatedAt: input.now,
-      }
-    }
-  }
 
   const trust = run ? trustFromTags(input.tags) : null
   const reviewed = run
@@ -301,7 +251,7 @@ export function buildQuickRateWrite(input: {
     if (targetSiteUserId) trustReview.reviewedUserId = targetSiteUserId
   }
 
-  const positive = input.tags.filter((tag) => tag !== 'mvp')
+  const positive = input.tags
   if (
     run &&
     reviewed?.ok &&
@@ -321,99 +271,24 @@ export function buildQuickRateWrite(input: {
     }
   }
 
-  const storedTags = input.tags.filter((tag) => tag !== 'mvp' || mvpStatus === 'saved' || mvpStatus === 'already')
-  if (!storedTags.length) {
-    return { ok: false, error: `MVP votes count after you clear a raid or dungeon with ${displayName}.` }
-  }
-
   const rating: GuardianQuickRating = {
     id: quickRateId(voterId, targetMembershipId),
     voterId,
     voterMembershipId,
     targetMembershipId,
     targetDisplayName: displayName,
-    tags: storedTags,
+    tags: input.tags,
     note: input.note,
-    mvpRunId,
     createdAt: input.createdAt ?? input.now,
     updatedAt: input.now,
   }
 
-  const shown = tagSummary(storedTags)
-  let message = `Rated ${displayName}: ${shown}.`
-  if (mvpStatus === 'saved') message += ' MVP vote saved on your shared clear.'
-  if (mvpStatus === 'already') message += ' They are already your MVP for that clear.'
-  if (mvpStatus === 'needs_run') message += ' MVP votes count after you clear together.'
+  const shown = tagSummary(input.tags)
+  const message = `Rated ${displayName}: ${shown}.`
 
   return {
     ok: true,
     draft: { rating, mvpVote, kudosVote, trustReview, reputationReview, mvpStatus, message },
-  }
-}
-
-const VOTE_LABEL: Record<Exclude<GuardianVoteType, 'mvp'>, string> = {
-  new_light: 'New Light',
-  useless: 'Useless',
-}
-
-/** New Light and Useless are one vote per Guardian, attached to a shared clear when one exists. */
-export function buildLabeledGuardianVote(input: {
-  voteType: 'new_light' | 'useless'
-  voterId: string
-  voterMembershipId?: string
-  targetMembershipId: string
-  targetDisplayName: string
-  now: string
-  preferredRunId?: string
-  runs: RunRecord[]
-  users?: StoredDestinyUser[]
-  already?: boolean
-}): { ok: true; vote?: MvpVote; already: boolean; message: string } | { ok: false; error: string } {
-  const label = VOTE_LABEL[input.voteType]
-  const voterId = input.voterId.trim().toLowerCase()
-  const targetMembershipId = input.targetMembershipId.trim()
-  if (!voterId) return { ok: false, error: 'Sign in with Bungie to submit your vote' }
-  if (!isBungieMembershipId(targetMembershipId)) return { ok: false, error: 'Pick a Guardian with a Bungie membership id' }
-  const voterMembershipId = input.voterMembershipId?.trim() || undefined
-  if (voterMembershipId && voterMembershipId === targetMembershipId) {
-    return { ok: false, error: 'You cannot vote for yourself' }
-  }
-  const displayName = input.targetDisplayName.trim() || targetMembershipId
-  if (input.already) {
-    return { ok: true, already: true, message: `${label} is already saved for ${displayName}.` }
-  }
-  const run = pickSharedRun(input.runs, voterId, voterMembershipId, targetMembershipId, input.preferredRunId)
-  if (!run) {
-    return { ok: false, error: `${label} votes count after you clear a raid or dungeon with ${displayName}.` }
-  }
-  const usersByMembership = usersByMembershipMap(input.users ?? [])
-  const validation = validateMvpVoteSubmission({
-    voterId,
-    voterMembershipId,
-    targetMembershipId,
-    category: 'mvp',
-    action: 'set',
-    runId: run.id,
-    runs: input.runs,
-    usersByMembership,
-  })
-  if (!validation.ok) return validation
-  return {
-    ok: true,
-    already: false,
-    message: `${label} saved for ${validation.target.displayName}.`,
-    vote: {
-      id: quickVoteId(voterId, validation.target.membershipId, input.voteType),
-      runId: run.id,
-      voterId,
-      voterMembershipId,
-      voteType: input.voteType,
-      selectedUserId: validation.target.siteUserId,
-      selectedMembershipId: validation.target.membershipId,
-      selectedDisplayName: validation.target.displayName,
-      createdAt: input.now,
-      updatedAt: input.now,
-    },
   }
 }
 

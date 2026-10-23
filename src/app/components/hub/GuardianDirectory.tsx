@@ -7,7 +7,7 @@ import CharacterDossier from '@/app/components/hub/CharacterDossier'
 import { NextStep } from '@/app/components/hub/clarity'
 import { PageHeader } from '@/app/components/hub/PageHeader'
 import { GUARDIAN_SEARCH_EVENT, navigateDestinyTab, navigateGuardianProfile, navigateGuardianSearch } from '@/lib/routing/tabUrl'
-import { RateButton } from '@/app/components/hub/QuickRate'
+import { GuardianRankPills, MvpCountBadge, RankLink } from '@/app/components/hub/QuickRate'
 import { rateTagLine, type RateTag } from '@/lib/destiny/quickRate'
 
 function readLocation() {
@@ -219,14 +219,10 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
                   ))}
                 </span>
               </button>
-              <RateButton
-                membershipId={card.membershipId}
-                displayName={card.displayName}
-                membershipType={card.membershipType}
-                mvpVotes={card.mvpVotes ?? card.mvpCount}
-                newLightVotes={card.newLightVotes}
-                uselessVotes={card.uselessVotes}
-              />
+              <span className="gh-vote">
+                <MvpCountBadge count={card.mvpVotes ?? card.mvpCount} />
+                <RankLink membershipId={card.membershipId} displayName={card.displayName} membershipType={card.membershipType} />
+              </span>
             </div>
           </li>
         ))}
@@ -284,14 +280,12 @@ function ProfileBody({ profile, onLogin }: { profile: GuardianPublicProfile; onL
             {profile.sherpaGuided} guided · {profile.sherpaMarks} sherpa marks
           </span>
         </p>
+        <MvpCountBadge count={card.mvpVotes ?? card.mvpCount} />
         <QuickRateSummary membershipId={card.membershipId} />
-        <RateButton
+        <GuardianRankPills
           membershipId={card.membershipId}
           displayName={card.displayName}
           membershipType={card.membershipType}
-          mvpVotes={card.mvpVotes ?? card.mvpCount}
-          newLightVotes={card.newLightVotes}
-          uselessVotes={card.uselessVotes}
         />
       </div>
 

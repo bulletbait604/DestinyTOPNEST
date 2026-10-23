@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { QuickRateForm, RatePage } from '@/app/components/hub/QuickRate'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import {
-  buildLabeledGuardianVote,
+  RATE_TAGS,
   buildQuickRateWrite,
   normalizeRateNote,
   parseRateTags,
@@ -13,8 +13,10 @@ import {
   recentTeammatesFromRuns,
   resetQuickRateLimits,
   takeQuickRateLimit,
+  toggleRateTag,
   trustFromTags,
 } from '@/lib/destiny/quickRate'
+import { computeCompositeTrustScore } from '@/lib/destiny/trustRank'
 import type { RunRecord, RunTeamMember } from '@/lib/destiny/types'
 
 function member(id: string, name: string): RunTeamMember {
@@ -64,11 +66,12 @@ const ada: StoredDestinyUser = {
 
 describe('quick guardian rating', () => {
   it('keeps known tags and a single short note', () => {
-    expect(parseRateTags(['Chill', 'good comms', 'nope', 'chill', 'MVP'])).toEqual([
+    expect(parseRateTags(['Chill', 'good comms', 'nope', 'chill', 'MVP', 'New Light'])).toEqual([
       'chill',
       'good_comms',
-      'mvp',
+      'new_light',
     ])
+    expect([...(RATE_TAGS as readonly string[])]).not.toContain('mvp')
     expect(normalizeRateNote('  clutch\nplay ')).toBe('clutch play')
     expect(normalizeRateNote('x'.repeat(140))?.length).toBe(120)
     expect(normalizeRateNote('   ')).toBeUndefined()
@@ -89,7 +92,7 @@ describe('quick guardian rating', () => {
       targetMembershipId: '222',
       targetDisplayName: 'Ada',
       targetSiteUserId: 'ada',
-      tags: ['chill', 'mvp'],
+      tags: ['chill'],
       now: '2026-10-23T00:00:00.000Z',
       runs: [],
       users: [ada],
@@ -98,11 +101,11 @@ describe('quick guardian rating', () => {
     if (!built.ok) return
     expect(built.draft.rating.tags).toEqual(['chill'])
     expect(built.draft.mvpVote).toBeUndefined()
-    expect(built.draft.mvpStatus).toBe('needs_run')
-    expect(built.draft.message).toContain('clear together')
+    expect(built.draft.kudosVote).toBeUndefined()
+    expect(built.draft.mvpStatus).toBe('skipped')
   })
 
-  it('writes the MVP and kudos onto the shared clear membership id', () => {
+  it('saves a sherpa rank without writing an MVP crown or kudos', () => {
     const shared = run('run-1', '2026-10-21T00:00:00.000Z')
     const built = buildQuickRateWrite({
       voterId: 'voter',
@@ -110,7 +113,7 @@ describe('quick guardian rating', () => {
       targetMembershipId: '222',
       targetDisplayName: 'Ada',
       targetSiteUserId: 'ada',
-      tags: ['helpful', 'sherpa', 'mvp'],
+      tags: ['helpful', 'sherpa'],
       note: 'Patient callouts',
       now: '2026-10-23T00:00:00.000Z',
       runs: [shared],
@@ -118,9 +121,9 @@ describe('quick guardian rating', () => {
     })
     expect(built.ok).toBe(true)
     if (!built.ok) return
-    expect(built.draft.mvpVote?.selectedMembershipId).toBe('222')
-    expect(built.draft.mvpVote?.id).toBe('mvp-voter-run-1')
-    expect(built.draft.kudosVote?.id).toBe('kudos-voter-run-1-222')
+    expect(built.draft.mvpVote).toBeUndefined()
+    expect(built.draft.kudosVote).toBeUndefined()
+    expect(built.draft.rating.tags).toEqual(['helpful', 'sherpa'])
     expect(built.draft.trustReview?.vibes).toBe('sherpa')
     expect(built.draft.trustReview?.knowledge).toBe(5)
     expect(built.draft.reputationReview?.notes).toBe('Patient callouts')
@@ -137,18 +140,17 @@ describe('quick guardian rating', () => {
       voterMembershipId: '111',
       targetMembershipId: '222',
       targetDisplayName: 'Ada',
-      tags: ['clutch', 'mvp'],
+      tags: ['clutch'],
       now: '2026-10-23T00:00:00.000Z',
       preferredRunId: 'run-old',
       runs: [older, newer],
       existingTrustRunIds: ['run-old'],
-      existingMvpMembershipId: '222',
     })
     expect(built.ok).toBe(true)
     if (!built.ok) return
     expect(built.draft.trustReview).toBeUndefined()
-    expect(built.draft.mvpStatus).toBe('already')
-    expect(built.draft.rating.mvpRunId).toBe('run-old')
+    expect(built.draft.mvpVote).toBeUndefined()
+    expect(built.draft.mvpStatus).toBe('skipped')
   })
 
   it('refuses a self rating and an MVP with no shared clear', () => {
@@ -162,26 +164,32 @@ describe('quick guardian rating', () => {
       runs: [],
     })
     expect(self.ok).toBe(false)
-    const mvpOnly = buildQuickRateWrite({
+    const empty = buildQuickRateWrite({
       voterId: 'voter',
       voterMembershipId: '111',
       targetMembershipId: '222',
       targetDisplayName: 'Ada',
-      tags: ['mvp'],
+      tags: [],
       now: '2026-10-23T00:00:00.000Z',
       runs: [],
     })
-    expect(mvpOnly.ok).toBe(false)
-    if (mvpOnly.ok) return
-    expect(mvpOnly.error).toContain('MVP votes count')
+    expect(empty.ok).toBe(false)
+    if (empty.ok) return
+    expect(empty.error).toContain('at least one tag')
   })
 
   it('maps tags onto the private commend scale', () => {
     expect(trustFromTags(['chill'])).toEqual({ knowledge: 3, vibes: 'good' })
-    expect(trustFromTags(['mvp'])).toBeNull()
-    expect(rateTagLine({ chill: 2, helpful: 0, sherpa: 1, clutch: 0, good_comms: 0, mvp: 4 })).toBe(
-      'Chill 2 · Sherpa / Teacher 1'
-    )
+    expect(trustFromTags([])).toBeNull()
+    expect(trustFromTags(['new_light'])).toEqual({ knowledge: 2, vibes: 'new_light' })
+    expect(trustFromTags(['useless'])).toEqual({ knowledge: 1, vibes: 'useless' })
+    expect(computeCompositeTrustScore(1, 'useless')).toBe(1)
+    expect(computeCompositeTrustScore(2, 'new_light')).toBe(2)
+    expect(toggleRateTag(['new_light'], 'useless')).toEqual(['new_light', 'useless'])
+    expect(toggleRateTag(['new_light', 'useless'], 'useless')).toEqual(['new_light'])
+    expect(
+      rateTagLine({ sherpa: 1, clutch: 0, helpful: 0, chill: 2, good_comms: 0, new_light: 1, useless: 0 })
+    ).toBe('Sherpa / Teacher 1 · Chill 2 · New Light 1')
   })
 
   it('limits how fast one voter can submit', () => {
@@ -190,68 +198,47 @@ describe('quick guardian rating', () => {
     expect(takeQuickRateLimit({ userId: 'voter', now: 2_000 }).ok).toBe(false)
   })
 
-  it('records New Light and Useless as their own vote on a shared clear', () => {
-    const saved = buildLabeledGuardianVote({
-      voteType: 'new_light',
+  it('keeps New Light and Useless on the guardian rank, not an MVP vote', () => {
+    const saved = buildQuickRateWrite({
       voterId: 'voter',
       voterMembershipId: '111',
       targetMembershipId: '222',
       targetDisplayName: 'Ada',
+      tags: ['new_light', 'useless'],
       now: '2026-10-23T00:00:00.000Z',
       runs: [run('run-1', '2026-10-20T00:00:00.000Z')],
       users: [ada],
     })
     expect(saved.ok).toBe(true)
     if (!saved.ok) return
-    expect(saved.already).toBe(false)
-    expect(saved.vote?.voteType).toBe('new_light')
-    expect(saved.vote?.category).toBeUndefined()
-    expect(saved.vote?.id).toBe('vote-new_light-voter-222')
-
-    const duplicate = buildLabeledGuardianVote({
-      voteType: 'useless',
-      voterId: 'voter',
-      targetMembershipId: '222',
-      targetDisplayName: 'Ada',
-      now: '2026-10-23T00:00:00.000Z',
-      runs: [run('run-1', '2026-10-20T00:00:00.000Z')],
-      already: true,
-    })
-    expect(duplicate.ok && duplicate.already).toBe(true)
-
-    const stranger = buildLabeledGuardianVote({
-      voteType: 'useless',
-      voterId: 'voter',
-      targetMembershipId: '333',
-      targetDisplayName: 'Ghost',
-      now: '2026-10-23T00:00:00.000Z',
-      runs: [run('run-1', '2026-10-20T00:00:00.000Z')],
-    })
-    expect(stranger.ok).toBe(false)
-    if (stranger.ok) return
-    expect(stranger.error).toContain('Useless votes count')
+    expect(saved.draft.mvpVote).toBeUndefined()
+    expect(saved.draft.kudosVote).toBeUndefined()
+    expect(saved.draft.rating.tags).toEqual(['new_light', 'useless'])
+    expect(saved.draft.trustReview?.vibes).toBe('useless')
+    expect(saved.draft.trustReview?.knowledge).toBe(1)
   })
 
-  it('shows MVP, New Light, and Useless in one click', () => {
+  it('shows guardian ranks in one click and keeps MVP on its own crown', () => {
     const signedOut = renderToStaticMarkup(
       createElement(QuickRateForm, {
         signedIn: false,
         target: { membershipId: '222', displayName: 'Ada' },
       })
     )
-    expect(signedOut).toContain('MVP')
+    expect(signedOut).toContain('Sherpa / Teacher')
     expect(signedOut).toContain('New Light')
     expect(signedOut).toContain('Useless')
-    expect(signedOut).toContain('Sign in with Bungie to submit your vote')
+    expect(signedOut).toContain('Sign in with Bungie to rank this Guardian')
     expect(signedOut).not.toContain('Cast MVP Vote')
-    expect(signedOut).not.toContain('Sherpa / Teacher')
-    expect(signedOut).not.toContain('Optional one-line note')
+    expect(signedOut).not.toContain('>MVP<')
 
     const page = renderToStaticMarkup(createElement(RatePage))
-    expect(page).toContain('Vote MVP')
+    expect(page).toContain('Crown Run MVP (1 per run)')
+    expect(page).toContain('Rank a Guardian')
     expect(page).toContain('New Light')
     expect(page).toContain('Useless')
+    expect(page).toContain('Great Comms')
     expect(page).toContain('Search')
-    expect(page).not.toContain('Great Comms')
+    expect(page).not.toContain('Choose MVP, New Light, or Useless')
   })
 })
