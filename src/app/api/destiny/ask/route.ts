@@ -1,10 +1,9 @@
 import { NextRequest } from 'next/server'
-import { streamText } from 'ai'
 import { formatAskContext, contextKey } from '@/lib/ask/askContext'
-import { ASK_INSTRUCTIONS } from '@/lib/ask/askPrompt'
+import { streamGatewayAnswer, streamGeminiAnswer } from '@/lib/ask/askGemini'
 import { takeAskRateLimit } from '@/lib/ask/askRateLimit'
 import { retrieveTrustedSources } from '@/lib/ask/askRetrieve'
-import { askGatewayConfigured, askModelId, normalizeQuestion } from '@/lib/ask/askSources'
+import { askProvider, normalizeQuestion } from '@/lib/ask/askSources'
 import { loadAskPlayerContext, readAskCache, writeAskCache } from '@/lib/ask/askStore'
 import { createAskStream } from '@/lib/ask/askStream'
 import { optionalAuth } from '@/lib/destiny/communityBuildAccess'
@@ -41,7 +40,8 @@ export async function POST(req: NextRequest) {
   const cacheContext = contextKey(player)
   const cached = await readAskCache(question.value, cacheContext)
   const sources = cached?.sources?.length ? cached.sources : await retrieveTrustedSources(question.value)
-  const configured = askGatewayConfigured()
+  const provider = askProvider()
+  const configured = provider !== 'none'
 
   const stream = createAskStream({
     question: question.value,
@@ -50,16 +50,7 @@ export async function POST(req: NextRequest) {
     configured,
     cachedText: cached?.answer ?? null,
     answerId: cached?.answerId ?? 'live',
-    complete: configured
-      ? async function* (prompt: string) {
-          const result = streamText({
-            model: askModelId(),
-            instructions: ASK_INSTRUCTIONS,
-            prompt,
-          })
-          for await (const delta of result.textStream) yield delta
-        }
-      : undefined,
+    complete: provider === 'gemini' ? streamGeminiAnswer : provider === 'gateway' ? streamGatewayAnswer : undefined,
     onDone: async (text) => {
       if (!configured || cached) return
       await writeAskCache({ question: question.value, context: cacheContext, answer: text, sources })

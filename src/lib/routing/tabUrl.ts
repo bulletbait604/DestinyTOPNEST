@@ -118,13 +118,22 @@ export function navigateProfileSection(view: ProfileNavView) {
 /** Update URL and notify the shell to switch tabs (e.g. header Settings → Admin). */
 function onDedicatedHubPage(): boolean {
   if (typeof window === 'undefined') return false
-  return window.location.pathname === '/ask' || window.location.pathname === '/rate'
+  const path = window.location.pathname
+  return path === '/ask' || path === '/rate' || path === '/score' || path === '/boards'
 }
 
 export function navigateDestinyTab(tab: DestinyTopNestTab) {
   if (typeof window !== 'undefined') {
     if (tab === 'ask' && window.location.pathname !== '/ask') {
       window.location.assign('/ask')
+      return
+    }
+    if (tab === 'leaderboards' && window.location.pathname !== '/boards') {
+      window.location.assign('/boards')
+      return
+    }
+    if (tab === 'overview' && window.location.pathname !== '/') {
+      window.location.assign('/')
       return
     }
     if (onDedicatedHubPage() && tab !== 'ask') {

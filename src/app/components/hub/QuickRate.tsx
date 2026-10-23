@@ -115,9 +115,9 @@ export function QuickRateForm({
         if (signedIn) void submit()
       }}
     >
-      <p className="gh-muted">Tap every tag that fits. One line is optional.</p>
+      <p className="gh-muted">Tap the tags that fit, then send.</p>
       <div className="gh-tags" role="group" aria-label="Rating tags">
-        {RATE_TAGS.map((tag) => (
+        {RATE_TAGS.filter((tag) => tag !== 'mvp').map((tag) => (
           <button
             key={tag}
             type="button"
@@ -129,6 +129,14 @@ export function QuickRateForm({
           </button>
         ))}
       </div>
+      <button
+        type="button"
+        className="gh-tag gh-mvp-toggle"
+        aria-pressed={tags.includes('mvp')}
+        onClick={() => toggle('mvp')}
+      >
+        Cast MVP Vote
+      </button>
       <label className="gh-sr" htmlFor={`rate-note-${target.membershipId ?? 'new'}`}>
         Optional one-line note
       </label>
@@ -151,7 +159,7 @@ export function QuickRateForm({
       ) : null}
       {signedIn ? (
         <button type="submit" className="gh-btn gh-btn-primary" disabled={saving}>
-          {saving ? 'Sending…' : 'Send rating'}
+          {saving ? 'Sending…' : 'Submit Rating'}
         </button>
       ) : (
         <button type="button" className="gh-btn gh-btn-primary" onClick={() => signInToVote(target)}>

@@ -154,7 +154,7 @@ function publicFireteams(lobbies: FireteamLobby[]): PublicFireteamCard[] {
 const BOARD_LABEL = {
   raid: 'Raid',
   dungeon: 'Dungeon',
-  new_bonds: 'New Bonds',
+  new_bonds: 'New Teammates',
 } as const
 
 /** Season leaders for the homepage. Names come from verified clears, not private profiles. */

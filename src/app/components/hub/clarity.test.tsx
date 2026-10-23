@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dismissGuide, isGearTab, isGuideDismissed, navHint } from '@/app/components/hub/clarity'
+import { dismissGuide, isGearTab, isGuideDismissed, MAIN_NAV, navHint } from '@/app/components/hub/clarity'
 
 describe('plain-language navigation', () => {
   it('describes the current page in one line', () => {
@@ -8,6 +8,16 @@ describe('plain-language navigation', () => {
     expect(navHint('leaderboards')).toContain('3D print')
     expect(navHint('compare')).toContain('side by side')
     expect(navHint('sherpas').toLowerCase()).toContain('sherpa')
+  })
+
+  it('puts the five main actions in the nav', () => {
+    expect(MAIN_NAV.map((item) => item.label)).toEqual([
+      'Home',
+      'Score a Run',
+      'Rate a Guardian',
+      'Leaderboards',
+      'Ask AI',
+    ])
   })
 
   it('groups builds, compare, lookup, and quests as gear', () => {

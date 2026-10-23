@@ -12,7 +12,7 @@ import { RateButton } from '@/app/components/hub/QuickRate'
 const CATEGORIES: { id: LeaderboardCategory; label: string }[] = [
   { id: 'raid', label: 'Raid' },
   { id: 'dungeon', label: 'Dungeon' },
-  { id: 'new_bonds', label: 'New Bonds' },
+  { id: 'new_bonds', label: 'New Teammates' },
 ]
 
 const PERIODS: { id: LeaderboardPeriod; label: string }[] = [
@@ -71,8 +71,8 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
   return (
     <section className="gh-stack" aria-labelledby="gh-boards-title">
       <PageHeader
-        title="Boards"
-        subtitle="Season standings from verified clears."
+        title="Leaderboards"
+        subtitle="Raid, Dungeon, and New Teammates. Season leaders can win a Destiny 2 3D print."
         titleId="gh-boards-title"
       />
 
@@ -140,7 +140,7 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
         <NextStep
           alert
           title="The board did not load"
-          body="Try again in a moment. Raid, Dungeon, and New Bonds are the only boards."
+          body="Try again in a moment. Raid, Dungeon, and New Teammates are the boards."
           actions={[{ label: 'Try again', onClick: () => setReload((value) => value + 1) }]}
         />
       ) : null}

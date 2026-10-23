@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { HUB_NAME } from '@/lib/destiny/branding'
 import { bungieOAuthErrorMessage } from '@/lib/destiny/bungieOAuthMessages'
 import { TopNestLogoMark } from '@/app/components/destiny/TopNestBrandBanner'
@@ -10,13 +10,42 @@ import HubChrome from '@/app/components/hub/HubChrome'
 import HubErrorBoundary from '@/app/components/hub/HubErrorBoundary'
 import AskGuide from '@/app/components/hub/AskGuide'
 import { RatePage } from '@/app/components/hub/QuickRate'
+import BoardsHub from '@/app/components/hub/BoardsHub'
+import { ConnectedHome, ScoreRuns } from '@/app/components/hub/HubPages'
 import PublicHub from '@/app/components/hub/PublicHub'
 import SignedInHubFrame from '@/app/components/hub/SignedInHubFrame'
 import SiteBackdrop from '@/app/components/SiteBackdrop'
 import { useAppSession } from '@/hooks/useAppSession'
-import { stripUrlParams, navigateDestinyTab } from '@/lib/routing/tabUrl'
+import { stripUrlParams, navigateDestinyTab, parseTabFromSearch, DESTINY_TAB_NAV_EVENT, isDestinyTopNestTab } from '@/lib/routing/tabUrl'
+import type { DestinyTopNestTab } from '@/lib/destiny/types'
 
-export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' }) {
+function SignedHome({
+  onLogin,
+  fallback,
+}: {
+  onLogin: () => void
+  fallback: ReactNode
+}) {
+  const [tab, setTab] = useState<DestinyTopNestTab>('overview')
+  useEffect(() => {
+    const read = () => setTab(parseTabFromSearch(window.location.search))
+    read()
+    const onTab = (event: Event) => {
+      const next = (event as CustomEvent<DestinyTopNestTab>).detail
+      if (next && isDestinyTopNestTab(next)) setTab(next)
+    }
+    window.addEventListener(DESTINY_TAB_NAV_EVENT, onTab)
+    window.addEventListener('popstate', read)
+    return () => {
+      window.removeEventListener(DESTINY_TAB_NAV_EVENT, onTab)
+      window.removeEventListener('popstate', read)
+    }
+  }, [])
+  if (tab === 'overview') return <ConnectedHome onLogin={onLogin} signedIn />
+  return fallback
+}
+
+export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' | 'score' | 'boards' }) {
   const { mounted, user, loading, login, logout, refresh, isAdmin, isOwner } = useAppSession()
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginPending, setLoginPending] = useState(false)
@@ -110,8 +139,17 @@ export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' }) {
           ) : null}
           {view === 'rate' ? (
             <RatePage />
+          ) : view === 'score' ? (
+            <ScoreRuns signedIn onLogin={handleLogin} />
+          ) : view === 'boards' ? (
+            <BoardsHub onLogin={handleLogin} />
+          ) : view === 'ask' ? (
+            <AskGuide />
           ) : (
-            <DestinyTopNestApp embedded darkMode isAdmin={isAdmin} isOwner={isOwner} userId={user.id} />
+            <SignedHome
+              onLogin={handleLogin}
+              fallback={<DestinyTopNestApp embedded darkMode isAdmin={isAdmin} isOwner={isOwner} userId={user.id} />}
+            />
           )}
         </SignedInHubFrame>
       </SiteBackdrop>
@@ -127,7 +165,17 @@ export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' }) {
           </p>
         ) : null}
         <HubErrorBoundary label="public hub">
-          {view === 'ask' ? <AskGuide /> : view === 'rate' ? <RatePage /> : <PublicHub onLogin={handleLogin} />}
+          {view === 'ask' ? (
+            <AskGuide />
+          ) : view === 'rate' ? (
+            <RatePage />
+          ) : view === 'score' ? (
+            <ScoreRuns signedIn={false} onLogin={handleLogin} />
+          ) : view === 'boards' ? (
+            <BoardsHub onLogin={handleLogin} />
+          ) : (
+            <PublicHub onLogin={handleLogin} />
+          )}
         </HubErrorBoundary>
       </HubChrome>
     </SiteBackdrop>

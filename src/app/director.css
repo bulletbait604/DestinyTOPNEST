@@ -167,6 +167,7 @@ h1, h2, h3, h4,
   border-radius: 0;
   overflow: visible;
 }
+.gh-nav a.gh-nav-link { text-decoration: none; }
 .gh-nav-link,
 .gh-more summary {
   display: inline-flex;
@@ -606,6 +607,29 @@ h1, h2, h3, h4,
 }
 .gh-rate-form { display: grid; gap: 8px; }
 .gh-confirm { color: var(--dir-gold); margin: 0; }
+.gh-action-cards { display: grid; gap: 12px; }
+.gh-action-card {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 12px;
+  border: 1px solid var(--dir-gold-dim);
+}
+.gh-action-card h2 { margin: 0; font-size: 1.15rem; }
+.gh-action-card p { margin: 0; }
+.gh-prize-line { margin: 0; color: var(--dir-gold); }
+.gh-score-points { margin: 8px 0 0; padding-left: 1.1rem; }
+.gh-score-points li { margin: 4px 0; }
+.gh-ask-answer { white-space: pre-wrap; line-height: 1.45; margin: 0; }
+.gh-source-pills { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.gh-source-pills a {
+  display: inline-block;
+  border: 1px solid var(--dir-line);
+  padding: 4px 10px;
+  color: var(--dir-ink);
+  text-decoration: none;
+}
+.gh-mvp-toggle { margin-top: 4px; }
 .gh-drawer-backdrop {
   position: fixed;
   inset: 0;
@@ -810,6 +834,7 @@ h1, h2, h3, h4,
 }
 
 @media (min-width: 800px) {
+  .gh-action-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .gh-how-steps,
   .gh-character-grid,
   .gh-rating.gh-card { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -828,7 +853,7 @@ h1, h2, h3, h4,
   .gh-nav { display: none; }
   .gh-bottom-nav {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     position: fixed;
     left: 0;
     right: 0;
@@ -838,6 +863,7 @@ h1, h2, h3, h4,
     border-top: 1px solid var(--dir-gold-dim);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+  .gh-bottom-nav a,
   .gh-bottom-nav button {
     min-height: 48px;
     border: 0;
@@ -848,11 +874,13 @@ h1, h2, h3, h4,
     align-content: center;
     gap: 0.15rem;
     font-family: Rajdhani, sans-serif;
-    font-size: 0.68rem;
+    font-size: 0.58rem;
+    text-decoration: none;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
+  .gh-bottom-nav a[aria-current='page'],
   .gh-bottom-nav button[aria-current='page'] {
     color: var(--dir-gold);
     box-shadow: inset 0 2px 0 var(--dir-gold);

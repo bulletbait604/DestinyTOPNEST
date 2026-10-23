@@ -1,10 +1,10 @@
 import { buildAskPrompt } from '@/lib/ask/askPrompt'
-import { UNCONFIGURED_MESSAGE, type AskSource } from '@/lib/ask/askSources'
+import { dedupeSources, publicAskSources, UNCONFIGURED_MESSAGE, type AskSource } from '@/lib/ask/askSources'
 
 export type AskEvent =
   | { type: 'meta'; sources: AskSource[]; configured: boolean; cached: boolean; answerId: string }
   | { type: 'delta'; text: string }
-  | { type: 'done' }
+  | { type: 'done'; sources?: AskSource[] }
   | { type: 'error'; message: string }
 
 export function encodeAskEvent(event: AskEvent): string {
@@ -36,7 +36,7 @@ export function createAskStream(input: {
       try {
         send({
           type: 'meta',
-          sources: input.sources,
+          sources: publicAskSources(input.sources),
           configured: input.configured || Boolean(input.cachedText),
           cached: Boolean(input.cachedText),
           answerId: input.answerId,
@@ -49,11 +49,22 @@ export function createAskStream(input: {
           send({ type: 'delta', text })
         } else {
           const prompt = buildAskPrompt(input.question, input.sources, input.contextText)
-          for await (const delta of input.complete(prompt)) {
-            text += delta
-            send({ type: 'delta', text: delta })
+          const iterator = input.complete(prompt)[Symbol.asyncIterator]()
+          let extra: AskSource[] = []
+          while (true) {
+            const step = await iterator.next()
+            if (step.done) {
+              if (Array.isArray(step.value)) extra = step.value
+              break
+            }
+            text += step.value
+            send({ type: 'delta', text: step.value })
           }
           if (input.onDone) await input.onDone(text)
+          const merged = extra.length ? dedupeSources([...input.sources, ...extra], 8) : []
+          send(merged.length ? { type: 'done', sources: publicAskSources(merged) } : { type: 'done' })
+          controller.close()
+          return
         }
         send({ type: 'done' })
         controller.close()

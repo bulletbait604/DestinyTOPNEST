@@ -179,7 +179,7 @@ describe('quick guardian rating', () => {
     expect(trustFromTags(['chill'])).toEqual({ knowledge: 3, vibes: 'good' })
     expect(trustFromTags(['mvp'])).toBeNull()
     expect(rateTagLine({ chill: 2, helpful: 0, sherpa: 1, clutch: 0, good_comms: 0, mvp: 4 })).toBe(
-      'Chill 2 · Sherpa 1'
+      'Chill 2 · Sherpa / Teacher 1'
     )
   })
 
@@ -197,13 +197,15 @@ describe('quick guardian rating', () => {
       })
     )
     expect(signedOut).toContain('Chill')
-    expect(signedOut).toContain('MVP vote')
+    expect(signedOut).toContain('Cast MVP Vote')
+    expect(signedOut).toContain('Sherpa / Teacher')
+    expect(signedOut).toContain('Great Comms')
     expect(signedOut).toContain('Sign in with Bungie to submit your vote')
     expect(signedOut).toContain('Optional one-line note')
 
     const page = renderToStaticMarkup(createElement(RatePage))
     expect(page).toContain('Rate a Guardian')
     expect(page).toContain('Recent teammates')
-    expect(page).toContain('Good Comms')
+    expect(page).toContain('Great Comms')
   })
 })

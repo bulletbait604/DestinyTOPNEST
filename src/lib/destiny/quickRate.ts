@@ -10,9 +10,9 @@ export type RateTag = (typeof RATE_TAGS)[number]
 export const RATE_TAG_LABELS: Record<RateTag, string> = {
   chill: 'Chill',
   helpful: 'Helpful',
-  sherpa: 'Sherpa',
+  sherpa: 'Sherpa / Teacher',
   clutch: 'Clutch',
-  good_comms: 'Good Comms',
+  good_comms: 'Great Comms',
   mvp: 'MVP vote',
 }
 

@@ -1,11 +1,12 @@
 'use client'
 
 import { FormEvent, useEffect, useState, type ReactNode } from 'react'
-import { GEAR_NAV, isGearTab, MORE_NAV, PRIMARY_NAV } from '@/app/components/hub/clarity'
+import { GEAR_NAV, isGearTab, MAIN_NAV, MORE_NAV } from '@/app/components/hub/clarity'
 import { QuickRateHost } from '@/app/components/hub/QuickRate'
 import { DirectorIcon } from '@/app/components/hub/directorIcons'
 import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
+import { usePathname } from 'next/navigation'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
 import {
   DESTINY_PROFILE_NAV_EVENT,
@@ -16,22 +17,6 @@ import {
   navigateProfileSection,
   parseTabFromSearch,
 } from '@/lib/routing/tabUrl'
-
-const ICONS: Partial<Record<DestinyTopNestTab, 'home' | 'people' | 'play' | 'boards' | 'gear' | 'ask'>> = {
-  overview: 'home',
-  guardians: 'people',
-  fireteam: 'play',
-  leaderboards: 'boards',
-  loadouts: 'gear',
-  ask: 'ask',
-}
-
-const MOBILE_NAV: { id: DestinyTopNestTab; label: string }[] = [
-  { id: 'overview', label: 'Home' },
-  { id: 'fireteam', label: 'Play' },
-  { id: 'leaderboards', label: 'Boards' },
-  { id: 'ask', label: 'Ask' },
-]
 
 function visibleTab(tab: DestinyTopNestTab): DestinyTopNestTab {
   if (tab === 'builds' || tab === 'loadouts') return 'loadouts'
@@ -51,13 +36,12 @@ export default function HubChrome({
   loginPending?: boolean
   account?: ReactNode
 }) {
+  const pathname = usePathname() || '/'
   const [tab, setTab] = useState<DestinyTopNestTab>('overview')
-  const [onRate, setOnRate] = useState(false)
   const [query, setQuery] = useState('')
 
   useEffect(() => {
     const read = () => {
-      setOnRate(window.location.pathname === '/rate')
       if (window.location.pathname === '/ask') {
         setTab('ask')
         return
@@ -121,9 +105,6 @@ export default function HubChrome({
           <button type="submit">Search</button>
         </form>
         <div className="gh-top-actions">
-          <a className="gh-btn gh-btn-ghost" href="/rate" aria-current={onRate ? 'page' : undefined}>
-            Rate
-          </a>
           <details className="gh-more">
             <summary>More</summary>
             <div className="gh-more-menu">
@@ -157,18 +138,13 @@ export default function HubChrome({
         </div>
       </header>
       <nav className="gh-nav" aria-label="TopNest">
-        {PRIMARY_NAV.map((item) => {
+        {MAIN_NAV.map((item) => {
+          const current = item.href === '/' ? pathname === '/' : pathname === item.href
           return (
-            <button
-              key={item.id}
-              type="button"
-              className="gh-nav-link"
-              aria-current={tab === item.id ? 'page' : undefined}
-              onClick={() => go(item.id)}
-            >
-              <DirectorIcon name={ICONS[item.id] ?? 'home'} />
+            <a key={item.href} className="gh-nav-link" href={item.href} aria-current={current ? 'page' : undefined}>
+              <DirectorIcon name={item.icon} />
               <span>{item.label}</span>
-            </button>
+            </a>
           )
         })}
         <details className="gh-nav-group">
@@ -203,18 +179,13 @@ export default function HubChrome({
         Fan-made. Not affiliated with Bungie. <a href="/rules">Prize rules</a>
       </footer>
       <nav className="gh-bottom-nav" aria-label="TopNest mobile">
-        {MOBILE_NAV.map((item) => {
-          const current = tab === item.id
+        {MAIN_NAV.map((item) => {
+          const current = item.href === '/' ? pathname === '/' : pathname === item.href
           return (
-            <button
-              key={item.id}
-              type="button"
-              aria-current={current ? 'page' : undefined}
-              onClick={() => go(item.id)}
-            >
-              <DirectorIcon name={ICONS[item.id] ?? 'gear'} />
+            <a key={item.href} href={item.href} aria-current={current ? 'page' : undefined}>
+              <DirectorIcon name={item.icon} />
               <span>{item.label}</span>
-            </button>
+            </a>
           )
         })}
       </nav>

@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { HubHome } from '@/app/components/hub/HubPages'
+import { HubHome, ScoreRuns } from '@/app/components/hub/HubPages'
 import { assemblePublicHub } from '@/lib/destiny/publicHub'
 
 describe('guardian hub home', () => {
@@ -20,25 +20,32 @@ describe('guardian hub home', () => {
       })
     )
 
-    expect(html).toContain('Guardian Hub')
-    expect(html).toContain('Find your fireteam')
-    expect(html).toContain('Sign in with Bungie')
+    expect(html).toContain('Play with new friends. Score the clear.')
+    expect(html).toContain('Score Your Runs')
+    expect(html).toContain('Sign in with Bungie to Score Runs')
+    expect(html).toContain('Rate and Vote MVP')
     expect(html).toContain('Rate a Guardian')
+    expect(html).toContain('Ask Destiny AI')
     expect(html).toContain('gh-rotation')
     expect(html).toContain('Featured raids')
-    expect(html).toContain('Top guardians')
+    expect(html).toContain('Live season leaderboards')
     expect(html).toContain('Featured builds')
-    expect(html).toContain('Ask TopNest')
-    expect(html).toContain('This season')
-    expect(html).toContain('More about TopNest')
-    expect(html).toContain('What is TopNest?')
-    expect(html).toContain('Play with new friends')
-    expect(html).toContain('Earn points')
     expect(html).toContain('3D print')
-    expect(html).toContain('A sherpa is')
+    expect(html).not.toContain('New Bonds')
     expect(html).not.toContain('This week\'s contracts')
     expect(html).not.toContain('Live fireteams')
     expect(html.toLowerCase()).not.toContain('cash prize')
     expect(html.toLowerCase()).not.toContain('pantheon')
+  })
+
+  it('explains scoring in three lines and keeps sync one click away', () => {
+    const signedOut = renderToStaticMarkup(createElement(ScoreRuns, { signedIn: false, onLogin: () => undefined }))
+    expect(signedOut).toContain('Clear raids or dungeons')
+    expect(signedOut).toContain('have not run with before')
+    expect(signedOut).toContain('Sync My Runs')
+    expect(signedOut).toContain('Sign in with Bungie to Score Runs')
+
+    const signedIn = renderToStaticMarkup(createElement(ScoreRuns, { signedIn: true, onLogin: () => undefined }))
+    expect(signedIn).toContain('Sync My Recent Runs')
   })
 })
