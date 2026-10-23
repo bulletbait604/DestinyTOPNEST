@@ -328,5 +328,8 @@ describe('shared builds placement', () => {
     const html = renderToStaticMarkup(createElement(CommunityBuildsBrowser, { darkMode: true }))
     expect(html).toContain('Shared builds')
     expect(html).toContain('Loading shared builds')
+    expect(html).toContain('Share a Build / Import from Destiny 2')
+    expect(html).toContain('Load In-Game Loadouts by Bungie Name')
+    expect(html).toContain('Save All In-Game Loadouts to Shared Builds')
   })
 })

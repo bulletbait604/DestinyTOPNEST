@@ -16,6 +16,7 @@ import {
 } from '@/lib/destiny/communityBuildModel'
 import type { DestinyCharacterClass } from '@/lib/destiny/types'
 import CommunityBuildForm from '@/app/components/destiny/community/CommunityBuildForm'
+import InGameLoadoutShare from '@/app/components/destiny/community/InGameLoadoutShare'
 import { EmptyBlock, GlassCard, ItemIcon, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { destinyPrimaryBtn, destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
@@ -102,6 +103,7 @@ export default function CommunityBuildsBrowser({
   const [scope, setScope] = useState<'public' | 'mine' | 'saved'>('public')
   const [offset, setOffset] = useState(0)
   const [composing, setComposing] = useState(false)
+  const [listVersion, setListVersion] = useState(0)
   const limit = 12
 
   useEffect(() => {
@@ -153,7 +155,7 @@ export default function CommunityBuildsBrowser({
     })()
 
     return () => controller.abort()
-  }, [debouncedQ, debouncedSubclass, characterClass, tag, stat, sort, scope, offset])
+  }, [debouncedQ, debouncedSubclass, characterClass, tag, stat, sort, scope, offset, listVersion])
 
   async function shareBuild(content: CommunityBuildContent) {
     const res = await fetch('/api/destiny/community-builds', {
@@ -169,6 +171,12 @@ export default function CommunityBuildsBrowser({
 
   return (
     <div className="space-y-4">
+      <InGameLoadoutShare
+        darkMode={darkMode}
+        signedIn={signedIn}
+        onLogin={onLogin}
+        onPublished={() => setListVersion((current) => current + 1)}
+      />
       <GlassCard darkMode={darkMode}>
         <SectionTitle
           title="Shared builds"

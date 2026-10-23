@@ -156,6 +156,14 @@ export async function searchPlayer(displayName: string, displayNameCode: number)
   >(`/User/Search/GlobalName/${encoded}/${displayNameCode}/`)
 }
 
+/** Profiles, vault, characters, equipment, inventories, in-game loadouts, and item plugs. */
+export const DESTINY_PROFILE_COMPONENTS = [100, 102, 200, 201, 205, 206, 300, 302, 304, 305, 800, 900, 1100] as const
+
+/** Full profile used for in-game loadouts. Component 206 is CharacterLoadouts. Component 102 is the vault. */
+export async function getDestinyProfile(membershipType: number, membershipId: string, accessToken?: string) {
+  return getPlayerProfile(membershipType, membershipId, [...DESTINY_PROFILE_COMPONENTS], accessToken)
+}
+
 /** Profile + characters — requires membershipType + membershipId. */
 export async function getPlayerProfile(
   membershipType: number,
@@ -193,10 +201,7 @@ export async function getCharacterLoadoutProfile(
   membershipId: string,
   accessToken?: string
 ) {
-  return bungieFetch(
-    `/Destiny2/${membershipType}/Profile/${membershipId}/?components=200,201,205,102,206,300,304,305`,
-    { accessToken }
-  )
+  return getDestinyProfile(membershipType, membershipId, accessToken)
 }
 
 /** Character equipment + item sockets/stats for live build parsing. */

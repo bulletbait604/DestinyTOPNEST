@@ -759,6 +759,34 @@ export interface AdminUserDetail extends AdminUserSummary {
   bungieLinked?: boolean
 }
 
+/** One resolved weapon, armor piece, or subclass from a profile or in-game loadout. */
+export interface InventoryItemSummary {
+  itemHash: number
+  itemInstanceId?: string
+  name: string
+  iconUrl?: string
+  slot?: string
+  tier?: string
+  exotic?: boolean
+}
+
+/** One non-empty Destiny 2 in-game loadout slot. */
+export interface InGameLoadoutSummary {
+  index: number
+  name: string
+  characterId: string
+  classType: 'Titan' | 'Hunter' | 'Warlock'
+  subclass?: string
+  exoticArmor?: string
+  exoticWeapon?: string
+  weapons: string[]
+  armor: string[]
+  aspects?: string[]
+  fragments?: string[]
+  mods?: string[]
+  items: InventoryItemSummary[]
+}
+
 /** One guardian slot — DIM-style horizontal character tile data. */
 export interface CharacterSummary {
   characterId: string
@@ -770,6 +798,8 @@ export interface CharacterSummary {
   classRef?: DestinyIconRef
   /** Equipped title / seal name when available from Bungie. */
   title?: string
+  /** Saved in-game loadouts for this character. Equipped gear stays on the live loadout. */
+  inGameLoadouts?: InGameLoadoutSummary[]
 }
 
 export interface PlayerProfile extends DestinyUser {
