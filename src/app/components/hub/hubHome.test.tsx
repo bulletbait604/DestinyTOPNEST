@@ -28,6 +28,12 @@ describe('guardian hub home', () => {
     expect(html).toContain('gh-rotation')
     expect(html).toContain('Featured raids')
     expect(html).toContain('Live season leaderboards')
+    expect(html).toContain('Raid Leaderboard')
+    expect(html).toContain('Dungeon Leaderboard')
+    expect(html).toContain('New Teammates Leaderboard')
+    expect(html).toContain('Full Raid Board')
+    expect(html).toContain('Full Dungeon Board')
+    expect(html).toContain('Full New Teammates Board')
     expect(html).toContain('Featured builds')
     expect(html).toContain('3D print')
     expect(html).not.toContain('New Bonds')
@@ -35,6 +41,42 @@ describe('guardian hub home', () => {
     expect(html).not.toContain('Live fireteams')
     expect(html.toLowerCase()).not.toContain('cash prize')
     expect(html.toLowerCase()).not.toContain('pantheon')
+  })
+
+  it('keeps raid, dungeon, and new teammates on separate cards', () => {
+    const snapshot = assemblePublicHub({
+      now: new Date('2026-10-11T18:00:00.000Z'),
+      runs: [],
+      lobbies: [],
+    })
+    snapshot.topGuardians = [
+      { board: 'raid', boardLabel: 'Raid', displayName: 'RaidLead', points: 40, rank: 1 },
+      { board: 'dungeon', boardLabel: 'Dungeon', displayName: 'DunLead', points: 24, rank: 1 },
+      { board: 'new_bonds', boardLabel: 'New Teammates', displayName: 'TeamLead', points: 15, rank: 1 },
+      { board: 'raid', boardLabel: 'Raid', displayName: 'RaidTwo', points: 20, rank: 2 },
+    ]
+    const html = renderToStaticMarkup(
+      createElement(HubHome, {
+        snapshot,
+        loading: false,
+        error: null,
+        onLogin: () => undefined,
+      })
+    )
+    const raidCard = html.slice(html.indexOf('Raid Leaderboard'), html.indexOf('Dungeon Leaderboard'))
+    const dungeonCard = html.slice(html.indexOf('Dungeon Leaderboard'), html.indexOf('New Teammates Leaderboard'))
+    const teammatesCard = html.slice(html.indexOf('New Teammates Leaderboard'))
+    expect(raidCard).toContain('RaidLead')
+    expect(raidCard).toContain('RaidTwo')
+    expect(raidCard).not.toContain('DunLead')
+    expect(raidCard).not.toContain('TeamLead')
+    expect(dungeonCard).toContain('DunLead')
+    expect(dungeonCard).not.toContain('RaidLead')
+    expect(teammatesCard).toContain('TeamLead')
+    expect(teammatesCard).not.toContain('DunLead')
+    expect(html).toContain('href="/boards?category=raid"')
+    expect(html).toContain('href="/boards?category=dungeon"')
+    expect(html).toContain('href="/boards?category=new_bonds"')
   })
 
   it('explains scoring in three lines and keeps sync one click away', () => {

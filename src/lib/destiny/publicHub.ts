@@ -173,7 +173,7 @@ export function topGuardiansFromRuns(
   const users = new Map<string, StoredDestinyUser>()
   const rows: PublicTopGuardian[] = []
   for (const board of ['raid', 'dungeon', 'new_bonds'] as const) {
-    const entries = aggregateLeaderboard(runs, users, board, 'season', season, kickMembershipIds).slice(0, 3)
+    const entries = aggregateLeaderboard(runs, users, board, 'season', season, kickMembershipIds).slice(0, 5)
     for (const entry of entries) {
       rows.push({
         board,

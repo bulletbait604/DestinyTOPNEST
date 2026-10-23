@@ -22,6 +22,13 @@ const PERIODS: { id: LeaderboardPeriod; label: string }[] = [
   { id: 'monthly', label: 'Month' },
 ]
 
+function boardFromLocation(): LeaderboardCategory {
+  if (typeof window === 'undefined') return 'raid'
+  const value = new URLSearchParams(window.location.search).get('category')
+  if (value === 'raid' || value === 'dungeon' || value === 'new_bonds') return value
+  return 'raid'
+}
+
 export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
   const [category, setCategory] = useState<LeaderboardCategory>('raid')
   const [period, setPeriod] = useState<LeaderboardPeriod>('season')
@@ -34,10 +41,18 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
   const [reload, setReload] = useState(0)
 
   useEffect(() => {
+    setCategory(boardFromLocation())
     const onRefresh = () => setReload((value) => value + 1)
     window.addEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
     return () => window.removeEventListener(OVERVIEW_REFRESH_EVENT, onRefresh)
   }, [])
+
+  const selectCategory = (next: LeaderboardCategory) => {
+    setCategory(next)
+    const url = new URL(window.location.href)
+    url.searchParams.set('category', next)
+    window.history.replaceState(null, '', `${url.pathname}${url.search}`)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -77,15 +92,17 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
       />
 
       <div className="gh-segments">
-        <div className="gh-tabs" role="tablist" aria-label="Leaderboard">
+        <div className="gh-tabs gh-board-switch" role="tablist" aria-label="Leaderboard">
           {CATEGORIES.map((item) => (
             <button
               key={item.id}
+              id={`gh-board-tab-${item.id}`}
               type="button"
               role="tab"
               aria-selected={category === item.id}
+              aria-controls="gh-board-panel"
               className="gh-tab"
-              onClick={() => setCategory(item.id)}
+              onClick={() => selectCategory(item.id)}
             >
               {item.label}
             </button>
@@ -135,6 +152,7 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
         </form>
       </details>
 
+      <div id="gh-board-panel" role="tabpanel" aria-labelledby={`gh-board-tab-${category}`}>
       {loading ? <p className="gh-muted">Loading the board…</p> : null}
       {error ? (
         <NextStep
@@ -188,6 +206,7 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
           ))}
         </ol>
       ) : null}
+      </div>
 
       <div className="gh-actions">
         <button type="button" className="gh-btn gh-btn-ghost" onClick={() => navigateDestinyTab('season')}>

@@ -604,7 +604,7 @@ export function HubHome({
                   Full boards
                 </a>
               </div>
-              <TopGuardianList rows={snapshot.topGuardians} />
+              <HomeLeaderboards rows={snapshot.topGuardians} />
             </section>
             <div className="gh-split">
               <section className="gh-status" aria-label="This week">
@@ -626,36 +626,69 @@ export function HubHome({
   )
 }
 
-function TopGuardianList({ rows }: { rows: PublicTopGuardian[] }) {
-  if (!rows.length) {
-    return (
-      <NextStep
-        title="No leaders yet"
-        body="Names show up here after a verified clear this season."
-        actions={[{ label: 'Open the boards', onClick: () => openHubTab('leaderboards') }]}
-      />
-    )
-  }
+const HOME_BOARDS: {
+  id: PublicTopGuardian['board']
+  title: string
+  link: string
+}[] = [
+  { id: 'raid', title: 'Raid Leaderboard', link: 'Full Raid Board →' },
+  { id: 'dungeon', title: 'Dungeon Leaderboard', link: 'Full Dungeon Board →' },
+  { id: 'new_bonds', title: 'New Teammates Leaderboard', link: 'Full New Teammates Board →' },
+]
+
+function HomeLeaderboards({ rows }: { rows: PublicTopGuardian[] }) {
   return (
-    <ul className="gh-list">
-      {rows.map((row) => (
-        <li key={`${row.board}-${row.rank}-${row.displayName}`} className="gh-row-with-rate">
-          <button type="button" className="gh-text-btn" onClick={() => navigateGuardianSearch(row.displayName)}>
-            #{row.rank} {row.displayName}
-          </button>
-          <VoteMvpButton
-            membershipId={row.bungieMembershipId}
-            displayName={row.displayName}
-            mvpVotes={row.mvpVotes}
-            newLightVotes={row.newLightVotes}
-            uselessVotes={row.uselessVotes}
-          />
-          <span className="gh-muted">
-            {row.boardLabel} · {row.points} pts
-          </span>
-        </li>
-      ))}
-    </ul>
+    <div className="gh-home-boards">
+      {HOME_BOARDS.map((board) => {
+        const boardRows = rows.filter((row) => row.board === board.id).slice(0, 5)
+        const leader = boardRows.find((row) => row.rank === 1) ?? boardRows[0]
+        return (
+          <article key={board.id} className="gh-home-board" aria-labelledby={`gh-board-${board.id}`}>
+            <header className="gh-home-board-head">
+              <h3 id={`gh-board-${board.id}`}>{board.title}</h3>
+              <p className="gh-prize-badge">Season #1 · 3D print</p>
+            </header>
+            {leader ? (
+              <p className="gh-leader-callout">
+                <span className="gh-kicker">#1 Prize Leader</span>
+                {leader.displayName} · {leader.points} pts
+              </p>
+            ) : (
+              <p className="gh-leader-callout">
+                <span className="gh-kicker">#1 Prize Leader</span>
+                No prize leader yet
+              </p>
+            )}
+            {boardRows.length ? (
+              <ol className="gh-home-board-list">
+                {boardRows.map((row) => (
+                  <li key={`${row.board}-${row.rank}-${row.displayName}`}>
+                    <div className="gh-home-rank">
+                      <button type="button" className="gh-text-btn" onClick={() => navigateGuardianSearch(row.displayName)}>
+                        #{row.rank} {row.displayName}
+                      </button>
+                      <span className="gh-muted">{row.points} pts</span>
+                    </div>
+                    <VoteMvpButton
+                      membershipId={row.bungieMembershipId}
+                      displayName={row.displayName}
+                      mvpVotes={row.mvpVotes}
+                      newLightVotes={row.newLightVotes}
+                      uselessVotes={row.uselessVotes}
+                    />
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="gh-muted">No ranked clears on this board yet.</p>
+            )}
+            <a className="gh-text-btn" href={`/boards?category=${board.id}`}>
+              {board.link}
+            </a>
+          </article>
+        )
+      })}
+    </div>
   )
 }
 
