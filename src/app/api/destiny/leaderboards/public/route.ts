@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCachedLeaderboardPayload } from '@/lib/destiny/dataCache'
+import { scheduleScoringHistoryBackfill } from '@/lib/destiny/historyBackfill'
 import { isActiveLeaderboardCategory } from '@/lib/destiny/leaderboards'
 import { cacheControlUntilWeeklyReset } from '@/lib/destiny/weeklyRotation'
 import type { LeaderboardPeriod } from '@/lib/destiny/types'
@@ -19,6 +20,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unknown leaderboard period' }, { status: 400 })
   }
   const period = periodRaw as LeaderboardPeriod
+  scheduleScoringHistoryBackfill()
   const payload = await getCachedLeaderboardPayload(requested, period)
   const res = NextResponse.json(payload)
   res.headers.set(

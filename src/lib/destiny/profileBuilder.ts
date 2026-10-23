@@ -126,7 +126,7 @@ export function buildPlayerProfileFromStored(
     badges,
     favoriteActivities: Array.from(new Set(verified.map((r) => r.activityName))).slice(0, 5),
     favoriteTeammates,
-    recentRuns: recentRunsFrom(userRuns, 10),
+    recentRuns: recentRunsFrom(userRuns, 40),
     topCompletions,
     prizeEligibility: prizeEligibilityForUser(seasonEntries, verified.length),
     currentLoadout: options?.loadout,

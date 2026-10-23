@@ -5,9 +5,11 @@ import { getPostGameCarnageReport, getPlayerProfile, searchPlayer } from '@/lib/
 import { getDestinyUserByBungieMembershipId, getDestinyUserBySiteUserId, getValidAccessToken } from '@/lib/destiny/destinyUserStore'
 import { resolveActivityByHash } from '@/lib/destiny/manifest'
 import { invalidateOverviewCache } from '@/lib/destiny/overviewCache'
+import { scheduleScoringHistoryBackfill } from '@/lib/destiny/historyBackfill'
 import {
   buildLookupRows,
   collectRaidDungeonHistory,
+  HISTORY_PAGE_SIZE,
   parseLookupQuery,
   syncHistoryDepth,
   type HistoryActivity,
@@ -58,10 +60,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Use a Bungie name like Name#1234, or a PGCR id.' }, { status: 400 })
     }
 
+    const requestedPages = Number(params.get('pages') || '')
     const pages = syncHistoryDepth({
-      includePrevious: params.get('includePrevious') === '1' || params.get('pages') === '6',
-      pages: Number(params.get('pages') || '') || undefined,
+      includePrevious: params.get('includePrevious') === '1',
+      pages: Number.isFinite(requestedPages) && requestedPages > 0 ? requestedPages : undefined,
     }).pages
+    scheduleScoringHistoryBackfill()
 
     let membershipId = params.get('membershipId')?.trim() || ''
     let membershipType = Number(params.get('membershipType') || '') || 0
@@ -130,7 +134,7 @@ export async function GET(req: NextRequest) {
       membershipId,
       characterIds,
       pages,
-      countPerPage: 25,
+      countPerPage: HISTORY_PAGE_SIZE,
       accessToken,
     })
     const existing = await getRunRecordsByPgcrIds(activities.map((row) => row.instanceId))

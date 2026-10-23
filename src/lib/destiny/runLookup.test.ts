@@ -10,7 +10,7 @@ import {
   shouldImportActivity,
   syncHistoryDepth,
 } from '@/lib/destiny/runLookup'
-import { withScoredRuns } from '@/lib/destiny/runDates'
+import { isRunInActiveSeasonPacific, recentRunsFrom, withScoredRuns } from '@/lib/destiny/runDates'
 import type { RunRecord, Season } from '@/lib/destiny/types'
 
 const season = {
@@ -81,12 +81,46 @@ describe('run history lookup', () => {
     expect(rows.map((row) => row.instanceId)).toEqual(['4-a', '4-b', '4-c', '82-a', '82-b', '82-c'])
   })
 
-  it('keeps previous clears only when the player asks to score them', () => {
-    expect(syncHistoryDepth().pages).toBe(3)
-    expect(syncHistoryDepth({ includePrevious: true }).pages).toBe(6)
-    expect(shouldImportActivity('2026-06-01T00:00:00.000Z', false)).toBe(false)
-    expect(shouldImportActivity('2026-06-01T00:00:00.000Z', true)).toBe(true)
-    expect(shouldImportActivity('2026-10-11T00:00:00.000Z', false)).toBe(true)
+  it('loads five history pages by default and eight when looking further back', () => {
+    expect(syncHistoryDepth()).toEqual({ pages: 5, countPerPage: 25, includePrevious: false })
+    expect(syncHistoryDepth({ includePrevious: true }).pages).toBe(8)
+    expect(Array.from({ length: syncHistoryDepth().pages }, (_, page) => page)).toEqual([0, 1, 2, 3, 4])
+    expect(shouldImportActivity('2026-06-01T00:00:00.000Z', false, 'raid')).toBe(true)
+    expect(shouldImportActivity('2026-06-01T00:00:00.000Z', false, 'dungeon')).toBe(true)
+    expect(shouldImportActivity('2026-06-01T00:00:00.000Z', false, 'pantheon')).toBe(false)
+    expect(shouldImportActivity('2026-10-11T00:00:00.000Z', false, 'pantheon')).toBe(true)
+  })
+
+  it('walks raid and dungeon pages 0 through 4', async () => {
+    const raidPages: number[] = []
+    const dungeonPages: number[] = []
+    const rows = await collectRaidDungeonHistory(
+      {
+        membershipType: 3,
+        membershipId: '999',
+        characterIds: ['111'],
+        pages: 5,
+        countPerPage: 1,
+      },
+      async (_type, _id, _character, mode, count, _token, page = 0) => {
+        expect(count).toBe(1)
+        if (mode === 4) raidPages.push(page)
+        if (mode === 82) dungeonPages.push(page)
+        return {
+          activities: [
+            {
+              activityDetails: { instanceId: `${mode}-${page}` },
+              period: '2026-01-15T00:00:00.000Z',
+            },
+          ],
+        }
+      }
+    )
+    expect(raidPages).toEqual([0, 1, 2, 3, 4])
+    expect(dungeonPages).toEqual([0, 1, 2, 3, 4])
+    expect(rows).toHaveLength(10)
+    expect(isRunInActiveSeasonPacific('2026-01-15T00:00:00.000Z', new Date('2026-10-20T00:00:00.000Z'), true)).toBe(true)
+    expect(recentRunsFrom([{ completedAt: '2026-01-15T00:00:00.000Z', scoredInActiveSeason: true }], 5)).toHaveLength(1)
   })
 
   it('labels scored, flagged, and new runs and picks the ones to add', () => {

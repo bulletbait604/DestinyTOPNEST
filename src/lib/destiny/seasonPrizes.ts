@@ -32,6 +32,7 @@ export async function computeSeasonStandings(
   eligibility: string
 }> {
   // One Destiny 2 3D print per board — winner = rank #1 on Raid, Dungeon and New Bonds.
+  // `runs` already includes scoredInActiveSeason clears from earlier history pages.
   const raidTop = (await buildLeaderboardWithAdjustments('raid', 'season', season, runs, usersById, votes)).slice(0, 3)
   const dungeonTop = (
     await buildLeaderboardWithAdjustments('dungeon', 'season', season, runs, usersById, votes)

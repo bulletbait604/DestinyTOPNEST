@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { PublicFeaturedBuild, PublicHubSnapshot, PublicTopGuardian } from '@/lib/destiny/publicHub'
 import { navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import { recentRunLines, scoreBoardLines, scorePointsLine, type ScoreRunRow, type ScoreStanding } from '@/lib/destiny/scoreStatus'
@@ -261,6 +261,46 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
     }
   }, [signedIn, refreshKey])
 
+  const autoSynced = useRef(false)
+  useEffect(() => {
+    if (!signedIn) return
+    let cancelled = false
+    const params = new URLSearchParams({ pages: '5' })
+    void fetch(`/api/destiny/runs/lookup?${params.toString()}`, { credentials: 'include' })
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((json: { displayName?: string; runs?: LookupRow[] } | null) => {
+        if (cancelled || !json?.runs) return
+        setFound(json.runs)
+        setFoundName(json.displayName || '')
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [signedIn, refreshKey])
+
+  useEffect(() => {
+    if (!signedIn || autoSynced.current) return
+    autoSynced.current = true
+    let cancelled = false
+    void fetch('/api/destiny/runs/sync', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ includePrevious: false, pages: 5 }),
+    })
+      .then(async (response) => {
+        const json = (await response.json().catch(() => ({}))) as { error?: string }
+        if (cancelled) return
+        if (response.ok) setRefreshKey((value) => value + 1)
+        else setStatus(json.error || 'Could not load the last pages of runs.')
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [signedIn])
+
   const sync = async (includePrevious: boolean) => {
     setBusy(true)
     setStatus(null)
@@ -269,7 +309,7 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ includePrevious, pages: includePrevious ? 6 : 3 }),
+        body: JSON.stringify({ includePrevious, pages: includePrevious ? 8 : 5 }),
       })
       const json = (await response.json().catch(() => ({}))) as { message?: string; error?: string }
       setStatus(json.message || json.error || (response.ok ? 'Runs synced.' : 'Sync did not finish.'))
@@ -291,8 +331,8 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
     try {
       const params = new URLSearchParams()
       if (!mine && query.trim()) params.set('q', query.trim())
-      params.set('pages', '6')
-      params.set('includePrevious', '1')
+      params.set('pages', mine ? '5' : '8')
+      if (!mine) params.set('includePrevious', '1')
       const response = await fetch(`/api/destiny/runs/lookup?${params.toString()}`, { credentials: 'include' })
       const json = (await response.json().catch(() => ({}))) as {
         error?: string
@@ -359,7 +399,7 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
           <ul className="gh-score-points">
             <li>Clear raids or dungeons in Destiny 2.</li>
             <li>Playing with Guardians you have not run with before earns bonus points.</li>
-            <li>Click Sync My Runs for recent clears, or look up previous raids and dungeons and add them to this season.</li>
+            <li>Click Sync My Runs for the last 5 pages, or look up previous raids and dungeons and add them to this season.</li>
           </ul>
         </div>
       </header>
@@ -405,6 +445,7 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
         }}
       >
         <h2>Look up recent or previous runs</h2>
+        <p className="gh-muted">The last 5 pages of raids and dungeons load into this scoring list, including clears from before this season.</p>
         <label className="gh-sr" htmlFor="score-lookup">
           Bungie name or PGCR id
         </label>

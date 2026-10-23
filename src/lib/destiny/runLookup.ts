@@ -24,8 +24,10 @@ export function parseLookupQuery(
   return { kind: 'invalid' }
 }
 
-export const RECENT_HISTORY_PAGES = 3
-export const PREVIOUS_HISTORY_PAGES = 6
+/** Last five Bungie history pages (0–4) at 25 activities each. */
+export const RECENT_HISTORY_PAGES = 5
+/** Deeper walk when the player asks for previous clears. */
+export const PREVIOUS_HISTORY_PAGES = 8
 export const HISTORY_PAGE_SIZE = 25
 
 export type SyncDepthOptions = {
@@ -49,8 +51,17 @@ export function syncHistoryDepth(options: SyncDepthOptions = {}): {
   }
 }
 
-/** Recent sync stays inside the active season. Previous lookup keeps older clears. */
-export function shouldImportActivity(period: string | undefined, includePrevious: boolean): boolean {
+/**
+ * Raid and dungeon pages are the window: every clear on those pages is imported,
+ * including dates before launch or the season start. Pantheon still stays in-season
+ * unless the player asked for a previous walk.
+ */
+export function shouldImportActivity(
+  period: string | undefined,
+  includePrevious: boolean,
+  activity: 'raid' | 'dungeon' | 'pantheon' = 'raid'
+): boolean {
+  if (activity === 'raid' || activity === 'dungeon') return true
   if (includePrevious) return true
   if (!period) return true
   return isRunInActiveSeasonPacific(period)

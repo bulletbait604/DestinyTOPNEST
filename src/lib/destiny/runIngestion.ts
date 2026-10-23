@@ -17,7 +17,13 @@ import {
 } from '@/lib/destiny/pgcrStats'
 import { calculateRunPoints } from '@/lib/destiny/scoring'
 import { computeRunBondScore, recordRunBonds } from '@/lib/destiny/bondStore'
-import { shouldImportActivity, syncHistoryDepth, type SyncDepthOptions } from '@/lib/destiny/runLookup'
+import {
+  HISTORY_PAGE_SIZE,
+  RECENT_HISTORY_PAGES,
+  shouldImportActivity,
+  syncHistoryDepth,
+  type SyncDepthOptions,
+} from '@/lib/destiny/runLookup'
 import { isPantheonActivityName, squadKeyFromMembers } from '@/lib/destiny/pantheonActivities'
 import {
   ensureDestinyIndexes,
@@ -443,7 +449,8 @@ export async function syncRunsForUser(stored: StoredDestinyUser, options: SyncDe
       for (const row of activities) {
         const instanceId = row.activityDetails?.instanceId
         if (!instanceId || seen.has(instanceId)) continue
-        if (!shouldImportActivity(row.period, includePrevious)) continue
+        const activityKind = activityTypeHint === 'pantheon' ? 'pantheon' : activityTypeHint
+        if (!shouldImportActivity(row.period, includePrevious, activityKind)) continue
         seen.add(instanceId)
 
         try {
@@ -468,18 +475,18 @@ export async function syncRunsForUser(stored: StoredDestinyUser, options: SyncDe
           }
 
           let { record, pgcr } = result
-          if (!shouldImportActivity(record.completedAt, includePrevious)) {
+          if (!shouldImportActivity(record.completedAt, includePrevious, activityKind)) {
             skipped++
             continue
           }
-          if (includePrevious) record.scoredInActiveSeason = true
+          if (activityKind !== 'pantheon') record.scoredInActiveSeason = true
 
           const existing = await getRunRecordById(record.id)
           if (existing) {
             const review = await getAdminReviewByRunId(record.id)
             record = await mergeRunRecordOnResync(existing, record, review)
           }
-          if (includePrevious || existing?.scoredInActiveSeason) record.scoredInActiveSeason = true
+          if (activityKind !== 'pantheon' || existing?.scoredInActiveSeason) record.scoredInActiveSeason = true
 
           const isNew = !(await runRecordExists(record.id))
           await saveRunRecord(record)
@@ -557,7 +564,7 @@ export async function scoreSelectedRuns(stored: StoredDestinyUser, runs: ScoreRu
   const newRuns: SyncResult['newRuns'] = []
   const seen = new Set<string>()
 
-  for (const requested of runs.slice(0, 40)) {
+  for (const requested of runs.slice(0, RECENT_HISTORY_PAGES * HISTORY_PAGE_SIZE * 2)) {
     if (!/^\d{1,22}$/.test(requested.instanceId) || seen.has(requested.instanceId)) continue
     seen.add(requested.instanceId)
     try {

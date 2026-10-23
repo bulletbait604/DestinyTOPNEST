@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { getCachedLeaderboardPayload } from '@/lib/destiny/dataCache'
+import { scheduleScoringHistoryBackfill } from '@/lib/destiny/historyBackfill'
 import { isActiveLeaderboardCategory } from '@/lib/destiny/leaderboards'
 import { cacheControlUntilWeeklyReset } from '@/lib/destiny/weeklyRotation'
 import type { LeaderboardCategory, LeaderboardPeriod } from '@/lib/destiny/types'
@@ -16,6 +17,7 @@ export async function GET(req: NextRequest) {
     }
     const category = requested satisfies LeaderboardCategory
     const period = (searchParams.get('period') || 'season') as LeaderboardPeriod
+    scheduleScoringHistoryBackfill()
     const payload = await getCachedLeaderboardPayload(category, period)
     const res = NextResponse.json(payload)
     // Shared payload after auth — Data Cache is the main win; private avoids CDN 401 poisoning.

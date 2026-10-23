@@ -3,6 +3,7 @@ import { verifyAuth } from '@/lib/auth/verifyAuth'
 import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
 import { invalidateOverviewCache } from '@/lib/destiny/overviewCache'
+import { scheduleScoringHistoryBackfill } from '@/lib/destiny/historyBackfill'
 import { syncRunsForUser } from '@/lib/destiny/runIngestion'
 import { syncHistoryDepth } from '@/lib/destiny/runLookup'
 
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const result = await syncRunsForUser(stored, depth)
+      scheduleScoringHistoryBackfill()
       if (result.synced > 0 || result.imported > 0) {
         invalidateOverviewCache()
       }

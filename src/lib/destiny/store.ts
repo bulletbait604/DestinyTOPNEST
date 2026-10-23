@@ -159,13 +159,14 @@ export async function loadAllMvpVotes(): Promise<MvpVote[]> {
     .toArray()) as unknown as MvpVote[]
 }
 
+/** Season boards and overview. Includes history-page clears from before launch. */
 async function loadAllRuns(): Promise<RunRecord[]> {
   const database = await db()
   return (await database
     .collection(DESTINY_COLLECTIONS.runRecords)
     .find(withScoredRuns())
     .sort({ completedAt: -1 })
-    .limit(500)
+    .limit(2000)
     .toArray()) as unknown as RunRecord[]
 }
 
