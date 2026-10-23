@@ -5,6 +5,8 @@ import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
 import { aggregateLeaderboard } from '@/lib/destiny/leaderboards'
+import { emptyVoteCounts, tallyVoteCounts } from '@/lib/destiny/mvpVoting'
+import { getVoteCountsMap } from '@/lib/destiny/voteCounts'
 import type {
   LeaderboardAdjustment,
   LeaderboardCategory,
@@ -104,18 +106,20 @@ export function applyLeaderboardAdjustments(
   return merged.slice(0, 10).map((entry, index) => ({ ...entry, rank: index + 1 }))
 }
 
-function attachMvpVotes(entries: LeaderboardEntry[], votes: MvpVote[]): LeaderboardEntry[] {
-  const counts = new Map<string, number>()
-  for (const vote of votes) {
-    if (vote.category === 'kudos') continue
-    const membershipId = vote.selectedMembershipId?.trim()
-    if (!membershipId) continue
-    counts.set(membershipId, (counts.get(membershipId) ?? 0) + 1)
-  }
-  return entries.map((entry) => ({
-    ...entry,
-    mvpVotes: entry.bungieMembershipId ? (counts.get(entry.bungieMembershipId) ?? 0) : (entry.mvpVotes ?? 0),
-  }))
+async function attachVoteCounts(entries: LeaderboardEntry[], votes: MvpVote[]): Promise<LeaderboardEntry[]> {
+  const ids = entries.map((entry) => entry.bungieMembershipId?.trim() ?? '').filter(Boolean)
+  let counts = ids.length ? await getVoteCountsMap(ids) : new Map()
+  if (counts.size === 0 && votes.length) counts = tallyVoteCounts(votes)
+  return entries.map((entry) => {
+    const bucket = entry.bungieMembershipId ? counts.get(entry.bungieMembershipId) : undefined
+    const fallback = bucket ?? emptyVoteCounts()
+    return {
+      ...entry,
+      mvpVotes: fallback.mvpVotes,
+      newLightVotes: fallback.newLightVotes,
+      uselessVotes: fallback.uselessVotes,
+    }
+  })
 }
 
 export async function buildLeaderboardWithAdjustments(
@@ -130,7 +134,7 @@ export async function buildLeaderboardWithAdjustments(
   const base = aggregateLeaderboard(runs, usersById, category, period, season, kickMembershipIds)
 
   const adjustments = await loadLeaderboardAdjustments(category, period, season.id)
-  return attachMvpVotes(
+  return attachVoteCounts(
     applyLeaderboardAdjustments(base, adjustments, usersById, category, period, season),
     votes
   )

@@ -179,6 +179,8 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
                     membershipId={entry.bungieMembershipId}
                     displayName={entry.bungieDisplayName}
                     mvpVotes={entry.mvpVotes}
+                    newLightVotes={entry.newLightVotes}
+                    uselessVotes={entry.uselessVotes}
                   />
                 )}
               </div>

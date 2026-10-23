@@ -9,6 +9,7 @@ import DestinyTopNestApp from '@/app/components/DestinyTopNestApp'
 import HubChrome from '@/app/components/hub/HubChrome'
 import HubErrorBoundary from '@/app/components/hub/HubErrorBoundary'
 import AskGuide from '@/app/components/hub/AskGuide'
+import GuardianDirectory from '@/app/components/hub/GuardianDirectory'
 import { RatePage } from '@/app/components/hub/QuickRate'
 import BoardsHub from '@/app/components/hub/BoardsHub'
 import { ConnectedHome, ScoreRuns } from '@/app/components/hub/HubPages'
@@ -45,7 +46,7 @@ function SignedHome({
   return fallback
 }
 
-export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' | 'score' | 'boards' }) {
+export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' | 'score' | 'boards' | 'people' }) {
   const { mounted, user, loading, login, logout, refresh, isAdmin, isOwner } = useAppSession()
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginPending, setLoginPending] = useState(false)
@@ -139,6 +140,8 @@ export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' | 's
           ) : null}
           {view === 'rate' ? (
             <RatePage />
+          ) : view === 'people' ? (
+            <GuardianDirectory onLogin={handleLogin} />
           ) : view === 'score' ? (
             <ScoreRuns signedIn onLogin={handleLogin} />
           ) : view === 'boards' ? (
@@ -169,6 +172,8 @@ export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' | 's
             <AskGuide />
           ) : view === 'rate' ? (
             <RatePage />
+          ) : view === 'people' ? (
+            <GuardianDirectory onLogin={handleLogin} />
           ) : view === 'score' ? (
             <ScoreRuns signedIn={false} onLogin={handleLogin} />
           ) : view === 'boards' ? (

@@ -11,7 +11,9 @@ import {
   kudosVoteId,
   mvpVoteId,
   mvpVotesReceivedQuery,
+  parseGuardianVoteType,
   parseMvpVoteCategory,
+  tallyVoteCounts,
   resolveVoteTargetMembershipId,
   unclaimedVoteAttachmentQuery,
   validateMvpVoteSubmission,
@@ -268,6 +270,17 @@ describe('fireteam MVP votes', () => {
     expect(resolved).toEqual({ ok: true, membershipId: 'ada' })
     expect(parseMvpVoteCategory(undefined)).toBe('mvp')
     expect(parseMvpVoteCategory('nope')).toBeNull()
+    expect(parseGuardianVoteType(undefined, 'mvp')).toBe('mvp')
+    expect(parseGuardianVoteType('new_light')).toBe('new_light')
+    expect(parseGuardianVoteType('nope')).toBeNull()
+    expect(
+      tallyVoteCounts([
+        { selectedMembershipId: '1' },
+        { selectedMembershipId: '1', voteType: 'new_light' },
+        { selectedMembershipId: '1', voteType: 'useless' },
+        { selectedMembershipId: '1', category: 'kudos' },
+      ]).get('1')
+    ).toEqual({ mvpVotes: 1, newLightVotes: 1, uselessVotes: 1 })
   })
 
   it('does not let an unclaimed placeholder satisfy a linked-account lookup', () => {
@@ -288,7 +301,12 @@ describe('fireteam MVP votes', () => {
     expect(mvpVotesReceivedQuery('Ada-User', ' 4611686018427387904 ', 'mvp')).toMatchObject({
       $and: [
         { $or: [{ selectedMembershipId: '4611686018427387904' }, { selectedUserId: 'ada-user' }] },
-        { $or: [{ category: 'mvp' }, { category: { $exists: false } }, { category: null }] },
+        {
+          $and: [
+            { $or: [{ category: 'mvp' }, { category: { $exists: false } }, { category: null }] },
+            { $or: [{ voteType: 'mvp' }, { voteType: { $exists: false } }, { voteType: null }] },
+          ],
+        },
       ],
     })
     expect(unclaimedVoteAttachmentQuery('4611686018427387904').selectedMembershipId).toBe('4611686018427387904')

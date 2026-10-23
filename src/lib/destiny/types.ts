@@ -321,7 +321,19 @@ export interface LeaderboardEntry {
   bungieMembershipId?: string
   /** MVP crowns stored for this membership, including votes from before sign-in. */
   mvpVotes?: number
+  /** New Light votes for this membership. */
+  newLightVotes?: number
+  /** Useless votes for this membership. */
+  uselessVotes?: number
 }
+
+/** Leaderboard row returned by the public and signed-in board APIs. */
+export type LeaderboardStandingEntry = LeaderboardEntry
+/** Same row after it is rendered for a board response. */
+export type LeaderboardEntryView = LeaderboardEntry
+
+/** Stored fireteam vote. Legacy documents without `voteType` are MVP crowns. */
+export type MvpVoteRecord = MvpVote
 
 export interface LeaderboardAdjustment {
   id: string
@@ -559,6 +571,9 @@ export interface SeasonPrizeRules {
 /** mvp = one crown per voter per run. kudos = optional, one per other participant. */
 export type MvpVoteCategory = 'mvp' | 'kudos'
 
+/** One-click Guardian vote. Legacy rows omit this and count as mvp. */
+export type GuardianVoteType = 'mvp' | 'new_light' | 'useless'
+
 /**
  * Fireteam commend stored by the target's Bungie membership id from the PGCR.
  * `selectedUserId` is filled once that guardian has a Top Nest account.
@@ -571,6 +586,11 @@ export interface MvpVote {
   voterMembershipId?: string
   /** Missing on legacy rows, which count as the run MVP. */
   category?: MvpVoteCategory
+  /**
+   * Quick vote. Missing on legacy rows, which count as `mvp`.
+   * `new_light` and `useless` are separate from the run crown.
+   */
+  voteType?: GuardianVoteType
   /** Site user id once the target has claimed a Top Nest account. */
   selectedUserId?: string
   /** Canonical recipient — Bungie membership id from the post-game carnage report. */

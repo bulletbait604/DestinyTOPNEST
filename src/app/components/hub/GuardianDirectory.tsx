@@ -223,7 +223,9 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
                 membershipId={card.membershipId}
                 displayName={card.displayName}
                 membershipType={card.membershipType}
-                mvpVotes={card.mvpCount}
+                mvpVotes={card.mvpVotes ?? card.mvpCount}
+                newLightVotes={card.newLightVotes}
+                uselessVotes={card.uselessVotes}
               />
             </div>
           </li>
@@ -287,7 +289,9 @@ function ProfileBody({ profile, onLogin }: { profile: GuardianPublicProfile; onL
           membershipId={card.membershipId}
           displayName={card.displayName}
           membershipType={card.membershipType}
-          mvpVotes={card.mvpCount}
+          mvpVotes={card.mvpVotes ?? card.mvpCount}
+          newLightVotes={card.newLightVotes}
+          uselessVotes={card.uselessVotes}
         />
       </div>
 

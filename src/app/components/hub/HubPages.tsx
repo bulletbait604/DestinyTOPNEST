@@ -537,7 +537,7 @@ export function HubHome({
         </article>
         <article className="gh-action-card">
           <h2>2. Vote MVP</h2>
-          <p>Pick a Guardian from your fireteam or the boards and send one MVP vote.</p>
+          <p>Pick a Guardian from your fireteam or the boards. Vote MVP, New Light, or Useless in one click.</p>
           <a className="gh-btn gh-btn-primary" href="/rate">
             Vote MVP
           </a>
@@ -601,7 +601,13 @@ function TopGuardianList({ rows }: { rows: PublicTopGuardian[] }) {
           <button type="button" className="gh-text-btn" onClick={() => navigateGuardianSearch(row.displayName)}>
             #{row.rank} {row.displayName}
           </button>
-          <VoteMvpButton membershipId={row.bungieMembershipId} displayName={row.displayName} mvpVotes={row.mvpVotes} />
+          <VoteMvpButton
+            membershipId={row.bungieMembershipId}
+            displayName={row.displayName}
+            mvpVotes={row.mvpVotes}
+            newLightVotes={row.newLightVotes}
+            uselessVotes={row.uselessVotes}
+          />
           <span className="gh-muted">
             {row.boardLabel} · {row.points} pts
           </span>

@@ -585,6 +585,21 @@ h1, h2, h3, h4,
   align-items: center;
   gap: 8px;
 }
+.gh-vote-pill {
+  border: 1px solid var(--dir-line);
+  background: transparent;
+  color: var(--dir-ink);
+  min-height: 32px;
+  padding: 2px 10px;
+  font-family: Rajdhani, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.gh-vote-pill[aria-pressed='true'] {
+  border-color: var(--dir-gold);
+  color: var(--dir-gold);
+}
 .gh-mvp-count {
   color: var(--dir-muted);
   font-size: 0.85rem;

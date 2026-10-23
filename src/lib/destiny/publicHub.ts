@@ -15,6 +15,7 @@ import { loadNightOpsEvents, loadWeeklyGoals } from '@/lib/destiny/siteContent'
 import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
+import { getVoteCountsMap } from '@/lib/destiny/voteCounts'
 
 export interface PublicContractCard {
   id: string
@@ -76,6 +77,8 @@ export interface PublicTopGuardian {
   rank: number
   bungieMembershipId?: string
   mvpVotes?: number
+  newLightVotes?: number
+  uselessVotes?: number
 }
 
 export interface PublicFeaturedBuild {
@@ -180,6 +183,8 @@ export function topGuardiansFromRuns(
         rank: entry.rank,
         bungieMembershipId: entry.bungieMembershipId,
         mvpVotes: entry.mvpVotes,
+        newLightVotes: entry.newLightVotes,
+        uselessVotes: entry.uselessVotes,
       })
     }
   }
@@ -326,7 +331,7 @@ export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHub
       listOpenLobbies(),
       loadFeaturedBuilds(),
     ])
-    return assemblePublicHub({
+    const snapshot = assemblePublicHub({
       now,
       runs: clears.runs,
       lobbies,
@@ -336,6 +341,15 @@ export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHub
       featuredBuilds,
       kickMembershipIds,
     })
+    const ids = snapshot.topGuardians.map((row) => row.bungieMembershipId ?? '').filter(Boolean)
+    if (ids.length) {
+      const counts = await getVoteCountsMap(ids)
+      snapshot.topGuardians = snapshot.topGuardians.map((row) => {
+        const bucket = row.bungieMembershipId ? counts.get(row.bungieMembershipId) : undefined
+        return bucket ? { ...row, ...bucket } : row
+      })
+    }
+    return snapshot
   } catch (error) {
     console.warn('[hub] public snapshot fell back to the contract catalog', error)
     return assemblePublicHub({

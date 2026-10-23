@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { QuickRateForm, RatePage } from '@/app/components/hub/QuickRate'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import {
+  buildLabeledGuardianVote,
   buildQuickRateWrite,
   normalizeRateNote,
   parseRateTags,
@@ -189,14 +190,58 @@ describe('quick guardian rating', () => {
     expect(takeQuickRateLimit({ userId: 'voter', now: 2_000 }).ok).toBe(false)
   })
 
-  it('shows one MVP button and the sign-in line', () => {
+  it('records New Light and Useless as their own vote on a shared clear', () => {
+    const saved = buildLabeledGuardianVote({
+      voteType: 'new_light',
+      voterId: 'voter',
+      voterMembershipId: '111',
+      targetMembershipId: '222',
+      targetDisplayName: 'Ada',
+      now: '2026-10-23T00:00:00.000Z',
+      runs: [run('run-1', '2026-10-20T00:00:00.000Z')],
+      users: [ada],
+    })
+    expect(saved.ok).toBe(true)
+    if (!saved.ok) return
+    expect(saved.already).toBe(false)
+    expect(saved.vote?.voteType).toBe('new_light')
+    expect(saved.vote?.category).toBeUndefined()
+    expect(saved.vote?.id).toBe('vote-new_light-voter-222')
+
+    const duplicate = buildLabeledGuardianVote({
+      voteType: 'useless',
+      voterId: 'voter',
+      targetMembershipId: '222',
+      targetDisplayName: 'Ada',
+      now: '2026-10-23T00:00:00.000Z',
+      runs: [run('run-1', '2026-10-20T00:00:00.000Z')],
+      already: true,
+    })
+    expect(duplicate.ok && duplicate.already).toBe(true)
+
+    const stranger = buildLabeledGuardianVote({
+      voteType: 'useless',
+      voterId: 'voter',
+      targetMembershipId: '333',
+      targetDisplayName: 'Ghost',
+      now: '2026-10-23T00:00:00.000Z',
+      runs: [run('run-1', '2026-10-20T00:00:00.000Z')],
+    })
+    expect(stranger.ok).toBe(false)
+    if (stranger.ok) return
+    expect(stranger.error).toContain('Useless votes count')
+  })
+
+  it('shows MVP, New Light, and Useless in one click', () => {
     const signedOut = renderToStaticMarkup(
       createElement(QuickRateForm, {
         signedIn: false,
         target: { membershipId: '222', displayName: 'Ada' },
       })
     )
-    expect(signedOut).toContain('Vote MVP')
+    expect(signedOut).toContain('MVP')
+    expect(signedOut).toContain('New Light')
+    expect(signedOut).toContain('Useless')
     expect(signedOut).toContain('Sign in with Bungie to submit your vote')
     expect(signedOut).not.toContain('Cast MVP Vote')
     expect(signedOut).not.toContain('Sherpa / Teacher')
@@ -204,6 +249,8 @@ describe('quick guardian rating', () => {
 
     const page = renderToStaticMarkup(createElement(RatePage))
     expect(page).toContain('Vote MVP')
+    expect(page).toContain('New Light')
+    expect(page).toContain('Useless')
     expect(page).toContain('Search')
     expect(page).not.toContain('Great Comms')
   })

@@ -35,6 +35,7 @@ import {
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
 import { mvpCategoryFilter, mvpVotesReceivedQuery } from '@/lib/destiny/mvpVoting'
+export { findGuardianVote, getVoteCountsMap, voteCountsForMembership } from '@/lib/destiny/voteCounts'
 import { recentRunsFrom, withScoredRuns } from '@/lib/destiny/runDates'
 import type { AdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
 import { logAdminActivity } from '@/lib/destiny/adminActivityLog'
@@ -116,6 +117,14 @@ async function ensureDestinyIndexesOnce(): Promise<void> {
       unique: true,
       partialFilterExpression: { category: 'kudos' },
       name: 'kudos_one_per_voter_run_target',
+    }
+  )
+  await mvpVotes.createIndex(
+    { voterId: 1, selectedMembershipId: 1, voteType: 1 },
+    {
+      unique: true,
+      partialFilterExpression: { voteType: { $in: ['new_light', 'useless'] } },
+      name: 'quick_vote_one_per_guardian',
     }
   )
   await mvpVotes.createIndex({ selectedUserId: 1, createdAt: -1 })
@@ -916,15 +925,17 @@ function isDuplicateKeyError(error: unknown): boolean {
 
 function voteWrite(vote: MvpVote): { $set: Record<string, unknown>; $setOnInsert: { createdAt: string }; $unset?: { selectedUserId: '' } } {
   const now = vote.updatedAt ?? new Date().toISOString()
+  const labeled = vote.voteType === 'new_light' || vote.voteType === 'useless'
   const set: Record<string, unknown> = {
     id: vote.id,
     runId: vote.runId,
     voterId: vote.voterId,
-    category: vote.category ?? 'mvp',
     selectedMembershipId: vote.selectedMembershipId,
     selectedDisplayName: vote.selectedDisplayName,
     updatedAt: now,
+    voteType: labeled ? vote.voteType : (vote.voteType ?? 'mvp'),
   }
+  if (!labeled) set.category = vote.category ?? 'mvp'
   if (vote.voterMembershipId) set.voterMembershipId = vote.voterMembershipId
   if (vote.selectedUserId) set.selectedUserId = vote.selectedUserId
   const update: { $set: Record<string, unknown>; $setOnInsert: { createdAt: string }; $unset?: { selectedUserId: '' } } = {
@@ -938,9 +949,15 @@ function voteWrite(vote: MvpVote): { $set: Record<string, unknown>; $setOnInsert
 export async function saveMvpVote(vote: MvpVote): Promise<void> {
   const database = await db()
   const collection = database.collection(DESTINY_COLLECTIONS.mvpVotes)
-  const category = vote.category ?? 'mvp'
-  const filter =
-    category === 'kudos'
+  const labeled = vote.voteType === 'new_light' || vote.voteType === 'useless'
+  const category = labeled ? undefined : (vote.category ?? 'mvp')
+  const filter = labeled
+    ? {
+        voterId: vote.voterId,
+        selectedMembershipId: vote.selectedMembershipId,
+        voteType: vote.voteType,
+      }
+    : category === 'kudos'
       ? {
           voterId: vote.voterId,
           runId: vote.runId,
@@ -952,7 +969,7 @@ export async function saveMvpVote(vote: MvpVote): Promise<void> {
           runId: vote.runId,
           ...mvpCategoryFilter(),
         }
-  const update = voteWrite({ ...vote, category })
+  const update = voteWrite(labeled ? vote : { ...vote, category, voteType: vote.voteType ?? 'mvp' })
   try {
     await collection.updateOne(filter, update, { upsert: true })
   } catch (error) {

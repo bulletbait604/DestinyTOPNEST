@@ -16,7 +16,21 @@ export interface GuardianDirectoryCard {
   clanTag?: string
   mvpCount: number
   kudosCount: number
+  /** Same totals the vote pills show. */
+  mvpVotes?: number
+  newLightVotes?: number
+  uselessVotes?: number
   badges: string[]
+}
+
+/** People directory row, including the three quick-vote totals. */
+export interface PersonRow {
+  membershipId: string
+  displayName: string
+  status?: GuardianListingStatus
+  mvpVotes: number
+  newLightVotes: number
+  uselessVotes: number
 }
 
 export interface GuardianRecentActivity {
