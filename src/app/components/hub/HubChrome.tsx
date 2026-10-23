@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useState, type ReactNode } from 'react'
-import { FirstTimeGuide, GEAR_NAV, isGearTab, MORE_NAV, PRIMARY_NAV } from '@/app/components/hub/clarity'
+import { GEAR_NAV, isGearTab, MORE_NAV, PRIMARY_NAV } from '@/app/components/hub/clarity'
 import { DirectorIcon } from '@/app/components/hub/directorIcons'
 import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
@@ -13,24 +13,23 @@ import {
   navigateDestinyTab,
   navigateGuardianSearch,
   navigateProfileSection,
-  navigateSharedBuilds,
   parseTabFromSearch,
 } from '@/lib/routing/tabUrl'
 
-const ICONS: Partial<Record<DestinyTopNestTab, 'home' | 'people' | 'play' | 'boards' | 'gear'>> = {
+const ICONS: Partial<Record<DestinyTopNestTab, 'home' | 'people' | 'play' | 'boards' | 'gear' | 'ask'>> = {
   overview: 'home',
   guardians: 'people',
   fireteam: 'play',
   leaderboards: 'boards',
   loadouts: 'gear',
+  ask: 'ask',
 }
 
 const MOBILE_NAV: { id: DestinyTopNestTab; label: string }[] = [
   { id: 'overview', label: 'Home' },
-  { id: 'guardians', label: 'People' },
   { id: 'fireteam', label: 'Play' },
   { id: 'leaderboards', label: 'Boards' },
-  { id: 'loadouts', label: 'Gear' },
+  { id: 'ask', label: 'Ask' },
 ]
 
 function visibleTab(tab: DestinyTopNestTab): DestinyTopNestTab {
@@ -55,7 +54,13 @@ export default function HubChrome({
   const [query, setQuery] = useState('')
 
   useEffect(() => {
-    const read = () => setTab(visibleTab(parseTabFromSearch(window.location.search)))
+    const read = () => {
+      if (window.location.pathname === '/ask') {
+        setTab('ask')
+        return
+      }
+      setTab(visibleTab(parseTabFromSearch(window.location.search)))
+    }
     read()
     const onTab = (event: Event) => {
       const next = (event as CustomEvent<DestinyTopNestTab>).detail
@@ -134,10 +139,6 @@ export default function HubChrome({
                   <small>Stamps from verified clears.</small>
                 </button>
               ) : null}
-              <button type="button" onClick={() => navigateSharedBuilds()}>
-                Shared builds
-                <small>The same list as Gear.</small>
-              </button>
             </div>
           </details>
           {signedIn ? (
@@ -165,9 +166,8 @@ export default function HubChrome({
           )
         })}
         <details className="gh-nav-group">
-          <summary className="gh-nav-link" aria-current={isGearTab(tab) ? 'page' : undefined}>
-            <DirectorIcon name="gear" />
-            <span>Gear</span>
+          <summary className="gh-nav-link" aria-current={isGearTab(tab) || MORE_NAV.some((item) => item.id === tab) ? 'page' : undefined}>
+            <span>More</span>
           </summary>
           <div className="gh-nav-menu">
             {GEAR_NAV.map((item) => (
@@ -176,22 +176,28 @@ export default function HubChrome({
                 <small>{item.hint}</small>
               </button>
             ))}
+            {MORE_NAV.map((item) => (
+              <button key={item.id} type="button" onClick={() => go(item.id)}>
+                {item.label}
+                <small>{item.hint}</small>
+              </button>
+            ))}
           </div>
         </details>
       </nav>
-      <SeasonPointsBar />
-      <FirstTimeGuide />
+      <details className="gh-disclosure">
+        <summary>Scoring</summary>
+        <SeasonPointsBar />
+      </details>
       <main id="hub-main" className="gh-main">
         {children}
       </main>
       <footer className="gh-footer">
-        Fan-made Destiny 2 site for playing with new friends. Not affiliated with Bungie. US and Canada: a Destiny 2 3D
-        print for each season board. UK: a $50 CAD Steam gift card. Other countries can play and are not
-        prize-eligible. <a href="/rules">Prize rules</a>
+        Fan-made. Not affiliated with Bungie. <a href="/rules">Prize rules</a>
       </footer>
       <nav className="gh-bottom-nav" aria-label="TopNest mobile">
         {MOBILE_NAV.map((item) => {
-          const current = item.id === 'loadouts' ? isGearTab(tab) : tab === item.id
+          const current = tab === item.id
           return (
             <button
               key={item.id}

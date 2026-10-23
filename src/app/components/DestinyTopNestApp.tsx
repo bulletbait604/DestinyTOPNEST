@@ -42,6 +42,7 @@ import BuildLookup from '@/app/components/hub/BuildLookup'
 import GuardianDirectory from '@/app/components/hub/GuardianDirectory'
 import LoadoutCompare from '@/app/components/hub/LoadoutCompare'
 import QuestLookup from '@/app/components/hub/QuestLookup'
+import AskGuide from '@/app/components/hub/AskGuide'
 
 type ProfileView = 'guardian' | 'passport' | 'activities' | 'loadouts'
 type LoadoutSection = LoadoutSectionId
@@ -131,7 +132,7 @@ export default function DestinyTopNestApp({
     if (restored.current) return
     restored.current = true
 
-    const tab = parseTabFromSearch(window.location.search)
+    const tab = window.location.pathname === '/ask' ? 'ask' : parseTabFromSearch(window.location.search)
     if (isDestinyTopNestTab(tab)) {
       const resolved = tab
       if (resolved === 'admin' && !isAdmin) {
@@ -220,6 +221,8 @@ export default function DestinyTopNestApp({
 
   function renderMainPanel() {
     switch (activeTab) {
+      case 'ask':
+        return <AskGuide />
       case 'overview':
         return (
           <>
@@ -286,7 +289,8 @@ export default function DestinyTopNestApp({
     activeTab === 'leaderboards' ||
     activeTab === 'compare' ||
     activeTab === 'lookup' ||
-    activeTab === 'quests'
+    activeTab === 'quests' ||
+    activeTab === 'ask'
   const showLeaderboardRules = activeTab === 'leaderboards'
   const showHero = !embedded || !hubTab
   const showPlayerCard = !embedded || PROFILE_TABS.has(activeTab)

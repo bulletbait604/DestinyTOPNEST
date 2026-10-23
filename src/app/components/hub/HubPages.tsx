@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import type { PublicFeaturedBuild, PublicHubSnapshot, PublicTopGuardian } from '@/lib/destiny/publicHub'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import BoardsHub from '@/app/components/hub/BoardsHub'
+import AskGuide from '@/app/components/hub/AskGuide'
 import { HowItWorks, NextStep } from '@/app/components/hub/clarity'
 import { PageHeader, PointsChip } from '@/app/components/hub/PageHeader'
 import { formatEventWhen, openHubTab, usePublicHub } from '@/app/components/hub/hubTypes'
@@ -200,29 +201,15 @@ export function HubHome({
         <div>
           <p className="gh-kicker">Guardian Hub</p>
           <h1>Find your fireteam</h1>
-          <p className="gh-lede">Play with new friends, earn points, and climb the season boards.</p>
+          <p className="gh-lede">Play with new friends.</p>
           <div className="gh-actions">
             <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
               Sign in with Bungie
             </button>
           </div>
         </div>
-        <form
-          className="gh-search gh-hero-search"
-          role="search"
-          onSubmit={(event) => {
-            event.preventDefault()
-            const data = new FormData(event.currentTarget)
-            navigateGuardianSearch(String(data.get('q') ?? ''))
-          }}
-        >
-          <label className="gh-sr" htmlFor="hub-home-search">
-            Search guardians
-          </label>
-          <input id="hub-home-search" name="q" placeholder="Search a Bungie name" autoComplete="off" />
-          <button type="submit">Search</button>
-        </form>
       </section>
+      <AskGuide compact />
 
       <BoardState loading={loading} error={error} onRetry={() => window.location.reload()}>
         {snapshot ? (
@@ -231,6 +218,10 @@ export function HubHome({
               <p>
                 <span className="gh-kicker">This season</span>
                 {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
+              </p>
+              <p className="gh-rotation">
+                Featured raids: {snapshot.featuredRaids.join(' · ') || 'Rotation loading'}. Featured dungeons:{' '}
+                {snapshot.featuredDungeons.join(' · ') || 'Rotation loading'}.
               </p>
               <button type="button" className="gh-text-btn" onClick={() => navigateDestinyTab('season')}>
                 Prize rules
@@ -246,7 +237,6 @@ export function HubHome({
               <TopGuardianList rows={snapshot.topGuardians} />
             </section>
             <FeaturedBuilds builds={snapshot.featuredBuilds} onLogin={onLogin} />
-            <RotationStrip snapshot={snapshot} />
           </>
         ) : null}
       </BoardState>
@@ -256,32 +246,6 @@ export function HubHome({
         <HowItWorks onLogin={onLogin} />
       </details>
     </div>
-  )
-}
-
-function RotationStrip({ snapshot }: { snapshot: PublicHubSnapshot }) {
-  const cards = [
-    { label: 'Featured raids', value: snapshot.featuredRaids.join(' · ') || 'Rotation loading' },
-    { label: 'Featured dungeons', value: snapshot.featuredDungeons.join(' · ') || 'Rotation loading' },
-    { label: 'Nightfall', value: snapshot.nightfall || 'Grandmaster not posted' },
-  ]
-  return (
-    <section className="gh-section" aria-labelledby="gh-rotation">
-      <div className="gh-section-head">
-        <h2 id="gh-rotation">This week&apos;s rotation</h2>
-        <p className="gh-kicker">
-          {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
-        </p>
-      </div>
-      <div className="gh-rotation">
-        {cards.map((card) => (
-          <article key={card.label} className="gh-card">
-            <p className="gh-kicker">{card.label}</p>
-            <h3>{card.value}</h3>
-          </article>
-        ))}
-      </div>
-    </section>
   )
 }
 

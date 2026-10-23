@@ -3,7 +3,7 @@
 export function DirectorIcon({
   name,
 }: {
-  name: 'home' | 'people' | 'play' | 'boards' | 'gear' | 'search'
+  name: 'home' | 'people' | 'play' | 'boards' | 'gear' | 'search' | 'ask'
 }) {
   const paths: Record<typeof name, string> = {
     home: 'M12 3.5 20.5 12 12 20.5 3.5 12 Z',
@@ -12,6 +12,7 @@ export function DirectorIcon({
     boards: 'M5 18.5 V12 M12 18.5 V7 M19 18.5 V10',
     gear: 'M12 3.2 19.2 7.4 V16.6 L12 20.8 4.8 16.6 V7.4 Z',
     search: 'M11 6.2 a4.8 4.8 0 1 0 0 9.6 a4.8 4.8 0 1 0 0 -9.6 M14.6 14.6 L19 19',
+    ask: 'M5 6.5 H19 V15.5 H10 L6 19 V15.5 H5 Z',
   }
   return (
     <svg className="dir-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden>

@@ -39,9 +39,9 @@ export const GLOSSARY = [
 
 export const PRIMARY_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
   { id: 'overview', label: 'Home', hint: 'This week, and how TopNest works.' },
-  { id: 'guardians', label: 'People', hint: 'Find a Guardian and read their rating.' },
   { id: 'fireteam', label: 'Play', hint: 'Open fireteams you can join.' },
   { id: 'leaderboards', label: 'Boards', hint: 'Season rankings. Leaders can win a 3D print.' },
+  { id: 'ask', label: 'Ask', hint: 'Step-by-step answers with source links.' },
 ]
 
 export const GEAR_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
@@ -52,6 +52,7 @@ export const GEAR_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] 
 ]
 
 export const MORE_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
+  { id: 'guardians', label: 'People', hint: 'Find a Guardian and read their rating.' },
   { id: 'contracts', label: 'Weekly goals', hint: 'Three goals that reset Tuesday. They do not change board points.' },
   { id: 'sherpas', label: 'Teachers', hint: 'Sherpas: players who guided a first clear.' },
   { id: 'clans', label: 'Clans', hint: 'Standings when clanmates clear together.' },
@@ -73,6 +74,7 @@ export function navHint(tab: DestinyTopNestTab): string {
   if (primary) return primary.hint
   const more = MORE_NAV.find((item) => item.id === tab)
   if (more) return more.hint
+  if (tab === 'ask') return 'Step-by-step answers with source links.'
   if (tab === 'profile') return 'Your Guardian, stamps, and weekly goals after you sign in.'
   return 'TopNest helps you play with new friends and climb the season boards.'
 }

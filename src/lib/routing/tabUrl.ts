@@ -17,6 +17,7 @@ const DESTINY_TABS = new Set<DestinyTopNestTab>([
   'compare',
   'lookup',
   'quests',
+  'ask',
 ])
 
 export function isDestinyTopNestTab(value: string): value is DestinyTopNestTab {
@@ -116,6 +117,20 @@ export function navigateProfileSection(view: ProfileNavView) {
 
 /** Update URL and notify the shell to switch tabs (e.g. header Settings → Admin). */
 export function navigateDestinyTab(tab: DestinyTopNestTab) {
+  if (typeof window !== 'undefined') {
+    const onAsk = window.location.pathname === '/ask'
+    if (tab === 'ask' && !onAsk) {
+      window.location.assign('/ask')
+      return
+    }
+    if (onAsk && tab !== 'ask') {
+      const params = new URLSearchParams()
+      if (tab !== 'overview') params.set('tab', tab)
+      const qs = params.toString()
+      window.location.assign(qs ? `/?${qs}` : '/')
+      return
+    }
+  }
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/builds')) {
     const params = new URLSearchParams()
     if (tab !== 'overview') params.set('tab', tab)

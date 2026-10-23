@@ -32,4 +32,6 @@ export const DESTINY_COLLECTIONS = {
   communityBuildComments: 'destiny_community_build_comments',
   siteContent: 'destiny_site_content',
   characterSnapshots: 'destiny_character_snapshots',
+  askCache: 'destiny_ask_cache',
+  askFeedback: 'destiny_ask_feedback',
 } as const
