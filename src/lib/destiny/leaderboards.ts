@@ -41,6 +41,10 @@ function periodStart(period: LeaderboardPeriod, season: Season): Date | null {
 }
 
 function runMatchesPeriod(run: RunRecord, period: LeaderboardPeriod, season: Season): boolean {
+  if (run.scoredInActiveSeason && (period === 'season' || period === 'all_time')) {
+    if (period === 'all_time') return true
+    return new Date(run.completedAt).getTime() <= new Date(season.endDate).getTime()
+  }
   if (!isRunAtOrAfterNestLaunch(run.completedAt)) return false
   const start = periodStart(period, season)
   if (!start) return true

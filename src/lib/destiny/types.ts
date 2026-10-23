@@ -284,6 +284,12 @@ export interface RunRecord {
   newBondMembershipIds?: string[]
   /** Owner's Destiny membership id at ingest time. */
   ownerMembershipId?: string
+  /**
+   * Set when a player looks up an older clear and adds it to scoring.
+   * Those runs count on the active season boards even when completedAt is
+   * before the season or the Oct 1 2026 launch.
+   */
+  scoredInActiveSeason?: boolean
 }
 
 export interface LeaderboardEntry {

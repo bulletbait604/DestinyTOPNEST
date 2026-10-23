@@ -4,6 +4,7 @@ import { destinyAuthHandler } from '@/lib/destiny/apiHandler'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
 import { invalidateOverviewCache } from '@/lib/destiny/overviewCache'
 import { syncRunsForUser } from '@/lib/destiny/runIngestion'
+import { syncHistoryDepth } from '@/lib/destiny/runLookup'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,8 +21,19 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    let body: { includePrevious?: boolean; pages?: number } = {}
     try {
-      const result = await syncRunsForUser(stored)
+      body = (await req.json()) as { includePrevious?: boolean; pages?: number }
+    } catch {
+      body = {}
+    }
+    const depth = syncHistoryDepth({
+      includePrevious: Boolean(body.includePrevious),
+      pages: body.pages,
+    })
+
+    try {
+      const result = await syncRunsForUser(stored, depth)
       if (result.synced > 0 || result.imported > 0) {
         invalidateOverviewCache()
       }

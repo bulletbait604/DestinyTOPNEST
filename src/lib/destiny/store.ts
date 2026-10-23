@@ -35,7 +35,7 @@ import {
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
 import { mvpCategoryFilter, mvpVotesReceivedQuery } from '@/lib/destiny/mvpVoting'
-import { recentRunsFrom, nestLaunchMongoFilter } from '@/lib/destiny/runDates'
+import { recentRunsFrom, withScoredRuns } from '@/lib/destiny/runDates'
 import type { AdminReviewDecision } from '@/lib/destiny/adminReviewDecisions'
 import { logAdminActivity } from '@/lib/destiny/adminActivityLog'
 import type {
@@ -154,7 +154,7 @@ async function loadAllRuns(): Promise<RunRecord[]> {
   const database = await db()
   return (await database
     .collection(DESTINY_COLLECTIONS.runRecords)
-    .find(nestLaunchMongoFilter())
+    .find(withScoredRuns())
     .sort({ completedAt: -1 })
     .limit(500)
     .toArray()) as unknown as RunRecord[]
@@ -200,7 +200,7 @@ export async function getRunsForUser(userId: string, limit = 25): Promise<RunRec
     const database = await db()
     const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
-      .find({ ownerUserId: userId, ...nestLaunchMongoFilter() })
+      .find(withScoredRuns({ ownerUserId: userId }))
       .sort({ completedAt: -1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
@@ -224,7 +224,7 @@ export async function getRunsForParticipant(
     }
     const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
-      .find({ $or: or, ...nestLaunchMongoFilter() })
+      .find(withScoredRuns({ $or: or }))
       .sort({ completedAt: -1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
@@ -250,12 +250,13 @@ export async function listVerifiedRunsForMembers(
     const database = await db()
     const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
-      .find({
-        verificationStatus: 'verified',
-        completed: true,
-        'teamMembers.membershipId': { $in: ids },
-        ...nestLaunchMongoFilter(),
-      })
+      .find(
+        withScoredRuns({
+          verificationStatus: 'verified',
+          completed: true,
+          'teamMembers.membershipId': { $in: ids },
+        })
+      )
       .sort({ completedAt: 1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
@@ -275,11 +276,12 @@ export async function listVerifiedFullClears(limit = 5000): Promise<{ runs: RunR
     const database = await db()
     const rows = (await database
       .collection(DESTINY_COLLECTIONS.runRecords)
-      .find({
-        verificationStatus: 'verified',
-        completed: true,
-        ...nestLaunchMongoFilter(),
-      })
+      .find(
+        withScoredRuns({
+          verificationStatus: 'verified',
+          completed: true,
+        })
+      )
       .sort({ completedAt: -1 })
       .limit(limit)
       .toArray()) as unknown as RunRecord[]
@@ -572,7 +574,7 @@ export async function getAdminRunsList(query: AdminRunsListQuery = {}): Promise<
     const database = await db()
     const limit = Math.min(Math.max(query.limit ?? 40, 1), 100)
     const offset = Math.max(query.offset ?? 0, 0)
-    const filter: Record<string, unknown> = { ...nestLaunchMongoFilter() }
+    const filter: Record<string, unknown> = {}
 
     if (query.status && query.status !== 'all') {
       filter.verificationStatus = query.status
@@ -591,10 +593,11 @@ export async function getAdminRunsList(query: AdminRunsListQuery = {}): Promise<
       ]
     }
 
+    const mongoFilter = withScoredRuns(filter)
     const collection = database.collection(DESTINY_COLLECTIONS.runRecords)
     const [runs, total] = await Promise.all([
-      collection.find(filter).sort({ completedAt: -1 }).skip(offset).limit(limit).toArray(),
-      collection.countDocuments(filter),
+      collection.find(mongoFilter).sort({ completedAt: -1 }).skip(offset).limit(limit).toArray(),
+      collection.countDocuments(mongoFilter),
     ])
 
     return { runs: (runs as unknown as RunRecord[]).map(normalizeRunRecord), total }
@@ -1059,6 +1062,21 @@ export async function getRunRecordById(id: string): Promise<RunRecord | null> {
     return doc ? (doc as unknown as RunRecord) : null
   } catch {
     return null
+  }
+}
+
+export async function getRunRecordsByPgcrIds(pgcrIds: string[]): Promise<RunRecord[]> {
+  const ids = Array.from(new Set(pgcrIds.filter(Boolean))).slice(0, 200)
+  if (!ids.length) return []
+  try {
+    const database = await db()
+    const rows = await database
+      .collection(DESTINY_COLLECTIONS.runRecords)
+      .find({ pgcrId: { $in: ids } })
+      .toArray()
+    return (rows as unknown as RunRecord[]).map(normalizeRunRecord)
+  } catch {
+    return []
   }
 }
 

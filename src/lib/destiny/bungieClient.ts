@@ -222,6 +222,18 @@ export async function getUniqueWeaponStats(
   )
 }
 
+/** Activity history path. `page` walks backward through older clears. */
+export function activityHistoryPath(
+  membershipType: number,
+  membershipId: string,
+  characterId: string,
+  mode: number,
+  count = 25,
+  page = 0
+): string {
+  return `/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=${count}&page=${page}`
+}
+
 /** Activity history for a character. */
 export async function getActivityHistory(
   membershipType: number,
@@ -229,12 +241,12 @@ export async function getActivityHistory(
   characterId: string,
   mode: number,
   count = 25,
-  accessToken?: string
+  accessToken?: string,
+  page = 0
 ) {
-  return bungieFetch(
-    `/Destiny2/${membershipType}/Account/${membershipId}/Character/${characterId}/Stats/Activities/?mode=${mode}&count=${count}`,
-    { accessToken }
-  )
+  return bungieFetch(activityHistoryPath(membershipType, membershipId, characterId, mode, count, page), {
+    accessToken,
+  })
 }
 
 /** Post-game carnage report — core for run verification. */

@@ -8,6 +8,8 @@ export type ScoreRunRow = {
   id: string
   activityName: string
   pointsAwarded?: number
+  bondPoints?: number
+  teammateCount?: number
   completedAt: string
 }
 
@@ -29,10 +31,17 @@ export function scoreBoardLines(entries: ScoreStanding[]): string[] {
 }
 
 export function recentRunLines(runs: ScoreRunRow[]): { id: string; line: string }[] {
-  return runs.slice(0, 5).map((run) => ({
-    id: run.id,
-    line: `${run.activityName} · ${run.pointsAwarded ?? 0} pts`,
-  }))
+  return runs.slice(0, 8).map((run) => {
+    const when = run.completedAt
+      ? new Date(run.completedAt).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })
+      : ''
+    const mates = run.teammateCount ?? 0
+    const bond = run.bondPoints ? ` · +${run.bondPoints} new teammates` : ''
+    return {
+      id: run.id,
+      line: `${run.activityName}${when ? ` · ${when}` : ''} · ${mates} teammates · +${run.pointsAwarded ?? 0} pts${bond}`,
+    }
+  })
 }
 
 export function scorePointsLine(input: {

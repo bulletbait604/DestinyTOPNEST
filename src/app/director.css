@@ -620,6 +620,15 @@ h1, h2, h3, h4,
 .gh-prize-line { margin: 0; color: var(--dir-gold); }
 .gh-score-points { margin: 8px 0 0; padding-left: 1.1rem; }
 .gh-score-points li { margin: 4px 0; }
+.gh-lookup { display: grid; gap: 8px; }
+.gh-lookup input { width: 100%; }
+.gh-lookup-row {
+  display: grid;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--dir-line);
+}
+.gh-lookup-row h3 { margin: 0; font-size: 1rem; }
 .gh-ask-answer { white-space: pre-wrap; line-height: 1.45; margin: 0; }
 .gh-source-pills { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
 .gh-source-pills a {
