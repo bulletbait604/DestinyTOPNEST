@@ -364,17 +364,24 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
         </ul>
       ) : null}
       <div className="gh-actions">
-        {signedIn ? (
-          <>
-            <button type="button" className="gh-btn gh-btn-primary" onClick={() => void sync(false)} disabled={busy}>
-              {busy ? 'Working…' : 'Sync Recent Runs'}
-            </button>
-            <button type="button" className="gh-btn gh-btn-ghost" onClick={() => void sync(true)} disabled={busy}>
-              Lookup & Score Previous Runs
-            </button>
-          </>
-        ) : (
-          <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
+        <button
+          type="button"
+          className="gh-btn gh-btn-primary"
+          onClick={() => (signedIn ? void sync(false) : onLogin())}
+          disabled={busy}
+        >
+          {busy ? 'Working…' : 'Sync Recent Runs'}
+        </button>
+        <button
+          type="button"
+          className="gh-btn gh-btn-ghost"
+          onClick={() => (signedIn ? void sync(true) : onLogin())}
+          disabled={busy}
+        >
+          Lookup & Score Previous Runs
+        </button>
+        {signedIn ? null : (
+          <button type="button" className="gh-btn gh-btn-ghost" onClick={onLogin}>
             Sign in with Bungie to Score Runs
           </button>
         )}
@@ -403,11 +410,14 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
           <button type="submit" className="gh-btn gh-btn-primary" disabled={busy}>
             Look up runs
           </button>
-          {signedIn ? (
-            <button type="button" className="gh-btn gh-btn-ghost" onClick={() => void lookup(true)} disabled={busy}>
-              Load My History
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="gh-btn gh-btn-ghost"
+            onClick={() => (signedIn ? void lookup(true) : onLogin())}
+            disabled={busy}
+          >
+            Load My History
+          </button>
           <button
             type="button"
             className="gh-btn gh-btn-ghost"

@@ -45,6 +45,8 @@ describe('guardian hub home', () => {
     expect(signedOut).toContain('Sync My Runs')
     expect(signedOut).toContain('Sign in with Bungie to Score Runs')
     expect(signedOut).toContain('Look up recent or previous runs')
+    expect(signedOut).toContain('Sync Recent Runs')
+    expect(signedOut).toContain('Score Previous Runs')
 
     const signedIn = renderToStaticMarkup(createElement(ScoreRuns, { signedIn: true, onLogin: () => undefined }))
     expect(signedIn).toContain('Sync Recent Runs')
