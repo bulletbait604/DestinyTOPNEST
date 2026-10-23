@@ -66,7 +66,7 @@ export function ActivityFireteamVoteList({
             <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0">
               {state.showMvpBadge ? (
                 <span className="inline-flex items-center gap-1 text-xs text-amber-200">
-                  <Crown className="w-3.5 h-3.5" /> MVP
+                  <Crown className="w-3.5 h-3.5" /> MVP ✓
                 </span>
               ) : null}
               {state.mvpButton !== 'hidden' ? (
@@ -81,7 +81,7 @@ export function ActivityFireteamVoteList({
                   ) : state.mvpButton === 'change' ? (
                     'Change MVP'
                   ) : (
-                    'Vote MVP'
+                    'Pick MVP'
                   )}
                 </button>
               ) : null}
@@ -237,7 +237,7 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
                         tone="gold"
                       />
                     ) : needsMvp ? (
-                      <StatusPill label="Vote MVP" tone="blue" />
+                      <StatusPill label="Pick MVP" tone="blue" />
                     ) : null}
                     {needsTrust ? (
                       <StatusPill label={`${run.pendingTrustCount} to rank`} tone="purple" />
@@ -261,7 +261,7 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
                     <div className="space-y-3">
                       <p className={cn('text-xs uppercase tracking-wide flex items-center gap-1.5', t.caption)}>
                         <Users className="w-3.5 h-3.5 text-violet-300" />
-                        Tags — one tap per teammate. The private rank stays hidden.
+                        Guardian rank — Sherpa, New Light, Useless, and the rest. Separate from the run MVP.
                       </p>
                       {run.guardians
                         .filter((g) => g.canReview)

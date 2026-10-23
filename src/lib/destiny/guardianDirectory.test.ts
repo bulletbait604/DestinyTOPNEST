@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { filterLeaderboardEntries } from '@/lib/destiny/boardFilters'
+import { RATE_TAGS } from '@/lib/destiny/quickRate'
 import {
   guardianBadges,
   guardianNameMatches,
@@ -52,6 +53,12 @@ describe('guardian directory', () => {
     expect(badges).toContain('10+ verified clears')
     expect(badges).toContain('2 MVPs')
     expect(badges).toContain('Sherpa')
+  })
+
+  it('keeps New Light and Useless on the rank list, away from the MVP crown', () => {
+    expect(RATE_TAGS).toContain('new_light')
+    expect(RATE_TAGS).toContain('useless')
+    expect([...(RATE_TAGS as readonly string[])]).not.toContain('mvp')
   })
 })
 

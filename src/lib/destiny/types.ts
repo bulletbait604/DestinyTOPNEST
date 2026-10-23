@@ -454,7 +454,7 @@ export interface ReputationReview {
 }
 
 /** Trust Rank commend — private Knowledge + Vibes vote for fireteam randos. */
-export type VibesLabel = 'quiet' | 'loud' | 'good' | 'ego' | 'sherpa'
+export type VibesLabel = 'quiet' | 'loud' | 'good' | 'ego' | 'sherpa' | 'new_light' | 'useless'
 
 export interface TrustReview {
   id: string
@@ -571,8 +571,8 @@ export interface SeasonPrizeRules {
 /** mvp = one crown per voter per run. kudos = optional, one per other participant. */
 export type MvpVoteCategory = 'mvp' | 'kudos'
 
-/** One-click Guardian vote. Legacy rows omit this and count as mvp. */
-export type GuardianVoteType = 'mvp' | 'new_light' | 'useless'
+/** Run crown only. New Light and Useless are guardian ranks, not MVP votes. */
+export type GuardianVoteType = 'mvp'
 
 /**
  * Fireteam commend stored by the target's Bungie membership id from the PGCR.
@@ -587,8 +587,8 @@ export interface MvpVote {
   /** Missing on legacy rows, which count as the run MVP. */
   category?: MvpVoteCategory
   /**
-   * Quick vote. Missing on legacy rows, which count as `mvp`.
-   * `new_light` and `useless` are separate from the run crown.
+   * Run crown. Missing on legacy rows, which count as `mvp`.
+   * New Light and Useless are stored as guardian rank tags, not here.
    */
   voteType?: GuardianVoteType
   /** Site user id once the target has claimed a Top Nest account. */

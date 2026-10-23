@@ -454,8 +454,6 @@ function LeaderboardRow({
           membershipId={entry.bungieMembershipId}
           displayName={entry.bungieDisplayName}
           mvpVotes={entry.mvpVotes}
-          newLightVotes={entry.newLightVotes}
-          uselessVotes={entry.uselessVotes}
         />
       ) : null}
     </div>

@@ -108,7 +108,7 @@ describe('fireteam MVP votes', () => {
     expect(ada?.canVoteFor).toBe(true)
     expect(ada?.siteUserId).toBeUndefined()
     expect(guardianVoteState(activities[0]!, ada!).mvpButton).toBe('vote')
-    expect(guardianVoteState(activities[0]!, ada!).kudosButton).toBe('give')
+    expect(guardianVoteState(activities[0]!, ada!).kudosButton).toBe('hidden')
   })
 
   it('keeps a linked guardian addressable by membership id and allows the crown to move', () => {
@@ -183,8 +183,8 @@ describe('fireteam MVP votes', () => {
     expect(activity?.kudosMembershipIds).toEqual(['bex'])
     const bex = activity?.guardians.find((guardian) => guardian.membershipId === 'bex')
     const ada = activity?.guardians.find((guardian) => guardian.membershipId === 'ada')
-    expect(guardianVoteState(activity!, bex!).kudosButton).toBe('clear')
-    expect(guardianVoteState(activity!, ada!).kudosButton).toBe('give')
+    expect(guardianVoteState(activity!, bex!).kudosButton).toBe('hidden')
+    expect(guardianVoteState(activity!, ada!).kudosButton).toBe('hidden')
     expect(kudosVoteId('voter', 'run-1', 'bex')).toBe('kudos-voter-run-1-bex')
   })
 
@@ -271,7 +271,8 @@ describe('fireteam MVP votes', () => {
     expect(parseMvpVoteCategory(undefined)).toBe('mvp')
     expect(parseMvpVoteCategory('nope')).toBeNull()
     expect(parseGuardianVoteType(undefined, 'mvp')).toBe('mvp')
-    expect(parseGuardianVoteType('new_light')).toBe('new_light')
+    expect(parseGuardianVoteType('new_light')).toBeNull()
+    expect(parseGuardianVoteType('useless')).toBeNull()
     expect(parseGuardianVoteType('nope')).toBeNull()
     expect(
       tallyVoteCounts([
@@ -280,7 +281,7 @@ describe('fireteam MVP votes', () => {
         { selectedMembershipId: '1', voteType: 'useless' },
         { selectedMembershipId: '1', category: 'kudos' },
       ]).get('1')
-    ).toEqual({ mvpVotes: 1, newLightVotes: 1, uselessVotes: 1 })
+    ).toEqual({ mvpVotes: 1, newLightVotes: 0, uselessVotes: 0 })
   })
 
   it('does not let an unclaimed placeholder satisfy a linked-account lookup', () => {
@@ -322,6 +323,36 @@ describe('fireteam MVP votes', () => {
     )
   })
 
+  it('keeps one MVP id per voter per run so a new pick replaces the crown', () => {
+    expect(mvpVoteId('voter', 'run-1')).toBe('mvp-voter-run-1')
+    expect(mvpVoteId('voter', 'run-1')).toBe(mvpVoteId('voter', 'run-1'))
+    expect(mvpVoteId('voter', 'run-1')).not.toBe(mvpVoteId('voter', 'run-2'))
+    const ada = validateMvpVoteSubmission({
+      voterId: 'voter',
+      voterMembershipId: 'me',
+      targetMembershipId: 'ada',
+      category: 'mvp',
+      runId: 'run-1',
+      runs,
+      usersByMembership: new Map(),
+    })
+    const bex = validateMvpVoteSubmission({
+      voterId: 'voter',
+      voterMembershipId: 'me',
+      targetMembershipId: 'bex',
+      category: 'mvp',
+      runId: 'run-1',
+      runs,
+      usersByMembership: new Map(),
+    })
+    expect(ada.ok).toBe(true)
+    expect(bex.ok).toBe(true)
+    if (!ada.ok || !bex.ok) return
+    expect(ada.target.membershipId).not.toBe(bex.target.membershipId)
+    expect(mvpVoteId('voter', 'run-1')).not.toContain('ada')
+    expect(mvpVoteId('voter', 'run-1')).not.toContain('bex')
+  })
+
   it('renders a vote for every other fireteam member', () => {
     const [activity] = buildActivityRunsForVote('voter', 'me', runs, [], [])
     const html = renderToStaticMarkup(
@@ -332,7 +363,7 @@ describe('fireteam MVP votes', () => {
         onVote: () => undefined,
       })
     )
-    expect(html).toContain('Vote MVP')
+    expect(html).toContain('Pick MVP')
     expect(html).not.toContain('Kudos')
     expect(html).toContain('not on Top Nest yet')
     expect(html).toContain('Ada')
