@@ -177,7 +177,7 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
   }
 
   const onTrustSubmitted = async (label: string) => {
-    setMessage(`${label} ranked — Knowledge + Vibes stay private.`)
+    setMessage(`${label} rated. The private rank stays off their profile.`)
     await load({ silent: true })
   }
 
@@ -185,7 +185,7 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
     <div className="space-y-4">
       <SectionTitle
         title="Previous Activities"
-        subtitle="Crown one MVP per run — anyone on the carnage report, even if they have not joined Top Nest. You can change it. Kudos are optional. Knowledge and Vibes stay private."
+        subtitle="Crown one MVP per run. Kudos are optional. Tags save a private rank without a long form."
         darkMode={darkMode}
       />
 
@@ -282,7 +282,7 @@ export default function PreviousActivitiesSection({ darkMode }: Props) {
                     <div className="space-y-3">
                       <p className={cn('text-xs uppercase tracking-wide flex items-center gap-1.5', t.caption)}>
                         <Users className="w-3.5 h-3.5 text-violet-300" />
-                        Knowledge + Vibes — rank every teammate (private)
+                        Tags — one tap per teammate. The private rank stays hidden.
                       </p>
                       {run.guardians
                         .filter((g) => g.canReview)

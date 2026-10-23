@@ -132,6 +132,11 @@ async function ensureDestinyIndexesOnce(): Promise<void> {
     .collection(DESTINY_COLLECTIONS.leaderboardAdjustments)
     .createIndex({ category: 1, period: 1, seasonId: 1, entryKey: 1 }, { unique: true })
   await database.collection(DESTINY_COLLECTIONS.weeklyLootIcons).createIndex({ builtAt: -1 })
+  await database.collection(DESTINY_COLLECTIONS.guardianRatings).createIndex(
+    { voterId: 1, targetMembershipId: 1 },
+    { unique: true, name: 'one_rating_per_voter_guardian' }
+  )
+  await database.collection(DESTINY_COLLECTIONS.guardianRatings).createIndex({ targetMembershipId: 1, updatedAt: -1 })
 }
 
 /** MVP crowns used for sherpa credit. Kudos are excluded so they cannot crowd out crowns. */

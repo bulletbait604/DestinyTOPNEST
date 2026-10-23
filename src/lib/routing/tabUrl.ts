@@ -116,14 +116,18 @@ export function navigateProfileSection(view: ProfileNavView) {
 }
 
 /** Update URL and notify the shell to switch tabs (e.g. header Settings → Admin). */
+function onDedicatedHubPage(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.location.pathname === '/ask' || window.location.pathname === '/rate'
+}
+
 export function navigateDestinyTab(tab: DestinyTopNestTab) {
   if (typeof window !== 'undefined') {
-    const onAsk = window.location.pathname === '/ask'
-    if (tab === 'ask' && !onAsk) {
+    if (tab === 'ask' && window.location.pathname !== '/ask') {
       window.location.assign('/ask')
       return
     }
-    if (onAsk && tab !== 'ask') {
+    if (onDedicatedHubPage() && tab !== 'ask') {
       const params = new URLSearchParams()
       if (tab !== 'overview') params.set('tab', tab)
       const qs = params.toString()

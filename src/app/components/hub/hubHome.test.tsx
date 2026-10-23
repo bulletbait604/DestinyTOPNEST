@@ -23,6 +23,7 @@ describe('guardian hub home', () => {
     expect(html).toContain('Guardian Hub')
     expect(html).toContain('Find your fireteam')
     expect(html).toContain('Sign in with Bungie')
+    expect(html).toContain('Rate a Guardian')
     expect(html).toContain('gh-rotation')
     expect(html).toContain('Featured raids')
     expect(html).toContain('Top guardians')

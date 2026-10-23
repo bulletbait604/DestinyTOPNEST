@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState, type ReactNode } from 'react'
 import { GEAR_NAV, isGearTab, MORE_NAV, PRIMARY_NAV } from '@/app/components/hub/clarity'
+import { QuickRateHost } from '@/app/components/hub/QuickRate'
 import { DirectorIcon } from '@/app/components/hub/directorIcons'
 import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
@@ -51,10 +52,12 @@ export default function HubChrome({
   account?: ReactNode
 }) {
   const [tab, setTab] = useState<DestinyTopNestTab>('overview')
+  const [onRate, setOnRate] = useState(false)
   const [query, setQuery] = useState('')
 
   useEffect(() => {
     const read = () => {
+      setOnRate(window.location.pathname === '/rate')
       if (window.location.pathname === '/ask') {
         setTab('ask')
         return
@@ -118,6 +121,9 @@ export default function HubChrome({
           <button type="submit">Search</button>
         </form>
         <div className="gh-top-actions">
+          <a className="gh-btn gh-btn-ghost" href="/rate" aria-current={onRate ? 'page' : undefined}>
+            Rate
+          </a>
           <details className="gh-more">
             <summary>More</summary>
             <div className="gh-more-menu">
@@ -192,6 +198,7 @@ export default function HubChrome({
       <main id="hub-main" className="gh-main">
         {children}
       </main>
+      <QuickRateHost />
       <footer className="gh-footer">
         Fan-made. Not affiliated with Bungie. <a href="/rules">Prize rules</a>
       </footer>

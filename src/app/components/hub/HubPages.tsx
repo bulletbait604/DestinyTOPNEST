@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import type { PublicFeaturedBuild, PublicHubSnapshot, PublicTopGuardian } from '@/lib/destiny/publicHub'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
+import { RateButton } from '@/app/components/hub/QuickRate'
 import BoardsHub from '@/app/components/hub/BoardsHub'
 import AskGuide from '@/app/components/hub/AskGuide'
 import { HowItWorks, NextStep } from '@/app/components/hub/clarity'
@@ -206,6 +207,9 @@ export function HubHome({
             <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
               Sign in with Bungie
             </button>
+            <a className="gh-btn gh-btn-ghost" href="/rate">
+              Rate a Guardian
+            </a>
           </div>
         </div>
       </section>
@@ -262,10 +266,11 @@ function TopGuardianList({ rows }: { rows: PublicTopGuardian[] }) {
   return (
     <ul className="gh-list">
       {rows.map((row) => (
-        <li key={`${row.board}-${row.rank}-${row.displayName}`}>
+        <li key={`${row.board}-${row.rank}-${row.displayName}`} className="gh-row-with-rate">
           <button type="button" className="gh-text-btn" onClick={() => navigateGuardianSearch(row.displayName)}>
             #{row.rank} {row.displayName}
           </button>
+          <RateButton displayName={row.displayName} />
           <span className="gh-muted">
             {row.boardLabel} · {row.points} pts
           </span>

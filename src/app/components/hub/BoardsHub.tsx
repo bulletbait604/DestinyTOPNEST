@@ -7,6 +7,7 @@ import { PageHeader } from '@/app/components/hub/PageHeader'
 import type { LeaderboardCategory, LeaderboardEntry, LeaderboardPeriod } from '@/lib/destiny/types'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
+import { RateButton } from '@/app/components/hub/QuickRate'
 
 const CATEGORIES: { id: LeaderboardCategory; label: string }[] = [
   { id: 'raid', label: 'Raid' },
@@ -157,21 +158,26 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
         <ol className="gh-board">
           {visible.map((entry) => (
             <li key={`${entry.userId}-${entry.rank}`}>
-              <button type="button" className="gh-board-row" onClick={() => navigateGuardianSearch(entry.bungieDisplayName)}>
-                <span className="gh-rank">#{entry.rank}</span>
-                <span>
-                  <strong>{entry.bungieDisplayName}</strong>
-                  <small>
-                    {entry.platform}
-                    {entry.clanTag ? ` · [${entry.clanTag}]` : ''}
-                    {entry.fastestActivityName ? ` · ${entry.fastestActivityName}` : ''}
-                  </small>
-                </span>
-                <span className="gh-points">
-                  {entry.points} pts
-                  <small>{entry.verifiedClears} clears</small>
-                </span>
-              </button>
+              <div className="gh-board-row">
+                <button type="button" className="gh-board-main" onClick={() => navigateGuardianSearch(entry.bungieDisplayName)}>
+                  <span className="gh-rank">#{entry.rank}</span>
+                  <span>
+                    <strong>{entry.bungieDisplayName}</strong>
+                    <small>
+                      {entry.platform}
+                      {entry.clanTag ? ` · [${entry.clanTag}]` : ''}
+                      {entry.fastestActivityName ? ` · ${entry.fastestActivityName}` : ''}
+                    </small>
+                  </span>
+                  <span className="gh-points">
+                    {entry.points} pts
+                    <small>{entry.verifiedClears} clears</small>
+                  </span>
+                </button>
+                {entry.isSquadEntry ? null : (
+                  <RateButton membershipId={entry.bungieMembershipId} displayName={entry.bungieDisplayName} />
+                )}
+              </div>
             </li>
           ))}
         </ol>

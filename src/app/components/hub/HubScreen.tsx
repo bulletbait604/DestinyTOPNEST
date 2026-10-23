@@ -9,13 +9,14 @@ import DestinyTopNestApp from '@/app/components/DestinyTopNestApp'
 import HubChrome from '@/app/components/hub/HubChrome'
 import HubErrorBoundary from '@/app/components/hub/HubErrorBoundary'
 import AskGuide from '@/app/components/hub/AskGuide'
+import { RatePage } from '@/app/components/hub/QuickRate'
 import PublicHub from '@/app/components/hub/PublicHub'
 import SignedInHubFrame from '@/app/components/hub/SignedInHubFrame'
 import SiteBackdrop from '@/app/components/SiteBackdrop'
 import { useAppSession } from '@/hooks/useAppSession'
 import { stripUrlParams, navigateDestinyTab } from '@/lib/routing/tabUrl'
 
-export default function HubScreen({ view }: { view: 'home' | 'ask' }) {
+export default function HubScreen({ view }: { view: 'home' | 'ask' | 'rate' }) {
   const { mounted, user, loading, login, logout, refresh, isAdmin, isOwner } = useAppSession()
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginPending, setLoginPending] = useState(false)
@@ -107,7 +108,11 @@ export default function HubScreen({ view }: { view: 'home' | 'ask' }) {
               {loginError}
             </p>
           ) : null}
-          <DestinyTopNestApp embedded darkMode isAdmin={isAdmin} isOwner={isOwner} userId={user.id} />
+          {view === 'rate' ? (
+            <RatePage />
+          ) : (
+            <DestinyTopNestApp embedded darkMode isAdmin={isAdmin} isOwner={isOwner} userId={user.id} />
+          )}
         </SignedInHubFrame>
       </SiteBackdrop>
     )
@@ -122,7 +127,7 @@ export default function HubScreen({ view }: { view: 'home' | 'ask' }) {
           </p>
         ) : null}
         <HubErrorBoundary label="public hub">
-          {view === 'ask' ? <AskGuide /> : <PublicHub onLogin={handleLogin} />}
+          {view === 'ask' ? <AskGuide /> : view === 'rate' ? <RatePage /> : <PublicHub onLogin={handleLogin} />}
         </HubErrorBoundary>
       </HubChrome>
     </SiteBackdrop>

@@ -55,7 +55,7 @@ export default function FireteamReviewSection({ darkMode, linked = true }: Props
           <Users className="w-4 h-4 text-sky-400/80" />
           <SectionTitle
             title="Trust Rank commends"
-            subtitle="Vote Knowledge + Vibes for randos in your fireteam — like D2 commendations"
+            subtitle="Tap tags for teammates on a verified clear. The private rank stays off the public profile."
             darkMode={darkMode}
           />
         </div>

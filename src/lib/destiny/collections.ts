@@ -34,4 +34,5 @@ export const DESTINY_COLLECTIONS = {
   characterSnapshots: 'destiny_character_snapshots',
   askCache: 'destiny_ask_cache',
   askFeedback: 'destiny_ask_feedback',
+  guardianRatings: 'destiny_guardian_ratings',
 } as const

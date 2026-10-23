@@ -43,8 +43,8 @@ export default function PendingVotePrompt({ darkMode, pending, onGoToActivities,
 
         <p className={cn('text-sm leading-relaxed mb-4', t.body)}>
           You have verified activities that still need your input. Head to{' '}
-          <span className="text-amber-200 font-medium">Previous Activities</span> to pick an MVP and
-          rank each fireteam member on Knowledge + Vibes (trust ranks stay private).
+          <span className="text-amber-200 font-medium">Previous Activities</span> to crown an MVP and
+          tap tags for each teammate. Private ranks stay off the public profile.
         </p>
 
         <ul className="space-y-2 mb-5">
@@ -60,8 +60,8 @@ export default function PendingVotePrompt({ darkMode, pending, onGoToActivities,
             <li className="flex items-center gap-2 rounded-lg bg-black/30 px-3 py-2 ring-1 ring-white/[0.06]">
               <Users className="w-4 h-4 text-violet-300 shrink-0" />
               <span className={cn('text-sm', t.body)}>
-                {pending.trustReviewCount} fireteam commend{pending.trustReviewCount === 1 ? '' : 's'}{' '}
-                pending (Knowledge + Vibes)
+                {pending.trustReviewCount} fireteam rating{pending.trustReviewCount === 1 ? '' : 's'}{' '}
+                still open
               </span>
             </li>
           ) : null}

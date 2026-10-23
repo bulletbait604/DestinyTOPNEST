@@ -106,6 +106,9 @@ export default function ProfilePanel({
       <p className={cn('text-[11px] -mt-2', t.muted)}>
         MVP votes and kudos are stored on your Bungie membership, including ones received before you linked Top Nest.
       </p>
+      <a className="gh-btn gh-btn-ghost" href="/rate">
+        Rate a Guardian
+      </a>
 
       <SegmentedControl
         label="Profile"
