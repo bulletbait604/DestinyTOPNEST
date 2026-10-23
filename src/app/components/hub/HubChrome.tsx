@@ -1,27 +1,14 @@
 'use client'
 
-import { FormEvent, useEffect, useState, type ReactNode } from 'react'
-import { GEAR_NAV, isGearTab, MAIN_NAV, MORE_NAV } from '@/app/components/hub/clarity'
+import { FormEvent, useState, type ReactNode } from 'react'
+import { MAIN_NAV, MORE_NAV } from '@/app/components/hub/clarity'
+import { isBuildsPath, isMorePath } from '@/lib/destiny/pageCatalog'
 import { QuickRateHost } from '@/app/components/hub/QuickRate'
 import { DirectorIcon } from '@/app/components/hub/directorIcons'
 import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
 import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
 import { usePathname } from 'next/navigation'
-import type { DestinyTopNestTab } from '@/lib/destiny/types'
-import {
-  DESTINY_PROFILE_NAV_EVENT,
-  DESTINY_TAB_NAV_EVENT,
-  isDestinyTopNestTab,
-  navigateDestinyTab,
-  navigateGuardianSearch,
-  navigateProfileSection,
-  parseTabFromSearch,
-} from '@/lib/routing/tabUrl'
-
-function visibleTab(tab: DestinyTopNestTab): DestinyTopNestTab {
-  if (tab === 'builds' || tab === 'loadouts') return 'loadouts'
-  return tab
-}
+import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
 
 export default function HubChrome({
   children,
@@ -37,39 +24,7 @@ export default function HubChrome({
   account?: ReactNode
 }) {
   const pathname = usePathname() || '/'
-  const [tab, setTab] = useState<DestinyTopNestTab>('overview')
   const [query, setQuery] = useState('')
-
-  useEffect(() => {
-    const read = () => {
-      if (window.location.pathname === '/ask') {
-        setTab('ask')
-        return
-      }
-      setTab(visibleTab(parseTabFromSearch(window.location.search)))
-    }
-    read()
-    const onTab = (event: Event) => {
-      const next = (event as CustomEvent<DestinyTopNestTab>).detail
-      if (next && isDestinyTopNestTab(next)) setTab(visibleTab(next))
-    }
-    const onProfile = () => setTab('profile')
-    window.addEventListener(DESTINY_TAB_NAV_EVENT, onTab)
-    window.addEventListener(DESTINY_PROFILE_NAV_EVENT, onProfile)
-    window.addEventListener('popstate', read)
-    return () => {
-      window.removeEventListener(DESTINY_TAB_NAV_EVENT, onTab)
-      window.removeEventListener(DESTINY_PROFILE_NAV_EVENT, onProfile)
-      window.removeEventListener('popstate', read)
-    }
-  }, [])
-
-  const go = (tabId: DestinyTopNestTab) => {
-    document.querySelectorAll('details.gh-more, details.gh-nav-group').forEach((node) => {
-      if (node instanceof HTMLDetailsElement) node.open = false
-    })
-    navigateDestinyTab(tabId)
-  }
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault()
@@ -108,24 +63,12 @@ export default function HubChrome({
           <details className="gh-more">
             <summary>More</summary>
             <div className="gh-more-menu">
-              {GEAR_NAV.map((item) => (
-                <button key={item.id} type="button" onClick={() => go(item.id)}>
-                  {item.label}
-                  <small>{item.hint}</small>
-                </button>
-              ))}
               {MORE_NAV.map((item) => (
-                <button key={item.id} type="button" onClick={() => go(item.id)}>
+                <a key={item.href} href={item.href}>
                   {item.label}
                   <small>{item.hint}</small>
-                </button>
+                </a>
               ))}
-              {signedIn ? (
-                <button type="button" onClick={() => navigateProfileSection('passport')}>
-                  Your record
-                  <small>Stamps from verified clears.</small>
-                </button>
-              ) : null}
             </div>
           </details>
           {signedIn ? (
@@ -139,7 +82,7 @@ export default function HubChrome({
       </header>
       <nav className="gh-nav" aria-label="TopNest">
         {MAIN_NAV.map((item) => {
-          const current = item.href === '/' ? pathname === '/' : pathname === item.href
+          const current = item.href === '/' ? pathname === '/' : item.href === '/builds' ? isBuildsPath(pathname) : pathname === item.href
           return (
             <a key={item.href} className="gh-nav-link" href={item.href} aria-current={current ? 'page' : undefined}>
               <DirectorIcon name={item.icon} />
@@ -148,21 +91,15 @@ export default function HubChrome({
           )
         })}
         <details className="gh-nav-group">
-          <summary className="gh-nav-link" aria-current={isGearTab(tab) || MORE_NAV.some((item) => item.id === tab) ? 'page' : undefined}>
+          <summary className="gh-nav-link" aria-current={isMorePath(pathname) ? 'page' : undefined}>
             <span>More</span>
           </summary>
           <div className="gh-nav-menu">
-            {GEAR_NAV.map((item) => (
-              <button key={item.id} type="button" onClick={() => go(item.id)}>
-                {item.label}
-                <small>{item.hint}</small>
-              </button>
-            ))}
             {MORE_NAV.map((item) => (
-              <button key={item.id} type="button" onClick={() => go(item.id)}>
+              <a key={item.href} href={item.href} aria-current={pathname === item.href ? 'page' : undefined}>
                 {item.label}
                 <small>{item.hint}</small>
-              </button>
+              </a>
             ))}
           </div>
         </details>
@@ -180,11 +117,11 @@ export default function HubChrome({
       </footer>
       <nav className="gh-bottom-nav" aria-label="TopNest mobile">
         {MAIN_NAV.map((item) => {
-          const current = item.href === '/' ? pathname === '/' : pathname === item.href
+          const current = item.href === '/' ? pathname === '/' : item.href === '/builds' ? isBuildsPath(pathname) : pathname === item.href
           return (
             <a key={item.href} href={item.href} aria-current={current ? 'page' : undefined}>
               <DirectorIcon name={item.icon} />
-              <span>{item.label}</span>
+              <span>{item.short}</span>
             </a>
           )
         })}

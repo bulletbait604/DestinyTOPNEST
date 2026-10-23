@@ -61,7 +61,7 @@ export function SignInGate({
   )
 }
 
-function BoardState({
+export function BoardState({
   loading,
   error,
   onRetry,
@@ -152,6 +152,7 @@ export function SherpaList({ snapshot }: { snapshot: PublicHubSnapshot }) {
           </span>
           <span className="gh-muted">
             {row.title} · {row.points} pts · {row.guidedClears} guided
+            {row.learnerMvps ? ` · ${row.learnerMvps} MVP` : ''}
           </span>
         </li>
       ))}
@@ -711,14 +712,16 @@ export function HubContracts() {
   )
 }
 
-export function HubSherpas() {
+export function HubSherpas({ bare = false }: { bare?: boolean }) {
   const { snapshot, loading, error } = usePublicHub()
   return (
     <section className="gh-stack">
-      <PageHeader
-        title="Teachers"
-        subtitle="A sherpa already cleared the activity and guided someone through their first clear."
-      />
+      {bare ? null : (
+        <PageHeader
+          title="Teachers"
+          subtitle="A sherpa already cleared the activity and guided someone through their first clear."
+        />
+      )}
       <BoardState loading={loading} error={error}>
         {snapshot ? (
           <div className="gh-card">
@@ -730,14 +733,16 @@ export function HubSherpas() {
   )
 }
 
-export function HubClans() {
+export function HubClans({ bare = false }: { bare?: boolean }) {
   const { snapshot, loading, error } = usePublicHub()
   return (
     <section className="gh-stack">
-      <PageHeader
-        title="Clans"
-        subtitle="A clan scores when two or more clanmates finish a verified clear together."
-      />
+      {bare ? null : (
+        <PageHeader
+          title="Clans"
+          subtitle="A clan scores when two or more clanmates finish a verified clear together."
+        />
+      )}
       <BoardState loading={loading} error={error}>
         {snapshot ? (
           <div className="gh-card">

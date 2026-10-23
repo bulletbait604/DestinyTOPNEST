@@ -1,4 +1,5 @@
-﻿import type { DestinyTopNestTab } from '@/lib/destiny/types'
+﻿import { routeForTab } from '@/lib/destiny/pageCatalog'
+import type { DestinyTopNestTab } from '@/lib/destiny/types'
 
 const DESTINY_TABS = new Set<DestinyTopNestTab>([
   'overview',
@@ -100,108 +101,69 @@ export function parseProfileView(search: string): ProfileNavView | undefined {
   return undefined
 }
 
-/** Switch to Profile and a specific sub-section (Guardian, Previous Activities, Loadouts). */
+/** Switch to Profile and a specific sub-section (Guardian, Passport, Loadouts). */
 export function navigateProfileSection(view: ProfileNavView) {
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/builds')) {
-    const params = new URLSearchParams()
-    params.set('tab', 'profile')
-    if (view !== 'guardian') params.set('profileView', view)
-    window.location.assign(`/?${params.toString()}`)
+  if (typeof window === 'undefined') return
+  if (view === 'passport') {
+    window.location.assign('/passport')
     return
   }
-  syncTabToUrl('profile')
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(DESTINY_PROFILE_NAV_EVENT, { detail: view }))
+  if (view === 'loadouts') {
+    window.location.assign('/builds?section=mine')
+    return
   }
+  window.location.assign('/profile')
 }
 
-/** Update URL and notify the shell to switch tabs (e.g. header Settings → Admin). */
-function onDedicatedHubPage(): boolean {
-  if (typeof window === 'undefined') return false
-  const path = window.location.pathname
-  return path === '/ask' || path === '/rate' || path === '/score' || path === '/boards'
-}
-
+/** Switch the shell, or open the dedicated page for builds, community, weekly, and profile. */
 export function navigateDestinyTab(tab: DestinyTopNestTab) {
-  if (typeof window !== 'undefined') {
-    if (tab === 'ask' && window.location.pathname !== '/ask') {
-      window.location.assign('/ask')
+  if (typeof window === 'undefined') return
+  const target = routeForTab(tab)
+  if (target) {
+    const here = `${window.location.pathname}${window.location.search}`
+    if (here !== target) {
+      window.location.assign(target)
       return
     }
-    if (tab === 'leaderboards' && window.location.pathname !== '/boards') {
-      window.location.assign('/boards')
-      return
-    }
-    if (tab === 'overview' && window.location.pathname !== '/') {
-      window.location.assign('/')
-      return
-    }
-    if (onDedicatedHubPage() && tab !== 'ask') {
-      const params = new URLSearchParams()
-      if (tab !== 'overview') params.set('tab', tab)
-      const qs = params.toString()
-      window.location.assign(qs ? `/?${qs}` : '/')
-      return
-    }
+    window.dispatchEvent(new CustomEvent(DESTINY_TAB_NAV_EVENT, { detail: tab }))
+    return
   }
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/builds')) {
-    const params = new URLSearchParams()
-    if (tab !== 'overview') params.set('tab', tab)
-    const qs = params.toString()
-    window.location.assign(qs ? `/?${qs}` : '/')
+  if (window.location.pathname !== '/') {
+    window.location.assign(`/?tab=${tab}`)
     return
   }
   syncTabToUrl(tab)
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(DESTINY_TAB_NAV_EVENT, { detail: tab }))
-  }
+  window.dispatchEvent(new CustomEvent(DESTINY_TAB_NAV_EVENT, { detail: tab }))
 }
 
-/** Open player-shared builds inside the existing Builds tab. */
+/** Open player-shared builds. */
 export function navigateSharedBuilds() {
   if (typeof window === 'undefined') return
-  if (window.location.pathname.startsWith('/builds')) {
-    window.location.assign('/?tab=loadouts&section=shared')
-    return
-  }
-  const params = new URLSearchParams(window.location.search)
-  params.delete('destiny')
-  params.set('tab', 'loadouts')
-  params.set('section', 'shared')
-  const qs = params.toString()
-  window.history.pushState(null, '', `${window.location.pathname}?${qs}`)
-  window.dispatchEvent(new CustomEvent(DESTINY_TAB_NAV_EVENT, { detail: 'loadouts' }))
+  window.location.assign('/builds')
 }
 
 export const GUARDIAN_SEARCH_EVENT = 'destiny-topnest:guardian-search'
 
-function assignOrPush(next: string, tab: DestinyTopNestTab) {
+function assignPeople(next: string) {
   if (typeof window === 'undefined') return
-  if (window.location.pathname.startsWith('/builds')) {
-    window.location.assign(next)
-    return
-  }
-  window.history.pushState(null, '', next)
-  window.dispatchEvent(new CustomEvent(DESTINY_TAB_NAV_EVENT, { detail: tab }))
-  window.dispatchEvent(new CustomEvent(GUARDIAN_SEARCH_EVENT))
+  window.location.assign(next)
 }
 
 /** Open the guardian directory, optionally with a Bungie name query. */
 export function navigateGuardianSearch(query: string) {
   const params = new URLSearchParams()
-  params.set('tab', 'guardians')
   const q = query.trim()
   if (q) params.set('q', q)
-  assignOrPush(`/?${params.toString()}`, 'guardians')
+  const qs = params.toString()
+  assignPeople(qs ? `/people?${qs}` : '/people')
 }
 
 /** Open one public guardian profile by Bungie membership id. */
 export function navigateGuardianProfile(membershipId: string, membershipType?: number) {
   const params = new URLSearchParams()
-  params.set('tab', 'guardians')
   params.set('guardian', membershipId)
   if (membershipType) params.set('membershipType', String(membershipType))
-  assignOrPush(`/?${params.toString()}`, 'guardians')
+  assignPeople(`/people?${params.toString()}`)
 }
 
 export function defaultBungieReturnPath(): string {

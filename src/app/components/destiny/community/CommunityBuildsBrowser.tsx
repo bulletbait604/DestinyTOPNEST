@@ -16,7 +16,6 @@ import {
 } from '@/lib/destiny/communityBuildModel'
 import type { DestinyCharacterClass } from '@/lib/destiny/types'
 import CommunityBuildForm from '@/app/components/destiny/community/CommunityBuildForm'
-import InGameLoadoutShare from '@/app/components/destiny/community/InGameLoadoutShare'
 import { EmptyBlock, GlassCard, ItemIcon, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { destinyPrimaryBtn, destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
@@ -46,6 +45,11 @@ function BuildCard({ build, darkMode }: { build: CommunityBuildPublic; darkMode:
         {build.exoticArmor || 'Exotic armor is on the source page'}
         {build.exoticWeapon ? ` · ${build.exoticWeapon}` : ''}
       </p>
+      {build.aspects.length || build.fragments.length ? (
+        <p className={cn('text-xs', t.muted)}>
+          {build.aspects.concat(build.fragments).slice(0, 4).map((plug) => plug.name).join(' · ')}
+        </p>
+      ) : null}
       <div className="flex flex-wrap gap-1.5">
         {featured ? (
           <span className="rounded-md border border-[var(--dir-gold-dim,rgba(227,197,122,0.45))] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--dir-gold,#e3c57a)]">
@@ -68,6 +72,7 @@ function BuildCard({ build, darkMode }: { build: CommunityBuildPublic; darkMode:
           </>
         )}
       </p>
+      <p className={cn('text-xs', t.caption)}>Inspect</p>
     </Link>
   )
 }
@@ -103,7 +108,6 @@ export default function CommunityBuildsBrowser({
   const [scope, setScope] = useState<'public' | 'mine' | 'saved'>('public')
   const [offset, setOffset] = useState(0)
   const [composing, setComposing] = useState(false)
-  const [listVersion, setListVersion] = useState(0)
   const limit = 12
 
   useEffect(() => {
@@ -155,7 +159,7 @@ export default function CommunityBuildsBrowser({
     })()
 
     return () => controller.abort()
-  }, [debouncedQ, debouncedSubclass, characterClass, tag, stat, sort, scope, offset, listVersion])
+  }, [debouncedQ, debouncedSubclass, characterClass, tag, stat, sort, scope, offset])
 
   async function shareBuild(content: CommunityBuildContent) {
     const res = await fetch('/api/destiny/community-builds', {
@@ -171,12 +175,6 @@ export default function CommunityBuildsBrowser({
 
   return (
     <div className="space-y-4">
-      <InGameLoadoutShare
-        darkMode={darkMode}
-        signedIn={signedIn}
-        onLogin={onLogin}
-        onPublished={() => setListVersion((current) => current + 1)}
-      />
       <GlassCard darkMode={darkMode}>
         <SectionTitle
           title="Shared builds"

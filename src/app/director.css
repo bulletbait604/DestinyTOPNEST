@@ -207,12 +207,15 @@ h1, h2, h3, h4,
   box-shadow: none;
 }
 .gh-nav-menu button,
-.gh-more-menu button {
+.gh-nav-menu a,
+.gh-more-menu button,
+.gh-more-menu a {
   border-radius: 0;
   color: var(--dir-ink);
   font-family: 'Source Sans 3', sans-serif;
   letter-spacing: 0;
   text-transform: none;
+  text-decoration: none;
 }
 .gh-nav-menu small,
 .gh-more-menu small { color: var(--dir-muted); font-size: 0.92rem; }
@@ -889,7 +892,7 @@ h1, h2, h3, h4,
   .gh-nav { display: none; }
   .gh-bottom-nav {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     position: fixed;
     left: 0;
     right: 0;
@@ -910,10 +913,10 @@ h1, h2, h3, h4,
     align-content: center;
     gap: 0.15rem;
     font-family: Rajdhani, sans-serif;
-    font-size: 0.58rem;
+    font-size: 0.52rem;
     text-decoration: none;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
   }
   .gh-bottom-nav a[aria-current='page'],

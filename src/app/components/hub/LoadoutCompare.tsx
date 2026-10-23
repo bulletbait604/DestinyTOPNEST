@@ -31,7 +31,7 @@ async function loadBuilds(q: string, characterClass: string, tag: string, subcla
   return json.builds ?? []
 }
 
-export default function LoadoutCompare() {
+export default function LoadoutCompare({ bare = false }: { bare?: boolean }) {
   const [q, setQ] = useState('')
   const [characterClass, setCharacterClass] = useState<DestinyCharacterClass | 'all'>('all')
   const [tag, setTag] = useState<CommunityActivityTag | 'all'>('all')
@@ -61,13 +61,15 @@ export default function LoadoutCompare() {
   const rows = left && right ? compareLoadoutSides(left, right) : []
 
   return (
-    <section className="gh-stack" aria-labelledby="gh-compare-title">
-      <PageHeader
-        kicker="Loadouts"
-        title="Compare"
-        subtitle="Two builds, side by side."
-        titleId="gh-compare-title"
-      />
+    <section className="gh-stack" aria-labelledby={bare ? undefined : 'gh-compare-title'} aria-label={bare ? 'Compare' : undefined}>
+      {bare ? null : (
+        <PageHeader
+          kicker="Loadouts"
+          title="Compare"
+          subtitle="Two builds, side by side."
+          titleId="gh-compare-title"
+        />
+      )}
       <div className="gh-segments" role="tablist" aria-label="Class">
         <div className="gh-tabs">
           <button

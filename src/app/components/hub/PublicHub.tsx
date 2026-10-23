@@ -19,10 +19,17 @@ import {
 } from '@/app/components/hub/HubPages'
 import SeasonRulesPanel from '@/app/components/nest/SeasonRulesPanel'
 import type { DestinyTopNestTab } from '@/lib/destiny/types'
+import { routeForTab } from '@/lib/destiny/pageCatalog'
 import { DESTINY_TAB_NAV_EVENT, isDestinyTopNestTab, parseTabFromSearch } from '@/lib/routing/tabUrl'
 
 export default function PublicHub({ onLogin }: { onLogin: () => void }) {
   const [tab, setTab] = useState<DestinyTopNestTab>('overview')
+
+  useEffect(() => {
+    if (window.location.pathname !== '/') return
+    const target = routeForTab(parseTabFromSearch(window.location.search))
+    if (target && target !== '/') window.location.replace(target)
+  }, [])
 
   useEffect(() => {
     const read = () => {

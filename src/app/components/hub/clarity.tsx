@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { DestinyTopNestTab } from '@/lib/destiny/types'
+import { MAIN_NAV, MORE_NAV, isGearTab, navHint } from '@/lib/destiny/pageCatalog'
 import { navigateDestinyTab } from '@/lib/routing/tabUrl'
+
+export { MAIN_NAV, MORE_NAV, isGearTab, navHint }
 
 export const GUIDE_STORAGE_KEY = 'topnest-guide-dismissed'
 
@@ -36,56 +38,6 @@ export const GLOSSARY = [
     meaning: 'A curated loadout from a build site, with a link to the source. It is not a player post.',
   },
 ] as const
-
-export const MAIN_NAV: { href: string; label: string; icon: 'home' | 'play' | 'people' | 'boards' | 'ask' }[] = [
-  { href: '/', label: 'Home', icon: 'home' },
-  { href: '/score', label: 'Score a Run', icon: 'play' },
-  { href: '/rate', label: 'Vote MVP', icon: 'people' },
-  { href: '/boards', label: 'Leaderboards', icon: 'boards' },
-  { href: '/ask', label: 'Ask AI', icon: 'ask' },
-]
-
-export const PRIMARY_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
-  { id: 'overview', label: 'Home', hint: 'Score a run, vote MVP, and see how TopNest works.' },
-  { id: 'leaderboards', label: 'Leaderboards', hint: 'Season rankings. Leaders can win a 3D print.' },
-  { id: 'ask', label: 'Ask AI', hint: 'Current step-by-step Destiny answers.' },
-]
-
-export const GEAR_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
-  { id: 'loadouts', label: 'Shared builds', hint: 'Featured guides from build sites, plus gear players post.' },
-  { id: 'compare', label: 'Compare', hint: 'Two builds side by side.' },
-  { id: 'lookup', label: 'Find a build', hint: 'Search builds or the gear someone has equipped.' },
-  { id: 'quests', label: 'Quests', hint: 'Quests, pursuits, and catalysts.' },
-]
-
-export const MORE_NAV: { id: DestinyTopNestTab; label: string; hint: string }[] = [
-  { id: 'fireteam', label: 'Find a fireteam', hint: 'Open raids and dungeons you can join.' },
-  { id: 'guardians', label: 'People', hint: 'Find a Guardian and vote MVP, New Light, or Useless.' },
-  { id: 'contracts', label: 'Weekly goals', hint: 'Three goals that reset Tuesday. They do not change board points.' },
-  { id: 'sherpas', label: 'Teachers', hint: 'Sherpas: players who guided a first clear.' },
-  { id: 'clans', label: 'Clans', hint: 'Standings when clanmates clear together.' },
-  { id: 'events', label: 'Events', hint: 'Scheduled community sessions.' },
-  { id: 'season', label: 'Prize rules', hint: 'The Season Hall of Fame, and who can win the 3D print or Steam card.' },
-]
-
-const GEAR_TABS = new Set<DestinyTopNestTab>(['loadouts', 'builds', 'compare', 'lookup', 'quests'])
-
-export function isGearTab(tab: DestinyTopNestTab): boolean {
-  return GEAR_TABS.has(tab)
-}
-
-export function navHint(tab: DestinyTopNestTab): string {
-  if (tab === 'builds') return GEAR_NAV[0].hint
-  const gear = GEAR_NAV.find((item) => item.id === tab)
-  if (gear) return gear.hint
-  const primary = PRIMARY_NAV.find((item) => item.id === tab)
-  if (primary) return primary.hint
-  const more = MORE_NAV.find((item) => item.id === tab)
-  if (more) return more.hint
-  if (tab === 'ask') return 'Step-by-step answers with source links.'
-  if (tab === 'profile') return 'Your Guardian, stamps, and weekly goals after you sign in.'
-  return 'TopNest helps you play with new friends and climb the season boards.'
-}
 
 type GuideStorage = {
   getItem: (key: string) => string | null
