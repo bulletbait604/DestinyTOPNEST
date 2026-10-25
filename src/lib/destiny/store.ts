@@ -926,7 +926,8 @@ function isDuplicateKeyError(error: unknown): boolean {
 
 function voteWrite(vote: MvpVote): { $set: Record<string, unknown>; $setOnInsert: { createdAt: string }; $unset?: { selectedUserId: '' } } {
   const now = vote.updatedAt ?? new Date().toISOString()
-  const labeled = vote.voteType === 'new_light' || vote.voteType === 'useless'
+  const kind = vote.voteType as string | undefined
+  const labeled = kind === 'new_light' || kind === 'useless'
   const set: Record<string, unknown> = {
     id: vote.id,
     runId: vote.runId,
@@ -950,7 +951,8 @@ function voteWrite(vote: MvpVote): { $set: Record<string, unknown>; $setOnInsert
 export async function saveMvpVote(vote: MvpVote): Promise<void> {
   const database = await db()
   const collection = database.collection(DESTINY_COLLECTIONS.mvpVotes)
-  const labeled = vote.voteType === 'new_light' || vote.voteType === 'useless'
+  const kind = vote.voteType as string | undefined
+  const labeled = kind === 'new_light' || kind === 'useless'
   const category = labeled ? undefined : (vote.category ?? 'mvp')
   const filter = labeled
     ? {

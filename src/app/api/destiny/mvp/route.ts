@@ -7,9 +7,7 @@ import { usersByMembershipMap } from '@/lib/destiny/fireteamReputation'
 import {
   kudosVoteId,
   mvpVoteId,
-  parseGuardianVoteType,
   parseMvpVoteCategory,
-  quickVoteId,
   resolveVoteTargetMembershipId,
   validateMvpVoteSubmission,
 } from '@/lib/destiny/mvpVoting'
@@ -18,7 +16,6 @@ import { ensurePendingPlayerForUnlinkedMember } from '@/lib/destiny/pendingPlaye
 import {
   DuplicateMvpVoteError,
   deleteKudosVote,
-  findGuardianVote,
   findMvpVote,
   getRunsForParticipant,
   loadUsersMap,
@@ -45,10 +42,12 @@ export async function POST(req: NextRequest) {
       voteType?: unknown
     }
 
-    if (body.voteType != null && body.voteType !== '' && parseGuardianVoteType(body.voteType) == null) {
-      return NextResponse.json({ error: 'voteType must be mvp, new_light, or useless' }, { status: 400 })
+    if (body.voteType === 'new_light' || body.voteType === 'useless') {
+      return NextResponse.json(
+        { error: 'New Light and Useless are guardian ranks, not a run MVP.' },
+        { status: 400 }
+      )
     }
-    const voteType = parseGuardianVoteType(body.voteType, 'mvp') ?? 'mvp'
 
     const runId = body.runId?.trim()
     if (!runId) {
@@ -117,34 +116,6 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date().toISOString()
-    if (category === 'mvp' && (voteType === 'new_light' || voteType === 'useless')) {
-      const already = Boolean(await findGuardianVote(voterId, validation.target.membershipId, voteType))
-      if (!already) {
-        await saveMvpVote({
-          id: quickVoteId(voterId, validation.target.membershipId, voteType),
-          runId,
-          voterId,
-          voterMembershipId: stored?.bungieMembershipId,
-          voteType,
-          selectedUserId: validation.target.siteUserId,
-          selectedMembershipId: validation.target.membershipId,
-          selectedDisplayName: validation.target.displayName,
-          createdAt: now,
-          updatedAt: now,
-        })
-      }
-      const label = voteType === 'new_light' ? 'New Light' : 'Useless'
-      invalidateDestinySharedCaches(VOTE_CACHE_TAGS)
-      return NextResponse.json({
-        ok: true,
-        already,
-        voteType,
-        message: already
-          ? `${label} is already saved for ${validation.target.displayName}.`
-          : `${label} saved for ${validation.target.displayName}.`,
-      })
-    }
-
     const vote: MvpVote = {
       id: category === 'mvp' ? mvpVoteId(voterId, runId) : kudosVoteId(voterId, runId, validation.target.membershipId),
       runId,

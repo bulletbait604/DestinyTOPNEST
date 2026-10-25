@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { PublicFeaturedBuild, PublicHubSnapshot, PublicTopGuardian } from '@/lib/destiny/publicHub'
 import { navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import { recentRunLines, scoreBoardLines, scorePointsLine, type ScoreRunRow, type ScoreStanding } from '@/lib/destiny/scoreStatus'
-import { VoteMvpButton } from '@/app/components/hub/QuickRate'
+import { RateButton, RunCrownList } from '@/app/components/hub/QuickRate'
 import BoardsHub from '@/app/components/hub/BoardsHub'
 import AskGuide from '@/app/components/hub/AskGuide'
 import { NextStep } from '@/app/components/hub/clarity'
@@ -499,7 +499,6 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
                       Add to Scoring
                     </button>
                   )}
-                  <VoteMvpButton membershipId={row.membershipId} displayName={row.displayName} membershipType={row.membershipType} />
                 </div>
               </li>
             ))}
@@ -509,27 +508,11 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
       {runs.length ? (
         <section className="gh-card" aria-labelledby="recent-runs">
           <h2 id="recent-runs">Scored runs</h2>
-          <ul className="gh-list">
-            {runs.map((run) => (
-              <li key={run.id}>
-                <span>{run.line}</span>
-                {run.teammates.length ? (
-                  <ul className="gh-list">
-                    {run.teammates.map((teammate) => (
-                      <li key={`${run.id}-${teammate.membershipId}`} className="gh-row-with-rate">
-                        <span>{teammate.displayName}</span>
-                        <VoteMvpButton membershipId={teammate.membershipId} displayName={teammate.displayName} runId={run.id} />
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <a className="gh-text-btn" href="/rate">
-                    Vote MVP
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
+          <p className="gh-muted">Open a run and pick one MVP. Choosing another teammate replaces that crown.</p>
+          <RunCrownList
+            signedIn={signedIn}
+            runs={runs.map((run) => ({ id: run.id, label: run.line, teammates: run.teammates }))}
+          />
         </section>
       ) : null}
       {status ? (
@@ -579,7 +562,7 @@ export function HubHome({
         </article>
         <article className="gh-action-card">
           <h2>2. Vote MVP</h2>
-          <p>Pick a Guardian from your fireteam or the boards. Vote MVP, New Light, or Useless in one click.</p>
+          <p>Crown one MVP for a run you played. Rank a Guardian separately.</p>
           <a className="gh-btn gh-btn-primary" href="/rate">
             Vote MVP
           </a>
@@ -669,12 +652,10 @@ function HomeLeaderboards({ rows }: { rows: PublicTopGuardian[] }) {
                       </button>
                       <span className="gh-muted">{row.points} pts</span>
                     </div>
-                    <VoteMvpButton
+                    <RateButton
                       membershipId={row.bungieMembershipId}
                       displayName={row.displayName}
                       mvpVotes={row.mvpVotes}
-                      newLightVotes={row.newLightVotes}
-                      uselessVotes={row.uselessVotes}
                     />
                   </li>
                 ))}

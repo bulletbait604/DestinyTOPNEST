@@ -18,15 +18,17 @@ export const VIBES_OPTIONS: { id: VibesLabel; label: string; hint: string }[] = 
   { id: 'good', label: 'Good', hint: 'Positive attitude, good comms' },
   { id: 'ego', label: 'EGO', hint: 'Selfish or toxic energy' },
   { id: 'sherpa', label: 'Sherpa', hint: 'Patient teacher, led the team' },
+  { id: 'new_light', label: 'New Light', hint: 'Learning the activity' },
+  { id: 'useless', label: 'Useless', hint: 'Lowest rank' },
 ]
 
 /** Composite trust score (1–5) from knowledge + vibes combo. */
 const COMPOSITE_MATRIX: Record<KnowledgeScore, Record<VibesLabel, number>> = {
-  1: { quiet: 1, loud: 1, good: 2, ego: 1, sherpa: 2 },
-  2: { quiet: 2, loud: 1, good: 2, ego: 1, sherpa: 3 },
-  3: { quiet: 2, loud: 2, good: 3, ego: 2, sherpa: 4 },
-  4: { quiet: 3, loud: 2, good: 4, ego: 2, sherpa: 4 },
-  5: { quiet: 2, loud: 2, good: 4, ego: 2, sherpa: 5 },
+  1: { quiet: 1, loud: 1, good: 2, ego: 1, sherpa: 2, new_light: 2, useless: 1 },
+  2: { quiet: 2, loud: 1, good: 2, ego: 1, sherpa: 3, new_light: 2, useless: 1 },
+  3: { quiet: 2, loud: 2, good: 3, ego: 2, sherpa: 4, new_light: 2, useless: 1 },
+  4: { quiet: 3, loud: 2, good: 4, ego: 2, sherpa: 4, new_light: 2, useless: 1 },
+  5: { quiet: 2, loud: 2, good: 4, ego: 2, sherpa: 5, new_light: 2, useless: 1 },
 }
 
 export function clampKnowledge(value: unknown): KnowledgeScore {
@@ -38,7 +40,15 @@ export function clampKnowledge(value: unknown): KnowledgeScore {
 export function parseVibesLabel(value: unknown): VibesLabel | null {
   if (typeof value === 'string') {
     const normalized = value.toLowerCase().trim()
-    if (normalized === 'quiet' || normalized === 'loud' || normalized === 'good' || normalized === 'ego' || normalized === 'sherpa') {
+    if (
+      normalized === 'quiet' ||
+      normalized === 'loud' ||
+      normalized === 'good' ||
+      normalized === 'ego' ||
+      normalized === 'sherpa' ||
+      normalized === 'new_light' ||
+      normalized === 'useless'
+    ) {
       return normalized
     }
   }

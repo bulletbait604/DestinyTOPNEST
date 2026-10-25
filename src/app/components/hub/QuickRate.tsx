@@ -2,19 +2,14 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import type { GuardianDirectoryCard } from '@/lib/destiny/guardianDirectory'
-import type { QuickRateTarget } from '@/lib/destiny/quickRate'
-import type { GuardianVoteType } from '@/lib/destiny/types'
+import { RATE_TAGS, RATE_TAG_LABELS, type QuickRateTarget, type RateTag } from '@/lib/destiny/quickRate'
+import type { ActivityRunForVote } from '@/lib/destiny/types'
 import { startBungieLogin } from '@/lib/bungie/startBungieLogin'
 
 export const QUICK_RATE_EVENT = 'topnest:quick-rate'
 
-const VOTE_OPTIONS: { voteType: GuardianVoteType; label: string }[] = [
-  { voteType: 'mvp', label: 'MVP' },
-  { voteType: 'new_light', label: 'New Light' },
-  { voteType: 'useless', label: 'Useless' },
-]
-
 type VoteCounts = { mvpVotes?: number; newLightVotes?: number; uselessVotes?: number }
+type TagCounts = Partial<Record<RateTag, number>>
 
 const voteCountCache = new Map<string, Promise<VoteCounts | null>>()
 
@@ -60,50 +55,73 @@ function pillLabel(label: string, count: number | undefined): string {
   return `${label} · ${count}`
 }
 
-export function VoteMvpButton({
-  membershipId,
-  displayName,
-  membershipType,
-  runId,
-  mvpVotes,
-  newLightVotes,
-  uselessVotes,
-  signedIn,
-  onSubmitted,
-}: QuickRateTarget & VoteCounts & { signedIn?: boolean; onSubmitted?: () => void }) {
-  const [counts, setCounts] = useState<VoteCounts>({ mvpVotes, newLightVotes, uselessVotes })
-  const [pressed, setPressed] = useState<GuardianVoteType | null>(null)
-  const [saving, setSaving] = useState<GuardianVoteType | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const target = { membershipId, displayName, membershipType, runId }
+export function MvpCountBadge({ count }: { count?: number }) {
+  if (!count || count <= 0) return null
+  return <span className="gh-mvp-badge">{count} MVP</span>
+}
 
-  useEffect(() => {
-    setCounts((current) => ({
-      mvpVotes: mvpVotes ?? current.mvpVotes,
-      newLightVotes: newLightVotes ?? current.newLightVotes,
-      uselessVotes: uselessVotes ?? current.uselessVotes,
-    }))
-  }, [mvpVotes, newLightVotes, uselessVotes])
+export function RankLink({ membershipId, displayName, runId }: QuickRateTarget) {
+  return (
+    <a className="gh-text-btn" href={rateReturnPath({ membershipId, displayName, runId })}>
+      Rank
+    </a>
+  )
+}
 
+/** Read-only MVP crowns plus a link into the guardian rank. Never mixes New Light or Useless in. */
+export function RateButton({ membershipId, displayName, membershipType, runId, mvpVotes }: QuickRateTarget & VoteCounts) {
+  const [count, setCount] = useState(mvpVotes)
   useEffect(() => {
-    if (!membershipId) return
-    if (mvpVotes != null && newLightVotes != null && uselessVotes != null) return
+    setCount(mvpVotes)
+  }, [mvpVotes])
+  useEffect(() => {
+    if (!membershipId || mvpVotes != null) return
     let cancelled = false
     void loadVoteCounts(membershipId).then((value) => {
-      if (!cancelled && value) setCounts((current) => ({ ...current, ...value }))
+      if (!cancelled && typeof value?.mvpVotes === 'number') setCount(value.mvpVotes)
     })
     return () => {
       cancelled = true
     }
-  }, [membershipId, mvpVotes, newLightVotes, uselessVotes])
+  }, [membershipId, mvpVotes])
+  return (
+    <span className="gh-vote">
+      <MvpCountBadge count={count} />
+      <RankLink membershipId={membershipId} displayName={displayName} membershipType={membershipType} runId={runId} />
+    </span>
+  )
+}
 
-  const countFor = (voteType: GuardianVoteType) => {
-    if (voteType === 'new_light') return counts.newLightVotes
-    if (voteType === 'useless') return counts.uselessVotes
-    return counts.mvpVotes
-  }
+export function GuardianRankPills({
+  membershipId,
+  displayName,
+  runId,
+  signedIn,
+  onSubmitted,
+}: QuickRateTarget & { signedIn?: boolean; onSubmitted?: () => void }) {
+  const [counts, setCounts] = useState<TagCounts>({})
+  const [mine, setMine] = useState<RateTag[]>([])
+  const [saving, setSaving] = useState<RateTag | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const target = { membershipId, displayName, runId }
 
-  const vote = async (voteType: GuardianVoteType) => {
+  useEffect(() => {
+    if (!membershipId) return
+    let cancelled = false
+    void fetch(`/api/destiny/rate?membershipId=${encodeURIComponent(membershipId)}`, { credentials: 'include' })
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((json: { counts?: TagCounts; mine?: { tags?: RateTag[] } } | null) => {
+        if (cancelled || !json) return
+        if (json.counts) setCounts(json.counts)
+        if (json.mine?.tags) setMine(json.mine.tags)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [membershipId])
+
+  const toggle = async (tag: RateTag) => {
     if (!membershipId) {
       if (typeof window !== 'undefined') window.location.assign(rateReturnPath(target))
       return
@@ -112,7 +130,7 @@ export function VoteMvpButton({
       signInToVote(target)
       return
     }
-    setSaving(voteType)
+    setSaving(tag)
     setError(null)
     try {
       if (signedIn !== true) {
@@ -126,32 +144,19 @@ export function VoteMvpButton({
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          membershipId,
-          displayName,
-          voteType,
-          tags: voteType === 'mvp' ? ['mvp'] : [],
-          runId,
-        }),
+        body: JSON.stringify({ membershipId, displayName, tags: [tag], toggle: true, runId }),
       })
-      const json = (await response.json().catch(() => ({}))) as VoteCounts & { error?: string; already?: boolean }
-      if (!response.ok) throw new Error(json.error ?? 'Could not save that vote')
-      setPressed(voteType)
-      voteCountCache.delete(membershipId)
-      if (typeof json.mvpVotes === 'number') {
-        setCounts({ mvpVotes: json.mvpVotes, newLightVotes: json.newLightVotes, uselessVotes: json.uselessVotes })
-      } else if (!json.already) {
-        setCounts((current) => {
-          const next = { ...current }
-          if (voteType === 'new_light') next.newLightVotes = (current.newLightVotes ?? 0) + 1
-          else if (voteType === 'useless') next.uselessVotes = (current.uselessVotes ?? 0) + 1
-          else next.mvpVotes = (current.mvpVotes ?? 0) + 1
-          return next
-        })
+      const json = (await response.json().catch(() => ({}))) as {
+        error?: string
+        tags?: RateTag[]
+        counts?: TagCounts
       }
+      if (!response.ok) throw new Error(json.error ?? 'Could not save that rank')
+      if (json.tags) setMine(json.tags)
+      if (json.counts) setCounts(json.counts)
       onSubmitted?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save that vote')
+      setError(err instanceof Error ? err.message : 'Could not save that rank')
     } finally {
       setSaving(null)
     }
@@ -159,20 +164,20 @@ export function VoteMvpButton({
 
   return (
     <span className="gh-vote">
-      {VOTE_OPTIONS.map((option) => (
+      {RATE_TAGS.map((tag) => (
         <button
-          key={option.voteType}
+          key={tag}
           type="button"
           className="gh-vote-pill"
-          aria-pressed={pressed === option.voteType}
+          aria-pressed={mine.includes(tag)}
           disabled={saving != null}
           onClick={(event) => {
             event.preventDefault()
             event.stopPropagation()
-            void vote(option.voteType)
+            void toggle(tag)
           }}
         >
-          {saving === option.voteType ? 'Sending…' : pillLabel(option.label, countFor(option.voteType))}
+          {saving === tag ? 'Saving…' : pillLabel(RATE_TAG_LABELS[tag], counts[tag])}
         </button>
       ))}
       {error ? (
@@ -182,10 +187,6 @@ export function VoteMvpButton({
       ) : null}
     </span>
   )
-}
-
-export function RateButton(props: QuickRateTarget & VoteCounts) {
-  return <VoteMvpButton {...props} />
 }
 
 export function QuickRateForm({
@@ -200,10 +201,170 @@ export function QuickRateForm({
 }) {
   return (
     <div className="gh-vote-block">
-      {signedIn ? null : <p className="gh-muted">Sign in with Bungie to submit your vote</p>}
-      <VoteMvpButton {...target} signedIn={signedIn} onSubmitted={onSubmitted} />
+      {signedIn ? null : <p className="gh-muted">Sign in with Bungie to rank this Guardian</p>}
+      <GuardianRankPills {...target} signedIn={signedIn} onSubmitted={onSubmitted} />
     </div>
   )
+}
+
+type CrownRun = {
+  id: string
+  label: string
+  teammates: { membershipId: string; displayName: string }[]
+  selectedMembershipId?: string
+}
+
+export function RunCrownList({
+  signedIn,
+  runs = [],
+  focusRunId,
+}: {
+  signedIn: boolean
+  runs?: CrownRun[]
+  focusRunId?: string
+}) {
+  const [rows, setRows] = useState<CrownRun[]>(runs)
+  const [open, setOpen] = useState<string | null>(focusRunId ?? null)
+  const [picked, setPicked] = useState<Record<string, string>>({})
+  const [busy, setBusy] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    setRows((current) => (runs.length ? mergeCrownRuns(current, runs) : current))
+  }, [runs])
+
+  useEffect(() => {
+    if (focusRunId) setOpen(focusRunId)
+  }, [focusRunId])
+
+  useEffect(() => {
+    if (!signedIn) return
+    let cancelled = false
+    void fetch('/api/destiny/runs', { credentials: 'include' })
+      .then(async (response) => (response.ok ? response.json() : { activities: [] }))
+      .then((json: { activities?: ActivityRunForVote[] }) => {
+        if (cancelled) return
+        const mapped = (json.activities ?? []).map((activity) => ({
+          id: activity.runId,
+          label: `${activity.activityName} · ${new Date(activity.completedAt).toLocaleDateString()}`,
+          selectedMembershipId: activity.selectedMembershipId,
+          teammates: activity.guardians
+            .filter((guardian) => guardian.canVoteFor)
+            .map((guardian) => ({ membershipId: guardian.membershipId, displayName: guardian.displayName })),
+        }))
+        if (!mapped.length) return
+        setRows((current) => mergeCrownRuns(current, mapped))
+        setPicked((current) => {
+          const next = { ...current }
+          for (const row of mapped) {
+            if (row.selectedMembershipId) next[row.id] = row.selectedMembershipId
+          }
+          return next
+        })
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [signedIn])
+
+  const pick = async (runId: string, teammate: { membershipId: string; displayName: string }) => {
+    if (!signedIn) {
+      signInToVote({ membershipId: teammate.membershipId, displayName: teammate.displayName, runId })
+      return
+    }
+    const key = `${runId}:${teammate.membershipId}`
+    setBusy(key)
+    setMessage(null)
+    try {
+      const response = await fetch('/api/destiny/mvp', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ runId, membershipId: teammate.membershipId, category: 'mvp', action: 'set' }),
+      })
+      const json = (await response.json().catch(() => ({}))) as { error?: string; message?: string }
+      if (!response.ok) throw new Error(json.error ?? 'Could not save that MVP')
+      setPicked((current) => ({ ...current, [runId]: teammate.membershipId }))
+      setMessage(json.message ?? `${teammate.displayName} is your MVP for this run.`)
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Could not save that MVP')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  if (!signedIn) {
+    return <p className="gh-muted">Sign in with Bungie to pick one MVP on a run you played.</p>
+  }
+  if (!rows.length) {
+    return <p className="gh-muted">Score a run, then crown one teammate as MVP.</p>
+  }
+
+  return (
+    <div className="gh-stack">
+      {message ? <p className="gh-confirm">{message}</p> : null}
+      <ul className="gh-list">
+        {rows.map((run) => {
+          const expanded = open === run.id
+          const chosen = picked[run.id]
+          return (
+            <li key={run.id}>
+              <button type="button" className="gh-text-btn" onClick={() => setOpen(expanded ? null : run.id)}>
+                {run.label}
+                {chosen ? ' · MVP picked' : ''}
+              </button>
+              {expanded ? (
+                <ul className="gh-list">
+                  {run.teammates.length ? (
+                    run.teammates.map((teammate) => {
+                      const selected = chosen === teammate.membershipId
+                      const label = selected ? 'MVP ✓' : chosen ? 'Change MVP' : 'Pick MVP'
+                      return (
+                        <li key={`${run.id}-${teammate.membershipId}`} className="gh-row-with-rate">
+                          <span>{teammate.displayName}</span>
+                          <button
+                            type="button"
+                            className="gh-btn gh-btn-ghost"
+                            disabled={selected || busy != null}
+                            onClick={() => void pick(run.id, teammate)}
+                          >
+                            {busy === `${run.id}:${teammate.membershipId}` ? 'Saving…' : label}
+                          </button>
+                        </li>
+                      )
+                    })
+                  ) : (
+                    <li className="gh-muted">No other guardians on this clear.</li>
+                  )}
+                </ul>
+              ) : null}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+function mergeCrownRuns(base: CrownRun[], extra: CrownRun[]): CrownRun[] {
+  const map = new Map<string, CrownRun>()
+  for (const row of base) map.set(row.id, row)
+  for (const row of extra) {
+    const prev = map.get(row.id)
+    map.set(
+      row.id,
+      prev
+        ? {
+            ...prev,
+            ...row,
+            teammates: row.teammates.length ? row.teammates : prev.teammates,
+            label: row.label || prev.label,
+          }
+        : row
+    )
+  }
+  return Array.from(map.values())
 }
 
 type VoteRow = {
@@ -330,48 +491,55 @@ export function RatePage() {
     <section className="gh-stack" aria-labelledby="rate-title">
       <header className="gh-hero">
         <div>
-          <p className="gh-kicker">One click</p>
-          <h1 id="rate-title">Vote MVP</h1>
-          <p className="gh-lede">
-            Pick a Guardian from your fireteam, Kick Guardians, or the season boards. Choose MVP, New Light, or Useless.
-          </p>
+          <p className="gh-kicker">Two different things</p>
+          <h1 id="rate-title">Rank</h1>
+          <p className="gh-lede">Crown one MVP on a run you played. Rank a Guardian with a separate set of tags.</p>
         </div>
       </header>
-      <form className="gh-rate-search" onSubmit={search}>
-        <label className="gh-sr" htmlFor="rate-search">
-          Search guardians
-        </label>
-        <input
-          id="rate-search"
-          value={draft}
-          placeholder="Bungie name or Name#1234"
-          onChange={(event) => setDraft(event.target.value)}
-        />
-        <button type="submit" className="gh-btn gh-btn-primary">
-          Search
-        </button>
-      </form>
-      {rows.length ? (
-        <ul className="gh-directory">
-          {rows.map((row) => (
-            <li key={row.membershipId} className="gh-row-with-rate">
-              <span className="gh-person-name">{row.displayName}</span>
-              <VoteMvpButton
-                membershipId={row.membershipId}
-                displayName={row.displayName}
-                membershipType={row.membershipType}
-                mvpVotes={row.mvpVotes}
-                newLightVotes={row.newLightVotes}
-                uselessVotes={row.uselessVotes}
-                runId={row.runId}
-                signedIn={signedIn}
-              />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="gh-muted">Guardians from your fireteam and the season boards show up here.</p>
-      )}
+      <section className="gh-card" aria-labelledby="crown-mvp">
+        <h2 id="crown-mvp">Crown Run MVP (1 per run)</h2>
+        <p className="gh-muted">One teammate gets the crown. Picking someone else replaces your MVP for that run.</p>
+        <RunCrownList signedIn={signedIn} focusRunId={runId} />
+      </section>
+      <section className="gh-card" aria-labelledby="rank-guardian">
+        <h2 id="rank-guardian">Rank a Guardian</h2>
+        <p className="gh-muted">
+          Sherpa / Teacher · Clutch · Helpful · Chill · Great Comms · New Light · Useless
+        </p>
+        <form className="gh-rate-search" onSubmit={search}>
+          <label className="gh-sr" htmlFor="rate-search">
+            Search guardians
+          </label>
+          <input
+            id="rate-search"
+            value={draft}
+            placeholder="Bungie name or Name#1234"
+            onChange={(event) => setDraft(event.target.value)}
+          />
+          <button type="submit" className="gh-btn gh-btn-primary">
+            Search
+          </button>
+        </form>
+        {rows.length ? (
+          <ul className="gh-directory">
+            {rows.map((row) => (
+              <li key={row.membershipId} className="gh-row-with-rate">
+                <span className="gh-person-name">{row.displayName}</span>
+                <MvpCountBadge count={row.mvpVotes} />
+                <GuardianRankPills
+                  membershipId={row.membershipId}
+                  displayName={row.displayName}
+                  membershipType={row.membershipType}
+                  runId={row.runId}
+                  signedIn={signedIn}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="gh-muted">Guardians from your fireteam and the season boards show up here.</p>
+        )}
+      </section>
     </section>
   )
 }

@@ -130,10 +130,9 @@ async function voteCounts(ids: string[]): Promise<Map<string, VoteTotals>> {
       if (!id) continue
       const current = map.get(id) ?? emptyTotals()
       const count = Number(row.n ?? 0)
-      if (grouped.voteType === 'kudos') current.kudos += count
-      else if (grouped.voteType === 'new_light') current.newLight += count
-      else if (grouped.voteType === 'useless') current.useless += count
-      else current.mvp += count
+      if (grouped.voteType === 'kudos' || grouped.voteType === 'new_light' || grouped.voteType === 'useless') {
+        if (grouped.voteType === 'kudos') current.kudos += count
+      } else current.mvp += count
       map.set(id, current)
     }
   } catch (error) {

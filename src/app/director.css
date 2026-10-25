@@ -664,6 +664,17 @@ h1, h2, h3, h4,
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+.gh-mvp-badge {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 8px;
+  border: 1px solid var(--dir-gold);
+  color: var(--dir-gold);
+  font-family: Rajdhani, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
 .gh-prize-badge {
   display: inline-block;
   margin: 6px 0 0;
