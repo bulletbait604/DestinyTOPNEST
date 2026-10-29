@@ -146,24 +146,26 @@ function WeekSpotlight() {
     <BoardState loading={loading} error={error}>
       {snapshot ? (
         <>
-          <div className="gh-grid">
-            <article className="gh-card">
-              <p className="gh-kicker">{snapshot.weekLabel}</p>
-              <h3>Featured raids</h3>
-              <p className="gh-muted">{snapshot.featuredRaids.length ? snapshot.featuredRaids.join(' · ') : 'Updating this week'}</p>
-            </article>
-            <article className="gh-card">
-              <p className="gh-kicker">Resets in {snapshot.resetsInLabel}</p>
-              <h3>Featured dungeons</h3>
-              <p className="gh-muted">
-                {snapshot.featuredDungeons.length ? snapshot.featuredDungeons.join(' · ') : 'Updating this week'}
-              </p>
-            </article>
-            <article className="gh-card">
-              <p className="gh-kicker">Nightfall</p>
-              <h3>{snapshot.nightfall || 'Nightfall updating'}</h3>
-            </article>
-          </div>
+          <ul className="gh-list">
+            <li>
+              <span className="ios-row-copy">
+                <strong>Featured raids</strong>
+                <small>{snapshot.featuredRaids.length ? snapshot.featuredRaids.join(' · ') : 'Updating'}</small>
+              </span>
+            </li>
+            <li>
+              <span className="ios-row-copy">
+                <strong>Featured dungeons</strong>
+                <small>{snapshot.featuredDungeons.length ? snapshot.featuredDungeons.join(' · ') : 'Updating'}</small>
+              </span>
+            </li>
+            <li>
+              <span className="ios-row-copy">
+                <strong>{snapshot.nightfall || 'Nightfall'}</strong>
+                <small>{snapshot.weekLabel} · {snapshot.resetsInLabel}</small>
+              </span>
+            </li>
+          </ul>
           <ContractList snapshot={snapshot} />
           {snapshot.events.length ? (
             <p className="gh-muted">
@@ -257,12 +259,24 @@ export function ProfileHub({
       />
       {section === 'prizes' ? (
         <div className="gh-stack">
-          <article className="gh-card">
-            <h3>Season 1 prizes</h3>
-            <p>US and Canada: {PRIZE_ELIGIBILITY.physicalPrize}.</p>
-            <p>UK: {PRIZE_ELIGIBILITY.giftCardPrize}.</p>
-            <p className="gh-muted">{PRIZE_ELIGIBILITY.summary}</p>
-          </article>
+          <ul className="gh-list">
+            <li>
+              <span className="ios-row-copy">
+                <strong>US and Canada</strong>
+                <small>{PRIZE_ELIGIBILITY.physicalPrize}</small>
+              </span>
+            </li>
+            <li>
+              <span className="ios-row-copy">
+                <strong>UK</strong>
+                <small>{PRIZE_ELIGIBILITY.giftCardPrize}</small>
+              </span>
+            </li>
+          </ul>
+          <details className="gh-disclosure">
+            <summary>Details</summary>
+            <p className="gh-lede">{PRIZE_ELIGIBILITY.summary}</p>
+          </details>
           <SeasonRulesPanel />
         </div>
       ) : null}
@@ -273,31 +287,40 @@ export function ProfileHub({
         />
       ) : null}
       {section !== 'prizes' && signedIn ? (
-        <div className="gh-grid">
-          <article className="gh-card">
-            <p className="gh-kicker">{profile?.bungieDisplayName || 'Linked Guardian'}</p>
-            <h3>Season score</h3>
-            <p>
-              {(profile?.raidPoints ?? 0) + (profile?.dungeonPoints ?? 0)} points · {profile?.verifiedClears ?? 0} clears
-            </p>
-            <p className="gh-muted">{profile?.passport?.clearStamps ?? 0} passport stamps</p>
-          </article>
+        <ul className="gh-list">
+          <li>
+            <span className="ios-row-copy">
+              <strong>{profile?.bungieDisplayName || 'Guardian'}</strong>
+              <small>{(profile?.raidPoints ?? 0) + (profile?.dungeonPoints ?? 0)} pts</small>
+            </span>
+          </li>
+          <li>
+            <span className="ios-row-copy">
+              <strong>Clears</strong>
+              <small>{profile?.verifiedClears ?? 0}</small>
+            </span>
+          </li>
+          <li>
+            <span className="ios-row-copy">
+              <strong>Stamps</strong>
+              <small>{profile?.passport?.clearStamps ?? 0}</small>
+            </span>
+          </li>
           {(profile?.characters ?? []).map((character) => (
-            <article key={character.characterId} className="gh-card">
-              <p className="gh-kicker">{character.characterClass}</p>
-              <h3>{character.powerLevel || '—'} power</h3>
-              {character.title ? <p className="gh-muted">{character.title}</p> : null}
-            </article>
+            <li key={character.characterId}>
+              <span className="ios-row-copy">
+                <strong>{character.characterClass}</strong>
+                <small>{character.powerLevel || '—'} power</small>
+              </span>
+            </li>
           ))}
-          {section === 'passport' ? (
-            <article className="gh-card">
-              <h3>Passport</h3>
-              <p className="gh-muted">
-                Each verified full clear adds a stamp. A teammate you have not cleared with before adds another.
-              </p>
-            </article>
-          ) : null}
-        </div>
+        </ul>
+      ) : null}
+      {section === 'passport' && signedIn ? (
+        <details className="gh-disclosure">
+          <summary>Details</summary>
+          <p className="gh-lede">Each verified full clear adds a stamp. A new teammate adds another.</p>
+        </details>
       ) : null}
     </section>
   )

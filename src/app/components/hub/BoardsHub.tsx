@@ -174,34 +174,35 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
       ) : null}
       {visible.length > 0 ? (
         <ol className="gh-board">
-          {visible.map((entry) => (
-            <li key={`${entry.userId}-${entry.rank}`}>
-              <div className="gh-board-row">
-                <button type="button" className="gh-board-main" onClick={() => navigateGuardianSearch(entry.bungieDisplayName)}>
-                  <span className="gh-rank">#{entry.rank}</span>
-                  <span>
+          {visible.map((entry) => {
+            const initial = entry.bungieDisplayName.replace(/[^A-Za-z0-9]/g, '').slice(0, 1).toUpperCase() || '?'
+            return (
+              <li key={`${entry.userId}-${entry.rank}`} className={entry.rank <= 3 ? 'is-podium' : undefined}>
+                <div className="gh-board-row">
+                  <button type="button" className="gh-board-main" onClick={() => navigateGuardianSearch(entry.bungieDisplayName)}>
+                    <span className="gh-rank">{entry.rank}</span>
+                    <span
+                      className="ios-avatar"
+                      aria-hidden
+                      style={entry.emblemUrl ? { backgroundImage: `url(${entry.emblemUrl})` } : undefined}
+                    >
+                      {entry.emblemUrl ? null : initial}
+                    </span>
                     <strong>{entry.bungieDisplayName}</strong>
-                    <small>
-                      {entry.platform}
-                      {entry.clanTag ? ` · [${entry.clanTag}]` : ''}
-                      {entry.fastestActivityName ? ` · ${entry.fastestActivityName}` : ''}
-                    </small>
-                  </span>
-                  <span className="gh-points">
-                    {entry.points} pts
-                    <small>{entry.verifiedClears} clears</small>
-                  </span>
-                </button>
-                {entry.isSquadEntry ? null : (
-                  <RateButton
-                    membershipId={entry.bungieMembershipId}
-                    displayName={entry.bungieDisplayName}
-                    mvpVotes={entry.mvpVotes}
-                  />
-                )}
-              </div>
-            </li>
-          ))}
+                    <span className="gh-points">{entry.points}</span>
+                    <span className="ios-chevron" aria-hidden />
+                  </button>
+                  {entry.isSquadEntry ? null : (
+                    <RateButton
+                      membershipId={entry.bungieMembershipId}
+                      displayName={entry.bungieDisplayName}
+                      mvpVotes={entry.mvpVotes}
+                    />
+                  )}
+                </div>
+              </li>
+            )
+          })}
         </ol>
       ) : null}
       </div>
