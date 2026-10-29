@@ -3,6 +3,7 @@ import { BRAND_FULL, BRAND_LOGO_PATH, BRAND_TAGLINE } from '@/lib/destiny/brandi
 import './globals.css'
 import './theme-nest.css'
 import './director.css'
+import './ios.css'
 
 export const metadata: Metadata = {
   title: BRAND_FULL,
@@ -16,7 +17,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#070708',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f2f2f7' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
   viewportFit: 'cover',
 }
 

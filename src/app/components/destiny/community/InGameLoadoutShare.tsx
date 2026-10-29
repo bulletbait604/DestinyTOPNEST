@@ -170,20 +170,23 @@ export default function InGameLoadoutShare({
   function renderCard(loadout: InGameLoadoutSummary, key: string, slotLabel: string) {
     const busy = savingKey === key || savingKey === 'all'
     return (
-      <article key={key} className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="text-base font-semibold text-white">
+      <article key={key} className="gh-card">
+        <div className="gh-section-head">
+          <h3>
             {loadout.classType} · {loadout.name}
           </h3>
-          <p className={cn('text-xs uppercase tracking-wide', t.caption)}>{slotLabel}</p>
+          <span className="gh-muted">{slotLabel}</span>
         </div>
-        <p className={cn('text-sm', t.body)}>
-          {loadout.subclass || 'Subclass unknown'}
-          {loadout.exoticArmor ? ` · ${loadout.exoticArmor}` : ''}
-          {loadout.exoticWeapon ? ` · ${loadout.exoticWeapon}` : ''}
-        </p>
-        <p className={cn('text-sm', t.muted)}>Weapons: {preview(loadout.weapons)}</p>
-        <p className={cn('text-sm', t.muted)}>Mods: {preview(loadout.mods)}</p>
+        <p className="gh-muted">{loadout.subclass || 'Subclass unknown'}</p>
+        <details className="gh-disclosure">
+          <summary>Details</summary>
+          <p className="gh-lede">
+            {loadout.exoticArmor || 'No exotic armor'}
+            {loadout.exoticWeapon ? ` · ${loadout.exoticWeapon}` : ''}
+          </p>
+          <p className="gh-lede">Weapons: {preview(loadout.weapons)}</p>
+          <p className="gh-lede">Mods: {preview(loadout.mods)}</p>
+        </details>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <label>
             <span className={cn('block text-[11px] uppercase tracking-wide mb-1', t.caption)}>Title</span>
@@ -221,8 +224,7 @@ export default function InGameLoadoutShare({
   return (
     <GlassCard darkMode={darkMode}>
       <SectionTitle
-        title="Share a Build / Import from Destiny 2"
-        subtitle="Save currently equipped gear or any saved in-game loadout into the shared builds list."
+        title="In-game loadouts"
         darkMode={darkMode}
       />
       <form className="mt-4 flex flex-col sm:flex-row gap-2" onSubmit={onLookup}>

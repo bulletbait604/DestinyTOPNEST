@@ -1,14 +1,38 @@
 'use client'
 
 import { FormEvent, useState, type ReactNode } from 'react'
-import { MAIN_NAV, MORE_NAV } from '@/app/components/hub/clarity'
+import { MORE_NAV } from '@/app/components/hub/clarity'
 import { isBuildsPath, isMorePath } from '@/lib/destiny/pageCatalog'
 import { QuickRateHost } from '@/app/components/hub/QuickRate'
 import { DirectorIcon } from '@/app/components/hub/directorIcons'
 import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
-import { BRAND_FULL, BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
+import { BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
 import { usePathname } from 'next/navigation'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
+
+const TAB_BAR: {
+  href: string
+  label: string
+  short: string
+  icon: 'home' | 'play' | 'boards' | 'gear'
+}[] = [
+  { href: '/', label: 'Home', short: 'Home', icon: 'home' },
+  { href: '/score', label: 'Score', short: 'Score', icon: 'play' },
+  { href: '/boards', label: 'Boards', short: 'Boards', icon: 'boards' },
+  { href: '/builds', label: 'Builds', short: 'Builds', icon: 'gear' },
+]
+
+const MORE_ITEMS = [
+  { href: '/rate', label: 'Vote' },
+  { href: '/ask', label: 'Ask AI' },
+  ...MORE_NAV.map((item) => ({ href: item.href, label: item.label })),
+]
+
+function tabCurrent(href: string, pathname: string) {
+  if (href === '/') return pathname === '/'
+  if (href === '/builds') return isBuildsPath(pathname)
+  return pathname === href
+}
 
 export default function HubChrome({
   children,
@@ -25,6 +49,8 @@ export default function HubChrome({
 }) {
   const pathname = usePathname() || '/'
   const [query, setQuery] = useState('')
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreCurrent = isMorePath(pathname) || pathname === '/rate' || pathname === '/ask'
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault()
@@ -38,10 +64,9 @@ export default function HubChrome({
       </a>
       <header className="gh-top">
         <button type="button" className="gh-brand" onClick={() => navigateDestinyTab('overview')}>
-          <img src={BRAND_LOGO_PATH} alt={BRAND_LOGO_ALT} width={44} height={44} />
+          <img src={BRAND_LOGO_PATH} alt={BRAND_LOGO_ALT} width={32} height={32} />
           <span>
             <strong>{HUB_NAME}</strong>
-            <small>{BRAND_FULL}</small>
           </span>
         </button>
         <form className="gh-search" role="search" onSubmit={submitSearch}>
@@ -54,51 +79,38 @@ export default function HubChrome({
             name="q"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search a Bungie name"
+            placeholder="Search"
             autoComplete="off"
           />
           <button type="submit">Search</button>
         </form>
         <div className="gh-top-actions">
-          <details className="gh-more">
-            <summary>More</summary>
-            <div className="gh-more-menu">
-              {MORE_NAV.map((item) => (
-                <a key={item.href} href={item.href}>
-                  {item.label}
-                  <small>{item.hint}</small>
-                </a>
-              ))}
-            </div>
-          </details>
           {signedIn ? (
             account
           ) : (
             <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin} disabled={loginPending}>
-              {loginPending ? 'Connecting…' : 'Sign in with Bungie'}
+              {loginPending ? 'Connecting…' : 'Sign in'}
             </button>
           )}
         </div>
       </header>
       <nav className="gh-nav" aria-label="TopNest">
-        {MAIN_NAV.map((item) => {
-          const current = item.href === '/' ? pathname === '/' : item.href === '/builds' ? isBuildsPath(pathname) : pathname === item.href
+        {TAB_BAR.map((item) => {
+          const current = tabCurrent(item.href, pathname)
           return (
             <a key={item.href} className="gh-nav-link" href={item.href} aria-current={current ? 'page' : undefined}>
-              <DirectorIcon name={item.icon} />
               <span>{item.label}</span>
             </a>
           )
         })}
         <details className="gh-nav-group">
-          <summary className="gh-nav-link" aria-current={isMorePath(pathname) ? 'page' : undefined}>
+          <summary className="gh-nav-link" aria-current={moreCurrent ? 'page' : undefined}>
             <span>More</span>
           </summary>
           <div className="gh-nav-menu">
-            {MORE_NAV.map((item) => (
+            {MORE_ITEMS.map((item) => (
               <a key={item.href} href={item.href} aria-current={pathname === item.href ? 'page' : undefined}>
                 {item.label}
-                <small>{item.hint}</small>
               </a>
             ))}
           </div>
@@ -116,8 +128,8 @@ export default function HubChrome({
         Fan-made. Not affiliated with Bungie. <a href="/rules">Prize rules</a>
       </footer>
       <nav className="gh-bottom-nav" aria-label="TopNest mobile">
-        {MAIN_NAV.map((item) => {
-          const current = item.href === '/' ? pathname === '/' : item.href === '/builds' ? isBuildsPath(pathname) : pathname === item.href
+        {TAB_BAR.map((item) => {
+          const current = tabCurrent(item.href, pathname)
           return (
             <a key={item.href} href={item.href} aria-current={current ? 'page' : undefined}>
               <DirectorIcon name={item.icon} />
@@ -125,7 +137,23 @@ export default function HubChrome({
             </a>
           )
         })}
+        <button type="button" aria-current={moreCurrent ? 'page' : undefined} aria-expanded={moreOpen} onClick={() => setMoreOpen(true)}>
+          <DirectorIcon name="more" />
+          <span>More</span>
+        </button>
       </nav>
+      {moreOpen ? (
+        <div className="ios-sheet-backdrop" onClick={() => setMoreOpen(false)}>
+          <div className="ios-sheet" role="dialog" aria-label="More" onClick={(event) => event.stopPropagation()}>
+            <div className="ios-sheet-grab" />
+            {MORE_ITEMS.map((item) => (
+              <a key={item.href} href={item.href} aria-current={pathname === item.href ? 'page' : undefined}>
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

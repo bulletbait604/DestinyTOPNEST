@@ -189,9 +189,7 @@ function Picker({
             <button type="button" className="gh-text-btn" aria-pressed={selectedId === build.id} onClick={() => onPick(build)}>
               {build.name}
             </button>
-            <span className="gh-muted">
-              {build.characterClass} · {build.subclass} · {build.upvoteCount} likes
-            </span>
+            <span className="gh-muted">{build.subclass || build.characterClass}</span>
           </li>
         ))}
       </ul>

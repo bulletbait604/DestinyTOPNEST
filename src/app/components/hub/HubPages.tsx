@@ -6,9 +6,8 @@ import { navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import { recentRunLines, scoreBoardLines, scorePointsLine, type ScoreRunRow, type ScoreStanding } from '@/lib/destiny/scoreStatus'
 import { RateButton, RunCrownList } from '@/app/components/hub/QuickRate'
 import BoardsHub from '@/app/components/hub/BoardsHub'
-import AskGuide from '@/app/components/hub/AskGuide'
 import { NextStep } from '@/app/components/hub/clarity'
-import { PageHeader, PointsChip } from '@/app/components/hub/PageHeader'
+import { PageHeader } from '@/app/components/hub/PageHeader'
 import { formatEventWhen, openHubTab, usePublicHub } from '@/app/components/hub/hubTypes'
 
 function EmptyNote({
@@ -117,13 +116,12 @@ export function ContractList({
           <article key={contract.id} className="gh-card">
             <div className="gh-section-head">
               <h3>{contract.title}</h3>
-              <PointsChip
-                label="Tier"
-                value={`+${contract.tierPoints}`}
-                hint="Finishing this contract adds season tier points for a title and a profile frame. It does not change leaderboard points."
-              />
+              <strong>+{contract.tierPoints}</strong>
             </div>
-            <p className="gh-muted">{contract.description}</p>
+            <details className="gh-disclosure">
+              <summary>Details</summary>
+              <p className="gh-lede">{contract.description}</p>
+            </details>
           </article>
         ))}
       </div>
@@ -147,12 +145,11 @@ export function SherpaList({ snapshot }: { snapshot: PublicHubSnapshot }) {
     <ol className="gh-list">
       {snapshot.sherpas.map((row) => (
         <li key={`${row.rank}-${row.displayName}`}>
-          <span>
-            #{row.rank} {row.displayName}
-          </span>
-          <span className="gh-muted">
-            {row.title} · {row.points} pts · {row.guidedClears} guided
-            {row.learnerMvps ? ` · ${row.learnerMvps} MVP` : ''}
+          <span className="ios-row-copy">
+            <strong>
+              {row.rank} {row.displayName}
+            </strong>
+            <small>{row.points} pts</small>
           </span>
         </li>
       ))}
@@ -175,11 +172,11 @@ export function ClanList({ snapshot }: { snapshot: PublicHubSnapshot }) {
     <ol className="gh-list">
       {snapshot.clans.map((row) => (
         <li key={`${row.rank}-${row.clanName}`}>
-          <span>
-            #{row.rank} {row.clanName}
-          </span>
-          <span className="gh-muted">
-            {row.division} · {row.seasonPoints} season pts · {row.weeklyPoints} this week
+          <span className="ios-row-copy">
+            <strong>
+              {row.rank} {row.clanName}
+            </strong>
+            <small>{row.seasonPoints} pts</small>
           </span>
         </li>
       ))}
@@ -393,16 +390,16 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
 
   return (
     <section className="gh-stack" aria-labelledby="score-title">
-      <header className="gh-hero">
-        <div>
-          <p className="gh-kicker">Score a Run</p>
-          <h1 id="score-title">Score your runs</h1>
+      <header className="gh-page-head">
+        <h1 id="score-title">Score</h1>
+        <details className="gh-disclosure ios-detail">
+          <summary>Details</summary>
           <ul className="gh-score-points">
             <li>Clear raids or dungeons in Destiny 2.</li>
             <li>Playing with Guardians you have not run with before earns bonus points.</li>
             <li>Click Sync My Runs for the last 5 pages, or look up previous raids and dungeons and add them to this season.</li>
           </ul>
-        </div>
+        </details>
       </header>
       {points ? <p className="gh-status">{points}</p> : null}
       {ranks.length ? (
@@ -446,7 +443,6 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
         }}
       >
         <h2>Look up recent or previous runs</h2>
-        <p className="gh-muted">The last 5 pages of raids and dungeons load into this scoring list, including clears from before this season.</p>
         <label className="gh-sr" htmlFor="score-lookup">
           Bungie name or PGCR id
         </label>
@@ -482,14 +478,9 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
           <ul className="gh-list">
             {found.map((row) => (
               <li key={row.instanceId} className="gh-lookup-row">
-                <h3>
-                  {row.activityName} · {row.type === 'raid' ? 'Raid' : 'Dungeon'}
-                </h3>
+                <h3>{row.activityName}</h3>
                 <p className="gh-muted">
-                  {row.completedAt ? new Date(row.completedAt).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' }) : 'Date unavailable'}
-                  {' · '}
-                  {row.teammateCount} teammates · {row.statusLabel}
-                  {row.bondPoints ? ` · +${row.bondPoints} new teammates` : ''}
+                  {row.status === 'scored' ? `+${row.pointsAwarded} pts` : row.statusLabel}
                 </p>
                 <div className="gh-actions">
                   {row.status === 'scored' ? (
@@ -508,7 +499,6 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
       {runs.length ? (
         <section className="gh-card" aria-labelledby="recent-runs">
           <h2 id="recent-runs">Scored runs</h2>
-          <p className="gh-muted">Open a run and pick one MVP. Choosing another teammate replaces that crown.</p>
           <RunCrownList
             signedIn={signedIn}
             runs={runs.map((run) => ({ id: run.id, label: run.line, teammates: run.teammates }))}
@@ -539,20 +529,15 @@ export function HubHome({
 }) {
   return (
     <div className="gh-stack">
-      <header className="gh-hero">
-        <div>
-          <p className="gh-kicker">TopNest</p>
-          <h1>Play with new friends. Score the clear.</h1>
-          <p className="gh-lede">Three things to do. Each one is one click.</p>
-        </div>
+      <header className="gh-page-head">
+        <h1>Home</h1>
       </header>
       <div className="gh-action-cards">
         <article className="gh-action-card">
-          <h2>1. Score Your Runs</h2>
-          <p>Sync your Bungie raids and dungeons with new teammates to climb the season boards and win the 3D print prize.</p>
+          <h2>Score Your Runs</h2>
           {signedIn ? (
             <a className="gh-btn gh-btn-primary" href="/score">
-              Score / Sync Runs Now
+              Score
             </a>
           ) : (
             <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
@@ -561,26 +546,24 @@ export function HubHome({
           )}
         </article>
         <article className="gh-action-card">
-          <h2>2. Vote MVP</h2>
-          <p>Crown one MVP for a run you played. Rank a Guardian separately.</p>
+          <h2>Vote MVP</h2>
           <a className="gh-btn gh-btn-primary" href="/rate">
             Vote MVP
           </a>
         </article>
         <article className="gh-action-card">
-          <h2>3. Ask Destiny AI</h2>
-          <p>Stuck on a quest, aspect, or unlock? Type what you are trying to do and get current step-by-step instructions.</p>
-          <AskGuide compact />
+          <h2>Ask Destiny AI</h2>
+          <a className="gh-btn gh-btn-primary" href="/ask">
+            Ask
+          </a>
         </article>
       </div>
-      <p className="gh-prize-line">
-        Season leaders in the US and Canada can win a Destiny 2 3D print. UK leaders can win a $50 CAD Steam gift card.
-      </p>
+      <p className="ios-caption">Season #1 · 3D print</p>
 
       <BoardState loading={loading} error={error} onRetry={() => window.location.reload()}>
         {snapshot ? (
           <>
-            <section className="gh-card" aria-labelledby="gh-top">
+            <section aria-labelledby="gh-top">
               <div className="gh-section-head">
                 <h2 id="gh-top">Live season leaderboards</h2>
                 <a className="gh-text-btn" href="/boards">
@@ -589,19 +572,29 @@ export function HubHome({
               </div>
               <HomeLeaderboards rows={snapshot.topGuardians} />
             </section>
-            <div className="gh-split">
-              <section className="gh-status" aria-label="This week">
-                <p>
-                  <span className="gh-kicker">This week</span>
-                  {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
-                </p>
-                <p className="gh-rotation">
-                  Featured raids: {snapshot.featuredRaids.join(' · ') || 'Rotation loading'}. Featured dungeons:{' '}
-                  {snapshot.featuredDungeons.join(' · ') || 'Rotation loading'}.
-                </p>
-              </section>
-              <FeaturedBuilds builds={snapshot.featuredBuilds} onLogin={onLogin} />
-            </div>
+            <ul className="gh-list gh-rotation" aria-label="This week">
+              <li>
+                <span className="ios-row-copy">
+                  <strong>This week</strong>
+                  <small>
+                    {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
+                  </small>
+                </span>
+              </li>
+              <li>
+                <span className="ios-row-copy">
+                  <strong>Featured raids</strong>
+                  <small>{snapshot.featuredRaids.join(' · ') || 'Rotation loading'}</small>
+                </span>
+              </li>
+              <li>
+                <span className="ios-row-copy">
+                  <strong>Featured dungeons</strong>
+                  <small>{snapshot.featuredDungeons.join(' · ') || 'Rotation loading'}</small>
+                </span>
+              </li>
+            </ul>
+            <FeaturedBuilds builds={snapshot.featuredBuilds} onLogin={onLogin} />
           </>
         ) : null}
       </BoardState>
@@ -629,19 +622,8 @@ function HomeLeaderboards({ rows }: { rows: PublicTopGuardian[] }) {
           <article key={board.id} className="gh-home-board" aria-labelledby={`gh-board-${board.id}`}>
             <header className="gh-home-board-head">
               <h3 id={`gh-board-${board.id}`}>{board.title}</h3>
-              <p className="gh-prize-badge">Season #1 · 3D print</p>
             </header>
-            {leader ? (
-              <p className="gh-leader-callout">
-                <span className="gh-kicker">#1 Prize Leader</span>
-                {leader.displayName} · {leader.points} pts
-              </p>
-            ) : (
-              <p className="gh-leader-callout">
-                <span className="gh-kicker">#1 Prize Leader</span>
-                No prize leader yet
-              </p>
-            )}
+            {leader ? <p className="gh-sr">#1 {leader.displayName}</p> : null}
             {boardRows.length ? (
               <ol className="gh-home-board-list">
                 {boardRows.map((row) => (
@@ -685,24 +667,18 @@ function FeaturedBuilds({ builds, onLogin }: { builds: PublicFeaturedBuild[]; on
       {builds.length === 0 ? (
         <NextStep
           title="No builds yet"
-          body="Featured guides are curated loadouts from build sites. Player posts show up after someone shares their gear."
+          body="Share a loadout to post it here."
           actions={[
             { label: 'Sign in to share', onClick: onLogin },
             { label: 'Browse builds', onClick: () => openHubTab('loadouts') },
           ]}
         />
       ) : (
-        <div className="gh-rotation">
+        <div className="ios-group">
           {builds.map((build) => (
-            <a key={build.id} className="gh-card gh-build-card" href={`/builds/${build.id}`}>
-              <p className="gh-kicker">
-                {build.listing === 'featured' ? 'Featured' : build.characterClass} · {build.characterClass} · {build.activity}
-              </p>
-              <h3>{build.name}</h3>
-              <p className="gh-muted">
-                {build.subclass}
-                {build.creditName ? ` · ${build.creditName}` : ` · ${build.likes} likes · ${build.ownerDisplayName}`}
-              </p>
+            <a key={build.id} className="gh-row-card gh-build-card" href={`/builds/${build.id}`}>
+              <strong>{build.name}</strong>
+              <span className="gh-muted">{build.characterClass}</span>
             </a>
           ))}
         </div>

@@ -22,9 +22,14 @@ export function PageHeader({
   return (
     <header className="gh-page-head">
       <div>
-        {kicker ? <p className="gh-kicker">{kicker}</p> : null}
         <h1 id={titleId}>{title}</h1>
-        {subtitle ? <p className="gh-lede">{subtitle}</p> : null}
+        {subtitle ? (
+          <details className="gh-disclosure ios-detail">
+            <summary>Details</summary>
+            <p className="gh-lede">{subtitle}</p>
+          </details>
+        ) : null}
+        {kicker ? <p className="gh-sr">{kicker}</p> : null}
       </div>
       {extra}
     </header>

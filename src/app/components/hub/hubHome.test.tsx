@@ -20,7 +20,7 @@ describe('guardian hub home', () => {
       })
     )
 
-    expect(html).toContain('Play with new friends. Score the clear.')
+    expect(html).toContain('Home')
     expect(html).toContain('Score Your Runs')
     expect(html).toContain('Sign in with Bungie to Score Runs')
     expect(html).toContain('Vote MVP')

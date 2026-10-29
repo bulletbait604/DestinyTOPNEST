@@ -203,21 +203,16 @@ export default function GuardianDirectory({ onLogin }: { onLogin?: () => void })
                 className="gh-person-main"
                 onClick={() => navigateGuardianProfile(card.membershipId, card.membershipType)}
               >
-                <span className="gh-person-name">
-                  {card.displayName}
-                  {card.clanTag ? <small>[{card.clanTag}]</small> : null}
+                <span className="ios-avatar" aria-hidden>
+                  {card.displayName.replace(/[^A-Za-z0-9]/g, '').slice(0, 1).toUpperCase() || '?'}
                 </span>
-                <span className="gh-muted">
-                  {statusLabel(card.status)} · {classLabel(card.characterClass)}
-                  {card.platform ? ` · ${card.platform}` : ''}
+                <span className="ios-row-copy">
+                  <strong className="gh-person-name">{card.displayName}</strong>
+                  <small className="gh-muted">
+                    {(card.mvpVotes ?? card.mvpCount) ? `${card.mvpVotes ?? card.mvpCount} MVP` : classLabel(card.characterClass)}
+                  </small>
                 </span>
-                <span className="gh-badge-row">
-                  {card.badges.map((badge) => (
-                    <span key={badge} className="gh-badge">
-                      {badge}
-                    </span>
-                  ))}
-                </span>
+                <span className="ios-chevron" aria-hidden />
               </button>
               <span className="gh-vote">
                 <MvpCountBadge count={card.mvpVotes ?? card.mvpCount} />
