@@ -15,14 +15,56 @@ import {
 } from '@/lib/destiny/communityBuildModel'
 import type { DestinyCharacterClass } from '@/lib/destiny/types'
 import CommunityBuildForm from '@/app/components/destiny/community/CommunityBuildForm'
-import { EmptyBlock, GlassCard, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
+import { EmptyBlock, GlassCard, ItemIcon, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
+import { elementBannerUrl } from '@/lib/destiny/featuredBuilds'
 import { destinyPrimaryBtn, destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
 import { cn } from '@/lib/utils'
 
 const fieldClass =
   'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/35'
 
+function elementClass(subclass: string): string {
+  const key = subclass.trim().toLowerCase()
+  if (key === 'arc' || key === 'solar' || key === 'void' || key === 'stasis' || key === 'strand' || key === 'prismatic') {
+    return `el-${key}`
+  }
+  return 'el-prismatic'
+}
+
+function FeaturedCard({ build }: { build: CommunityBuildPublic }) {
+  const icons = [...build.aspects, ...build.fragments, ...(build.weapons ?? [])].filter((plug) => plug.iconUrl).slice(0, 8)
+  return (
+    <Link href={`/builds/${build.id}`} className={`gh-build-sheet ${elementClass(build.subclass)}`}>
+      <span className="gh-build-banner" style={{ backgroundImage: `url(${elementBannerUrl(build.subclass)})` }} />
+      <span className="gh-build-body">
+        <span className="gh-build-kicker">
+          {build.subclassRef?.iconUrl ? (
+            <ItemIcon iconUrl={build.subclassRef.iconUrl} name={build.subclass} size={18} square={false} />
+          ) : null}
+          {communityClassLabel(build.characterClass)} · {build.subclass}
+        </span>
+        <strong>{build.name}</strong>
+        <span className="gh-build-gear">
+          <ItemIcon item={build.exoticArmorRef} name={build.exoticArmor} size={28} />
+          <span>{build.exoticArmor}</span>
+          <ItemIcon item={build.exoticWeaponRef} name={build.exoticWeapon} size={28} />
+          <span>{build.exoticWeapon}</span>
+        </span>
+        {icons.length ? (
+          <span className="gh-build-icons">
+            {icons.map((plug) => (
+              <ItemIcon key={`${build.id}-${plug.name}`} iconUrl={plug.iconUrl} name={plug.name} size={26} />
+            ))}
+          </span>
+        ) : null}
+        {build.playNotes ? <span className="gh-muted">{build.playNotes}</span> : null}
+      </span>
+    </Link>
+  )
+}
+
 function BuildCard({ build }: { build: CommunityBuildPublic }) {
+  if (build.listing === 'featured') return <FeaturedCard build={build} />
   return (
     <Link href={`/builds/${build.id}`} className="gh-row-card">
       <span className="ios-row-copy">
@@ -291,7 +333,7 @@ export default function CommunityBuildsBrowser({
           <h2 id="featured-builds-title" className={cn('text-lg font-semibold', t.gold)}>
             Featured
           </h2>
-          <div className="ios-group">
+          <div className="gh-build-grid">
             {featured.map((build) => (
               <BuildCard key={build.id} build={build} />
             ))}

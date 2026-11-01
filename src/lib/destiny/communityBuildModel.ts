@@ -53,6 +53,10 @@ export interface CommunityBuildPlug {
   iconUrl?: string
 }
 
+export interface CommunityBuildAbility extends CommunityBuildPlug {
+  slot: 'grenade' | 'melee' | 'class'
+}
+
 export interface CommunityBuildContent {
   name: string
   characterClass: DestinyCharacterClass
@@ -69,6 +73,12 @@ export interface CommunityBuildContent {
   activityTags: CommunityActivityTag[]
   description: string
   source: 'manual' | 'equipped'
+  /** Key weapons, including the exotic when the build uses one. */
+  weapons?: CommunityBuildPlug[]
+  superAbility?: CommunityBuildPlug
+  abilities?: CommunityBuildAbility[]
+  /** One short how-to line. */
+  playNotes?: string
 }
 
 export interface CommunityBuildDraft extends CommunityBuildContent {
@@ -598,6 +608,10 @@ export function toCommunityBuildPublic(
     statFocus: build.statFocus,
     activityTags: build.activityTags,
     description: build.description,
+    ...(build.weapons?.length ? { weapons: build.weapons } : {}),
+    ...(build.superAbility ? { superAbility: build.superAbility } : {}),
+    ...(build.abilities?.length ? { abilities: build.abilities } : {}),
+    ...(build.playNotes ? { playNotes: build.playNotes } : {}),
     source: build.source,
     status: build.status,
     moderationNote: canEdit ? build.moderationNote : undefined,

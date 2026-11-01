@@ -8,6 +8,7 @@ import type { LeaderboardCategory, LeaderboardEntry, LeaderboardPeriod } from '@
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import { RateButton } from '@/app/components/hub/QuickRate'
+import { BOARD_BANNER_URL } from '@/lib/destiny/featuredBuilds'
 
 const CATEGORIES: { id: LeaderboardCategory; label: string }[] = [
   { id: 'raid', label: 'Raid' },
@@ -153,6 +154,10 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
       </details>
 
       <div id="gh-board-panel" role="tabpanel" aria-labelledby={`gh-board-tab-${category}`}>
+      <div
+        className="gh-board-art gh-board-art-wide"
+        style={{ backgroundImage: `url(${category === 'dungeon' ? BOARD_BANNER_URL.dungeon : category === 'new_bonds' ? BOARD_BANNER_URL.new_bonds : BOARD_BANNER_URL.raid})` }}
+      />
       {loading ? <p className="gh-muted">Loading the board…</p> : null}
       {error ? (
         <NextStep

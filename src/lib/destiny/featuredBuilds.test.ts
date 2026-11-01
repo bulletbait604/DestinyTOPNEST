@@ -30,16 +30,35 @@ describe('featured builds', () => {
     for (const record of featuredBuildRecords()) {
       expect(record.listing).toBe('featured')
       expect(record.ownerDisplayName).toBe('Featured')
+      expect(record.exoticArmor.trim().length).toBeGreaterThan(0)
+      expect(record.exoticWeapon.trim().length).toBeGreaterThan(0)
+      expect(record.aspects.length).toBeGreaterThan(0)
+      expect(record.fragments.length).toBeGreaterThan(0)
+      expect(record.mods.length).toBeGreaterThan(0)
+      expect(record.weapons?.length).toBeGreaterThan(0)
+      expect(record.superAbility?.name.trim().length).toBeGreaterThan(0)
+      expect(record.abilities?.map((ability) => ability.slot)).toEqual(['grenade', 'melee', 'class'])
+      expect(record.abilities?.every((ability) => ability.name.trim().length > 0)).toBe(true)
+      expect(record.playNotes && record.playNotes.trim().length).toBeGreaterThan(12)
+      expect(record.statFocus.length).toBeGreaterThan(0)
       const named = [
         record.exoticArmorRef,
         record.exoticWeaponRef,
+        record.superAbility,
+        ...(record.weapons ?? []),
+        ...(record.abilities ?? []),
         ...record.aspects,
         ...record.fragments,
         ...record.mods,
       ]
       for (const plug of named) {
-        if (!plug?.hash) continue
+        if (!plug?.name) continue
         const entry = catalogLookup(plug.name)
+        if (entry && (entry.entity === 'DestinyInventoryItemDefinition' || entry.entity === 'DestinySandboxPerkDefinition')) {
+          expect(plug.hash).toBe(entry.hash)
+          expect(plug.iconUrl?.startsWith('https://www.bungie.net/')).toBe(true)
+        }
+        if (!plug.hash) continue
         expect(entry?.hash).toBe(plug.hash)
       }
       if (record.exoticArmor) {
