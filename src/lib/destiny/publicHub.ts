@@ -92,6 +92,12 @@ export interface PublicFeaturedBuild {
   listing?: 'featured' | 'player'
   creditName?: string
   creditUrl?: string
+  exoticArmor?: string
+  exoticArmorIcon?: string
+  exoticWeapon?: string
+  exoticWeaponIcon?: string
+  subclassIcon?: string
+  playNotes?: string
 }
 
 export interface PublicHubSnapshot {
@@ -284,6 +290,12 @@ function toPublicFeatured(build: {
   listing?: 'featured' | 'player'
   creditName?: string
   creditUrl?: string
+  exoticArmor?: string
+  exoticArmorRef?: { iconUrl?: string }
+  exoticWeapon?: string
+  exoticWeaponRef?: { iconUrl?: string }
+  subclassRef?: { iconUrl?: string }
+  playNotes?: string
 }): PublicFeaturedBuild {
   return {
     id: build.id,
@@ -296,6 +308,12 @@ function toPublicFeatured(build: {
     listing: build.listing === 'featured' ? 'featured' : 'player',
     creditName: build.creditName,
     creditUrl: build.creditUrl,
+    exoticArmor: build.exoticArmor,
+    exoticArmorIcon: build.exoticArmorRef?.iconUrl,
+    exoticWeapon: build.exoticWeapon,
+    exoticWeaponIcon: build.exoticWeaponRef?.iconUrl,
+    subclassIcon: build.subclassRef?.iconUrl,
+    playNotes: build.playNotes,
   }
 }
 

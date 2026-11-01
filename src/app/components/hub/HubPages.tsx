@@ -9,6 +9,7 @@ import BoardsHub from '@/app/components/hub/BoardsHub'
 import { NextStep } from '@/app/components/hub/clarity'
 import { PageHeader } from '@/app/components/hub/PageHeader'
 import { formatEventWhen, openHubTab, usePublicHub } from '@/app/components/hub/hubTypes'
+import { BOARD_BANNER_URL, elementBannerUrl } from '@/lib/destiny/featuredBuilds'
 
 function EmptyNote({
   title,
@@ -606,10 +607,11 @@ const HOME_BOARDS: {
   id: PublicTopGuardian['board']
   title: string
   link: string
+  art: string
 }[] = [
-  { id: 'raid', title: 'Raid Leaderboard', link: 'Full Raid Board →' },
-  { id: 'dungeon', title: 'Dungeon Leaderboard', link: 'Full Dungeon Board →' },
-  { id: 'new_bonds', title: 'New Teammates Leaderboard', link: 'Full New Teammates Board →' },
+  { id: 'raid', title: 'Raid Leaderboard', link: 'Full Raid Board →', art: BOARD_BANNER_URL.raid },
+  { id: 'dungeon', title: 'Dungeon Leaderboard', link: 'Full Dungeon Board →', art: BOARD_BANNER_URL.dungeon },
+  { id: 'new_bonds', title: 'New Teammates Leaderboard', link: 'Full New Teammates Board →', art: BOARD_BANNER_URL.new_bonds },
 ]
 
 function HomeLeaderboards({ rows }: { rows: PublicTopGuardian[] }) {
@@ -620,6 +622,7 @@ function HomeLeaderboards({ rows }: { rows: PublicTopGuardian[] }) {
         const leader = boardRows.find((row) => row.rank === 1) ?? boardRows[0]
         return (
           <article key={board.id} className="gh-home-board" aria-labelledby={`gh-board-${board.id}`}>
+            <div className="gh-board-art" style={{ backgroundImage: `url(${board.art})` }} />
             <header className="gh-home-board-head">
               <h3 id={`gh-board-${board.id}`}>{board.title}</h3>
             </header>
@@ -674,13 +677,30 @@ function FeaturedBuilds({ builds, onLogin }: { builds: PublicFeaturedBuild[]; on
           ]}
         />
       ) : (
-        <div className="ios-group">
-          {builds.map((build) => (
-            <a key={build.id} className="gh-row-card gh-build-card" href={`/builds/${build.id}`}>
-              <strong>{build.name}</strong>
-              <span className="gh-muted">{build.characterClass}</span>
-            </a>
-          ))}
+        <div className="gh-build-grid">
+          {builds.map((build) => {
+            const element = build.subclass.toLowerCase()
+            const tone = ['arc', 'solar', 'void', 'stasis', 'strand', 'prismatic'].includes(element) ? element : 'prismatic'
+            return (
+              <a key={build.id} className={`gh-build-sheet el-${tone}`} href={`/builds/${build.id}`}>
+                <span className="gh-build-banner" style={{ backgroundImage: `url(${elementBannerUrl(build.subclass)})` }} />
+                <span className="gh-build-body">
+                  <span className="gh-build-kicker">
+                    {build.subclassIcon ? <span className="gh-mini-icon" style={{ backgroundImage: `url(${build.subclassIcon})` }} /> : null}
+                    {build.characterClass} · {build.subclass}
+                  </span>
+                  <strong>{build.name}</strong>
+                  <span className="gh-build-gear">
+                    {build.exoticArmorIcon ? <span className="gh-gear-icon" style={{ backgroundImage: `url(${build.exoticArmorIcon})` }} /> : null}
+                    <span>{build.exoticArmor}</span>
+                    {build.exoticWeaponIcon ? <span className="gh-gear-icon" style={{ backgroundImage: `url(${build.exoticWeaponIcon})` }} /> : null}
+                    <span>{build.exoticWeapon}</span>
+                  </span>
+                  {build.playNotes ? <span className="gh-muted">{build.playNotes}</span> : null}
+                </span>
+              </a>
+            )
+          })}
         </div>
       )}
     </section>

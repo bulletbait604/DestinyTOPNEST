@@ -13,6 +13,7 @@ import {
 import CommunityBuildForm from '@/app/components/destiny/community/CommunityBuildForm'
 import { EmptyBlock, GlassCard, ItemIcon, LoadingBlock, SectionTitle } from '@/app/components/destiny/DestinyUi'
 import { destinyPrimaryBtn, destinySecondaryBtn, getDestinyTheme } from '@/app/components/destiny/destinyTheme'
+import { elementBannerUrl } from '@/lib/destiny/featuredBuilds'
 import { cn } from '@/lib/utils'
 
 async function errorMessage(res: Response, fallback: string): Promise<string> {
@@ -30,17 +31,27 @@ function PlugList({
   if (!plugs.length) return null
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-wide text-white/45 mb-2">{title}</p>
-      <ul className="space-y-1.5">
+      <p className="gh-build-label">{title}</p>
+      <ul className="gh-build-plugs">
         {plugs.map((plug) => (
-          <li key={`${title}-${plug.name}`} className="flex items-center gap-2 text-sm text-white/85">
-            <ItemIcon iconUrl={plug.iconUrl} name={plug.name} size={28} />
+          <li key={`${title}-${plug.name}`}>
+            <ItemIcon iconUrl={plug.iconUrl} name={plug.name} size={32} />
             <span>{plug.name}</span>
           </li>
         ))}
       </ul>
     </div>
   )
+}
+
+const ABILITY_LABEL = { grenade: 'Grenade', melee: 'Melee', class: 'Class' } as const
+
+function elementClass(subclass: string): string {
+  const key = subclass.trim().toLowerCase()
+  if (key === 'arc' || key === 'solar' || key === 'void' || key === 'stasis' || key === 'strand' || key === 'prismatic') {
+    return `el-${key}`
+  }
+  return 'el-prismatic'
 }
 
 export default function CommunityBuildDetail({
@@ -317,6 +328,13 @@ export default function CommunityBuildDetail({
           </div>
         ) : null}
 
+        {build.listing === 'featured' ? (
+          <div className={`gh-build-hero ${elementClass(build.subclass)}`}>
+            <span className="gh-build-banner" style={{ backgroundImage: `url(${elementBannerUrl(build.subclass)})` }} />
+            {build.playNotes ? <p className="gh-build-note">{build.playNotes}</p> : null}
+          </div>
+        ) : null}
+
         {editing ? (
           <div className="mt-5">
             <CommunityBuildForm
@@ -341,32 +359,49 @@ export default function CommunityBuildDetail({
                 </span>
               ))}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="flex items-center gap-2">
+            <div className="gh-build-facts">
+              {build.superAbility ? (
+                <div>
+                  <ItemIcon iconUrl={build.superAbility.iconUrl} name={build.superAbility.name} size={40} />
+                  <div>
+                    <p className="gh-build-label">Super</p>
+                    <p>{build.superAbility.name}</p>
+                  </div>
+                </div>
+              ) : null}
+              {(build.abilities ?? []).map((ability) => (
+                <div key={ability.slot}>
+                  <ItemIcon iconUrl={ability.iconUrl} name={ability.name} size={40} />
+                  <div>
+                    <p className="gh-build-label">{ABILITY_LABEL[ability.slot]}</p>
+                    <p>{ability.name}</p>
+                  </div>
+                </div>
+              ))}
+              <div>
                 <ItemIcon item={build.exoticArmorRef} name={build.exoticArmor || 'Exotic armor'} size={40} />
                 <div>
-                  <p className={cn('text-[11px] uppercase tracking-wide', t.caption)}>Exotic armor</p>
-                  <p className="text-sm text-white">{build.exoticArmor || '—'}</p>
+                  <p className="gh-build-label">Exotic armor</p>
+                  <p>{build.exoticArmor || '—'}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div>
                 <ItemIcon item={build.exoticWeaponRef} name={build.exoticWeapon || 'Exotic weapon'} size={40} />
                 <div>
-                  <p className={cn('text-[11px] uppercase tracking-wide', t.caption)}>Exotic weapon</p>
-                  <p className="text-sm text-white">{build.exoticWeapon || '—'}</p>
+                  <p className="gh-build-label">Exotic weapon</p>
+                  <p>{build.exoticWeapon || '—'}</p>
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="gh-build-columns-3">
               <PlugList title="Aspects" plugs={build.aspects} />
               <PlugList title="Fragments" plugs={build.fragments} />
-              <PlugList title="Mods" plugs={build.mods} />
+              <PlugList title="Weapons" plugs={build.weapons ?? []} />
+              <PlugList title="Armor mods" plugs={build.mods} />
             </div>
-            {build.description ? (
+            {build.playNotes && build.description && build.description !== build.playNotes ? (
               <p className={cn('text-sm whitespace-pre-wrap leading-relaxed', t.body)}>{build.description}</p>
-            ) : (
-              <p className={cn('text-sm', t.muted)}>No description.</p>
-            )}
+            ) : null}
           </div>
         )}
         {error ? (
