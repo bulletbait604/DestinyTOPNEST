@@ -315,12 +315,14 @@ export default function CommunityBuildsBrowser({
         />
       ) : null}
       {!loading && !error && builds.length > 0 ? (
-        <div className="ios-group">
-          <h2 className={cn('px-4 pt-3 text-[17px] font-semibold', t.gold)}>Player posts</h2>
+        <>
+          <h2 className={cn('text-[17px] font-semibold', t.gold)}>Player posts</h2>
+          <div className="ios-group">
           {builds.map((build) => (
             <BuildCard key={build.id} build={build} />
           ))}
-        </div>
+          </div>
+        </>
       ) : null}
 
       {!loading && total > limit ? (
