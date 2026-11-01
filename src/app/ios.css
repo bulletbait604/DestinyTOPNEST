@@ -112,15 +112,18 @@ h1, h2, h3, h4,
 .d2-login-screen-logo-halo { content: none !important; display: none !important; }
 
 .gh-shell {
-  width: min(760px, calc(100% - 32px));
+  width: min(1200px, calc(100% - 48px));
   padding-bottom: 28px;
   color: var(--ios-label);
 }
 
 .gh-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  padding: 8px max(16px, calc((100vw - 760px) / 2));
+  padding: 10px max(24px, calc((100vw - 1200px) / 2));
   background: var(--ios-nav);
   border: 0;
   border-bottom: 0.5px solid var(--ios-separator);
@@ -140,6 +143,9 @@ h1, h2, h3, h4,
 .gh-top-actions { min-width: 0; }
 .gh-brand small { display: none; }
 .gh-search {
+  flex: 0 1 240px;
+  width: 240px;
+  margin-left: auto;
   min-height: 36px;
   padding: 0 10px;
   border: 0;
@@ -160,12 +166,15 @@ h1, h2, h3, h4,
 }
 
 .gh-nav {
-  gap: 4px;
-  margin: 8px 0 0;
-  padding: 2px;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
   border: 0;
-  border-radius: 12px;
-  background: var(--ios-fill);
+  border-radius: 0;
+  background: transparent;
 }
 .gh-nav-link,
 .gh-more summary,
@@ -181,10 +190,10 @@ h1, h2, h3, h4,
 }
 .gh-nav-link[aria-current='page'],
 .gh-nav-group > summary[aria-current='page'] {
-  color: var(--ios-label);
-  background: var(--ios-grouped);
+  color: var(--ios-tint);
+  background: transparent;
   border-bottom-color: transparent;
-  box-shadow: var(--ios-shadow);
+  box-shadow: none;
 }
 .gh-nav-menu,
 .gh-more-menu,
@@ -596,7 +605,63 @@ h1, h2, h3, h4,
 .gh-vote { flex: 0 0 auto; white-space: nowrap; align-items: center; }
 .gh-home-board { padding: 4px 0 8px; }
 .gh-home-board-head { padding: 8px 16px 0; }
-@media (max-width: 799px) {
+.gh-board-columns {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .gh-bottom-nav { display: none !important; }
+  .gh-nav { display: flex !important; }
+  .gh-action-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gh-action-card { flex-direction: column; align-items: flex-start; min-height: 112px; }
+  .gh-action-card .gh-btn { width: auto; }
+  .gh-home-boards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .gh-rotation.gh-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+  .gh-rotation.gh-list > li {
+    background: var(--ios-grouped);
+    border-radius: 12px;
+    border-top: 0;
+    box-shadow: var(--ios-shadow);
+  }
+  .ios-group {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+  .ios-group > a,
+  .ios-group > .gh-row-card {
+    background: var(--ios-grouped);
+    border-radius: 12px !important;
+    border-top: 0;
+    box-shadow: var(--ios-shadow);
+    min-height: 88px;
+    align-items: flex-start;
+  }
+  .gh-board-columns {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) 120px;
+    gap: 12px;
+    align-items: center;
+    padding: 0 108px 8px 16px;
+    color: var(--ios-secondary);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .gh-board-columns span:nth-child(3) { text-align: right; }
+  .ios-sheet-backdrop { align-items: center; }
+}
+
+@media (max-width: 767px) {
   .gh-action-card { flex-direction: column; align-items: stretch; }
   .gh-action-card .gh-btn { width: 100%; }
 }
@@ -757,23 +822,21 @@ h1, h2, h3, h4,
   }
 }
 
-@media (min-width: 800px) {
-  .gh-bottom-nav { display: none; }
-  .gh-nav { display: flex; }
-  .gh-action-cards { grid-template-columns: 1fr; }
-  .gh-home-boards { grid-template-columns: 1fr; gap: 12px; }
-  .ios-sheet-backdrop { align-items: center; }
-}
-
-@media (max-width: 799px) {
+@media (max-width: 767px) {
   .gh-shell {
-    width: min(100% - 32px, 760px);
+    width: min(100% - 32px, 1200px);
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
-  .gh-nav { display: none; }
-  .gh-top .gh-more { display: none; }
+  .gh-top {
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'brand actions' 'search search';
+    padding: 8px 16px;
+  }
+  .gh-search { width: auto; flex: none; margin-left: 0; }
+  .gh-nav { display: none !important; }
   .gh-bottom-nav {
-    display: grid;
+    display: grid !important;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     position: fixed;
     left: 0;

@@ -69,6 +69,28 @@ export default function HubChrome({
             <strong>{HUB_NAME}</strong>
           </span>
         </button>
+        <nav className="gh-nav" aria-label="TopNest">
+          {TAB_BAR.map((item) => {
+            const current = tabCurrent(item.href, pathname)
+            return (
+              <a key={item.href} className="gh-nav-link" href={item.href} aria-current={current ? 'page' : undefined}>
+                <span>{item.label}</span>
+              </a>
+            )
+          })}
+          <details className="gh-nav-group">
+            <summary className="gh-nav-link" aria-current={moreCurrent ? 'page' : undefined}>
+              <span>More</span>
+            </summary>
+            <div className="gh-nav-menu">
+              {MORE_ITEMS.map((item) => (
+                <a key={item.href} href={item.href} aria-current={pathname === item.href ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </details>
+        </nav>
         <form className="gh-search" role="search" onSubmit={submitSearch}>
           <label className="gh-sr" htmlFor="hub-global-search">
             Search guardians
@@ -94,28 +116,6 @@ export default function HubChrome({
           )}
         </div>
       </header>
-      <nav className="gh-nav" aria-label="TopNest">
-        {TAB_BAR.map((item) => {
-          const current = tabCurrent(item.href, pathname)
-          return (
-            <a key={item.href} className="gh-nav-link" href={item.href} aria-current={current ? 'page' : undefined}>
-              <span>{item.label}</span>
-            </a>
-          )
-        })}
-        <details className="gh-nav-group">
-          <summary className="gh-nav-link" aria-current={moreCurrent ? 'page' : undefined}>
-            <span>More</span>
-          </summary>
-          <div className="gh-nav-menu">
-            {MORE_ITEMS.map((item) => (
-              <a key={item.href} href={item.href} aria-current={pathname === item.href ? 'page' : undefined}>
-                {item.label}
-              </a>
-            ))}
-          </div>
-        </details>
-      </nav>
       <details className="gh-disclosure">
         <summary>Scoring</summary>
         <SeasonPointsBar />

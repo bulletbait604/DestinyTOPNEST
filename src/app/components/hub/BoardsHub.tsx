@@ -173,6 +173,12 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
         />
       ) : null}
       {visible.length > 0 ? (
+        <>
+        <div className="gh-board-columns" aria-hidden="true">
+          <span>Rank</span>
+          <span>Guardian</span>
+          <span>Score</span>
+        </div>
         <ol className="gh-board">
           {visible.map((entry) => {
             const initial = entry.bungieDisplayName.replace(/[^A-Za-z0-9]/g, '').slice(0, 1).toUpperCase() || '?'
@@ -204,6 +210,7 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
             )
           })}
         </ol>
+        </>
       ) : null}
       </div>
 
