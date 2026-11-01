@@ -26,10 +26,12 @@ describe('featured builds', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('attaches a hash only when the manifest catalog has that item', () => {
+  it('resolves a Bungie icon for every curated build item and leaves no required field empty', () => {
     for (const record of featuredBuildRecords()) {
       expect(record.listing).toBe('featured')
-      expect(record.ownerDisplayName).toBe('Featured')
+      expect(record.name.trim().length).toBeGreaterThan(0)
+      expect(record.characterClass).toBeTruthy()
+      expect(record.subclass.trim().length).toBeGreaterThan(0)
       expect(record.exoticArmor.trim().length).toBeGreaterThan(0)
       expect(record.exoticWeapon.trim().length).toBeGreaterThan(0)
       expect(record.aspects.length).toBeGreaterThan(0)
@@ -38,12 +40,13 @@ describe('featured builds', () => {
       expect(record.weapons?.length).toBeGreaterThan(0)
       expect(record.superAbility?.name.trim().length).toBeGreaterThan(0)
       expect(record.abilities?.map((ability) => ability.slot)).toEqual(['grenade', 'melee', 'class'])
-      expect(record.abilities?.every((ability) => ability.name.trim().length > 0)).toBe(true)
-      expect(record.playNotes && record.playNotes.trim().length).toBeGreaterThan(12)
+      expect(record.playNotes?.trim().length).toBeGreaterThan(12)
       expect(record.statFocus.length).toBeGreaterThan(0)
+      expect(record.description.trim().length).toBeGreaterThan(0)
       const named = [
         record.exoticArmorRef,
         record.exoticWeaponRef,
+        record.subclassRef,
         record.superAbility,
         ...(record.weapons ?? []),
         ...(record.abilities ?? []),
@@ -52,20 +55,16 @@ describe('featured builds', () => {
         ...record.mods,
       ]
       for (const plug of named) {
-        if (!plug?.name) continue
-        const entry = catalogLookup(plug.name)
-        if (entry && (entry.entity === 'DestinyInventoryItemDefinition' || entry.entity === 'DestinySandboxPerkDefinition')) {
-          expect(plug.hash).toBe(entry.hash)
-          expect(plug.iconUrl?.startsWith('https://www.bungie.net/')).toBe(true)
-        }
-        if (!plug.hash) continue
-        expect(entry?.hash).toBe(plug.hash)
+        expect(plug, record.name).toBeTruthy()
+        expect(plug?.name?.trim().length, record.name).toBeGreaterThan(0)
+        expect(plug?.hash, `${record.name}: ${plug?.name}`).toBeGreaterThan(0)
+        expect(plug?.iconUrl, `${record.name}: ${plug?.name}`).toMatch(/^https:\/\/www\.bungie\.net\//)
+        const entry = catalogLookup(plug!.name)
+        expect(entry?.hash, plug?.name).toBe(plug?.hash)
       }
-      if (record.exoticArmor) {
-        const ref = manifestRefForName(record.exoticArmor)
-        expect(ref?.name).toBe(record.exoticArmor)
-        if (ref?.hash) expect(catalogLookup(record.exoticArmor)?.hash).toBe(ref.hash)
-      }
+      const ref = manifestRefForName(record.exoticArmor)
+      expect(ref?.name).toBe(record.exoticArmor)
+      expect(ref?.iconUrl?.startsWith('https://www.bungie.net/')).toBe(true)
     }
   })
 })

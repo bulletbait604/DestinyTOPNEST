@@ -17,7 +17,7 @@ import type {
 import { catalogLookup } from '@/lib/destiny/itemsCatalog'
 import type { DestinyCharacterClass, DestinyIconRef } from '@/lib/destiny/types'
 
-export const FEATURED_BUILD_SEED_VERSION = '2026-11-01'
+export const FEATURED_BUILD_SEED_VERSION = '2026-11-02'
 export const FEATURED_BUILD_OWNER_ID = 'featured'
 export const FEATURED_BUILD_OWNER_NAME = 'Featured'
 
@@ -111,7 +111,7 @@ export const FEATURED_BUILD_SPECS: FeaturedBuildSpec[] = [
     mods: ['Harmonic Siphon', 'Recuperation', 'Innervation'],
     statFocus: ['Weapons', 'Class', 'Grenade'],
     activityTags: ['raid', 'dungeon', 'gm'],
-    superAbility: 'Shadowshot',
+    superAbility: 'Shadowshot: Deadfall',
     grenade: 'Vortex Grenade',
     melee: 'Snare Bomb',
     classAbility: "Gambler's Dodge",
@@ -479,7 +479,12 @@ export function manifestRefForName(name: string): DestinyIconRef | undefined {
   if (!trimmed) return undefined
   const entry = catalogLookup(trimmed)
   if (!entry) return { name: trimmed }
-  if (entry.entity !== 'DestinyInventoryItemDefinition' && entry.entity !== 'DestinySandboxPerkDefinition') {
+  const iconEntities = new Set([
+    'DestinyInventoryItemDefinition',
+    'DestinySandboxPerkDefinition',
+    'DestinyDamageTypeDefinition',
+  ])
+  if (!iconEntities.has(entry.entity)) {
     return { name: trimmed }
   }
   const ref: DestinyIconRef = { name: trimmed, hash: entry.hash, entityType: entry.entity }

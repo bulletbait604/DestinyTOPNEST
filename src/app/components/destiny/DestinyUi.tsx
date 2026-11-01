@@ -63,14 +63,16 @@ export function ItemIcon({
   return (
     <div
       title={label}
+      aria-hidden
       className={cn(
-        'd2-item-thumb d2-rarity-common flex items-center justify-center text-[10px] text-white/30',
+        'd2-item-thumb d2-icon-fallback flex items-center justify-center',
         square ? 'rounded-sm' : 'rounded-full',
+        elementClass,
         className
       )}
       style={{ width: size, height: size }}
     >
-      ·
+      {(label.trim()[0] || '·').toUpperCase()}
     </div>
   )
 }
