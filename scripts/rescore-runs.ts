@@ -1,7 +1,7 @@
 /**
  * Rewrite stored clear points, and optionally re-fetch Bungie history.
  *   npx vite-node --config vitest.config.mjs scripts/rescore-runs.ts
- *   npx vite-node --config vitest.config.mjs scripts/rescore-runs.ts --history
+ *   npx vite-node --config vitest.config.mjs scripts/rescore-runs.ts --history --limit=5
  */
 import { rescoreReadableHistory, rescoreStoredRuns } from '@/lib/destiny/rescore'
 
