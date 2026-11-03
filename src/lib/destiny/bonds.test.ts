@@ -119,7 +119,7 @@ describe('calculateRunPoints with bonds', () => {
   it('no longer zeroes runs with many randoms', () => {
     const r = calculateRunPoints({ ...base, bondPoints: 30 })
     expect(r.eligible).toBe(true)
-    expect(r.points).toBe(BOND_RULES.basePoints.raid + 30)
+    expect(r.points).toBe(BOND_RULES.basePoints.raid)
   })
   it('still blocks checkpoint, unverified and suspicious runs', () => {
     expect(calculateRunPoints({ ...base, checkpointLikely: true, bondPoints: 30 }).points).toBe(0)

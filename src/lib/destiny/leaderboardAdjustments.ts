@@ -5,6 +5,7 @@ import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
 import { aggregateLeaderboard } from '@/lib/destiny/leaderboards'
+import { mvpBoardBonus } from '@/lib/destiny/scoring'
 import { emptyVoteCounts, tallyVoteCounts } from '@/lib/destiny/mvpVoting'
 import { getVoteCountsMap } from '@/lib/destiny/voteCounts'
 import type {
@@ -134,10 +135,27 @@ export async function buildLeaderboardWithAdjustments(
   const base = aggregateLeaderboard(runs, usersById, category, period, season, kickMembershipIds)
 
   const adjustments = await loadLeaderboardAdjustments(category, period, season.id)
-  return attachVoteCounts(
+  const withVotes = await attachVoteCounts(
     applyLeaderboardAdjustments(base, adjustments, usersById, category, period, season),
     votes
   )
+  return applyMvpBoardPoints(withVotes, category)
+}
+
+/** Raid and dungeon totals include +2 for every MVP vote. Ranks are rebuilt after that. */
+export function applyMvpBoardPoints(entries: LeaderboardEntry[], category: LeaderboardCategory): LeaderboardEntry[] {
+  if (category === 'new_bonds') return entries
+  const scored = entries.map((entry) => ({
+    ...entry,
+    points: entry.points + mvpBoardBonus(entry.mvpVotes, category),
+  }))
+  scored.sort(
+    (a, b) =>
+      b.points - a.points ||
+      b.verifiedClears - a.verifiedClears ||
+      (a.fastestClearSeconds ?? Number.MAX_SAFE_INTEGER) - (b.fastestClearSeconds ?? Number.MAX_SAFE_INTEGER)
+  )
+  return scored.map((entry, index) => ({ ...entry, rank: index + 1 }))
 }
 
 export async function upsertLeaderboardAdjustment(input: {

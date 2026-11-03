@@ -397,8 +397,9 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
         <details className="gh-disclosure ios-detail">
           <summary>Details</summary>
           <ul className="gh-score-points">
-            <li>Clear raids or dungeons in Destiny 2.</li>
-            <li>Playing with Guardians you have not run with before earns bonus points.</li>
+            <li>Clear raids or dungeons in Destiny 2. A raid clear is 3 points. A dungeon clear is 1 point.</li>
+            <li>Each MVP vote you receive adds 2 points on the raid and dungeon boards.</li>
+            <li>Playing with Guardians you have not run with before earns bonus points on the New Teammates board.</li>
             <li>Click Sync My Runs for the last 5 pages, or look up previous raids and dungeons and add them to this season.</li>
           </ul>
         </details>
@@ -516,15 +517,6 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
   )
 }
 
-const HERO_ART = [
-  'https://www.bungie.net/img/destiny_content/pgcr/raid_root_of_nightmares.jpg',
-  'https://www.bungie.net/img/destiny_content/pgcr/europa-raid-deep-stone-crypt.jpg',
-  'https://www.bungie.net/img/destiny_content/pgcr/raid_beanstalk.jpg',
-  'https://www.bungie.net/img/destiny_content/pgcr/dungeon_duality.jpg',
-  'https://www.bungie.net/img/destiny_content/pgcr/raid_splinter.jpg',
-  'https://www.bungie.net/img/destiny_content/pgcr/vault_of_glass.jpg',
-]
-
 function bungieArt(path: string | undefined): string | undefined {
   if (!path) return undefined
   return path.startsWith('http') ? path : `https://www.bungie.net${path}`
@@ -532,49 +524,6 @@ function bungieArt(path: string | undefined): string | undefined {
 
 function activityArt(name: string): string | undefined {
   return bungieArt(activityCatalogLookup(name)?.iconPath)
-}
-
-function HomeHero({ signedIn, onLogin }: { signedIn: boolean; onLogin: () => void }) {
-  const [index, setIndex] = useState(0)
-  useEffect(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce) return
-    const id = window.setInterval(() => setIndex((current) => (current + 1) % HERO_ART.length), 6500)
-    return () => window.clearInterval(id)
-  }, [])
-  return (
-    <section className="gh-hero-banner" aria-label="Home">
-      {HERO_ART.map((src, slide) => (
-        <span
-          key={src}
-          className={slide === index ? 'gh-hero-slide is-on' : 'gh-hero-slide'}
-          style={{ backgroundImage: `url(${src})` }}
-        />
-      ))}
-      <div className="gh-hero-copy">
-        <p className="gh-hero-kicker">Home</p>
-        <h1>Score the clear.</h1>
-        <p>Find a Guardian, rate a teammate, and climb the season boards.</p>
-        <div className="gh-hero-actions">
-          {signedIn ? (
-            <a className="gh-btn gh-btn-primary" href="/score">
-              Score Your Runs
-            </a>
-          ) : (
-            <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
-              Sign in with Bungie to Score Runs
-            </button>
-          )}
-          <a className="gh-btn" href="/boards">
-            View leaderboards
-          </a>
-          <a className="gh-btn" href="/builds">
-            Browse builds
-          </a>
-        </div>
-      </div>
-    </section>
-  )
 }
 
 function HomeSkeleton() {
@@ -603,7 +552,9 @@ export function HubHome({
 }) {
   return (
     <div className="gh-stack gh-home">
-      <HomeHero signedIn={signedIn} onLogin={onLogin} />
+      <h1 className="gh-home-title">Home</h1>
+      {loading ? <HomeSkeleton /> : null}
+      {!loading && !error && snapshot ? <WeeklySection snapshot={snapshot} /> : null}
       <div className="gh-action-cards">
         <article className="gh-action-card">
           <h2>Score Your Runs</h2>
@@ -612,8 +563,8 @@ export function HubHome({
               Score
             </a>
           ) : (
-            <button type="button" className="gh-btn" onClick={onLogin}>
-              Sign in
+            <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
+              Sign in with Bungie to Score Runs
             </button>
           )}
         </article>
@@ -631,7 +582,6 @@ export function HubHome({
         </article>
       </div>
       <p className="ios-caption">Season #1 · 3D print</p>
-      {loading ? <HomeSkeleton /> : null}
       {error ? (
         <NextStep
           alert
@@ -655,18 +605,6 @@ function HomeLive({ snapshot, onLogin }: { snapshot: PublicHubSnapshot; onLogin:
   const clan = snapshot.clans[0]
   return (
     <>
-      <section className="gh-rotation gh-home-section" aria-label="This week">
-        <div className="gh-section-head">
-          <h2>This week</h2>
-          <span className="gh-muted">
-            {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
-          </span>
-        </div>
-        <div className="gh-feature-pair">
-          <FeaturedActivity title="Featured raids" names={snapshot.featuredRaids} />
-          <FeaturedActivity title="Featured dungeons" names={snapshot.featuredDungeons} />
-        </div>
-      </section>
       <HomeStats stats={snapshot.stats} />
       <section className="gh-home-section" aria-labelledby="gh-podium">
         <div className="gh-section-head">
@@ -754,6 +692,25 @@ function HomeLive({ snapshot, onLogin }: { snapshot: PublicHubSnapshot; onLogin:
         )}
       </section>
     </>
+  )
+}
+
+function WeeklySection({ snapshot }: { snapshot: PublicHubSnapshot }) {
+  const nightfall = snapshot.nightfall && !/pantheon/i.test(snapshot.nightfall) ? snapshot.nightfall : ''
+  return (
+    <section className="gh-home-section" aria-label="This week">
+      <div className="gh-section-head">
+        <h2>This week</h2>
+        <span className="gh-muted">
+          {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
+        </span>
+      </div>
+      <div className="gh-feature-pair gh-rotation">
+        <FeaturedActivity title="Featured raids" names={snapshot.featuredRaids} />
+        <FeaturedActivity title="Featured dungeons" names={snapshot.featuredDungeons} />
+        {nightfall ? <FeaturedActivity title="Nightfall" names={[nightfall]} /> : null}
+      </div>
+    </section>
   )
 }
 

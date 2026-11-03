@@ -8,7 +8,7 @@ import type { ActivityType, RunTeamMember } from '@/lib/destiny/types'
 
 export const BOND_RULES = {
   /** Base points for any verified full clear. */
-  basePoints: { raid: 10, dungeon: 6, pantheon: 10 } as Record<ActivityType, number>,
+  basePoints: { raid: 3, dungeon: 1, pantheon: 0 } as Record<ActivityType, number>,
   /** Bonus per first-time teammate. */
   newBondPoints: { raid: 15, dungeon: 10, pantheon: 15 } as Record<ActivityType, number>,
   /** Bonus per teammate on your 2nd or 3rd clear together (turn LFG into friends). */

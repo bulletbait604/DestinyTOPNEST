@@ -34,6 +34,8 @@ export type SyncDepthOptions = {
   pages?: number
   countPerPage?: number
   includePrevious?: boolean
+  /** Request pages until a short page comes back, capped by `pages` (max 40). */
+  walkUntilEmpty?: boolean
 }
 
 export function syncHistoryDepth(options: SyncDepthOptions = {}): {
@@ -44,8 +46,9 @@ export function syncHistoryDepth(options: SyncDepthOptions = {}): {
   const includePrevious = Boolean(options.includePrevious)
   const requestedPages = options.pages ?? (includePrevious ? PREVIOUS_HISTORY_PAGES : RECENT_HISTORY_PAGES)
   const requestedCount = options.countPerPage ?? HISTORY_PAGE_SIZE
+  const pageCap = options.walkUntilEmpty ? 80 : 8
   return {
-    pages: Math.min(8, Math.max(1, requestedPages)),
+    pages: Math.min(pageCap, Math.max(1, requestedPages)),
     countPerPage: Math.min(250, Math.max(1, requestedCount)),
     includePrevious,
   }

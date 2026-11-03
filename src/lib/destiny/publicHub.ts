@@ -16,6 +16,7 @@ import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
 import { loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
 import { getVoteCountsMap } from '@/lib/destiny/voteCounts'
+import { mvpBoardBonus } from '@/lib/destiny/scoring'
 
 export interface PublicContractCard {
   id: string
@@ -139,7 +140,7 @@ export interface PublicHubSnapshot {
 export const HUB_SCORING: PublicScoringNote[] = [
   {
     title: 'Leaderboard points',
-    body: 'A verified full clear from the start scores 10 (raid) or 6 (dungeon). Every fireteam member you have never cleared with adds a New Bonds bonus: 15 on a raid, 10 on a dungeon. Your 2nd and 3rd clears with someone add 4 each. Up to 6 new bonds score per 24 hours, and a teammate must finish and play at least half the run. A checkpoint clear scores only if a moderator approves it.',
+    body: 'A raid clear is 3 points. A dungeon clear is 1 point. Each MVP vote adds 2 points on the raid and dungeon boards. A checkpoint clear scores only if a moderator approves it.',
   },
   {
     title: 'Passport stamps',
@@ -383,6 +384,19 @@ function previewByClass<T extends { characterClass: string }>(rows: T[]): T[] {
   return picked.length ? picked : rows.slice(0, 6)
 }
 
+function rankHubBoards(rows: PublicTopGuardian[]): PublicTopGuardian[] {
+  const ranked: PublicTopGuardian[] = []
+  for (const board of ['raid', 'dungeon', 'new_bonds'] as const) {
+    const group = rows
+      .filter((row) => row.board === board)
+      .map((row) => ({ ...row, points: row.points + mvpBoardBonus(row.mvpVotes, board) }))
+      .sort((a, b) => b.points - a.points || a.displayName.localeCompare(b.displayName))
+      .map((row, index) => ({ ...row, rank: index + 1 }))
+    ranked.push(...group)
+  }
+  return ranked
+}
+
 export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHubSnapshot> {
   await refreshLiveWeeklyRotationBounded(now)
   const [events, contracts, kickMembershipIds] = await Promise.all([
@@ -409,10 +423,12 @@ export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHub
     const ids = snapshot.topGuardians.map((row) => row.bungieMembershipId ?? '').filter(Boolean)
     if (ids.length) {
       const counts = await getVoteCountsMap(ids)
-      snapshot.topGuardians = snapshot.topGuardians.map((row) => {
+      const withVotes = snapshot.topGuardians.map((row) => {
         const bucket = row.bungieMembershipId ? counts.get(row.bungieMembershipId) : undefined
-        return bucket ? { ...row, ...bucket } : row
+        const mvpVotes = bucket?.mvpVotes ?? row.mvpVotes ?? 0
+        return { ...row, ...(bucket ?? {}), mvpVotes, points: row.points }
       })
+      snapshot.topGuardians = rankHubBoards(withVotes)
     }
     return snapshot
   } catch (error) {

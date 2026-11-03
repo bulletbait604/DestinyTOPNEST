@@ -8,12 +8,12 @@ export const SEASON_HALL_BOARDS: {
   {
     category: 'raid',
     label: 'Raid board',
-    why: 'Points from verified raid clears this season, including bonuses for new teammates.',
+    why: '3 points for each verified raid clear this season, plus 2 points for every MVP vote.',
   },
   {
     category: 'dungeon',
     label: 'Dungeon board',
-    why: 'Points from verified dungeon clears this season, including bonuses for new teammates.',
+    why: '1 point for each verified dungeon clear this season, plus 2 points for every MVP vote.',
   },
   {
     category: 'new_bonds',
