@@ -100,6 +100,21 @@ export interface PublicFeaturedBuild {
   playNotes?: string
 }
 
+export interface PublicRecentRun {
+  id: string
+  activityName: string
+  type: 'raid' | 'dungeon'
+  completedAt: string
+  points: number
+  playerCount: number
+}
+
+export interface PublicHubStats {
+  runs: number
+  players: number
+  builds: number
+}
+
 export interface PublicHubSnapshot {
   weekLabel: string
   resetsInLabel: string
@@ -116,6 +131,8 @@ export interface PublicHubSnapshot {
   historyComplete: boolean
   topGuardians: PublicTopGuardian[]
   featuredBuilds: PublicFeaturedBuild[]
+  recentRuns: PublicRecentRun[]
+  stats: PublicHubStats
 }
 
 /** Plain-language rules. These do not award points; the evaluators do. */
@@ -231,6 +248,9 @@ export function assemblePublicHub(input: {
     events: input.events,
   })
 
+  const recentRuns = recentPublicRuns(runs)
+  const stats = hubStats(runs, input.featuredBuilds?.length ?? 0)
+
   return {
     weekLabel: week.weekLabel,
     resetsInLabel: week.resetsInLabel,
@@ -276,7 +296,34 @@ export function assemblePublicHub(input: {
     historyComplete: input.historyComplete !== false,
     topGuardians: topGuardiansFromRuns(runs, now, input.kickMembershipIds),
     featuredBuilds: input.featuredBuilds ?? [],
+    recentRuns,
+    stats,
   }
+}
+
+function recentPublicRuns(runs: RunRecord[]): PublicRecentRun[] {
+  return runs
+    .filter((run) => run.completed && run.activityName && (run.type === 'raid' || run.type === 'dungeon'))
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt))
+    .slice(0, 4)
+    .map((run) => ({
+      id: run.id,
+      activityName: run.activityName,
+      type: run.type === 'dungeon' ? 'dungeon' : 'raid',
+      completedAt: run.completedAt.slice(0, 10),
+      points: run.pointsAwarded,
+      playerCount: run.teamMembers?.length ?? 0,
+    }))
+}
+
+function hubStats(runs: RunRecord[], builds: number): PublicHubStats {
+  const players = new Set<string>()
+  for (const run of runs) {
+    for (const member of run.teamMembers ?? []) {
+      if (member.membershipId) players.add(member.membershipId)
+    }
+  }
+  return { runs: runs.length, players: players.size, builds }
 }
 
 function toPublicFeatured(build: {

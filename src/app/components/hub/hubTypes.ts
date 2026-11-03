@@ -30,6 +30,12 @@ export function normalizePublicHub(value: unknown): PublicHubSnapshot | null {
     historyComplete: data.historyComplete !== false,
     topGuardians: asArray(data.topGuardians),
     featuredBuilds: asArray(data.featuredBuilds),
+    recentRuns: asArray(data.recentRuns),
+    stats: {
+      runs: typeof data.stats?.runs === 'number' ? data.stats.runs : 0,
+      players: typeof data.stats?.players === 'number' ? data.stats.players : 0,
+      builds: typeof data.stats?.builds === 'number' ? data.stats.builds : asArray(data.featuredBuilds).length,
+    },
   }
 }
 
