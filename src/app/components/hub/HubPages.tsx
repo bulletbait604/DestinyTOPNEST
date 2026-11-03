@@ -698,14 +698,14 @@ function HomeLive({ snapshot, onLogin }: { snapshot: PublicHubSnapshot; onLogin:
 function WeeklySection({ snapshot }: { snapshot: PublicHubSnapshot }) {
   const nightfall = snapshot.nightfall && !/pantheon/i.test(snapshot.nightfall) ? snapshot.nightfall : ''
   return (
-    <section className="gh-rotation gh-home-section" aria-label="This week">
+    <section className="gh-home-section" aria-label="This week">
       <div className="gh-section-head">
         <h2>This week</h2>
         <span className="gh-muted">
           {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
         </span>
       </div>
-      <div className="gh-feature-pair">
+      <div className="gh-feature-pair gh-rotation">
         <FeaturedActivity title="Featured raids" names={snapshot.featuredRaids} />
         <FeaturedActivity title="Featured dungeons" names={snapshot.featuredDungeons} />
         {nightfall ? <FeaturedActivity title="Nightfall" names={[nightfall]} /> : null}

@@ -628,8 +628,8 @@ h1, h2, h3, h4,
   .gh-bottom-nav { display: none !important; }
   .gh-nav { display: flex !important; }
   .gh-action-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .gh-action-card { flex-direction: row; align-items: center; min-height: 0; }
-  .gh-action-card .gh-btn { width: auto; }
+  .gh-action-card { flex-direction: column; align-items: flex-start; min-height: 0; }
+  .gh-action-card .gh-btn { width: auto; max-width: 100%; white-space: normal; }
   .gh-home-boards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
   .gh-rotation.gh-list {
     display: grid;
@@ -1048,7 +1048,9 @@ h1, h2, h3, h4,
 .gh-hero-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .gh-home-section { animation: gh-rise 420ms ease both; }
 .gh-feature-pair,
-.gh-home-split { display: grid; gap: 8px; }
+.gh-home-split { display: grid; gap: 8px; width: 100%; }
+.gh-feature-pair.gh-rotation { grid-template-columns: 1fr; }
+.gh-feature-card { width: 100%; min-width: 0; }
 .gh-feature-card .gh-board-art { height: 56px; }
 .gh-feature-card,
 .gh-spotlight,
@@ -1128,7 +1130,8 @@ h1, h2, h3, h4,
 .gh-footer nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 16px; margin-bottom: 6px; }
 .gh-footer p { margin: 0; }
 @media (min-width: 768px) {
-  .gh-feature-pair { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .gh-feature-pair,
+  .gh-feature-pair.gh-rotation { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
   .gh-home-split { grid-template-columns: 1fr 1fr; }
   .gh-hero-banner { min-height: 0; }
 }
