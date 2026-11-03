@@ -12,6 +12,10 @@
     {
       "path": "/api/destiny/cron/character-snapshots",
       "schedule": "15 8 * * *"
+    },
+    {
+      "path": "/api/destiny/cron/rescore",
+      "schedule": "15 6 * * *"
     }
   ],
   "functions": {
@@ -128,6 +132,14 @@
     },
     "src/app/api/destiny/cron/character-snapshots/route.ts": {
       "memory": 1024
+    },
+    "src/app/api/destiny/cron/rescore/route.ts": {
+      "memory": 1024,
+      "maxDuration": 300
+    },
+    "src/app/api/destiny/admin/rescore/route.ts": {
+      "memory": 1024,
+      "maxDuration": 300
     },
     "src/app/api/destiny/admin/meta-builds/route.ts": {
       "memory": 1024

@@ -4,7 +4,7 @@ import { useId, type ReactNode } from 'react'
 import { BOND_RULES } from '@/lib/destiny/bonds'
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
 
-export const BOARD_POINTS_HINT = `A verified raid clear from the start is ${BOND_RULES.basePoints.raid} points. A dungeon clear is ${BOND_RULES.basePoints.dungeon}. A first clear with a new teammate adds ${BOND_RULES.newBondPoints.raid} on a raid or ${BOND_RULES.newBondPoints.dungeon} on a dungeon. Contracts add tier points for a title and frame, and those do not change the boards.`
+export const BOARD_POINTS_HINT = `A raid clear is ${BOND_RULES.basePoints.raid} points. A dungeon clear is ${BOND_RULES.basePoints.dungeon}. Every MVP vote adds 2 points. Contracts add tier points for a title and frame, and those do not change the boards.`
 
 export function PageHeader({
   title,

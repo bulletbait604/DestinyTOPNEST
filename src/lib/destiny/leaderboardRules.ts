@@ -9,7 +9,7 @@ export const LEADERBOARD_RULES_SUMMARY = (): string => {
 
 export const LEADERBOARD_RULES_BULLETS = [
   'Points only for verified full completions',
-  'Base: 10 pts per raid clear · 6 pts per dungeon clear',
+  'Base: 3 pts per raid clear · 1 pt per dungeon clear · +2 pts for each MVP vote on the raid and dungeon boards',
   'New Bonds: +15 (raid) / +10 (dungeon) for each fireteam member you have never cleared with — no cap on strangers',
   'Growing bonds: +4 for your 2nd and 3rd clear with the same Guardian, then bonus stops',
   'Anti-farm: max 6 new bonds scored per 24h; teammates must complete and play ≥50% of the run; very short clears earn no bond bonus; alt-account rings are disqualified',

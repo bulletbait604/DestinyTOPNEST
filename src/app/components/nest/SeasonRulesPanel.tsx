@@ -6,6 +6,7 @@ import SeasonHall from '@/app/components/destiny/SeasonHall'
 import type { SeasonWinner } from '@/lib/destiny/types'
 import { NEST_SEASON_CATALOG, PRIZE_ELIGIBILITY, resolveActiveSeasonByDate } from '@/lib/destiny/seasonCatalog'
 import { BOND_RULES } from '@/lib/destiny/bonds'
+import { MVP_BOARD_POINTS } from '@/lib/destiny/scoring'
 import { LEADERBOARD_RULES_APPEALS_EMAIL } from '@/lib/destiny/leaderboardRules'
 
 function pt(iso: string): string {
@@ -61,8 +62,8 @@ export default function SeasonRulesPanel({ now = new Date() }: { now?: Date }) {
 
       <div className="nest-grid">
         {[
-          { title: 'Raid board', body: 'Most points from verified raid clears (incl. bond bonuses).' },
-          { title: 'Dungeon board', body: 'Most points from verified dungeon clears (incl. bond bonuses).' },
+          { title: 'Raid board', body: 'Verified raid clears are 3 points. Each MVP vote adds 2.' },
+          { title: 'Dungeon board', body: 'Verified dungeon clears are 1 point. Each MVP vote adds 2.' },
           { title: 'New Bonds board', body: 'Most bond points — clearing with Guardians you had never played with.' },
         ].map((b) => (
           <div key={b.title} className="nest-card">
@@ -103,8 +104,10 @@ export default function SeasonRulesPanel({ now = new Date() }: { now?: Date }) {
         </h2>
         <table className="nest-table">
           <tbody>
-            <tr><td>Verified raid / dungeon full clear</td><td>{BOND_RULES.basePoints.raid} / {BOND_RULES.basePoints.dungeon}</td></tr>
-            <tr><td>Each fireteam member you have <strong>never</strong> cleared with (raid / dungeon)</td><td>+{BOND_RULES.newBondPoints.raid} / +{BOND_RULES.newBondPoints.dungeon}</td></tr>
+            <tr><td>Verified raid clear</td><td>{BOND_RULES.basePoints.raid}</td></tr>
+            <tr><td>Verified dungeon clear</td><td>{BOND_RULES.basePoints.dungeon}</td></tr>
+            <tr><td>Each MVP vote you receive</td><td>+{MVP_BOARD_POINTS}</td></tr>
+            <tr><td>Each fireteam member you have <strong>never</strong> cleared with (New Teammates board only)</td><td>+{BOND_RULES.newBondPoints.raid} / +{BOND_RULES.newBondPoints.dungeon}</td></tr>
             <tr><td>2nd and 3rd clear with the same Guardian</td><td>+{BOND_RULES.repeatBondPoints} each</td></tr>
             <tr><td>Bringing someone through their first clear (sherpa)</td><td>+{BOND_RULES.sherpaBonusPoints}</td></tr>
           </tbody>
