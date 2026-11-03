@@ -10,6 +10,7 @@ import { NextStep } from '@/app/components/hub/clarity'
 import { PageHeader } from '@/app/components/hub/PageHeader'
 import { formatEventWhen, openHubTab, usePublicHub } from '@/app/components/hub/hubTypes'
 import { BOARD_BANNER_URL, elementBannerUrl } from '@/lib/destiny/featuredBuilds'
+import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
 
 function EmptyNote({
   title,
@@ -515,6 +516,78 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
   )
 }
 
+const HERO_ART = [
+  'https://www.bungie.net/img/destiny_content/pgcr/raid_root_of_nightmares.jpg',
+  'https://www.bungie.net/img/destiny_content/pgcr/europa-raid-deep-stone-crypt.jpg',
+  'https://www.bungie.net/img/destiny_content/pgcr/raid_beanstalk.jpg',
+  'https://www.bungie.net/img/destiny_content/pgcr/dungeon_duality.jpg',
+  'https://www.bungie.net/img/destiny_content/pgcr/raid_splinter.jpg',
+  'https://www.bungie.net/img/destiny_content/pgcr/vault_of_glass.jpg',
+]
+
+function bungieArt(path: string | undefined): string | undefined {
+  if (!path) return undefined
+  return path.startsWith('http') ? path : `https://www.bungie.net${path}`
+}
+
+function activityArt(name: string): string | undefined {
+  return bungieArt(activityCatalogLookup(name)?.iconPath)
+}
+
+function HomeHero({ signedIn, onLogin }: { signedIn: boolean; onLogin: () => void }) {
+  const [index, setIndex] = useState(0)
+  useEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduce) return
+    const id = window.setInterval(() => setIndex((current) => (current + 1) % HERO_ART.length), 6500)
+    return () => window.clearInterval(id)
+  }, [])
+  return (
+    <section className="gh-hero-banner" aria-label="Home">
+      {HERO_ART.map((src, slide) => (
+        <span
+          key={src}
+          className={slide === index ? 'gh-hero-slide is-on' : 'gh-hero-slide'}
+          style={{ backgroundImage: `url(${src})` }}
+        />
+      ))}
+      <div className="gh-hero-copy">
+        <p className="gh-hero-kicker">Home</p>
+        <h1>Score the clear.</h1>
+        <p>Find a Guardian, rate a teammate, and climb the season boards.</p>
+        <div className="gh-hero-actions">
+          {signedIn ? (
+            <a className="gh-btn gh-btn-primary" href="/score">
+              Score Your Runs
+            </a>
+          ) : (
+            <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
+              Sign in with Bungie to Score Runs
+            </button>
+          )}
+          <a className="gh-btn" href="/boards">
+            View leaderboards
+          </a>
+          <a className="gh-btn" href="/builds">
+            Browse builds
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function HomeSkeleton() {
+  return (
+    <div className="gh-home-skeleton" aria-hidden>
+      <span />
+      <span />
+      <span />
+      <span />
+    </div>
+  )
+}
+
 export function HubHome({
   snapshot,
   loading,
@@ -529,10 +602,8 @@ export function HubHome({
   signedIn?: boolean
 }) {
   return (
-    <div className="gh-stack">
-      <header className="gh-page-head">
-        <h1>Home</h1>
-      </header>
+    <div className="gh-stack gh-home">
+      <HomeHero signedIn={signedIn} onLogin={onLogin} />
       <div className="gh-action-cards">
         <article className="gh-action-card">
           <h2>Score Your Runs</h2>
@@ -541,8 +612,8 @@ export function HubHome({
               Score
             </a>
           ) : (
-            <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
-              Sign in with Bungie to Score Runs
+            <button type="button" className="gh-btn" onClick={onLogin}>
+              Sign in
             </button>
           )}
         </article>
@@ -560,46 +631,164 @@ export function HubHome({
         </article>
       </div>
       <p className="ios-caption">Season #1 · 3D print</p>
-
-      <BoardState loading={loading} error={error} onRetry={() => window.location.reload()}>
-        {snapshot ? (
-          <>
-            <section aria-labelledby="gh-top">
-              <div className="gh-section-head">
-                <h2 id="gh-top">Live season leaderboards</h2>
-                <a className="gh-text-btn" href="/boards">
-                  Full boards
-                </a>
-              </div>
-              <HomeLeaderboards rows={snapshot.topGuardians} />
-            </section>
-            <ul className="gh-list gh-rotation" aria-label="This week">
-              <li>
-                <span className="ios-row-copy">
-                  <strong>This week</strong>
-                  <small>
-                    {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
-                  </small>
-                </span>
-              </li>
-              <li>
-                <span className="ios-row-copy">
-                  <strong>Featured raids</strong>
-                  <small>{snapshot.featuredRaids.join(' · ') || 'Rotation loading'}</small>
-                </span>
-              </li>
-              <li>
-                <span className="ios-row-copy">
-                  <strong>Featured dungeons</strong>
-                  <small>{snapshot.featuredDungeons.join(' · ') || 'Rotation loading'}</small>
-                </span>
-              </li>
-            </ul>
-            <FeaturedBuilds builds={snapshot.featuredBuilds} onLogin={onLogin} />
-          </>
-        ) : null}
-      </BoardState>
+      {loading ? <HomeSkeleton /> : null}
+      {error ? (
+        <NextStep
+          alert
+          title="This page did not load"
+          body="Check your connection, then try again. You can still sign in and look up a Guardian."
+          actions={[{ label: 'Try again', onClick: () => window.location.reload() }]}
+        />
+      ) : null}
+      {!loading && !error && snapshot ? <HomeLive snapshot={snapshot} onLogin={onLogin} /> : null}
     </div>
+  )
+}
+
+function HomeLive({ snapshot, onLogin }: { snapshot: PublicHubSnapshot; onLogin: () => void }) {
+  const podium = snapshot.topGuardians.filter((row) => row.board === 'raid').slice(0, 3)
+  const mvps = snapshot.topGuardians
+    .filter((row) => (row.mvpVotes ?? 0) > 0)
+    .sort((a, b) => (b.mvpVotes ?? 0) - (a.mvpVotes ?? 0))
+    .filter((row, index, all) => all.findIndex((item) => item.displayName === row.displayName) === index)
+    .slice(0, 3)
+  const clan = snapshot.clans[0]
+  return (
+    <>
+      <section className="gh-rotation gh-home-section" aria-label="This week">
+        <div className="gh-section-head">
+          <h2>This week</h2>
+          <span className="gh-muted">
+            {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
+          </span>
+        </div>
+        <div className="gh-feature-pair">
+          <FeaturedActivity title="Featured raids" names={snapshot.featuredRaids} />
+          <FeaturedActivity title="Featured dungeons" names={snapshot.featuredDungeons} />
+        </div>
+      </section>
+      <HomeStats stats={snapshot.stats} />
+      <section className="gh-home-section" aria-labelledby="gh-podium">
+        <div className="gh-section-head">
+          <h2 id="gh-podium">Top 3</h2>
+          <a className="gh-text-btn" href="/boards?category=raid">
+            Raid board
+          </a>
+        </div>
+        {podium.length ? (
+          <ol className="gh-podium">
+            {podium.map((row) => (
+              <li key={`${row.rank}-${row.displayName}`} className={row.rank === 1 ? 'is-first' : undefined}>
+                <span className="gh-rank">{row.rank}</span>
+                <button type="button" className="gh-text-btn" onClick={() => navigateGuardianSearch(row.displayName)}>
+                  {row.displayName}
+                </button>
+                <strong>{row.points} pts</strong>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="gh-empty-card">No raid leaders yet. A verified clear from the start shows up here.</p>
+        )}
+      </section>
+      <section className="gh-home-section" aria-labelledby="gh-top">
+        <div className="gh-section-head">
+          <h2 id="gh-top">Live season leaderboards</h2>
+          <a className="gh-text-btn" href="/boards">
+            View leaderboards
+          </a>
+        </div>
+        <HomeLeaderboards rows={snapshot.topGuardians} />
+      </section>
+      <div className="gh-home-split">
+        <section className="gh-home-section" aria-labelledby="gh-runs">
+          <h2 id="gh-runs">Recent runs</h2>
+          {snapshot.recentRuns.length ? (
+            <ul className="gh-list">
+              {snapshot.recentRuns.map((run) => (
+                <li key={run.id}>
+                  <span className="ios-row-copy">
+                    <strong>{run.activityName}</strong>
+                    <small>
+                      {run.completedAt} · {run.points} pts · {run.playerCount} players
+                    </small>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="gh-empty-card">No scored runs yet.</p>
+          )}
+        </section>
+        <section className="gh-home-section" aria-labelledby="gh-mvps">
+          <h2 id="gh-mvps">Latest MVPs</h2>
+          {mvps.length ? (
+            <ul className="gh-list">
+              {mvps.map((row) => (
+                <li key={row.displayName}>
+                  <span className="ios-row-copy">
+                    <strong>{row.displayName}</strong>
+                    <small>{row.mvpVotes} MVP</small>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="gh-empty-card">No MVP crowns yet.</p>
+          )}
+        </section>
+      </div>
+      <FeaturedBuilds builds={snapshot.featuredBuilds} onLogin={onLogin} />
+      <section className="gh-home-section" aria-labelledby="gh-spotlight">
+        <h2 id="gh-spotlight">{clan ? 'Clan spotlight' : 'Kick'}</h2>
+        {clan ? (
+          <article className="gh-spotlight">
+            <strong>{clan.clanName}</strong>
+            <span>{clan.seasonPoints} pts</span>
+          </article>
+        ) : (
+          <a className="gh-spotlight" href="https://kick.com/bulletbait604" target="_blank" rel="noreferrer">
+            <strong>Kick Guardians</strong>
+            <span>kick.com/bulletbait604</span>
+          </a>
+        )}
+      </section>
+    </>
+  )
+}
+
+function FeaturedActivity({ title, names }: { title: string; names: string[] }) {
+  const name = names[0]
+  const art = name ? activityArt(name) : undefined
+  return (
+    <article className="gh-feature-card">
+      <div className="gh-board-art" style={art ? { backgroundImage: `url(${art})` } : undefined} />
+      <div>
+        <h3>{title}</h3>
+        <p>{names.length ? names.join(' · ') : 'Rotation loading'}</p>
+      </div>
+    </article>
+  )
+}
+
+function HomeStats({ stats }: { stats: PublicHubSnapshot['stats'] }) {
+  const tiles = [
+    stats.runs > 0 ? { label: 'Runs', value: String(stats.runs) } : null,
+    stats.players > 0 ? { label: 'Players', value: String(stats.players) } : null,
+    stats.builds > 0 ? { label: 'Builds', value: String(stats.builds) } : null,
+  ].filter((tile): tile is { label: string; value: string } => Boolean(tile))
+  if (!tiles.length) {
+    return <p className="gh-empty-card">Stats show up after a scored run.</p>
+  }
+  return (
+    <ul className="gh-stat-row">
+      {tiles.map((tile) => (
+        <li key={tile.label}>
+          <strong>{tile.value}</strong>
+          <span>{tile.label}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
 

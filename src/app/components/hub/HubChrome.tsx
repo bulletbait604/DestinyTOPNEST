@@ -125,7 +125,16 @@ export default function HubChrome({
       </main>
       <QuickRateHost />
       <footer className="gh-footer">
-        Fan-made. Not affiliated with Bungie. <a href="/rules">Prize rules</a>
+        <nav aria-label="Footer">
+          <a href="https://kick.com/bulletbait604" target="_blank" rel="noreferrer">
+            Kick
+          </a>
+          <a href="/boards">Leaderboards</a>
+          <a href="/builds">Builds</a>
+          <a href="/ask">Ask</a>
+          <a href="/rules">Prize rules</a>
+        </nav>
+        <p>Fan-made. Not affiliated with Bungie.</p>
       </footer>
       <nav className="gh-bottom-nav" aria-label="TopNest mobile">
         {TAB_BAR.map((item) => {
