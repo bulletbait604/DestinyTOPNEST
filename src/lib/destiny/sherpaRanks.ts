@@ -89,6 +89,16 @@ function learnerVotedForSherpa(
 export function evaluateSherpaRanks(input: SherpaEvalInput): SherpaBoard {
   const votes = input.votes ?? []
   const membershipToUserId = input.membershipToUserId ?? new Map<string, string>()
+  const names = new Map<string, string>()
+  for (const run of input.runs) {
+    if (run.ownerMembershipId && run.ownerDisplayName) {
+      names.set(run.ownerMembershipId, preferBungieGlobalName(names.get(run.ownerMembershipId), run.ownerDisplayName))
+    }
+    for (const member of run.teamMembers) {
+      if (!member.membershipId) continue
+      names.set(member.membershipId, preferBungieGlobalName(names.get(member.membershipId), member.displayName))
+    }
+  }
   const firstClears = buildFirstClearIndex(input.runs)
   const credits: SherpaCredit[] = []
 
@@ -139,7 +149,10 @@ export function evaluateSherpaRanks(input: SherpaEvalInput): SherpaBoard {
       rank: 0,
       title: 'Unranked',
     }
-    row.displayName = preferBungieGlobalName(row.displayName, credit.sherpaDisplayName)
+    row.displayName = preferBungieGlobalName(
+      preferBungieGlobalName(row.displayName, credit.sherpaDisplayName),
+      names.get(credit.sherpaMembershipId)
+    )
     row.guidedClears += 1
     if (credit.learnerMvp) row.learnerMvps += 1
     row.points += credit.points
