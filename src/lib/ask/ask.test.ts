@@ -18,6 +18,7 @@ import {
   parseHtmlLinks,
   parseRedditSearch,
   redditThreadExcerpt,
+  sourceIsCurrentPatch,
 } from '@/lib/ask/askSources'
 import { createAskStream, parseAskEvents } from '@/lib/ask/askStream'
 
@@ -128,6 +129,8 @@ describe('ask answers', () => {
       { title: 'Item', url: 'https://www.light.gg/db/items/1', snippet: '', site: 'light.gg', publishedAt: '2026-10-01' },
     ])
     expect(ranked.map((source) => source.site)).toEqual(['Bungie', 'light.gg', 'Reddit'])
+    expect(sourceIsCurrentPatch({ title: 'Destiny Update 2.2.0', snippet: '' }, 'What is the current patch?')).toBe(false)
+    expect(sourceIsCurrentPatch({ title: 'Destiny 2 Update 9.7.0', snippet: '' }, 'What is the current patch?')).toBe(true)
   })
 
   it('streams a mocked model answer and cites sources first', async () => {

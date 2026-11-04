@@ -6,9 +6,8 @@ import {
   parseFandomSearch,
   parseHtmlLinks,
   parseRedditSearch,
-  questionMentionsVaulted,
   redditThreadExcerpt,
-  textLooksVaulted,
+  sourceIsCurrentPatch,
   type AskSource,
 } from '@/lib/ask/askSources'
 
@@ -68,9 +67,7 @@ export async function retrieveTrustedSources(question: string, fetchImpl: FetchL
   if (light) sources.push(...parseHtmlLinks(light, 'light.gg'))
   if (berries) sources.push(...parseHtmlLinks(berries, 'Blueberries'))
   if (foundry) sources.push(...parseHtmlLinks(foundry, 'd2foundry'))
-  const current = questionMentionsVaulted(question)
-    ? sources
-    : sources.filter((source) => !textLooksVaulted(`${source.title} ${source.snippet}`))
+  const current = sources.filter((source) => sourceIsCurrentPatch(source, question))
   const unique = dedupeSources(rankAskSources(current), 8)
   const enriched = await Promise.all(unique.map((source) => enrichSource(fetchImpl, source)))
   return enriched

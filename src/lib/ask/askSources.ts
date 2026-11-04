@@ -47,6 +47,17 @@ export function textLooksVaulted(text: string): boolean {
   return VAULTED_TEXT.test(text)
 }
 
+/** Drop wiki hits for patches older than Monument of Triumph (9.7.0). */
+export function sourceIsCurrentPatch(source: Pick<AskSource, 'title' | 'snippet'>, question: string): boolean {
+  if (questionMentionsVaulted(question)) return true
+  if (textLooksVaulted(`${source.title} ${source.snippet}`)) return false
+  const match = source.title.match(/update\s+(\d+)\.(\d+)/i)
+  if (!match) return true
+  const major = Number(match[1])
+  const minor = Number(match[2])
+  return major > 9 || (major === 9 && minor >= 7)
+}
+
 export function redditPostIsFresh(createdUtc: number | undefined, nowSec: number, question: string): boolean {
   if (questionMentionsVaulted(question)) return true
   if (createdUtc == null || !Number.isFinite(createdUtc)) return false
