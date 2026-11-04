@@ -5,6 +5,8 @@ export type AskSource = {
   site: string
   /** Page or comment text for the model. Omitted from the client source pills. */
   excerpt?: string
+  /** ISO date when the page or post was published, when we know it. */
+  publishedAt?: string
 }
 
 /** Hosts we will cite. Anything else is dropped before the model sees it. */
@@ -31,6 +33,8 @@ export const UNCONFIGURED_MESSAGE =
   'Ask TopNest cannot write steps yet. Add GOOGLE_API or AI_GATEWAY_API_KEY on the server, then ask again. The links below are the pages we already found.'
 
 export const REDDIT_MAX_AGE_SEC = 18 * 30 * 24 * 60 * 60
+/** Monument of Triumph went live on this day. Older posts are not the current patch. */
+export const CURRENT_PATCH_EPOCH_SEC = Math.floor(Date.parse('2026-06-09T00:00:00.000Z') / 1000)
 
 const VAULTED_TEXT =
   /red war|tangled shore|warmind cell|season of opulence|elemental well|charged with light|armor 2\.0|sunset quest|menagerie|leviathan|scourge of the past|crown of sorrow/i
@@ -45,7 +49,8 @@ export function textLooksVaulted(text: string): boolean {
 
 export function redditPostIsFresh(createdUtc: number | undefined, nowSec: number, question: string): boolean {
   if (questionMentionsVaulted(question)) return true
-  if (createdUtc == null || !Number.isFinite(createdUtc)) return true
+  if (createdUtc == null || !Number.isFinite(createdUtc)) return false
+  if (createdUtc < CURRENT_PATCH_EPOCH_SEC) return false
   return nowSec - createdUtc <= REDDIT_MAX_AGE_SEC
 }
 
@@ -73,7 +78,7 @@ export function askCacheKey(question: string, contextKey: string): string {
     hash ^= text.charCodeAt(i)
     hash = Math.imul(hash, 16777619)
   }
-  return `ask_v2_${(hash >>> 0).toString(16)}`
+  return `ask_v3_${(hash >>> 0).toString(16)}`
 }
 
 export function geminiApiKey(env: NodeJS.ProcessEnv = process.env): string {
@@ -110,6 +115,7 @@ export function keepSource(source: AskSource): AskSource | null {
     url: source.url,
     snippet: clip(source.snippet, 220),
     site: source.site,
+    ...(source.publishedAt ? { publishedAt: source.publishedAt } : {}),
   }
 }
 
@@ -157,6 +163,7 @@ export function parseRedditSearch(
       url: `https://www.reddit.com${data.permalink}`,
       snippet,
       site: 'r/DestinyTheGame',
+      publishedAt: created ? new Date(created * 1000).toISOString() : undefined,
     })
     if (kept) sources.push(kept)
   }
