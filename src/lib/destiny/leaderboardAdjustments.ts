@@ -3,7 +3,8 @@ import clientPromise from '@/lib/mongodb'
 import { getMongoDbName } from '@/lib/database'
 import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
-import { loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
+import { loadMembershipAliasMap } from '@/lib/destiny/identityNormalize'
+import { bungieBoardKey, loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
 import { aggregateLeaderboard } from '@/lib/destiny/leaderboards'
 import { mvpBoardBonus } from '@/lib/destiny/scoring'
 import { emptyVoteCounts, tallyVoteCounts } from '@/lib/destiny/mvpVoting'
@@ -50,20 +51,39 @@ export function applyLeaderboardAdjustments(
   if (!adjustments.length) return entries
 
   const adjMap = new Map(adjustments.map((a) => [a.entryKey, a]))
-  const inBase = new Set(entries.map((e) => e.userId))
+  const userIdsForMembership = new Map<string, string[]>()
+  for (const user of Array.from(usersById.values())) {
+    const ids = [user.bungieMembershipId, ...(user.linkedMembershipIds ?? [])]
+    for (const id of ids) {
+      const membershipId = id?.trim()
+      if (!membershipId) continue
+      const keys = userIdsForMembership.get(membershipId) ?? []
+      keys.push(user.userId)
+      userIdsForMembership.set(membershipId, keys)
+    }
+  }
+  const keysFor = (entry: LeaderboardEntry) => {
+    const keys = [entry.userId]
+    if (entry.bungieMembershipId) {
+      keys.push(entry.bungieMembershipId, bungieBoardKey(entry.bungieMembershipId))
+      keys.push(...(userIdsForMembership.get(entry.bungieMembershipId) ?? []))
+    }
+    return keys.filter(Boolean)
+  }
+  const inBase = new Set(entries.flatMap((entry) => keysFor(entry)))
 
   const merged: LeaderboardEntry[] = entries
-    .filter((e) => !adjMap.get(e.userId)?.excluded)
-    .map((e) => {
-      const adj = adjMap.get(e.userId)
-      if (!adj) return e
+    .filter((entry) => !keysFor(entry).some((key) => adjMap.get(key)?.excluded))
+    .map((entry) => {
+      const adj = keysFor(entry).map((key) => adjMap.get(key)).find(Boolean)
+      if (!adj) return entry
       const points =
-        adj.pointsOverride != null ? adj.pointsOverride : e.points + (adj.pointsDelta ?? 0)
+        adj.pointsOverride != null ? adj.pointsOverride : entry.points + (adj.pointsDelta ?? 0)
       const verifiedClears =
         adj.verifiedClearsOverride ??
-        Math.max(0, e.verifiedClears + (adj.verifiedClearsDelta ?? 0))
+        Math.max(0, entry.verifiedClears + (adj.verifiedClearsDelta ?? 0))
       return {
-        ...e,
+        ...entry,
         points: Math.max(0, Math.round(points)),
         verifiedClears,
         hasManualAdjustment: true,
@@ -131,8 +151,8 @@ export async function buildLeaderboardWithAdjustments(
   usersById: Map<string, StoredDestinyUser>,
   votes: MvpVote[]
 ): Promise<LeaderboardEntry[]> {
-  const kickMembershipIds = await loadKickGuardianMembershipIds()
-  const base = aggregateLeaderboard(runs, usersById, category, period, season, kickMembershipIds)
+  const [kickMembershipIds, aliases] = await Promise.all([loadKickGuardianMembershipIds(), loadMembershipAliasMap()])
+  const base = aggregateLeaderboard(runs, usersById, category, period, season, kickMembershipIds, aliases)
 
   const adjustments = await loadLeaderboardAdjustments(category, period, season.id)
   const withVotes = await attachVoteCounts(

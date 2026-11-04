@@ -600,7 +600,10 @@ function HomeLive({ snapshot, onLogin }: { snapshot: PublicHubSnapshot; onLogin:
   const mvps = snapshot.topGuardians
     .filter((row) => (row.mvpVotes ?? 0) > 0)
     .sort((a, b) => (b.mvpVotes ?? 0) - (a.mvpVotes ?? 0))
-    .filter((row, index, all) => all.findIndex((item) => item.displayName === row.displayName) === index)
+    .filter((row, index, all) => {
+      const key = row.bungieMembershipId || row.displayName
+      return all.findIndex((item) => (item.bungieMembershipId || item.displayName) === key) === index
+    })
     .slice(0, 3)
   const clan = snapshot.clans[0]
   return (

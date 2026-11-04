@@ -15,6 +15,7 @@ import {
   type ActivityHistoryRowLike,
   type BungieValueMap,
 } from '@/lib/destiny/pgcrStats'
+import { formatBungieGlobalName } from '@/lib/destiny/guardianIdentity'
 import { calculateRunPoints } from '@/lib/destiny/scoring'
 import { computeRunBondScore, recordRunBonds } from '@/lib/destiny/bondStore'
 import {
@@ -67,6 +68,8 @@ interface PgcrEntry {
       membershipId?: number | string
       displayName?: string
       membershipType?: number
+      bungieGlobalDisplayName?: string
+      bungieGlobalDisplayNameCode?: number | string
     }
     characterClass?: string
     lightLevel?: number
@@ -103,7 +106,11 @@ function parseTeamMembers(entries: PgcrEntry[] = []): RunTeamMember[] {
 
       return {
         membershipId: String(info.membershipId),
-        displayName: info.displayName ?? 'Guardian',
+        displayName: formatBungieGlobalName(
+          info.bungieGlobalDisplayName,
+          info.bungieGlobalDisplayNameCode,
+          info.displayName ?? 'Guardian'
+        ),
         platform:
           (membershipType === 1
             ? 'xbox'

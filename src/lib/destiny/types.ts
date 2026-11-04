@@ -205,6 +205,8 @@ export interface DestinyUser {
   bungieStats?: GuardianBungieStats
   /** Bungie membership type enum (1=xbox, 2=ps, 3=steam, 6=epic) for API calls */
   destinyMembershipType?: number
+  /** Other platform membership ids that resolve to bungieMembershipId. */
+  linkedMembershipIds?: string[]
   /** equipped = live character emblem; collection = displayEmblemHash from inventory */
   displayEmblemSource?: 'equipped' | 'collection'
   displayEmblemHash?: number

@@ -1,3 +1,4 @@
+import { preferBungieGlobalName } from '@/lib/destiny/guardianIdentity'
 import { isMvpCategoryVote } from '@/lib/destiny/mvpVoting'
 import type { MvpVote, RunRecord, SherpaBoard, SherpaCredit, SherpaStanding } from '@/lib/destiny/types'
 import {
@@ -138,7 +139,7 @@ export function evaluateSherpaRanks(input: SherpaEvalInput): SherpaBoard {
       rank: 0,
       title: 'Unranked',
     }
-    row.displayName = credit.sherpaDisplayName || row.displayName
+    row.displayName = preferBungieGlobalName(row.displayName, credit.sherpaDisplayName)
     row.guidedClears += 1
     if (credit.learnerMvp) row.learnerMvps += 1
     row.points += credit.points

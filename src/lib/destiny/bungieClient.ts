@@ -332,6 +332,23 @@ export async function getAllClanMembersWithPresence(
   return all
 }
 
+export interface BungieLinkedMembership {
+  membershipId?: string
+  membershipType?: number
+  displayName?: string
+  bungieGlobalDisplayName?: string
+  bungieGlobalDisplayNameCode?: number
+  crossSaveOverride?: number
+}
+
+/** Every Destiny membership tied to this id, including the cross-save primary. */
+export async function getMembershipsById(membershipId: string, membershipType: number, accessToken?: string) {
+  return bungieFetch<{
+    destinyMemberships?: BungieLinkedMembership[]
+    primaryMembershipId?: string
+  }>(`/User/GetMembershipsById/${encodeURIComponent(membershipId)}/${membershipType}/`, { accessToken })
+}
+
 /** Groups/clans a member belongs to. filter=0 all, groupType=1 clan. */
 export async function getGroupsForMember(
   membershipType: number,

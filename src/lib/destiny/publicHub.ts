@@ -14,8 +14,11 @@ import { resolveWeeklyContractCatalog } from '@/lib/destiny/weeklyContractCatalo
 import { loadNightOpsEvents, loadWeeklyGoals } from '@/lib/destiny/siteContent'
 import { refreshLiveWeeklyRotationBounded } from '@/lib/destiny/bungieWeekly'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
+import { loadMembershipAliasMap } from '@/lib/destiny/identityNormalize'
 import { loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
+import { loadUsersMap } from '@/lib/destiny/store'
 import { getVoteCountsMap } from '@/lib/destiny/voteCounts'
+import { preferBungieGlobalName } from '@/lib/destiny/guardianIdentity'
 import { mvpBoardBonus } from '@/lib/destiny/scoring'
 
 export interface PublicContractCard {
@@ -191,13 +194,14 @@ const BOARD_LABEL = {
 export function topGuardiansFromRuns(
   runs: RunRecord[],
   now: Date,
-  kickMembershipIds?: ReadonlySet<string>
+  kickMembershipIds?: ReadonlySet<string>,
+  usersById: Map<string, StoredDestinyUser> = new Map(),
+  aliases?: ReadonlyMap<string, string>
 ): PublicTopGuardian[] {
   const season = getConfiguredActiveSeason(now)
-  const users = new Map<string, StoredDestinyUser>()
   const rows: PublicTopGuardian[] = []
   for (const board of ['raid', 'dungeon', 'new_bonds'] as const) {
-    const entries = aggregateLeaderboard(runs, users, board, 'season', season, kickMembershipIds).slice(0, 5)
+    const entries = aggregateLeaderboard(runs, usersById, board, 'season', season, kickMembershipIds, aliases).slice(0, 5)
     for (const entry of entries) {
       rows.push({
         board,
@@ -225,6 +229,8 @@ export function assemblePublicHub(input: {
   historyComplete?: boolean
   featuredBuilds?: PublicFeaturedBuild[]
   kickMembershipIds?: ReadonlySet<string>
+  usersById?: Map<string, StoredDestinyUser>
+  membershipAliases?: ReadonlyMap<string, string>
 }): PublicHubSnapshot {
   const now = input.now ?? new Date()
   const runs = input.runs ?? []
@@ -295,7 +301,7 @@ export function assemblePublicHub(input: {
     fireteams: publicFireteams(input.lobbies ?? []),
     scoring: HUB_SCORING,
     historyComplete: input.historyComplete !== false,
-    topGuardians: topGuardiansFromRuns(runs, now, input.kickMembershipIds),
+    topGuardians: topGuardiansFromRuns(runs, now, input.kickMembershipIds, input.usersById, input.membershipAliases),
     featuredBuilds: input.featuredBuilds ?? [],
     recentRuns,
     stats,
@@ -387,8 +393,19 @@ function previewByClass<T extends { characterClass: string }>(rows: T[]): T[] {
 function rankHubBoards(rows: PublicTopGuardian[]): PublicTopGuardian[] {
   const ranked: PublicTopGuardian[] = []
   for (const board of ['raid', 'dungeon', 'new_bonds'] as const) {
-    const group = rows
-      .filter((row) => row.board === board)
+    const byGuardian = new Map<string, PublicTopGuardian>()
+    for (const row of rows.filter((item) => item.board === board)) {
+      const key = row.bungieMembershipId?.trim() || row.displayName
+      const current = byGuardian.get(key)
+      if (!current) {
+        byGuardian.set(key, { ...row })
+        continue
+      }
+      current.points += row.points
+      current.displayName = preferBungieGlobalName(current.displayName, row.displayName)
+      current.mvpVotes = Math.max(current.mvpVotes ?? 0, row.mvpVotes ?? 0)
+    }
+    const group = Array.from(byGuardian.values())
       .map((row) => ({ ...row, points: row.points + mvpBoardBonus(row.mvpVotes, board) }))
       .sort((a, b) => b.points - a.points || a.displayName.localeCompare(b.displayName))
       .map((row, index) => ({ ...row, rank: index + 1 }))
@@ -405,10 +422,12 @@ export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHub
     loadKickGuardianMembershipIds(),
   ])
   try {
-    const [clears, lobbies, featuredBuilds] = await Promise.all([
+    const [clears, lobbies, featuredBuilds, usersById, membershipAliases] = await Promise.all([
       listVerifiedFullClears(2000),
       listOpenLobbies(),
       loadFeaturedBuilds(),
+      loadUsersMap().catch(() => new Map<string, StoredDestinyUser>()),
+      loadMembershipAliasMap(),
     ])
     const snapshot = assemblePublicHub({
       now,
@@ -419,6 +438,8 @@ export async function loadPublicHubSnapshot(now = new Date()): Promise<PublicHub
       historyComplete: clears.complete,
       featuredBuilds,
       kickMembershipIds,
+      usersById,
+      membershipAliases,
     })
     const ids = snapshot.topGuardians.map((row) => row.bungieMembershipId ?? '').filter(Boolean)
     if (ids.length) {

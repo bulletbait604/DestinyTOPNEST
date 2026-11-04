@@ -224,6 +224,9 @@ export async function GET(req: NextRequest) {
         bungieNetMembershipId: tokens.membershipId,
         destinyMembershipType: primary.membershipType,
         bungieDisplayName: displayName,
+        linkedMembershipIds: (memberships.destinyMemberships ?? [])
+          .map((membership) => membership.membershipId)
+          .filter((id) => id && id !== primary.membershipId),
         platform: platformFromMembershipType(primary.membershipType) as
           | 'steam'
           | 'xbox'
