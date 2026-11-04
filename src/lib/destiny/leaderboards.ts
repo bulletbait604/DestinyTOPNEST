@@ -8,6 +8,11 @@
   Season,
 } from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
+import {
+  membershipAliasesFromUsers,
+  preferBungieGlobalName,
+  primaryMembershipId,
+} from '@/lib/destiny/guardianIdentity'
 import { bungieBoardKey, isKickGuardiansClan } from '@/lib/destiny/kickGuardians'
 import { isRunAtOrAfterNestLaunch, nestLaunchUtcMs } from '@/lib/destiny/runDates'
 import { getWeeklyResetState } from '@/lib/destiny/weeklyRotation'
@@ -82,11 +87,15 @@ function activeUser(user: StoredDestinyUser | undefined): user is StoredDestinyU
 
 function usersByMembership(usersById: Map<string, StoredDestinyUser>): Map<string, StoredDestinyUser> {
   const byMembership = new Map<string, StoredDestinyUser>()
+  const remember = (membershipId: string | undefined, user: StoredDestinyUser) => {
+    const id = membershipId?.trim()
+    if (!id) return
+    const current = byMembership.get(id)
+    if (!current || (!activeUser(current) && activeUser(user))) byMembership.set(id, user)
+  }
   for (const user of Array.from(usersById.values())) {
-    const membershipId = user.bungieMembershipId?.trim()
-    if (!membershipId) continue
-    const current = byMembership.get(membershipId)
-    if (!current || (!activeUser(current) && activeUser(user))) byMembership.set(membershipId, user)
+    remember(user.bungieMembershipId, user)
+    for (const linked of user.linkedMembershipIds ?? []) remember(linked, user)
   }
   return byMembership
 }
@@ -174,13 +183,11 @@ function remember(
   }
   existing.points += points
   existing.verifiedClears += 1
-  if (meta.displayName && (existing.displayName === key || existing.displayName.startsWith('bungie:'))) {
-    existing.displayName = meta.displayName
-  }
-  if (!existing.membershipId && meta.membershipId) existing.membershipId = meta.membershipId
+  existing.displayName = preferBungieGlobalName(existing.displayName, meta.displayName)
+  if (meta.membershipId) existing.membershipId = meta.membershipId
   if (meta.platform) existing.platform = meta.platform
   if (meta.user) {
-    existing.displayName = meta.user.bungieDisplayName || existing.displayName
+    existing.displayName = preferBungieGlobalName(existing.displayName, meta.user.bungieDisplayName)
     existing.emblemUrl = meta.user.emblemUrl ?? existing.emblemUrl
     existing.clanTag = meta.user.clanTag ?? existing.clanTag
     existing.guardianRank = meta.user.guardianRank ?? existing.guardianRank
@@ -198,16 +205,24 @@ function remember(
   agg.set(key, existing)
 }
 
+function boardKey(membershipId: string | undefined, aliases: ReadonlyMap<string, string>, fallbackUserId?: string): string {
+  const primary = primaryMembershipId(membershipId, aliases)
+  if (primary) return bungieBoardKey(primary)
+  return (fallbackUserId ?? '').trim()
+}
+
 export function aggregateLeaderboard(
   runs: RunRecord[],
   usersById: Map<string, StoredDestinyUser>,
   category: LeaderboardCategory,
   period: LeaderboardPeriod,
   season: Season,
-  kickMembershipIds?: ReadonlySet<string>
+  kickMembershipIds?: ReadonlySet<string>,
+  aliases?: ReadonlyMap<string, string>
 ): LeaderboardEntry[] {
   const agg = new Map<string, UserAgg>()
   const byMembership = usersByMembership(usersById)
+  const aliasMap = membershipAliasesFromUsers(Array.from(usersById.values()), aliases)
 
   for (const run of dedupeRuns(runs, category)) {
     if (!runMatchesPeriod(run, period, season)) continue
@@ -218,35 +233,35 @@ export function aggregateLeaderboard(
     if (points <= 0) continue
 
     const owner = registeredOwner(run, usersById)
-    const ownerMembership = (owner?.bungieMembershipId || run.ownerMembershipId || '').trim()
+    const ownerMembership = primaryMembershipId(owner?.bungieMembershipId || run.ownerMembershipId, aliasMap)
     const seen = new Set<string>()
 
     for (const member of completedMembers(run)) {
-      const membershipId = member.membershipId.trim()
-      const linked = byMembership.get(membershipId)
-      const active = activeUser(linked) ? linked : undefined
-      const key = active?.userId ?? (owner && membershipId === ownerMembership ? owner.userId : bungieBoardKey(membershipId))
-      if (seen.has(key)) continue
+      const primary = primaryMembershipId(member.membershipId, aliasMap)
+      const key = boardKey(primary, aliasMap)
+      if (!key || seen.has(key)) continue
       seen.add(key)
-      const profile = active ?? (key === owner?.userId ? owner : undefined)
+      const linked = byMembership.get(member.membershipId.trim()) ?? byMembership.get(primary)
+      const profile = activeUser(linked) ? linked : undefined
       remember(agg, key, points, run, {
-        displayName: member.displayName || profile?.bungieDisplayName || membershipId,
-        membershipId,
+        displayName: preferBungieGlobalName(member.displayName, profile?.bungieDisplayName) || primary,
+        membershipId: primary,
         platform: member.platform,
         user: profile,
       })
     }
 
+    const ownerKey = boardKey(ownerMembership, aliasMap, owner?.userId)
     const ownerListed = ownerMembership
-      ? run.teamMembers.find((member) => member.membershipId.trim() === ownerMembership)
+      ? run.teamMembers.find((member) => primaryMembershipId(member.membershipId, aliasMap) === ownerMembership)
       : undefined
     const ownerFinished = !ownerListed || ownerListed.completed !== false
-    if (owner && ownerFinished && !seen.has(owner.userId)) {
-      remember(agg, owner.userId, points, run, {
+    if (owner && ownerKey && ownerFinished && !seen.has(ownerKey)) {
+      remember(agg, ownerKey, points, run, {
         displayName: owner.bungieDisplayName,
         membershipId: ownerMembership || undefined,
         platform: owner.platform,
-        user: owner,
+        user: activeUser(owner) ? owner : undefined,
       })
     }
   }

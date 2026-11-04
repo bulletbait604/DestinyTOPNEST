@@ -4,6 +4,7 @@ export const DESTINY_COLLECTIONS = {
   users: 'destiny_users',
   runRecords: 'destiny_run_records',
   rescoreCursor: 'destiny_rescore_cursor',
+  membershipAliases: 'destiny_membership_aliases',
   leaderboardEntries: 'destiny_leaderboard_entries',
   fireteamLobbies: 'destiny_fireteam_lobbies',
   reputationReviews: 'destiny_reputation_reviews',

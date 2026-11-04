@@ -98,7 +98,7 @@ describe('unregistered leaderboard players', () => {
 
     const rows = aggregateLeaderboard([shared, duplicate, randoms], users, 'raid', 'all_time', season)
     expect(rows.map((row) => [row.userId, row.points])).toEqual([
-      ['ada', 25],
+      ['bungie:111', 25],
       ['bungie:222', 25],
     ])
     expect(rows.find((row) => row.userId === 'bungie:222')?.bungieMembershipId).toBe('222')

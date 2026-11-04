@@ -10,6 +10,7 @@ import {
 } from '@/lib/destiny/kickGuardians'
 import { syncRunsForUser } from '@/lib/destiny/runIngestion'
 import { HISTORY_PAGE_SIZE } from '@/lib/destiny/runLookup'
+import { normalizeStoredIdentities } from '@/lib/destiny/identityNormalize'
 import { assignStoredClearPoints } from '@/lib/destiny/scoring'
 import type { DestinyPlatform, RunRecord } from '@/lib/destiny/types'
 
@@ -21,6 +22,8 @@ export interface StoredRescoreResult {
   updated: number
   unchanged: number
   duplicates: number
+  renamed: number
+  aliases: number
 }
 
 export interface HistoryRescoreResult extends StoredRescoreResult {
@@ -69,6 +72,15 @@ async function runsCollection() {
  * The same PGCR is scored once. Incomplete, rejected, and checkpoint clears stay at 0.
  */
 export async function rescoreStoredRuns(): Promise<StoredRescoreResult> {
+  let renamed = 0
+  let aliases = 0
+  try {
+    const names = await normalizeStoredIdentities({ apiLimit: 0 })
+    renamed = names.renamed
+    aliases = names.aliases
+  } catch (error) {
+    console.warn('[rescore] identity normalize failed', error)
+  }
   const col = await runsCollection()
   const cursor = col.find(
     {},
@@ -104,7 +116,7 @@ export async function rescoreStoredRuns(): Promise<StoredRescoreResult> {
     await col.updateOne({ id: assignment.id }, { $set: { pointsAwarded: assignment.points } })
     updated += 1
   }
-  return { examined, updated, unchanged, duplicates }
+  return { examined, updated, unchanged, duplicates, renamed, aliases }
 }
 
 async function historyTargets(): Promise<StoredDestinyUser[]> {
@@ -154,6 +166,13 @@ async function cursorCollection() {
  * Calling it again continues, then wraps to the start. Safe to repeat.
  */
 export async function rescoreReadableHistory(limit = 3): Promise<HistoryRescoreResult> {
+  if (destinyApiConfigured()) {
+    try {
+      await normalizeStoredIdentities({ apiLimit: Math.max(1, limit) })
+    } catch (error) {
+      console.warn('[rescore] membership alias lookup failed', error)
+    }
+  }
   const stored = await rescoreStoredRuns()
   if (!destinyApiConfigured()) {
     return { ...stored, skipped: true, players: 0, imported: 0, failed: 0, nextIndex: 0, done: true }

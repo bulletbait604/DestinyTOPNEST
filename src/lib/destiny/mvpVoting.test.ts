@@ -418,7 +418,7 @@ describe('leaderboards include qualifying unregistered players', () => {
     )
     expect(rows.find((row) => row.userId === 'ghost')).toBeUndefined()
     expect(rows.find((row) => row.userId === 'bungie:ghost')?.points).toBe(40)
-    expect(rows.find((row) => row.userId === 'ada')?.points).toBe(40)
+    expect(rows.find((row) => row.userId === 'bungie:ada')?.points).toBe(40)
     expect(rows.find((row) => row.userId === 'bungie:ghost')?.bungieDisplayName).toBe('Ghost')
   })
 })
