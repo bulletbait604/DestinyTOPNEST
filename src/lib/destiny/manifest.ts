@@ -78,7 +78,7 @@ function activityIconFromDefinition(def: unknown): string | undefined {
 }
 
 const CACHE_COLLECTION = 'destiny_manifest_cache'
-const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 /** Full definition metadata resolved from the live manifest. */
 export interface ManifestDefinitionInfo {
@@ -105,6 +105,7 @@ interface CacheDoc {
   itemTypeDisplayName?: string
   equipableItemSetHash?: number
   cachedAt: string
+  manifestVersion?: string
 }
 
 import { buildBungieIconUrl } from '@/lib/destiny/bungieUrls'
@@ -115,6 +116,23 @@ function cacheId(entityType: ManifestEntityType, hash: number): string {
   return `${entityType}:${hash}`
 }
 
+const VERSION_PROBE_MS = 6 * 60 * 60 * 1000
+let versionProbe: { at: number; version?: string } | null = null
+
+async function cachedManifestVersion(): Promise<string | undefined> {
+  if (versionProbe && Date.now() - versionProbe.at < VERSION_PROBE_MS) return versionProbe.version
+  let version: string | undefined
+  if (destinyApiConfigured()) {
+    try {
+      version = (await getDestinyManifest()).version
+    } catch {
+      version = undefined
+    }
+  }
+  versionProbe = { at: Date.now(), version }
+  return version
+}
+
 async function readCache(entityType: ManifestEntityType, hash: number): Promise<CacheDoc | null> {
   try {
     const client = await clientPromise
@@ -122,6 +140,9 @@ async function readCache(entityType: ManifestEntityType, hash: number): Promise<
     if (!doc) return null
     const age = Date.now() - new Date(doc.cachedAt as string).getTime()
     if (age > CACHE_TTL_MS) return null
+    const liveVersion = await cachedManifestVersion()
+    const storedVersion = typeof doc.manifestVersion === 'string' ? doc.manifestVersion : ''
+    if (liveVersion && storedVersion && storedVersion !== liveVersion) return null
     return doc as unknown as CacheDoc
   } catch {
     return null
@@ -320,6 +341,7 @@ async function resolveDefinitionInner(
       itemTypeDisplayName,
       equipableItemSetHash,
       cachedAt: new Date().toISOString(),
+      manifestVersion: await cachedManifestVersion(),
     })
 
     return {

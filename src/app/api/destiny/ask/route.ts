@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { formatAskContext, contextKey } from '@/lib/ask/askContext'
+import { loadAskSandbox } from '@/lib/ask/askFreshness'
 import { streamGatewayAnswer, streamGeminiAnswer } from '@/lib/ask/askGemini'
 import { takeAskRateLimit } from '@/lib/ask/askRateLimit'
 import { retrieveTrustedSources } from '@/lib/ask/askRetrieve'
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
 
   const player = user ? await loadAskPlayerContext(user) : null
   const contextText = formatAskContext(player)
+  const sandboxText = await loadAskSandbox()
   const cacheContext = contextKey(player)
   const cached = await readAskCache(question.value, cacheContext)
   const sources = cached?.sources?.length ? cached.sources : await retrieveTrustedSources(question.value)
@@ -47,6 +49,7 @@ export async function POST(req: NextRequest) {
     question: question.value,
     sources,
     contextText,
+    sandboxText,
     configured,
     cachedText: cached?.answer ?? null,
     answerId: cached?.answerId ?? 'live',

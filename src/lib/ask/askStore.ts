@@ -3,9 +3,8 @@ import { getMongoDbName } from '@/lib/database'
 import { DESTINY_COLLECTIONS } from '@/lib/destiny/collections'
 import { getDestinyUserBySiteUserId } from '@/lib/destiny/destinyUserStore'
 import { contextKey, type AskCharacterNote, type AskPlayerContext } from '@/lib/ask/askContext'
+import { ASK_CACHE_MS, askCacheIsFresh } from '@/lib/ask/askFreshness'
 import { askCacheKey, type AskSource } from '@/lib/ask/askSources'
-
-const CACHE_MS = 7 * 24 * 60 * 60 * 1000
 
 export type AskCacheRecord = {
   answerId: string
@@ -29,7 +28,7 @@ export async function readAskCache(question: string, context: string): Promise<A
     const doc = await (await collection(DESTINY_COLLECTIONS.askCache)).findOne({ _id: answerId })
     if (!doc || typeof doc.answer !== 'string') return null
     const createdAt = typeof doc.createdAt === 'string' ? doc.createdAt : ''
-    if (!createdAt || Date.now() - Date.parse(createdAt) > CACHE_MS) return null
+    if (!askCacheIsFresh(createdAt, Date.now(), ASK_CACHE_MS)) return null
     return {
       answerId,
       question,

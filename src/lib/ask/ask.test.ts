@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatAskContext } from '@/lib/ask/askContext'
+import { ASK_CACHE_MS, askCacheIsFresh, rankAskSources } from '@/lib/ask/askFreshness'
 import { ASK_INSTRUCTIONS, buildAskPrompt } from '@/lib/ask/askPrompt'
 import { resetAskRateLimits, takeAskRateLimit } from '@/lib/ask/askRateLimit'
 import { retrieveTrustedSources } from '@/lib/ask/askRetrieve'
@@ -17,6 +18,7 @@ import {
   parseHtmlLinks,
   parseRedditSearch,
   redditThreadExcerpt,
+  sourceIsCurrentPatch,
 } from '@/lib/ask/askSources'
 import { createAskStream, parseAskEvents } from '@/lib/ask/askStream'
 
@@ -58,7 +60,14 @@ describe('ask source parsers', () => {
     const reddit = parseRedditSearch({
       data: {
         children: [
-          { data: { title: 'Prismatic unlock', permalink: '/r/DestinyTheGame/comments/abc/prismatic/', selftext: 'Do the quest on one character.' } },
+          {
+            data: {
+              title: 'Prismatic unlock',
+              permalink: '/r/DestinyTheGame/comments/abc/prismatic/',
+              selftext: 'Do the quest on one character.',
+              created_utc: Math.floor(Date.parse('2026-10-01T00:00:00.000Z') / 1000),
+            },
+          },
         ],
       },
     })
@@ -92,8 +101,12 @@ describe('ask answers', () => {
       formatAskContext({
         displayName: 'Ada',
         characters: [{ className: 'warlock', light: 200, subclass: 'Prismatic' }],
-      })
+      }),
+      'Today is 2026-11-04.\nCurrent season and patch: Monument of Triumph (Update 9.7.0), released 2026-06-09.'
     )
+    expect(prompt).toContain('Monument of Triumph')
+    expect(prompt).toContain('Update 9.7.0')
+    expect(prompt).toContain('2026-11-04')
     expect(prompt).toContain('Weaver’s Call')
     expect(prompt).toContain('warlock')
     expect(prompt).toContain('destiny.fandom.com')
@@ -101,6 +114,23 @@ describe('ask answers', () => {
     expect(ASK_INSTRUCTIONS).toContain('Quick Answer:')
     expect(ASK_INSTRUCTIONS).toContain('Lost City')
     expect(ASK_INSTRUCTIONS).toContain('vaulted')
+    expect(ASK_INSTRUCTIONS).toContain('Update 9.7.0')
+    expect(ASK_INSTRUCTIONS).toContain('do not name a strike')
+  })
+
+  it('expires cached answers after six hours and ranks Bungie ahead of Reddit', () => {
+    const now = Date.parse('2026-11-04T12:00:00.000Z')
+    expect(askCacheIsFresh('2026-11-04T07:00:00.000Z', now, ASK_CACHE_MS)).toBe(true)
+    expect(askCacheIsFresh('2026-11-04T05:00:00.000Z', now, ASK_CACHE_MS)).toBe(false)
+    expect(ASK_CACHE_MS).toBe(6 * 60 * 60 * 1000)
+    const ranked = rankAskSources([
+      { title: 'Reddit tip', url: 'https://www.reddit.com/r/DestinyTheGame/comments/1', snippet: '', site: 'Reddit', publishedAt: '2026-11-01' },
+      { title: 'TWAB', url: 'https://www.bungie.net/7/en/News/Article/monument_of_triumph_is_live', snippet: '', site: 'Bungie', publishedAt: '2026-06-09' },
+      { title: 'Item', url: 'https://www.light.gg/db/items/1', snippet: '', site: 'light.gg', publishedAt: '2026-10-01' },
+    ])
+    expect(ranked.map((source) => source.site)).toEqual(['Bungie', 'light.gg', 'Reddit'])
+    expect(sourceIsCurrentPatch({ title: 'Destiny Update 2.2.0', snippet: '' }, 'What is the current patch?')).toBe(false)
+    expect(sourceIsCurrentPatch({ title: 'Destiny 2 Update 9.7.0', snippet: '' }, 'What is the current patch?')).toBe(true)
   })
 
   it('streams a mocked model answer and cites sources first', async () => {
@@ -135,7 +165,7 @@ describe('ask answers', () => {
     const body = await new Response(stream).text()
     expect(body).toContain(UNCONFIGURED_MESSAGE)
     expect(body).toContain('AI_GATEWAY_API_KEY')
-    expect(askCacheKey('How do I get Weaver’s Call?', 'anon').startsWith('ask_v2_')).toBe(true)
+    expect(askCacheKey('How do I get Weaver’s Call?', 'anon').startsWith('ask_v3_')).toBe(true)
   })
 
   it('uses GOOGLE_API for Gemini before the gateway key', () => {

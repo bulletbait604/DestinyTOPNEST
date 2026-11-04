@@ -23,6 +23,7 @@ export function createAskStream(input: {
   question: string
   sources: AskSource[]
   contextText: string
+  sandboxText?: string
   configured: boolean
   cachedText?: string | null
   answerId: string
@@ -48,7 +49,7 @@ export function createAskStream(input: {
           text = UNCONFIGURED_MESSAGE
           send({ type: 'delta', text })
         } else {
-          const prompt = buildAskPrompt(input.question, input.sources, input.contextText)
+          const prompt = buildAskPrompt(input.question, input.sources, input.contextText, input.sandboxText)
           const iterator = input.complete(prompt)[Symbol.asyncIterator]()
           let extra: AskSource[] = []
           while (true) {

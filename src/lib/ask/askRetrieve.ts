@@ -1,3 +1,4 @@
+import { rankAskSources } from '@/lib/ask/askFreshness'
 import {
   dedupeSources,
   extractArticleText,
@@ -5,9 +6,8 @@ import {
   parseFandomSearch,
   parseHtmlLinks,
   parseRedditSearch,
-  questionMentionsVaulted,
   redditThreadExcerpt,
-  textLooksVaulted,
+  sourceIsCurrentPatch,
   type AskSource,
 } from '@/lib/ask/askSources'
 
@@ -34,13 +34,14 @@ async function readText(fetchImpl: FetchLike, url: string): Promise<string | nul
 
 export async function retrieveTrustedSources(question: string, fetchImpl: FetchLike = fetch): Promise<AskSource[]> {
   const q = encodeURIComponent(question)
-  const [fandom, reddit, help, light, berries, foundry] = await Promise.all([
+  const [fandom, reddit, help, news, light, berries, foundry] = await Promise.all([
     readText(fetchImpl, `https://destiny.fandom.com/api.php?action=query&list=search&srsearch=${q}&format=json&srlimit=3`),
     readText(
       fetchImpl,
-      `https://www.reddit.com/r/DestinyTheGame/search.json?q=${q}&restrict_sr=1&sort=relevance&t=year&limit=5`
+      `https://www.reddit.com/r/DestinyTheGame/search.json?q=${q}&restrict_sr=1&sort=new&t=month&limit=5`
     ),
     readText(fetchImpl, `https://help.bungie.net/hc/en-us/search?query=${q}`),
+    readText(fetchImpl, 'https://www.bungie.net/7/en/News/Index'),
     readText(fetchImpl, `https://www.light.gg/db/search/?q=${q}`),
     readText(fetchImpl, `https://www.blueberries.gg/?s=${q}`),
     readText(fetchImpl, `https://d2foundry.gg/?q=${q}`),
@@ -62,13 +63,12 @@ export async function retrieveTrustedSources(question: string, fetchImpl: FetchL
     }
   }
   if (help) sources.push(...parseHtmlLinks(help, 'Bungie Help'))
+  if (news) sources.push(...parseHtmlLinks(news, 'Bungie News'))
   if (light) sources.push(...parseHtmlLinks(light, 'light.gg'))
   if (berries) sources.push(...parseHtmlLinks(berries, 'Blueberries'))
   if (foundry) sources.push(...parseHtmlLinks(foundry, 'd2foundry'))
-  const current = questionMentionsVaulted(question)
-    ? sources
-    : sources.filter((source) => !textLooksVaulted(`${source.title} ${source.snippet}`))
-  const unique = dedupeSources(current)
+  const current = sources.filter((source) => sourceIsCurrentPatch(source, question))
+  const unique = dedupeSources(rankAskSources(current), 8)
   const enriched = await Promise.all(unique.map((source) => enrichSource(fetchImpl, source)))
   return enriched
 }
