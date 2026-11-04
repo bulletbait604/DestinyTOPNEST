@@ -114,6 +114,7 @@ describe('ask answers', () => {
     expect(ASK_INSTRUCTIONS).toContain('Lost City')
     expect(ASK_INSTRUCTIONS).toContain('vaulted')
     expect(ASK_INSTRUCTIONS).toContain('Update 9.7.0')
+    expect(ASK_INSTRUCTIONS).toContain('do not name a strike')
   })
 
   it('expires cached answers after six hours and ranks Bungie ahead of Reddit', () => {

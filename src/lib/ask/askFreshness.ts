@@ -33,7 +33,7 @@ export function formatSandboxBrief(input: {
   const today = input.now.toISOString().slice(0, 10)
   const raids = input.raids.length ? input.raids.join(', ') : 'not listed'
   const dungeons = input.dungeons.length ? input.dungeons.join(', ') : 'not listed'
-  const nightfall = input.nightfall?.trim() || 'not named by the live feed'
+  const nightfall = input.nightfall?.trim() || 'not named by the live feed. Do not guess a strike name.'
   const manifest = input.manifestVersion
     ? `Bungie manifest version checked just now: ${input.manifestVersion}.`
     : 'Bungie manifest version was not available on this request. Do not invent a version.'
