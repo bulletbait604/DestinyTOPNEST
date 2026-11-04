@@ -26,6 +26,22 @@ describe('featured builds', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
+  it('gives each build two different aspects that belong on that class', () => {
+    const titanOnly = new Set(['touch of thunder', "storm's keep", 'consecration', 'roaring flames', 'diamond lance', 'unbreakable', 'controlled demolition'])
+    const warlockOnly = new Set(['electrostatic mind', 'arc soul', 'hellion', 'touch of flame', 'feed the void', "weaver's call", 'mindspun invocation'])
+    for (const spec of FEATURED_BUILD_SPECS) {
+      const aspects = spec.aspects.map((name) => name.toLowerCase())
+      expect(new Set(aspects).size, spec.name).toBe(aspects.length)
+      expect(aspects, spec.name).not.toContain('lightning storm')
+      if (spec.characterClass === 'warlock' || spec.characterClass === 'hunter') {
+        for (const aspect of aspects) expect(titanOnly.has(aspect), `${spec.name}: ${aspect}`).toBe(false)
+      }
+      if (spec.characterClass === 'titan' || spec.characterClass === 'hunter') {
+        for (const aspect of aspects) expect(warlockOnly.has(aspect), `${spec.name}: ${aspect}`).toBe(false)
+      }
+    }
+  })
+
   it('resolves a Bungie icon for every curated build item and leaves no required field empty', () => {
     for (const record of featuredBuildRecords()) {
       expect(record.listing).toBe('featured')

@@ -146,7 +146,6 @@ export const ITEM_CATALOG: Record<string, CatalogEntry> = {
   'kingslayer': { hash: 1557274655, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/ce71024d7d432d5b0d912eca78a863d0.jpg' },
   'lament': { hash: 3487253372, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/f6844ca3eb572c546e97a340c24531d5.jpg' },
   'lethal current': { hash: 4194622038, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/aec5d87a0d36729045b0ab0baffb8620.jpg' },
-  'lightning storm': { hash: 1656549672, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/2e639c65526c331f1d97623d51ca3a09.jpg' },
   'long goodbye': { hash: 2154059444, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/aad3dcc28bf0a6a6c5fd44b0df4981e4.jpg' },
   'lucky pants': { hash: 193869522, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/fa501bf3740c6b0cdc91f2cafd0547a3.jpg' },
   'magnetic grenade': { hash: 886607940, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/72966b5c97e45d8668483f2263138613.jpg' },
@@ -293,6 +292,10 @@ export const ITEM_CATALOG: Record<string, CatalogEntry> = {
   'hammer strike': { hash: 852252788, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/c05584046992239cbbd0d319228058b8.jpg' },
   'hammer of sol': { hash: 2747500761, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/9d1fd669f61cce4abd35dbefd22ba90c.png' },
   'shadowshot: deadfall': { hash: 2722573683, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/61feac4f1271ba6cecc29cc50e20ab5a.png' },
+  'knockout': { hash: 1262901523, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/e0fdf5c4c4dc10d6ee63365bf7d70821.jpg' },
+  'arc soul': { hash: 1293395731, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/767a0f26b7b3a790a82bb243eb6707b4.jpg' },
+  'storm\'s keep': { hash: 1656549675, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/58cee87c4df6399921797be06a7aa608.jpg' },
+  'lightning surge': { hash: 1293395730, entity: 'DestinyInventoryItemDefinition', iconPath: '/common/destiny2_content/icons/5730fd352ae02a03290387ea81d39468.jpg' },
 }
 
 export function catalogLookup(name: string): CatalogEntry | undefined {

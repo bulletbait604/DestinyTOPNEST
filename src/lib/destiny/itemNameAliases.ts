@@ -24,7 +24,6 @@ export const ITEM_NAME_ALIASES: Record<string, string> = {
   'gathering storm': 'gathering storm',
   'spark of amplitude': 'spark of amplitude',
   'spark of volts': 'spark of volts',
-  'lightning storm': 'touch of thunder',
   'shock absorber': 'electrostatic mind',
   // Void warlock
   'feed the void': 'feed the void',

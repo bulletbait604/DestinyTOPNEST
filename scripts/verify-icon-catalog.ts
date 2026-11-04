@@ -11,7 +11,7 @@ const META_NAMES = [
   "Winter's Resilience",
   'Gyrfalcon',
   'Dynamism',
-  'Lightning Storm',
+  "Storm's Keep",
   'Shock Absorber',
   'Waveframe Trace Rifle',
   'Touch of Devour',
