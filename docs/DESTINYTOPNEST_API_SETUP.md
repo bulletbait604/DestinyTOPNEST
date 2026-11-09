@@ -25,6 +25,7 @@ Every request needs header `X-API-Key: <your key>`. OAuth routes need `Authoriza
 | Single definition | `/Destiny2/Manifest/{EntityType}/{hash}/` | `resolveDefinition()` in `manifest.ts` |
 | Armory search (by name) | `/Destiny2/Armory/Search/{EntityType}/{term}/` | `searchDestinyEntities()` |
 | Public milestones (weekly featured raids/dungeons) | `/Destiny2/Milestones/` | `getPublicMilestones()` |
+| This week's checklist | same milestones, plus activity history when signed in | `GET /api/destiny/week` |
 
 Constants live in `src/lib/destiny/env.ts` (`BUNGIE_API_BASE`, `DESTINY_MANIFEST_URL`, OAuth URLs).
 
@@ -161,6 +162,18 @@ Featured raid/dungeon rotation updates every **Tuesday 10:00 AM Pacific (17:00 U
 The current week is read from Bungie's public `Destiny2/Milestones` endpoint (`getPublicMilestones` in `bungieClient.ts`). Milestone and activity definitions supply the names. That result is cached only until the next reset, keyed by the Tuesday date, so a warm server cannot keep last week's raids.
 
 If the API key is missing or Bungie is unreachable, `src/lib/destiny/weeklyRotation.ts` falls back to the Monument of Triumph schedule: raids repeat every 9 weeks from 2026-07-28, dungeons every 10 weeks from 2026-07-21. Weekly contract checks use the same featured-dungeon list.
+
+### This week's checklist
+
+`GET /api/destiny/week` is the home-page checklist. It is `private, no-store` because a signed-in response includes that Guardian's clears.
+
+- Featured names come from the weekly reset pipeline above. `rotationSource` and `sourceLabel` say whether the list is from Bungie milestones, a saved post, a mix, or the backup calendar.
+- With a session, the route reads `Destiny2.GetActivityHistory` for that account's characters, mode `4` (Raid) and `82` (Dungeon), and marks each featured activity `cleared`, `not_cleared`, or `unknown`.
+- A clear is `completionReason === 0` on a row at or after Tuesday 17:00 UTC. Checkpoint finishes count. This is not a TopNest leaderboard score.
+- Signed out, unlinked, or a failed Bungie read never fills in a clear. The public names still return.
+- History walks at most two pages of 25 per character and mode. If those pages never cross the reset, unfinished activities stay `unknown`.
+
+See `docs/PLAYER_RESEARCH.md` for why this is the core loop, the sources, and what was left out.
 
 ## Phases
 

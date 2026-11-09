@@ -2,6 +2,8 @@
 
 Standalone community hub for verified Destiny 2 raid/dungeon leaderboards, fireteams, loadouts, and season prizes.
 
+The home screen is a weekly checklist of featured raids and dungeons, including whether the signed-in Guardian cleared them since reset. Why that is the core loop, and what the Bungie API does and does not provide, is written up in [docs/PLAYER_RESEARCH.md](docs/PLAYER_RESEARCH.md).
+
 Forked from [SDHQCC](https://github.com/bulletbait604/SDHQCC) — the Top Nest feature now lives in this repository only.
 
 ## Stack

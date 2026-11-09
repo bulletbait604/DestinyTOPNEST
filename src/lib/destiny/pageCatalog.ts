@@ -21,12 +21,12 @@ export const MAIN_NAV: {
 /** The header More menu. Three destinations, each with its own page. */
 export const MORE_NAV: { href: string; label: string; hint: string }[] = [
   { href: '/people', label: 'Community', hint: 'Players, teachers, and clans.' },
-  { href: '/quests', label: 'Weekly & Quests', hint: 'This week’s raids, dungeons, nightfall, goals, and quest search.' },
+  { href: '/quests', label: 'Weekly & Quests', hint: 'This week’s featured clears, goals, and quest search.' },
   { href: '/profile', label: 'Profile & Prizes', hint: 'Your characters, stamps, and season prizes.' },
 ]
 
 const TAB_HINTS: Partial<Record<DestinyTopNestTab, string>> = {
-  overview: 'Score a run, vote MVP, and see how TopNest works.',
+  overview: 'This week’s featured raids and dungeons, and whether you already cleared them.',
   leaderboards: 'Season rankings. Leaders can win a 3D print.',
   ask: 'Current step-by-step Destiny answers.',
   loadouts: 'Shared builds, your in-game loadouts, and a side-by-side compare.',

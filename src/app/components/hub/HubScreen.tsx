@@ -84,7 +84,7 @@ function HubViewBody({
     const community: CommunitySection = section === 'teachers' || section === 'clans' ? section : 'players'
     return <CommunityHub section={community} onLogin={onLogin} />
   }
-  if (view === 'weekly') return <WeeklyHub onLogin={onLogin} />
+  if (view === 'weekly') return <WeeklyHub onLogin={onLogin} signedIn={signedIn} />
   if (view === 'profile') {
     const profile: ProfileSection = section === 'passport' || section === 'prizes' ? section : 'guardian'
     return <ProfileHub section={profile} signedIn={signedIn} onLogin={onLogin} />

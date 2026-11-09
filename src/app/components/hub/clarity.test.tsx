@@ -4,7 +4,7 @@ import { routeForTab } from '@/lib/destiny/pageCatalog'
 
 describe('plain-language navigation', () => {
   it('describes the current page in one line', () => {
-    expect(navHint('overview')).toContain('how TopNest works')
+    expect(navHint('overview')).toContain('featured raids and dungeons')
     expect(navHint('guardians')).toContain('vote')
     expect(navHint('leaderboards')).toContain('3D print')
     expect(navHint('compare')).toContain('side by side')

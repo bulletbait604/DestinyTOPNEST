@@ -20,13 +20,17 @@ describe('guardian hub home', () => {
       })
     )
 
-    expect(html).toContain('Home')
+    expect(html).toContain('This week')
+    expect(html).toContain('Not checked')
+    expect(html).toContain('Sign in to check your clears')
+    expect(html).not.toContain('>Cleared<')
+    for (const name of [...snapshot.featuredRaids, ...snapshot.featuredDungeons]) {
+      expect(html).toContain(name.replace(/'/g, '&#x27;'))
+    }
     expect(html).toContain('Score Your Runs')
     expect(html).toContain('Sign in with Bungie to Score Runs')
     expect(html).toContain('Vote MVP')
     expect(html).toContain('Ask Destiny AI')
-    expect(html).toContain('gh-rotation')
-    expect(html).toContain('Featured raids')
     expect(html).toContain('Live season leaderboards')
     expect(html).toContain('Raid Leaderboard')
     expect(html).toContain('Dungeon Leaderboard')
