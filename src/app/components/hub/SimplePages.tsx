@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import WeekChecklist from '@/app/components/hub/WeekChecklist'
 import CommunityBuildsBrowser from '@/app/components/destiny/community/CommunityBuildsBrowser'
 import InGameLoadoutShare from '@/app/components/destiny/community/InGameLoadoutShare'
 import GuardianDirectory from '@/app/components/hub/GuardianDirectory'
@@ -140,54 +141,49 @@ export function CommunityHub({
   )
 }
 
-function WeekSpotlight() {
-  const { snapshot, loading, error } = usePublicHub()
+function WeekExtras({
+  snapshot,
+  loading,
+  error,
+}: {
+  snapshot: ReturnType<typeof usePublicHub>['snapshot']
+  loading: boolean
+  error: string | null
+}) {
+  const nightfall = snapshot?.nightfall && !/pantheon/i.test(snapshot.nightfall) ? snapshot.nightfall : ''
   return (
     <BoardState loading={loading} error={error}>
       {snapshot ? (
         <>
-          <ul className="gh-list">
-            <li>
-              <span className="ios-row-copy">
-                <strong>Featured raids</strong>
-                <small>{snapshot.featuredRaids.length ? snapshot.featuredRaids.join(' · ') : 'Updating'}</small>
-              </span>
-            </li>
-            <li>
-              <span className="ios-row-copy">
-                <strong>Featured dungeons</strong>
-                <small>{snapshot.featuredDungeons.length ? snapshot.featuredDungeons.join(' · ') : 'Updating'}</small>
-              </span>
-            </li>
-            <li>
-              <span className="ios-row-copy">
-                <strong>{snapshot.nightfall || 'Nightfall'}</strong>
-                <small>{snapshot.weekLabel} · {snapshot.resetsInLabel}</small>
-              </span>
-            </li>
-          </ul>
-          <ContractList snapshot={snapshot} />
-          {snapshot.events.length ? (
+          {nightfall ? (
             <p className="gh-muted">
-              Events: {snapshot.events.map((event) => event.title).join(' · ')}
+              Nightfall: {nightfall}. {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
             </p>
           ) : null}
+          <ContractList snapshot={snapshot} />
+          {snapshot.events.length ? (
+            <p className="gh-muted">Events: {snapshot.events.map((event) => event.title).join(' · ')}</p>
+          ) : (
+            <p className="gh-muted">No community events are scheduled this week.</p>
+          )}
         </>
       ) : null}
     </BoardState>
   )
 }
 
-export function WeeklyHub({ onLogin }: { onLogin?: () => void }) {
+export function WeeklyHub({ onLogin, signedIn = false }: { onLogin?: () => void; signedIn?: boolean }) {
+  const hub = usePublicHub()
   return (
     <section className="gh-stack" aria-labelledby="gh-weekly-title">
       <PageHeader
         kicker="This week"
         title="Weekly & Quests"
-        subtitle="Featured activities, weekly goals, and a quest search."
+        subtitle="Featured raids and dungeons first. Weekly goals and quest search stay below."
         titleId="gh-weekly-title"
       />
-      <WeekSpotlight />
+      <WeekChecklist snapshot={hub.snapshot} signedIn={signedIn} onLogin={onLogin} heading="section" />
+      <WeekExtras snapshot={hub.snapshot} loading={hub.loading} error={hub.error} />
       <QuestLookup onLogin={onLogin} bare />
     </section>
   )

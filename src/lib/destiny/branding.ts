@@ -6,11 +6,11 @@ export const BRAND_SHORT = 'Top Nest'
 export const HUB_NAME = 'Guardian Hub'
 
 export const BRAND_TAGLINE =
-  'Guardian Hub for finding Destiny 2 players, rating teammates, sharing builds, and climbing the Raid, Dungeon, and New Bonds boards. Fan-made and not affiliated with Bungie.'
+  'This week’s featured raids and dungeons, and whether your Guardian already cleared them since reset. Fan-made and not affiliated with Bungie.'
 
 /** Hero mission copy on the logged-in home shell. */
 export const BRAND_MISSION =
-  'Find a Guardian, check their rating, and climb the Raid, Dungeon, and New Bonds boards. Rewards are badges, titles, frames, and a season prize for #1.'
+  'Check the featured raids and dungeons before Tuesday’s reset. Sign in with Bungie to see your own clears. Scoring, votes, and builds stay available.'
 
 /** Logo assets (public/) */
 export const BRAND_LOGO_PATH = '/brand/topnest-logo.png'

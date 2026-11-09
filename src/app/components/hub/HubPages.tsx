@@ -10,7 +10,7 @@ import { NextStep } from '@/app/components/hub/clarity'
 import { PageHeader } from '@/app/components/hub/PageHeader'
 import { formatEventWhen, openHubTab, usePublicHub } from '@/app/components/hub/hubTypes'
 import { BOARD_BANNER_URL, elementBannerUrl } from '@/lib/destiny/featuredBuilds'
-import { activityCatalogLookup } from '@/lib/destiny/activityCatalog'
+import WeekChecklist from '@/app/components/hub/WeekChecklist'
 
 function EmptyNote({
   title,
@@ -517,15 +517,6 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
   )
 }
 
-function bungieArt(path: string | undefined): string | undefined {
-  if (!path) return undefined
-  return path.startsWith('http') ? path : `https://www.bungie.net${path}`
-}
-
-function activityArt(name: string): string | undefined {
-  return bungieArt(activityCatalogLookup(name)?.iconPath)
-}
-
 function HomeSkeleton() {
   return (
     <div className="gh-home-skeleton" aria-hidden>
@@ -552,9 +543,7 @@ export function HubHome({
 }) {
   return (
     <div className="gh-stack gh-home">
-      <h1 className="gh-home-title">Home</h1>
-      {loading ? <HomeSkeleton /> : null}
-      {!loading && !error && snapshot ? <WeeklySection snapshot={snapshot} /> : null}
+      {loading ? <HomeSkeleton /> : <WeekChecklist snapshot={snapshot} signedIn={signedIn} onLogin={onLogin} />}
       <div className="gh-action-cards">
         <article className="gh-action-card">
           <h2>Score Your Runs</h2>
@@ -695,39 +684,6 @@ function HomeLive({ snapshot, onLogin }: { snapshot: PublicHubSnapshot; onLogin:
         )}
       </section>
     </>
-  )
-}
-
-function WeeklySection({ snapshot }: { snapshot: PublicHubSnapshot }) {
-  const nightfall = snapshot.nightfall && !/pantheon/i.test(snapshot.nightfall) ? snapshot.nightfall : ''
-  return (
-    <section className="gh-home-section" aria-label="This week">
-      <div className="gh-section-head">
-        <h2>This week</h2>
-        <span className="gh-muted">
-          {snapshot.weekLabel} · resets in {snapshot.resetsInLabel}
-        </span>
-      </div>
-      <div className="gh-feature-pair gh-rotation">
-        <FeaturedActivity title="Featured raids" names={snapshot.featuredRaids} />
-        <FeaturedActivity title="Featured dungeons" names={snapshot.featuredDungeons} />
-        {nightfall ? <FeaturedActivity title="Nightfall" names={[nightfall]} /> : null}
-      </div>
-    </section>
-  )
-}
-
-function FeaturedActivity({ title, names }: { title: string; names: string[] }) {
-  const name = names[0]
-  const art = name ? activityArt(name) : undefined
-  return (
-    <article className="gh-feature-card">
-      <div className="gh-board-art" style={art ? { backgroundImage: `url(${art})` } : undefined} />
-      <div>
-        <h3>{title}</h3>
-        <p>{names.length ? names.join(' · ') : 'Rotation loading'}</p>
-      </div>
-    </article>
   )
 }
 
