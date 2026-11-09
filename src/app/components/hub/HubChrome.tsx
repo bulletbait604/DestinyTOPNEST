@@ -9,6 +9,7 @@ import { SeasonPointsBar } from '@/app/components/hub/PageHeader'
 import { BRAND_LOGO_ALT, BRAND_LOGO_PATH, HUB_NAME } from '@/lib/destiny/branding'
 import { usePathname } from 'next/navigation'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
+import { DestinyLookCredit, DestinyLookMenu, useDestinyLook } from '@/app/components/hub/DestinyLook'
 
 const TAB_BAR: {
   href: string
@@ -50,6 +51,7 @@ export default function HubChrome({
   const pathname = usePathname() || '/'
   const [query, setQuery] = useState('')
   const [moreOpen, setMoreOpen] = useState(false)
+  const look = useDestinyLook()
   const moreCurrent = isMorePath(pathname) || pathname === '/rate' || pathname === '/ask'
 
   const submitSearch = (event: FormEvent) => {
@@ -107,6 +109,12 @@ export default function HubChrome({
           <button type="submit">Search</button>
         </form>
         <div className="gh-top-actions">
+          <DestinyLookMenu
+            scene={look.scene}
+            accent={look.accent}
+            onScene={look.chooseScene}
+            onAccent={look.chooseAccent}
+          />
           {signedIn ? (
             account
           ) : (
@@ -135,6 +143,7 @@ export default function HubChrome({
           <a href="/rules">Prize rules</a>
         </nav>
         <p>Fan-made. Not affiliated with Bungie.</p>
+        <DestinyLookCredit scene={look.scene} />
       </footer>
       <nav className="gh-bottom-nav" aria-label="TopNest mobile">
         {TAB_BAR.map((item) => {

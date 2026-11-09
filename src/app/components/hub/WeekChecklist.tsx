@@ -75,6 +75,7 @@ export function WeekChecklistView({
   const TitleTag = heading === 'page' ? 'h1' : 'h2'
   return (
     <section className="gh-week" aria-labelledby="gh-week-title">
+      <div className="gh-week-panel">
       <div className="gh-section-head">
         <TitleTag id="gh-week-title">
           {heading === 'page' ? 'This week' : 'Featured clears'}
@@ -106,7 +107,7 @@ export function WeekChecklistView({
               model.personal.status === 'ready' ? model.personal.clears[activity.key]?.completedAt : undefined
             const when = formatWhen(completedAt)
             return (
-              <li key={activity.key} className="gh-week-row">
+              <li key={activity.key} className={`gh-week-row is-${state}`}>
                 <span
                   className="gh-week-art"
                   aria-hidden="true"
@@ -138,6 +139,7 @@ export function WeekChecklistView({
       <p className="gh-muted">
         <a href="/passport">Passport</a> keeps older verified clears. Scoring and votes stay on their own pages.
       </p>
+      </div>
     </section>
   )
 }
