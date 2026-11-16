@@ -57,6 +57,7 @@ export function sourceRank(source: AskSource): number {
   }
   let score = 40
   if (host === 'www.bungie.net' || host === 'bungie.net' || host === 'help.bungie.net') score = 0
+  else if (host.endsWith('todayindestiny.com')) score = 8
   else if (host.endsWith('light.gg') || host.endsWith('blueberries.gg') || host.endsWith('d2foundry.gg')) score = 10
   else if (host.endsWith('fandom.com')) score = 20
   else if (host.endsWith('reddit.com')) score = 30

@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { filterLeaderboardEntries } from '@/lib/destiny/boardFilters'
 import { NextStep } from '@/app/components/hub/clarity'
-import { PageHeader } from '@/app/components/hub/PageHeader'
-import type { LeaderboardCategory, LeaderboardEntry, LeaderboardPeriod } from '@/lib/destiny/types'
+import { PageHeader, SeasonBanner } from '@/app/components/hub/PageHeader'
+import type { LeaderboardCategory, LeaderboardEntry, LeaderboardPeriod, SeasonWinner } from '@/lib/destiny/types'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import { RateButton } from '@/app/components/hub/QuickRate'
-import { BOARD_BANNER_URL } from '@/lib/destiny/featuredBuilds'
+import { liveBoardPeriodLabel } from '@/lib/destiny/seasonConfig'
 
 const CATEGORIES: { id: LeaderboardCategory; label: string }[] = [
   { id: 'raid', label: 'Raid' },
@@ -16,12 +16,14 @@ const CATEGORIES: { id: LeaderboardCategory; label: string }[] = [
   { id: 'new_bonds', label: 'New Teammates' },
 ]
 
-const PERIODS: { id: LeaderboardPeriod; label: string }[] = [
-  { id: 'season', label: 'Season' },
-  { id: 'all_time', label: 'All-time' },
-  { id: 'weekly', label: 'Week' },
-  { id: 'monthly', label: 'Month' },
-]
+function periodOptions(now = new Date()): { id: LeaderboardPeriod; label: string }[] {
+  return [
+    { id: 'season', label: liveBoardPeriodLabel(now) },
+    { id: 'all_time', label: 'All-time' },
+    { id: 'weekly', label: 'Week' },
+    { id: 'monthly', label: 'Month' },
+  ]
+}
 
 function boardFromLocation(): LeaderboardCategory {
   if (typeof window === 'undefined') return 'raid'
@@ -40,6 +42,25 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
   const [platform, setPlatform] = useState('all')
   const [activity, setActivity] = useState('')
   const [reload, setReload] = useState(0)
+  const [lastSeason, setLastSeason] = useState<{ name: string; winners: SeasonWinner[]; frozen: boolean } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/destiny/hall', { cache: 'no-store' })
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((data: { lastSeason?: { name?: string; winners?: SeasonWinner[]; frozen?: boolean } | null } | null) => {
+        if (cancelled || !data?.lastSeason) return
+        setLastSeason({
+          name: data.lastSeason.name || 'Preseason (Oct-Dec 2026)',
+          winners: Array.isArray(data.lastSeason.winners) ? data.lastSeason.winners : [],
+          frozen: Boolean(data.lastSeason.frozen),
+        })
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     setCategory(boardFromLocation())
@@ -83,14 +104,18 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
     () => filterLeaderboardEntries(entries, { name, platform, activity }),
     [entries, name, platform, activity]
   )
+  const periods = periodOptions()
+  const showingPreseason = periods[0]?.label === 'Preseason'
 
   return (
     <section className="gh-stack" aria-labelledby="gh-boards-title">
       <PageHeader
         title="Leaderboards"
         subtitle="Raid, Dungeon, and New Teammates. Season leaders can win a Destiny 2 3D print."
+        explainer="A raid clear is 3, a dungeon clear is 1, and each MVP vote adds 2. Sign in and sync a clear from this window to get on the board."
         titleId="gh-boards-title"
       />
+      <SeasonBanner />
 
       <div className="gh-segments">
         <div className="gh-tabs gh-board-switch" role="tablist" aria-label="Leaderboard">
@@ -110,7 +135,7 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
           ))}
         </div>
         <div className="gh-tabs" role="tablist" aria-label="Time range">
-          {PERIODS.map((item) => (
+          {periods.map((item) => (
             <button
               key={item.id}
               type="button"
@@ -124,6 +149,9 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
           ))}
         </div>
       </div>
+      {showingPreseason && period === 'season' ? (
+        <p className="gh-explainer">Live Preseason (Oct–Dec 2026) standings. Season 1 starts at 0 on Jan 1.</p>
+      ) : null}
 
       <details className="gh-disclosure">
         <summary>Filter</summary>
@@ -154,10 +182,6 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
       </details>
 
       <div id="gh-board-panel" role="tabpanel" aria-labelledby={`gh-board-tab-${category}`}>
-      <div
-        className="gh-board-art gh-board-art-wide"
-        style={{ backgroundImage: `url(${category === 'dungeon' ? BOARD_BANNER_URL.dungeon : category === 'new_bonds' ? BOARD_BANNER_URL.new_bonds : BOARD_BANNER_URL.raid})` }}
-      />
       {loading ? <p className="gh-muted">Loading the board…</p> : null}
       {error ? (
         <NextStep
@@ -169,8 +193,12 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
       ) : null}
       {!loading && !error && visible.length === 0 ? (
         <NextStep
-          title="No scores on this board yet"
-          body="A verified clear from the start of the activity shows up here."
+          title={showingPreseason && period === 'season' ? 'No preseason scores yet' : 'No scores on this board yet'}
+          body={
+            showingPreseason && period === 'season'
+              ? 'A verified clear since Oct 1 shows up here. Season 1 starts at 0 on Jan 1.'
+              : 'A verified clear from this window shows up here.'
+          }
           actions={[
             { label: 'Find people', onClick: () => navigateDestinyTab('guardians') },
             { label: 'Read prize rules', onClick: () => navigateDestinyTab('season') },
@@ -218,6 +246,33 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
         </>
       ) : null}
       </div>
+
+      <section className="gh-home-section" aria-labelledby="last-season">
+        <h2 id="last-season">Last season</h2>
+        <p className="gh-explainer">Preseason (Oct-Dec 2026) standings are saved here on Jan 1. Clears are not deleted.</p>
+        {lastSeason?.winners.length ? (
+          <ol className="gh-list">
+            {lastSeason.winners.map((winner) => (
+              <li key={`${winner.category}-${winner.rank}-${winner.displayName}`}>
+                <span className="ios-row-copy">
+                  <strong>
+                    #{winner.rank} {winner.displayName}
+                  </strong>
+                  <small>
+                    {lastSeason.name} · {winner.category.replace(/_/g, ' ')}
+                  </small>
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="gh-empty-card">
+            {lastSeason?.frozen
+              ? `${lastSeason.name} ended with no scored clears.`
+              : 'Nothing is archived yet. Season 1 starts Jan 1 and the board starts at 0.'}
+          </p>
+        )}
+      </section>
 
       <div className="gh-actions">
         <button type="button" className="gh-btn gh-btn-ghost" onClick={() => navigateDestinyTab('season')}>

@@ -34,7 +34,7 @@ async function readText(fetchImpl: FetchLike, url: string): Promise<string | nul
 
 export async function retrieveTrustedSources(question: string, fetchImpl: FetchLike = fetch): Promise<AskSource[]> {
   const q = encodeURIComponent(question)
-  const [fandom, reddit, help, news, light, berries, foundry] = await Promise.all([
+  const [fandom, reddit, help, news, light, berries, foundry, today] = await Promise.all([
     readText(fetchImpl, `https://destiny.fandom.com/api.php?action=query&list=search&srsearch=${q}&format=json&srlimit=3`),
     readText(
       fetchImpl,
@@ -45,6 +45,7 @@ export async function retrieveTrustedSources(question: string, fetchImpl: FetchL
     readText(fetchImpl, `https://www.light.gg/db/search/?q=${q}`),
     readText(fetchImpl, `https://www.blueberries.gg/?s=${q}`),
     readText(fetchImpl, `https://d2foundry.gg/?q=${q}`),
+    readText(fetchImpl, 'https://www.todayindestiny.com/'),
   ])
 
   const sources: AskSource[] = []
@@ -67,6 +68,7 @@ export async function retrieveTrustedSources(question: string, fetchImpl: FetchL
   if (light) sources.push(...parseHtmlLinks(light, 'light.gg'))
   if (berries) sources.push(...parseHtmlLinks(berries, 'Blueberries'))
   if (foundry) sources.push(...parseHtmlLinks(foundry, 'd2foundry'))
+  if (today) sources.push(...parseHtmlLinks(today, 'Today in Destiny'))
   const current = sources.filter((source) => sourceIsCurrentPatch(source, question))
   const unique = dedupeSources(rankAskSources(current), 8)
   const enriched = await Promise.all(unique.map((source) => enrichSource(fetchImpl, source)))

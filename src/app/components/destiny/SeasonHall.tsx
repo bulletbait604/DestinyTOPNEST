@@ -5,7 +5,7 @@ function formatDay(iso: string): string {
   const parsed = Date.parse(iso)
   if (!Number.isFinite(parsed)) return ''
   return new Date(parsed).toLocaleDateString('en-US', {
-    timeZone: 'America/Los_Angeles',
+    timeZone: 'America/Vancouver',
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -23,7 +23,7 @@ export default function SeasonHall({
   const grouped = groupHallByBoard(winners)
   const start = formatDay(season.startDate)
   const end = formatDay(season.endDate)
-  const number = season.seasonNumber ? `Season ${season.seasonNumber}` : 'This season'
+  const number = season.seasonNumber ? `Season ${season.seasonNumber}` : season.name
 
   return (
     <section className="gh-hall" aria-labelledby="season-hall-title">

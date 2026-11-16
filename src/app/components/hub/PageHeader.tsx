@@ -2,7 +2,7 @@
 
 import { useId, type ReactNode } from 'react'
 import { BOND_RULES } from '@/lib/destiny/bonds'
-import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
+import { getConfiguredActiveSeason, getSeasonCountdown, PRESEASON_NAME, seasonBannerLabel } from '@/lib/destiny/seasonConfig'
 
 export const BOARD_POINTS_HINT = `A raid clear is ${BOND_RULES.basePoints.raid} points. A dungeon clear is ${BOND_RULES.basePoints.dungeon}. Every MVP vote adds 2 points. Contracts add tier points for a title and frame, and those do not change the boards.`
 
@@ -12,17 +12,20 @@ export function PageHeader({
   kicker,
   titleId,
   extra,
+  explainer,
 }: {
   title: string
   subtitle?: string
   kicker?: string
   titleId?: string
   extra?: ReactNode
+  explainer?: string
 }) {
   return (
     <header className="gh-page-head">
       <div>
         <h1 id={titleId}>{title}</h1>
+        {explainer ? <p className="gh-explainer">{explainer}</p> : null}
         {subtitle ? (
           <details className="gh-disclosure ios-detail">
             <summary>Details</summary>
@@ -68,11 +71,27 @@ export function PointsChip({
 /** One season label, one score, and a short explanation of how that score is earned. */
 export function SeasonPointsBar() {
   const season = getConfiguredActiveSeason()
+  const countdown = getSeasonCountdown(season)
   return (
     <div className="gh-points-bar" aria-label="Season points">
       <span className="gh-kicker">How scoring works</span>
-      <span className="gh-kicker">Season {season.seasonNumber}</span>
+      <span className="gh-kicker">{seasonBannerLabel()}</span>
+      <span className="gh-kicker">{countdown.days}d {countdown.hours}h</span>
       <PointsChip label="Raid clear" value={BOND_RULES.basePoints.raid} hint={BOARD_POINTS_HINT} />
     </div>
+  )
+}
+
+/** Visible season label. Before Jan 1 2027 this reads “Season 1 starts Jan 1”. */
+export function SeasonBanner() {
+  const season = getConfiguredActiveSeason()
+  const countdown = getSeasonCountdown(season)
+  const preseason = season.kind === 'preseason'
+  return (
+    <p className="gh-season-banner" aria-label="Season">
+      <strong>{countdown.label}</strong>
+      <span>{preseason ? PRESEASON_NAME : `${countdown.days}d ${countdown.hours}h left`}</span>
+      <span>Raid 3 · Dungeon 1 · MVP +2 · 3D print for #1</span>
+    </p>
   )
 }

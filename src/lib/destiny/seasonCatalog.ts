@@ -1,11 +1,24 @@
 import type { Season, SeasonPrizeRules } from '@/lib/destiny/types'
 
+export const SEASON_TIME_ZONE = 'America/Vancouver'
+/** Competitive seasons after the preseason. Season 2 starts three months after Season 1. */
+export const SEASON_LENGTH_MONTHS = 3
+/** Season 1 opens at this Pacific midnight. It is a restart, not a continuation of the preseason. */
+export const SEASON_ONE_START = { year: 2027, month: 1, day: 1 } as const
+/** Beta window. Standings are archived under this name. Runs are not deleted. */
+export const PRESEASON_START = { year: 2026, month: 10, day: 1 } as const
+export const PRESEASON_NAME = 'Preseason (Oct-Dec 2026)'
+
+export type SeasonKind = 'preseason' | 'season'
+
 export interface NestSeasonDefinition {
+  /** 0 for the preseason. Competitive seasons start at 1 on Jan 1, 2027. */
   seasonNumber: number
+  kind: SeasonKind
   id: string
   name: string
   tagline: string
-  /** Inclusive season window (UTC). */
+  /** Inclusive window (UTC instants of America/Vancouver wall time). */
   startDate: string
   endDate: string
 }
@@ -63,38 +76,98 @@ const QUARTER_NAMES: { name: string; tagline: string }[] = [
   { name: 'Season of the Kindled Flame', tagline: 'Bring someone through their first clear.' },
 ]
 
-/** Pacific midnight of a calendar date, as UTC ISO (handles PST/PDT). */
-export function pacificMidnightIso(year: number, month0: number, day = 1): string {
-  // Probe offset at noon UTC on that day to pick PST (-8) or PDT (-7).
-  const probe = new Date(Date.UTC(year, month0, day, 12))
-  const tzName = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', timeZoneName: 'short' })
-    .formatToParts(probe)
-    .find((p) => p.type === 'timeZoneName')?.value
-  const offsetHours = tzName === 'PDT' ? 7 : 8
-  return new Date(Date.UTC(year, month0, day, offsetHours)).toISOString()
+/** Local clock minus UTC, in milliseconds, for an instant in the season timezone. */
+export function timeZoneOffsetMs(instant: Date, timeZone = SEASON_TIME_ZONE): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(instant)
+  const pick = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value ?? 'NaN')
+  const asUtc = Date.UTC(pick('year'), pick('month') - 1, pick('day'), pick('hour'), pick('minute'), pick('second'))
+  return asUtc - instant.getTime()
 }
 
-/** Quarterly seasons: Season 1 = Oct 1 – Dec 31 2026 (Pacific), then every 3 months. */
+/** UTC instant of a wall-clock time in America/Vancouver (or another zone). */
+export function zonedWallTimeUtc(
+  year: number,
+  month: number,
+  day: number,
+  hour = 0,
+  minute = 0,
+  second = 0,
+  millisecond = 0,
+  timeZone = SEASON_TIME_ZONE
+): Date {
+  const wallAsUtc = Date.UTC(year, month - 1, day, hour, minute, second, millisecond)
+  let utc = wallAsUtc
+  for (let pass = 0; pass < 3; pass += 1) {
+    utc = wallAsUtc - timeZoneOffsetMs(new Date(utc), timeZone)
+  }
+  return new Date(utc)
+}
+
+/** Midnight at the start of a calendar day in the season timezone. `month0` is 0-based. */
+export function pacificMidnightIso(year: number, month0: number, day = 1): string {
+  return zonedWallTimeUtc(year, month0 + 1, day).toISOString()
+}
+
+function addMonths(year: number, month: number, delta: number): { year: number; month: number } {
+  const index = year * 12 + (month - 1) + delta
+  return { year: Math.floor(index / 12), month: (index % 12) + 1 }
+}
+
+/** Inclusive window: start at local midnight, end 1ms before the next local midnight. */
+export function seasonWindow(startYear: number, startMonth: number, endYear: number, endMonth: number): {
+  startDate: string
+  endDate: string
+} {
+  const start = zonedWallTimeUtc(startYear, startMonth, 1)
+  const end = new Date(zonedWallTimeUtc(endYear, endMonth, 1).getTime() - 1)
+  return { startDate: start.toISOString(), endDate: end.toISOString() }
+}
+
+/**
+ * Preseason is Oct 1–Dec 31 2026 Pacific. Season 1 restarts Jan 1 2027 and lasts
+ * SEASON_LENGTH_MONTHS. Season 2 opens the next boundary (Apr 1), then Jul 1, Oct 1, and so on.
+ */
 export function buildQuarterlyCatalog(count = 12): NestSeasonDefinition[] {
-  const out: NestSeasonDefinition[] = []
-  for (let i = 0; i < count; i++) {
-    const startMonthIndex = 9 + i * 3 // Oct 2026 = month 9
-    const y = 2026 + Math.floor(startMonthIndex / 12)
-    const m = startMonthIndex % 12
-    const endIdx = startMonthIndex + 3
-    const ey = 2026 + Math.floor(endIdx / 12)
-    const em = endIdx % 12
-    const start = pacificMidnightIso(y, m, 1)
-    const end = new Date(Date.parse(pacificMidnightIso(ey, em, 1)) - 1).toISOString()
+  const pre = seasonWindow(PRESEASON_START.year, PRESEASON_START.month, SEASON_ONE_START.year, SEASON_ONE_START.month)
+  const out: NestSeasonDefinition[] = [
+    {
+      seasonNumber: 0,
+      kind: 'preseason',
+      id: 'dtn-preseason-2026',
+      name: PRESEASON_NAME,
+      tagline: 'Beta standings. Archived when Season 1 starts. Clears are not deleted.',
+      startDate: pre.startDate,
+      endDate: pre.endDate,
+    },
+  ]
+  let year: number = SEASON_ONE_START.year
+  let month: number = SEASON_ONE_START.month
+  for (let i = 0; i < count; i += 1) {
+    const next = addMonths(year, month, SEASON_LENGTH_MONTHS)
+    const span = seasonWindow(year, month, next.year, next.month)
     const label = QUARTER_NAMES[i % QUARTER_NAMES.length]!
+    const seasonNumber = i + 1
     out.push({
-      seasonNumber: i + 1,
-      id: `dtn-q${String(i + 1).padStart(2, '0')}-${y}-${String(m + 1).padStart(2, '0')}`,
-      name: label.name,
+      seasonNumber,
+      kind: 'season',
+      id: `dtn-s${String(seasonNumber).padStart(2, '0')}-${year}-${String(month).padStart(2, '0')}`,
+      name: `Season ${seasonNumber}`,
       tagline: label.tagline,
-      startDate: start,
-      endDate: end,
+      startDate: span.startDate,
+      endDate: span.endDate,
     })
+    year = next.year
+    month = next.month
   }
   return out
 }
@@ -112,6 +185,7 @@ export function seasonDefinitionToSeason(
     name: def.name,
     tagline: def.tagline,
     seasonNumber: def.seasonNumber,
+    kind: def.kind,
     startDate: def.startDate,
     endDate: def.endDate,
     status,
@@ -170,6 +244,7 @@ export function mergeSeasonWithDefinition(stored: Season, def: NestSeasonDefinit
     ...stored,
     id: def.id,
     seasonNumber: def.seasonNumber,
+    kind: def.kind,
     // Admin edits (destiny_seasons.adminOverride) win over the generated catalog.
     name: stored.adminOverride?.name || def.name,
     tagline: stored.adminOverride?.tagline || def.tagline,

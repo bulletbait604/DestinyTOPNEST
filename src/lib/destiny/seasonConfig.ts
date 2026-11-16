@@ -1,7 +1,7 @@
 ﻿import type { Season } from '@/lib/destiny/types'
-import { resolveActiveSeasonByDate } from '@/lib/destiny/seasonCatalog'
+import { NEST_SEASON_CATALOG, SEASON_TIME_ZONE, resolveActiveSeasonByDate } from '@/lib/destiny/seasonCatalog'
 
-export { DEFAULT_SEASON_PRIZE_RULES, NEST_SEASON_CATALOG } from '@/lib/destiny/seasonCatalog'
+export { DEFAULT_SEASON_PRIZE_RULES, NEST_SEASON_CATALOG, PRESEASON_NAME, SEASON_LENGTH_MONTHS, SEASON_TIME_ZONE } from '@/lib/destiny/seasonCatalog'
 export { resolveActiveSeasonByDate, getNextSeasonDefinition } from '@/lib/destiny/seasonCatalog'
 
 /** Current operational season — resolves from the Nest catalog by date. */
@@ -9,17 +9,59 @@ export function getConfiguredActiveSeason(now = new Date()): Season {
   return resolveActiveSeasonByDate(now)
 }
 
-export function getSeasonCountdown(season: Season = getConfiguredActiveSeason()): {
+export function competitiveSeasonOne(): (typeof NEST_SEASON_CATALOG)[number] {
+  const season = NEST_SEASON_CATALOG.find((def) => def.kind === 'season' && def.seasonNumber === 1)
+  if (!season) throw new Error('Season 1 is missing from the catalog')
+  return season
+}
+
+function pacificDay(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    timeZone: SEASON_TIME_ZONE,
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+/**
+ * Before Jan 1 2027 the label is "Season 1 starts Jan 1".
+ * Once that midnight passes, the live competitive season is "Season 1", then "Season 2", and so on.
+ */
+export function daysUntil(targetMs: number, now = new Date()): number {
+  return Math.max(0, Math.ceil((targetMs - now.getTime()) / (1000 * 60 * 60 * 24)))
+}
+
+/** The season-period tab. Preseason until Jan 1, then Season. */
+export function liveBoardPeriodLabel(now = new Date()): 'Preseason' | 'Season' {
+  return getConfiguredActiveSeason(now).kind === 'preseason' ? 'Preseason' : 'Season'
+}
+
+export function seasonBannerLabel(now = new Date()): string {
+  const seasonOne = competitiveSeasonOne()
+  if (now.getTime() < Date.parse(seasonOne.startDate)) {
+    const days = daysUntil(Date.parse(seasonOne.startDate), now)
+    return `Season 1 starts ${pacificDay(seasonOne.startDate)} · ${days} day${days === 1 ? '' : 's'}`
+  }
+  const active = resolveActiveSeasonByDate(now)
+  if (active.kind === 'preseason' || !active.seasonNumber) {
+    const days = daysUntil(Date.parse(seasonOne.startDate), now)
+    return `Season 1 starts ${pacificDay(seasonOne.startDate)} · ${days} day${days === 1 ? '' : 's'}`
+  }
+  return `Season ${active.seasonNumber}`
+}
+
+export function getSeasonCountdown(season: Season = getConfiguredActiveSeason(), now = new Date()): {
   days: number
   hours: number
   label: string
 } {
-  const end = new Date(season.endDate).getTime()
-  const now = Date.now()
-  const diff = Math.max(0, end - now)
+  const seasonOne = competitiveSeasonOne()
+  const countingToSeasonOne = now.getTime() < Date.parse(seasonOne.startDate)
+  const target = countingToSeasonOne ? Date.parse(seasonOne.startDate) : new Date(season.endDate).getTime()
+  const diff = Math.max(0, target - now.getTime())
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  return { days, hours, label: `${days}d ${hours}h until season end` }
+  return { days, hours, label: seasonBannerLabel(now) }
 }
 
 export const PRIZE_SUMMARY =

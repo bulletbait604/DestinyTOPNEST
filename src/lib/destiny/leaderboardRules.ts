@@ -1,10 +1,11 @@
-import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
+import { getConfiguredActiveSeason, seasonBannerLabel, SEASON_TIME_ZONE } from '@/lib/destiny/seasonConfig'
 
 /** Static scoring and eligibility copy for the Leaderboards rules panel. */
 export const LEADERBOARD_RULES_SUMMARY = (): string => {
   const season = getConfiguredActiveSeason()
-  const endLabel = new Date(season.endDate).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })
-  return `${season.name} runs ${new Date(season.startDate).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })} – ${endLabel} PT (seasons are 3 months). #1 on the Raid, Dungeon and New Bonds boards each win a Destiny 2 3D print (USA/Canada, shipping covered) or a $50 CAD Steam gift card (UK). Other countries are not prize-eligible.`
+  const when = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-US', { timeZone: SEASON_TIME_ZONE, month: 'short', day: 'numeric', year: 'numeric' })
+  return `${seasonBannerLabel()}. ${season.name} is ${when(season.startDate)} – ${when(season.endDate)} Pacific. Seasons last 3 months after Season 1 restarts on Jan 1. #1 on the Raid, Dungeon and New Bonds boards each win a Destiny 2 3D print (USA/Canada, shipping covered) or a $50 CAD Steam gift card (UK). Other countries are not prize-eligible.`
 }
 
 export const LEADERBOARD_RULES_BULLETS = [

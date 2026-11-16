@@ -40,6 +40,7 @@ describe('guardian hub home', () => {
     expect(html).toContain('Full New Teammates Board')
     expect(html).toContain('Featured builds')
     expect(html).toContain('3D print')
+    expect(html).toContain('Raid 3')
     expect(html).not.toContain('New Bonds')
     expect(html).not.toContain('This week\'s contracts')
     expect(html).not.toContain('Live fireteams')

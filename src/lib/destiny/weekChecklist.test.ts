@@ -207,7 +207,7 @@ describe('week checklist', () => {
     const payload = buildWeekPayload(state, { status: 'signed_out', message: SIGNED_OUT_MESSAGE })
     expect(payload.activities).toHaveLength(4)
     expect(payload.personal.status).toBe('signed_out')
-    expect(payload.note).toContain('checkpoint')
+    expect(payload.note).toBe('Featured raids and dungeons this week.')
     expect(payload.sourceLabel.length).toBeGreaterThan(0)
     expect(payload.activities.every((activity) => activity.iconUrl?.startsWith('https://www.bungie.net'))).toBe(true)
   })

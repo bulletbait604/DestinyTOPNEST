@@ -83,6 +83,7 @@ export function BuildsHub({
       <PageHeader
         kicker="Builds"
         title="Builds"
+        explainer="Shared builds, your in-game loadouts, or two builds side by side."
         subtitle="Shared builds, the loadouts saved in Destiny, and a side-by-side compare."
         titleId="gh-builds-title"
       />
@@ -121,6 +122,7 @@ export function CommunityHub({
       <PageHeader
         kicker="Community"
         title="Community"
+        explainer="Players, teachers who guided a first clear, and clan standings."
         subtitle="Find players, teachers, and clans."
         titleId="gh-community-title"
       />
@@ -179,6 +181,7 @@ export function WeeklyHub({ onLogin, signedIn = false }: { onLogin?: () => void;
       <PageHeader
         kicker="This week"
         title="Weekly & Quests"
+        explainer="This week’s featured clears, then weekly goals and a quest search."
         subtitle="Featured raids and dungeons first. Weekly goals and quest search stay below."
         titleId="gh-weekly-title"
       />
@@ -240,6 +243,7 @@ export function ProfileHub({
       <PageHeader
         kicker="You"
         title="Profile & Prizes"
+        explainer="Your Guardian, passport stamps, and who can win the season prize."
         subtitle="Characters, season score, stamps, and who can win."
         titleId="gh-profile-title"
       />

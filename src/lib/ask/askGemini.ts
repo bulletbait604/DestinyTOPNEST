@@ -14,7 +14,13 @@ function geminiBody(prompt: string) {
     systemInstruction: { parts: [{ text: ASK_INSTRUCTIONS }] },
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     tools: [{ googleSearch: {} }],
+    generationConfig: { temperature: 0.2, maxOutputTokens: 700 },
   }
+}
+
+function modelError(status: number): Error {
+  if (status === 429) return new Error('Ask is busy right now. Wait a minute and try again.')
+  return new Error('Ask could not reach the model. Try again in a moment.')
 }
 
 async function readGemini(
@@ -27,6 +33,7 @@ async function readGemini(
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
     body: JSON.stringify(geminiBody(prompt)),
   })
+  if (response.status === 429) throw modelError(429)
   if (!response.ok) return null
   const payload = await response.json().catch(() => null)
   if (!payload) return null
@@ -49,7 +56,9 @@ export async function* streamGeminiAnswer(
 
   const sources: AskSource[] = []
   let yielded = false
-  if (response.ok && response.body) {
+  if (response.status === 429) throw modelError(429)
+  if (!response.ok) throw modelError(response.status)
+  if (response.body) {
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
@@ -99,13 +108,16 @@ export async function* streamGatewayAnswer(
     body: JSON.stringify({
       model: askModelId(env),
       stream: true,
+      temperature: 0.2,
+      max_tokens: 700,
       messages: [
         { role: 'system', content: ASK_INSTRUCTIONS },
         { role: 'user', content: prompt },
       ],
     }),
   })
-  if (!response.ok || !response.body) throw new Error('Gateway did not return an answer')
+  if (response.status === 429) throw new Error('Ask is busy right now. Wait a minute and try again.')
+  if (!response.ok || !response.body) throw new Error('Ask could not reach the model. Try again in a moment.')
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
