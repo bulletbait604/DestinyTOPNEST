@@ -1,23 +1,13 @@
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
 
-/** July 6 2026 1:00 AM America/Los_Angeles — Top Nest run window opens (PDT, UTC-7). */
-/** Season 1 (quarterly) start — Oct 1 2026, Pacific midnight. Older runs never score. */
+/** Preseason opens Oct 1 2026, midnight America/Vancouver. Older runs never score on a season board. */
 export const NEST_LAUNCH_ISO = '2026-10-01T07:00:00.000Z'
 
 export function nestLaunchUtcMs(): number {
   return Date.parse(NEST_LAUNCH_ISO)
 }
 
-function pacificCalendarDate(date: Date = new Date()): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(date)
-}
-
-function activeSeasonStartPacific(now = new Date()): string {
-  const season = getConfiguredActiveSeason(now)
-  return pacificCalendarDate(new Date(season.startDate))
-}
-
-/** True when the run is on or after the Top Nest launch instant (July 6 2026 1am Pacific). */
+/** True when the run is on or after the preseason open (Oct 1 2026, America/Vancouver). */
 export function isRunAtOrAfterNestLaunch(completedAt: string | Date): boolean {
   return new Date(completedAt).getTime() >= nestLaunchUtcMs()
 }
@@ -56,19 +46,17 @@ export function withScoredRuns(filter: Record<string, unknown> = {}): Record<str
 }
 
 /**
- * True when the run falls within the active season window (Pacific calendar days).
- * A history-page clear (`scoredInActiveSeason`) stays in season standings even when
- * `completedAt` is before launch or `season.startDate`.
+ * True when the clear's timestamp sits inside the active window.
+ * Preseason is Oct 1–Dec 31 2026. Season 1 is Jan 1–Mar 31 2027. A flag cannot pull a clear across that line.
  */
 export function isRunInActiveSeasonPacific(
   completedAt: string | Date,
   now = new Date(),
-  scoredInActiveSeason = false
+  _scoredInActiveSeason = false
 ): boolean {
-  if (scoredInActiveSeason) return true
-  if (!isRunAtOrAfterNestLaunch(completedAt)) return false
-  const runDay = pacificCalendarDate(new Date(completedAt))
-  return runDay >= activeSeasonStartPacific(now)
+  const season = getConfiguredActiveSeason(now)
+  const at = new Date(completedAt).getTime()
+  return at >= Date.parse(season.startDate) && at <= Date.parse(season.endDate)
 }
 
 function sortRunsNewestFirst<T extends { completedAt: string }>(runs: T[]): T[] {

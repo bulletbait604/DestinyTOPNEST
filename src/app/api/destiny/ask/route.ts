@@ -4,7 +4,7 @@ import { loadAskSandbox } from '@/lib/ask/askFreshness'
 import { streamGatewayAnswer, streamGeminiAnswer } from '@/lib/ask/askGemini'
 import { takeAskRateLimit } from '@/lib/ask/askRateLimit'
 import { retrieveTrustedSources } from '@/lib/ask/askRetrieve'
-import { askProvider, normalizeQuestion } from '@/lib/ask/askSources'
+import { askProvider, askTopic, normalizeQuestion, OFF_TOPIC_MESSAGE } from '@/lib/ask/askSources'
 import { loadAskPlayerContext, readAskCache, writeAskCache } from '@/lib/ask/askStore'
 import { createAskStream } from '@/lib/ask/askStream'
 import { optionalAuth } from '@/lib/destiny/communityBuildAccess'
@@ -34,6 +34,24 @@ export async function POST(req: NextRequest) {
       { error: 'Too many questions. Wait a few minutes and try again.' },
       { status: 429, headers: { 'Retry-After': String(limited.retryAfterSec) } }
     )
+  }
+
+  if (askTopic(question.value) === 'off_topic') {
+    const stream = createAskStream({
+      question: question.value,
+      sources: [],
+      contextText: '',
+      configured: true,
+      cachedText: OFF_TOPIC_MESSAGE,
+      answerId: 'off-topic',
+    })
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'X-Accel-Buffering': 'no',
+      },
+    })
   }
 
   const player = user ? await loadAskPlayerContext(user) : null

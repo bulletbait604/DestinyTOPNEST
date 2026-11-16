@@ -69,8 +69,12 @@ export function createAskStream(input: {
         }
         send({ type: 'done' })
         controller.close()
-      } catch {
-        send({ type: 'error', message: 'Ask TopNest could not finish that answer. Try again in a moment.' })
+      } catch (err) {
+        const message =
+          err instanceof Error && /busy|reach the model|not sure/i.test(err.message)
+            ? err.message
+            : 'Ask TopNest could not finish that answer. Try again in a moment.'
+        send({ type: 'error', message })
         controller.close()
       }
     },

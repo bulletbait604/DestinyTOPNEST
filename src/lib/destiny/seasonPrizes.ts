@@ -50,7 +50,7 @@ export async function computeSeasonStandings(
   const storedWinners = (season.winners ?? []).filter((winner) => isActiveLeaderboardCategory(winner.category))
   const eligibility =
     raidTop.length || dungeonTop.length || bondsTop.length
-      ? `Season ends ${new Date(season.endDate).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })} PT. #1 on the Raid, Dungeon and New Bonds boards each win a Destiny 2 3D print after a 7-day verification window.`
+      ? `Season ends ${new Date(season.endDate).toLocaleDateString('en-US', { timeZone: 'America/Vancouver' })} Pacific. #1 on the Raid, Dungeon and New Bonds boards each win a Destiny 2 3D print after a 7-day verification window.`
       : 'Sync verified raid and dungeon clears — new fireteam members earn bonus New Bonds points.'
 
   return {

@@ -491,9 +491,9 @@ export function RatePage() {
     <section className="gh-stack" aria-labelledby="rate-title">
       <header className="gh-hero">
         <div>
-          <p className="gh-kicker">Two different things</p>
-          <h1 id="rate-title">Rank</h1>
-          <p className="gh-lede">Crown one MVP on a run you played. Rank a Guardian with a separate set of tags.</p>
+          <p className="gh-kicker">Vote</p>
+          <h1 id="rate-title">Vote</h1>
+          <p className="gh-explainer">Crown one MVP on a run you played. Each MVP vote adds 2 points on the raid and dungeon boards.</p>
         </div>
       </header>
       <section className="gh-card" aria-labelledby="crown-mvp">

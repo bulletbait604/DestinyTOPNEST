@@ -1333,3 +1333,43 @@ h1, h2, h3, h4,
 .gh-week-row.is-not_cleared { box-shadow: inset 4px 0 0 #f0631e; }
 .gh-week-row.is-unknown { box-shadow: inset 4px 0 0 #8e749e; }
 .gh-week-row.is-not_checked { box-shadow: inset 4px 0 0 rgba(243, 245, 248, 0.55); }
+
+.gh-explainer {
+  margin: 4px 0 0;
+  color: var(--ios-secondary);
+  font-size: 14px;
+  line-height: 1.35;
+}
+.gh-season-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: baseline;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: linear-gradient(100deg, rgba(245, 220, 86, 0.22), rgba(62, 197, 255, 0.16) 52%, rgba(176, 140, 255, 0.2));
+  border: 1px solid rgba(245, 220, 86, 0.45);
+}
+.gh-season-banner strong { font-size: 15px; }
+.gh-action-card.gh-tone-arc {
+  box-shadow: inset 4px 0 0 #3ec5ff;
+  background: linear-gradient(180deg, rgba(62, 197, 255, 0.18), transparent 72%);
+}
+.gh-action-card.gh-tone-solar {
+  box-shadow: inset 4px 0 0 #f5dc56;
+  background: linear-gradient(180deg, rgba(245, 220, 86, 0.2), transparent 72%);
+}
+.gh-action-card.gh-tone-void {
+  box-shadow: inset 4px 0 0 #b08cff;
+  background: linear-gradient(180deg, rgba(176, 140, 255, 0.22), transparent 72%);
+}
+.gh-ask-examples { display: flex; flex-wrap: wrap; gap: 8px; }
+.gh-ask-examples .gh-btn { border-radius: 999px; min-height: 36px; font-size: 14px; }
+
+@media (min-width: 768px) {
+  .gh-shell {
+    width: calc(100% - 32px);
+    max-width: 1680px;
+  }
+}

@@ -165,7 +165,7 @@ describe('ask answers', () => {
     const body = await new Response(stream).text()
     expect(body).toContain(UNCONFIGURED_MESSAGE)
     expect(body).toContain('AI_GATEWAY_API_KEY')
-    expect(askCacheKey('How do I get Weaver’s Call?', 'anon').startsWith('ask_v3_')).toBe(true)
+    expect(askCacheKey('How do I get Weaver’s Call?', 'anon').startsWith('ask_v4_')).toBe(true)
   })
 
   it('uses GOOGLE_API for Gemini before the gateway key', () => {

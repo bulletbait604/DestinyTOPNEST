@@ -66,6 +66,17 @@ export interface VoteCountBucket {
   uselessVotes: number
 }
 
+/** MVP votes whose createdAt falls inside an inclusive season window. */
+export function votesInsideWindow<T extends { createdAt?: string }>(votes: T[], startIso: string, endIso: string): T[] {
+  const start = Date.parse(startIso)
+  const end = Date.parse(endIso)
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return []
+  return votes.filter((vote) => {
+    const at = Date.parse(vote.createdAt ?? '')
+    return Number.isFinite(at) && at >= start && at <= end
+  })
+}
+
 export function emptyVoteCounts(): VoteCountBucket {
   return { mvpVotes: 0, newLightVotes: 0, uselessVotes: 0 }
 }

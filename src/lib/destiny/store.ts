@@ -27,11 +27,11 @@ import { rankTopMetaLoadoutsByClass, rankTrendingMetaBuilds, sortExternalBuildsB
 import { rankTopLoadoutsByClass } from '@/lib/destiny/loadoutRankings'
 import { getConfiguredActiveSeason } from '@/lib/destiny/seasonConfig'
 import {
-  getNextSeasonDefinition,
   getSeasonDefinitionById,
   mergeSeasonWithDefinition,
   seasonDefinitionToSeason,
 } from '@/lib/destiny/seasonCatalog'
+import { previousSeasonDefinition, seasonsAwaitingFreeze } from '@/lib/destiny/seasonRollover'
 import { getDestinyUserBySiteUserId, type StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import { computePendingRunActions } from '@/lib/destiny/pendingRunActions'
 import { mvpCategoryFilter, mvpVotesReceivedQuery } from '@/lib/destiny/mvpVoting'
@@ -410,10 +410,66 @@ export async function getFireteamLobbies(): Promise<FireteamLobby[]> {
   }
 }
 
+/**
+ * Write final standings for every window that has ended and is not snapshotted yet.
+ * Run records stay in place. The next window scores only its own dates, so its board starts at 0.
+ */
+async function freezeEndedSeasons(now = new Date()): Promise<void> {
+  const database = await db()
+  const ended = seasonsAwaitingFreeze(now, [])
+  if (!ended.length) return
+  const rows = await database
+    .collection(DESTINY_COLLECTIONS.seasons)
+    .find({ id: { $in: ended.map((def) => def.id) } })
+    .toArray()
+  const pending = seasonsAwaitingFreeze(
+    now,
+    rows.map((row) => ({
+      id: String(row.id ?? ''),
+      standingsFrozenAt: typeof row.standingsFrozenAt === 'string' ? row.standingsFrozenAt : undefined,
+    }))
+  )
+  if (!pending.length) return
+  const { runs, usersById, votes } = await getSeasonStandingsInput()
+  for (const def of pending) {
+    const season = seasonDefinitionToSeason(def, 'archived')
+    const { hallOfFame } = await computeSeasonStandings(runs, usersById, { ...season, winners: [] }, votes)
+    const stored = rows.find((row) => row.id === def.id) as unknown as Season | undefined
+    const retired = (stored?.winners ?? []).filter((winner) => !isActiveLeaderboardCategory(winner.category))
+    await saveSeasonData({
+      ...season,
+      status: 'archived',
+      winners: [...hallOfFame, ...retired],
+      standingsFrozenAt: now.toISOString(),
+      adminOverride: stored?.adminOverride,
+      prizeRulesEdited: stored?.prizeRulesEdited,
+    })
+  }
+}
+
+export async function getLastSeasonArchive(now = new Date()): Promise<Season | null> {
+  const previous = previousSeasonDefinition(now)
+  if (!previous) return null
+  try {
+    await freezeEndedSeasons(now)
+    const database = await db()
+    const row = await database.collection(DESTINY_COLLECTIONS.seasons).findOne({ id: previous.id })
+    if (!row) return seasonDefinitionToSeason(previous, 'archived')
+    return mergeSeasonWithDefinition(row as unknown as Season, previous)
+  } catch {
+    return seasonDefinitionToSeason(previous, 'archived')
+  }
+}
+
 export async function getSeasonData(): Promise<Season> {
   const configured = getConfiguredActiveSeason()
   try {
     await ensureDestinyIndexes()
+    try {
+      await freezeEndedSeasons()
+    } catch (error) {
+      console.warn('[season] ended-season snapshot failed', error)
+    }
     const database = await db()
     const def = getSeasonDefinitionById(configured.id)
     const dbConfigured = await database
@@ -476,26 +532,17 @@ export async function saveSeasonData(season: Season): Promise<void> {
 export async function finalizeActiveSeason(): Promise<Season> {
   const season = await getSeasonData()
   const { runs, usersById, votes } = await getSeasonStandingsInput()
-  const { hallOfFame } = await computeSeasonStandings(runs, usersById, season, votes)
+  const { hallOfFame } = await computeSeasonStandings(runs, usersById, { ...season, winners: [] }, votes)
   const retiredWinners = (season.winners ?? []).filter((winner) => !isActiveLeaderboardCategory(winner.category))
-
-  const archived: Season = {
+  const ended = Date.now() > Date.parse(season.endDate)
+  const snapshotted: Season = {
     ...season,
-    status: 'archived',
+    status: ended ? 'archived' : season.status,
     winners: [...hallOfFame, ...retiredWinners],
-    endDate: new Date().toISOString(),
+    ...(ended ? { standingsFrozenAt: new Date().toISOString() } : {}),
   }
-
-  await saveSeasonData(archived)
-
-  const nextDef = getNextSeasonDefinition(season.id)
-  if (nextDef) {
-    const next = seasonDefinitionToSeason(nextDef, 'active')
-    await saveSeasonData(next)
-    return next
-  }
-
-  return archived
+  await saveSeasonData(snapshotted)
+  return snapshotted
 }
 
 export async function getPrizeClaimsForUser(userId: string, seasonId: string): Promise<PrizeClaim[]> {

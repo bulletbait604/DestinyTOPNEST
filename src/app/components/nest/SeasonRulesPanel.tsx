@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react'
 import { Award, Gift, ShieldCheck, Sparkles, Users } from 'lucide-react'
 import SeasonHall from '@/app/components/destiny/SeasonHall'
 import type { SeasonWinner } from '@/lib/destiny/types'
-import { NEST_SEASON_CATALOG, PRIZE_ELIGIBILITY, resolveActiveSeasonByDate } from '@/lib/destiny/seasonCatalog'
+import { NEST_SEASON_CATALOG, PRIZE_ELIGIBILITY, resolveActiveSeasonByDate, SEASON_TIME_ZONE } from '@/lib/destiny/seasonCatalog'
+import { seasonBannerLabel } from '@/lib/destiny/seasonConfig'
 import { BOND_RULES } from '@/lib/destiny/bonds'
 import { MVP_BOARD_POINTS } from '@/lib/destiny/scoring'
 import { LEADERBOARD_RULES_APPEALS_EMAIL } from '@/lib/destiny/leaderboardRules'
 
 function pt(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', year: 'numeric' })
+  return new Date(iso).toLocaleDateString('en-US', { timeZone: SEASON_TIME_ZONE, month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 /** Season, prize and rules page — shared by the Season tab and /rules. */
@@ -50,7 +51,7 @@ export default function SeasonRulesPanel({ now = new Date() }: { now?: Date }) {
     <div className="space-y-4">
       <header className="gh-page-head">
         <div>
-          <p className="gh-kicker">Season {season.seasonNumber} · {daysLeft} days left</p>
+          <p className="gh-kicker">{seasonBannerLabel(now)} · {daysLeft} days left</p>
           <h1>{season.name}</h1>
           <p className="gh-lede">
             {season.tagline} {pt(season.startDate)} – {pt(season.endDate)} PT.

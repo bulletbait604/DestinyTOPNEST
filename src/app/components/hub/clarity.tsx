@@ -26,7 +26,7 @@ export const HOW_STEPS = [
 export const GLOSSARY = [
   { word: 'Points', meaning: 'Score from a verified raid or dungeon clear.' },
   { word: 'Bonds', meaning: 'Extra points for clearing with someone new to you.' },
-  { word: 'MVP', meaning: 'Your vote for the most helpful teammate. It does not change board points.' },
+  { word: 'MVP', meaning: 'Your vote for the most helpful teammate. Each vote adds 2 points on the raid and dungeon boards.' },
   { word: 'Kudos', meaning: 'A thank-you on a profile. It does not change board points.' },
   { word: 'Sherpa', meaning: 'A sherpa is a player who already cleared an activity and helps someone get their first clear.' },
   {

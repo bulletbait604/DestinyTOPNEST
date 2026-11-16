@@ -7,7 +7,7 @@ import { loadMembershipAliasMap } from '@/lib/destiny/identityNormalize'
 import { bungieBoardKey, loadKickGuardianMembershipIds } from '@/lib/destiny/kickGuardians'
 import { aggregateLeaderboard } from '@/lib/destiny/leaderboards'
 import { mvpBoardBonus } from '@/lib/destiny/scoring'
-import { emptyVoteCounts, tallyVoteCounts } from '@/lib/destiny/mvpVoting'
+import { emptyVoteCounts, tallyVoteCounts, votesInsideWindow } from '@/lib/destiny/mvpVoting'
 import { getVoteCountsMap } from '@/lib/destiny/voteCounts'
 import type {
   LeaderboardAdjustment,
@@ -127,10 +127,19 @@ export function applyLeaderboardAdjustments(
   return merged.slice(0, 10).map((entry, index) => ({ ...entry, rank: index + 1 }))
 }
 
-async function attachVoteCounts(entries: LeaderboardEntry[], votes: MvpVote[]): Promise<LeaderboardEntry[]> {
+async function attachVoteCounts(
+  entries: LeaderboardEntry[],
+  votes: MvpVote[],
+  seasonScoped = false
+): Promise<LeaderboardEntry[]> {
   const ids = entries.map((entry) => entry.bungieMembershipId?.trim() ?? '').filter(Boolean)
-  let counts = ids.length ? await getVoteCountsMap(ids) : new Map()
-  if (counts.size === 0 && votes.length) counts = tallyVoteCounts(votes)
+  let counts = new Map<string, ReturnType<typeof emptyVoteCounts>>()
+  if (seasonScoped) {
+    counts = tallyVoteCounts(votes)
+  } else {
+    counts = ids.length ? await getVoteCountsMap(ids) : new Map()
+    if (counts.size === 0 && votes.length) counts = tallyVoteCounts(votes)
+  }
   return entries.map((entry) => {
     const bucket = entry.bungieMembershipId ? counts.get(entry.bungieMembershipId) : undefined
     const fallback = bucket ?? emptyVoteCounts()
@@ -155,9 +164,11 @@ export async function buildLeaderboardWithAdjustments(
   const base = aggregateLeaderboard(runs, usersById, category, period, season, kickMembershipIds, aliases)
 
   const adjustments = await loadLeaderboardAdjustments(category, period, season.id)
+  const seasonVotes = period === 'season' ? votesInsideWindow(votes, season.startDate, season.endDate) : votes
   const withVotes = await attachVoteCounts(
     applyLeaderboardAdjustments(base, adjustments, usersById, category, period, season),
-    votes
+    seasonVotes,
+    period === 'season'
   )
   return applyMvpBoardPoints(withVotes, category)
 }

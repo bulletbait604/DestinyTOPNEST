@@ -88,7 +88,9 @@ export default function AskGuide({ compact = false }: { compact?: boolean }) {
         <header className="gh-page-head">
           <p className="gh-kicker">Ask AI</p>
           <h1 id="gh-ask-title">Ask Destiny AI</h1>
-          <p className="gh-lede">Current steps for what you are trying to do, with the pages they came from.</p>
+          <p className="gh-explainer">
+            Destiny 2 only. Short numbered steps, with sources from Bungie, the wiki, light.gg, D2 Foundry, or Today in Destiny.
+          </p>
         </header>
       )}
       {compact ? <h2 id="gh-ask-title">Ask Destiny AI</h2> : null}
@@ -103,10 +105,24 @@ export default function AskGuide({ compact = false }: { compact?: boolean }) {
           placeholder="How do I unlock an ability on a second character?"
           maxLength={400}
         />
-        <button type="submit" className="gh-btn gh-btn-primary" disabled={busy}>
-          {busy ? 'Looking…' : 'Ask'}
+        <button type="submit" className="gh-btn gh-btn-primary" disabled={busy || question.trim().length < 8}>
+          {busy ? 'Looking up sources…' : 'Ask'}
         </button>
       </form>
+      {!answer && !busy ? (
+        <div className="gh-ask-examples">
+          {[
+            'How do I unlock an exotic catalyst?',
+            'What is the weekly raid rotation?',
+            'How do I get a Prismatic aspect?',
+          ].map((example) => (
+            <button key={example} type="button" className="gh-btn gh-btn-ghost" onClick={() => setQuestion(example)}>
+              {example}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {busy && !answer ? <p className="gh-muted">Checking current sources. This can take a few seconds.</p> : null}
       {error ? <p className="gh-alert">{error}</p> : null}
       {answer ? <div className="gh-ask-answer">{answer}</div> : null}
       {sources.length > 0 ? (

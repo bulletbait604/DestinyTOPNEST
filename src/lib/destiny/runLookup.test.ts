@@ -119,7 +119,8 @@ describe('run history lookup', () => {
     expect(raidPages).toEqual([0, 1, 2, 3, 4])
     expect(dungeonPages).toEqual([0, 1, 2, 3, 4])
     expect(rows).toHaveLength(10)
-    expect(isRunInActiveSeasonPacific('2026-01-15T00:00:00.000Z', new Date('2026-10-20T00:00:00.000Z'), true)).toBe(true)
+    expect(isRunInActiveSeasonPacific('2026-01-15T00:00:00.000Z', new Date('2026-10-20T00:00:00.000Z'), true)).toBe(false)
+    expect(isRunInActiveSeasonPacific('2026-10-20T00:00:00.000Z', new Date('2026-10-20T00:00:00.000Z'), false)).toBe(true)
     expect(recentRunsFrom([{ completedAt: '2026-01-15T00:00:00.000Z', scoredInActiveSeason: true }], 5)).toHaveLength(1)
   })
 
@@ -146,7 +147,7 @@ describe('run history lookup', () => {
     expect(parseLookupQuery('123456789').kind).toBe('pgcr')
   })
 
-  it('counts an older clear on the season board after it is added to scoring', () => {
+  it('keeps a clear on the season board only when it is inside the window', () => {
     const older = raid({
       id: 'old',
       completedAt: '2026-06-15T00:00:00.000Z',
@@ -154,10 +155,16 @@ describe('run history lookup', () => {
       bondPoints: 15,
       scoredInActiveSeason: true,
     })
+    const inside = raid({
+      id: 'inside',
+      pgcrId: 'inside',
+      completedAt: '2026-10-11T00:00:00.000Z',
+      pointsAwarded: 3,
+    })
     const ignored = raid({ id: 'ignored', completedAt: '2026-06-15T00:00:00.000Z', pointsAwarded: 10 })
     const users = new Map([['ada', { userId: 'ada', bungieMembershipId: '999', bungieDisplayName: 'Ada', platform: 'steam' as const }]])
-    const seasonRows = aggregateLeaderboard([older, ignored], users, 'raid', 'season', season)
-    expect(seasonRows.map((row) => row.points)).toEqual([25])
+    const seasonRows = aggregateLeaderboard([older, inside, ignored], users, 'raid', 'season', season)
+    expect(seasonRows.map((row) => row.points)).toEqual([3])
     const weekly = aggregateLeaderboard([older], users, 'raid', 'weekly', season)
     expect(weekly).toEqual([])
     const filter = withScoredRuns({ ownerUserId: 'ada' })

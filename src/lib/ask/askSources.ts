@@ -20,6 +20,8 @@ export const TRUSTED_HOSTS = [
   'destiny.fandom.com',
   'www.blueberries.gg',
   'blueberries.gg',
+  'www.todayindestiny.com',
+  'todayindestiny.com',
   'www.reddit.com',
   'reddit.com',
   'old.reddit.com',
@@ -89,7 +91,7 @@ export function askCacheKey(question: string, contextKey: string): string {
     hash ^= text.charCodeAt(i)
     hash = Math.imul(hash, 16777619)
   }
-  return `ask_v3_${(hash >>> 0).toString(16)}`
+  return `ask_v4_${(hash >>> 0).toString(16)}`
 }
 
 export function geminiApiKey(env: NodeJS.ProcessEnv = process.env): string {
@@ -111,6 +113,20 @@ export function askGatewayConfigured(env: NodeJS.ProcessEnv = process.env): bool
 export function askModelId(env: NodeJS.ProcessEnv = process.env): string {
   return env[ASK_MODEL_ENV]?.trim() || DEFAULT_ASK_MODEL
 }
+
+const DESTINY_TOPIC =
+  /\b(destiny|guardian|raid|dungeon|exotic|subclass|bungie|nightfall|vanguard|crucible|gambit|warlock|hunter|titan|prism|aspect|fragment|weapon|armor|quest|weekly|lost sector|grandmaster|loadout|mod|light\.gg|gjallarhorn|divinity|vow|salvations|root of nightmares|ghost|engram|catalyst|adept|triumph|seal)\b/i
+const OFF_TOPIC =
+  /\b(weather forecast|stock price|recipe for|homework|write (me )?python|javascript tutorial|election results|crypto price|not destiny)\b/i
+
+/** Off-topic only when the question is clearly outside Destiny 2. Unknown game questions still go to the model. */
+export function askTopic(question: string): 'destiny' | 'off_topic' {
+  if (DESTINY_TOPIC.test(question)) return 'destiny'
+  if (OFF_TOPIC.test(question)) return 'off_topic'
+  return 'destiny'
+}
+
+export const OFF_TOPIC_MESSAGE = 'Ask TopNest only answers Destiny 2 questions. Try a quest step, an exotic, a raid, or a build.'
 
 function clip(value: string, max: number): string {
   const clean = value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
@@ -244,7 +260,8 @@ export function parseGeminiChunk(payload: unknown): { text: string; sources: Ask
     const uri = chunk.web?.uri
     const title = chunk.web?.title
     if (typeof uri !== 'string' || typeof title !== 'string' || !uri.startsWith('http')) continue
-    sources.push({ title: clip(title, 140), url: uri, snippet: '', site: 'Google Search' })
+    const kept = keepSource({ title, url: uri, snippet: title, site: 'Google Search' })
+    if (kept) sources.push(kept)
   }
   return { text, sources }
 }

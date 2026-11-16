@@ -9,6 +9,7 @@
 } from '@/lib/destiny/types'
 import type { StoredDestinyUser } from '@/lib/destiny/destinyUserStore'
 import {
+  isBungieGlobalName,
   membershipAliasesFromUsers,
   preferBungieGlobalName,
   primaryMembershipId,
@@ -56,21 +57,18 @@ function periodStart(period: LeaderboardPeriod, season: Season): Date | null {
 }
 
 function runMatchesPeriod(run: RunRecord, period: LeaderboardPeriod, season: Season): boolean {
-  if (run.scoredInActiveSeason && (period === 'season' || period === 'all_time')) {
-    if (period === 'all_time') return true
-    return new Date(run.completedAt).getTime() <= new Date(season.endDate).getTime()
+  const completedAt = new Date(run.completedAt).getTime()
+  if (period === 'season') {
+    const start = new Date(season.startDate).getTime()
+    const end = new Date(season.endDate).getTime()
+    return completedAt >= start && completedAt <= end
   }
+  if (run.scoredInActiveSeason && period === 'all_time') return true
   if (!isRunAtOrAfterNestLaunch(run.completedAt)) return false
   const start = periodStart(period, season)
   if (!start) return true
-  if (period === 'season') {
-    const seasonStartMs = Math.max(start.getTime(), nestLaunchUtcMs())
-    const end = new Date(season.endDate).getTime()
-    const t = new Date(run.completedAt).getTime()
-    return t >= seasonStartMs && t <= end
-  }
   const effectiveStart = Math.max(start.getTime(), nestLaunchUtcMs())
-  return new Date(run.completedAt).getTime() >= effectiveStart
+  return completedAt >= effectiveStart
 }
 
 function runMatchesCategory(run: RunRecord, category: LeaderboardCategory): boolean {
@@ -205,6 +203,40 @@ function remember(
   agg.set(key, existing)
 }
 
+function bungieNameKey(name: string): string {
+  const trimmed = name.trim()
+  return isBungieGlobalName(trimmed) ? trimmed.toLowerCase() : ''
+}
+
+/** One row per full Bungie name (Name#1234). Membership ids stay on the row for links. */
+function collapseByBungieName(rows: UserAgg[]): UserAgg[] {
+  const order: string[] = []
+  const merged = new Map<string, UserAgg>()
+  for (const row of rows) {
+    const nameKey = bungieNameKey(row.displayName)
+    const key = nameKey ? `name:${nameKey}` : `id:${row.userId}`
+    const existing = merged.get(key)
+    if (!existing) {
+      order.push(key)
+      merged.set(key, { ...row })
+      continue
+    }
+    existing.points += row.points
+    existing.verifiedClears += row.verifiedClears
+    existing.displayName = preferBungieGlobalName(existing.displayName, row.displayName)
+    if (!existing.membershipId && row.membershipId) existing.membershipId = row.membershipId
+    if (
+      row.fastestClearSeconds != null &&
+      (existing.fastestClearSeconds == null || row.fastestClearSeconds < existing.fastestClearSeconds)
+    ) {
+      existing.fastestClearSeconds = row.fastestClearSeconds
+      existing.fastestActivityName = row.fastestActivityName
+    }
+    if (!existing.emblemUrl && row.emblemUrl) existing.emblemUrl = row.emblemUrl
+  }
+  return order.map((key) => merged.get(key)!)
+}
+
 function boardKey(membershipId: string | undefined, aliases: ReadonlyMap<string, string>, fallbackUserId?: string): string {
   const primary = primaryMembershipId(membershipId, aliases)
   if (primary) return bungieBoardKey(primary)
@@ -266,7 +298,9 @@ export function aggregateLeaderboard(
     }
   }
 
-  const sorted = Array.from(agg.values()).sort((a, b) => b.points - a.points || b.verifiedClears - a.verifiedClears)
+  const sorted = collapseByBungieName(Array.from(agg.values())).sort(
+    (a, b) => b.points - a.points || b.verifiedClears - a.verifiedClears
+  )
 
   return sorted.slice(0, 10).map((row, index) => ({
     userId: row.userId,

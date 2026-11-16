@@ -7,7 +7,7 @@ import { recentRunLines, scoreBoardLines, scorePointsLine, type ScoreRunRow, typ
 import { RateButton, RunCrownList } from '@/app/components/hub/QuickRate'
 import BoardsHub from '@/app/components/hub/BoardsHub'
 import { NextStep } from '@/app/components/hub/clarity'
-import { PageHeader } from '@/app/components/hub/PageHeader'
+import { PageHeader, SeasonBanner } from '@/app/components/hub/PageHeader'
 import { formatEventWhen, openHubTab, usePublicHub } from '@/app/components/hub/hubTypes'
 import { BOARD_BANNER_URL, elementBannerUrl } from '@/lib/destiny/featuredBuilds'
 import WeekChecklist from '@/app/components/hub/WeekChecklist'
@@ -394,6 +394,7 @@ export function ScoreRuns({ signedIn, onLogin }: { signedIn: boolean; onLogin: (
     <section className="gh-stack" aria-labelledby="score-title">
       <header className="gh-page-head">
         <h1 id="score-title">Score</h1>
+        <p className="gh-explainer">Only clears inside the current window count. Sign in with Bungie, then sync.</p>
         <details className="gh-disclosure ios-detail">
           <summary>Details</summary>
           <ul className="gh-score-points">
@@ -545,7 +546,7 @@ export function HubHome({
     <div className="gh-stack gh-home">
       {loading ? <HomeSkeleton /> : <WeekChecklist snapshot={snapshot} signedIn={signedIn} onLogin={onLogin} />}
       <div className="gh-action-cards">
-        <article className="gh-action-card">
+        <article className="gh-action-card gh-tone-arc">
           <h2>Score Your Runs</h2>
           {signedIn ? (
             <a className="gh-btn gh-btn-primary" href="/score">
@@ -557,20 +558,21 @@ export function HubHome({
             </button>
           )}
         </article>
-        <article className="gh-action-card">
+        <article className="gh-action-card gh-tone-solar">
           <h2>Vote MVP</h2>
           <a className="gh-btn gh-btn-primary" href="/rate">
             Vote MVP
           </a>
         </article>
-        <article className="gh-action-card">
+        <article className="gh-action-card gh-tone-void">
           <h2>Ask Destiny AI</h2>
           <a className="gh-btn gh-btn-primary" href="/ask">
             Ask
           </a>
         </article>
       </div>
-      <p className="ios-caption">Season #1 · 3D print</p>
+      <SeasonBanner />
+      <p className="gh-explainer">Weekly clears first. Then score a run, vote an MVP, or ask how to do it.</p>
       {error ? (
         <NextStep
           alert

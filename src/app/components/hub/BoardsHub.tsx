@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { filterLeaderboardEntries } from '@/lib/destiny/boardFilters'
 import { NextStep } from '@/app/components/hub/clarity'
-import { PageHeader } from '@/app/components/hub/PageHeader'
-import type { LeaderboardCategory, LeaderboardEntry, LeaderboardPeriod } from '@/lib/destiny/types'
+import { PageHeader, SeasonBanner } from '@/app/components/hub/PageHeader'
+import type { LeaderboardCategory, LeaderboardEntry, LeaderboardPeriod, SeasonWinner } from '@/lib/destiny/types'
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import { RateButton } from '@/app/components/hub/QuickRate'
@@ -40,6 +40,25 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
   const [platform, setPlatform] = useState('all')
   const [activity, setActivity] = useState('')
   const [reload, setReload] = useState(0)
+  const [lastSeason, setLastSeason] = useState<{ name: string; winners: SeasonWinner[]; frozen: boolean } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/destiny/hall', { cache: 'no-store' })
+      .then(async (response) => (response.ok ? response.json() : null))
+      .then((data: { lastSeason?: { name?: string; winners?: SeasonWinner[]; frozen?: boolean } | null } | null) => {
+        if (cancelled || !data?.lastSeason) return
+        setLastSeason({
+          name: data.lastSeason.name || 'Preseason (Oct-Dec 2026)',
+          winners: Array.isArray(data.lastSeason.winners) ? data.lastSeason.winners : [],
+          frozen: Boolean(data.lastSeason.frozen),
+        })
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     setCategory(boardFromLocation())
@@ -89,8 +108,10 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
       <PageHeader
         title="Leaderboards"
         subtitle="Raid, Dungeon, and New Teammates. Season leaders can win a Destiny 2 3D print."
+        explainer="A raid clear is 3, a dungeon clear is 1, and each MVP vote adds 2. Sign in and sync a clear from this window to get on the board."
         titleId="gh-boards-title"
       />
+      <SeasonBanner />
 
       <div className="gh-segments">
         <div className="gh-tabs gh-board-switch" role="tablist" aria-label="Leaderboard">
@@ -170,7 +191,7 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
       {!loading && !error && visible.length === 0 ? (
         <NextStep
           title="No scores on this board yet"
-          body="A verified clear from the start of the activity shows up here."
+          body="Sync a verified clear from this window. Season 1 starts at 0 on Jan 1. Preseason clears stay archived."
           actions={[
             { label: 'Find people', onClick: () => navigateDestinyTab('guardians') },
             { label: 'Read prize rules', onClick: () => navigateDestinyTab('season') },
@@ -218,6 +239,33 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
         </>
       ) : null}
       </div>
+
+      <section className="gh-home-section" aria-labelledby="last-season">
+        <h2 id="last-season">Last season</h2>
+        <p className="gh-explainer">Preseason (Oct-Dec 2026) standings are saved here on Jan 1. Clears are not deleted.</p>
+        {lastSeason?.winners.length ? (
+          <ol className="gh-list">
+            {lastSeason.winners.map((winner) => (
+              <li key={`${winner.category}-${winner.rank}-${winner.displayName}`}>
+                <span className="ios-row-copy">
+                  <strong>
+                    #{winner.rank} {winner.displayName}
+                  </strong>
+                  <small>
+                    {lastSeason.name} · {winner.category.replace(/_/g, ' ')}
+                  </small>
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="gh-empty-card">
+            {lastSeason?.frozen
+              ? `${lastSeason.name} ended with no scored clears.`
+              : 'Nothing is archived yet. Season 1 starts Jan 1 and the board starts at 0.'}
+          </p>
+        )}
+      </section>
 
       <div className="gh-actions">
         <button type="button" className="gh-btn gh-btn-ghost" onClick={() => navigateDestinyTab('season')}>

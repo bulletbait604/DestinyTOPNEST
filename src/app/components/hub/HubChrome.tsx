@@ -15,17 +15,17 @@ const TAB_BAR: {
   href: string
   label: string
   short: string
-  icon: 'home' | 'play' | 'boards' | 'gear'
+  icon: 'home' | 'play' | 'boards' | 'ask'
 }[] = [
   { href: '/', label: 'Home', short: 'Home', icon: 'home' },
   { href: '/score', label: 'Score', short: 'Score', icon: 'play' },
   { href: '/boards', label: 'Boards', short: 'Boards', icon: 'boards' },
-  { href: '/builds', label: 'Builds', short: 'Builds', icon: 'gear' },
+  { href: '/ask', label: 'Ask', short: 'Ask', icon: 'ask' },
 ]
 
 const MORE_ITEMS = [
+  { href: '/builds', label: 'Builds' },
   { href: '/rate', label: 'Vote' },
-  { href: '/ask', label: 'Ask AI' },
   ...MORE_NAV.map((item) => ({ href: item.href, label: item.label })),
 ]
 
@@ -52,7 +52,7 @@ export default function HubChrome({
   const [query, setQuery] = useState('')
   const [moreOpen, setMoreOpen] = useState(false)
   const look = useDestinyLook()
-  const moreCurrent = isMorePath(pathname) || pathname === '/rate' || pathname === '/ask'
+  const moreCurrent = isMorePath(pathname) || pathname === '/rate' || isBuildsPath(pathname)
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault()

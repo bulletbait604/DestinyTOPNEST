@@ -670,6 +670,8 @@ export interface Season {
   /** Short theme line from the Nest season catalog. */
   tagline?: string
   seasonNumber?: number
+  /** Preseason is the Oct–Dec 2026 beta. Competitive seasons start at Season 1 on Jan 1, 2027. */
+  kind?: 'preseason' | 'season'
   startDate: string
   endDate: string
   status: 'active' | 'upcoming' | 'archived'
@@ -679,6 +681,8 @@ export interface Season {
   adminOverride?: { name?: string; tagline?: string; startDate?: string; endDate?: string }
   /** When set, saved prize names win over the built-in prize text. */
   prizeRulesEdited?: boolean
+  /** Set once the final standings snapshot is stored. Runs themselves are never deleted. */
+  standingsFrozenAt?: string
 }
 
 export interface AdminReviewRecord {
