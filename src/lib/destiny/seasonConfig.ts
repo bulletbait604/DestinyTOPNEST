@@ -27,13 +27,26 @@ function pacificDay(iso: string): string {
  * Before Jan 1 2027 the label is "Season 1 starts Jan 1".
  * Once that midnight passes, the live competitive season is "Season 1", then "Season 2", and so on.
  */
+export function daysUntil(targetMs: number, now = new Date()): number {
+  return Math.max(0, Math.ceil((targetMs - now.getTime()) / (1000 * 60 * 60 * 24)))
+}
+
+/** The season-period tab. Preseason until Jan 1, then Season. */
+export function liveBoardPeriodLabel(now = new Date()): 'Preseason' | 'Season' {
+  return getConfiguredActiveSeason(now).kind === 'preseason' ? 'Preseason' : 'Season'
+}
+
 export function seasonBannerLabel(now = new Date()): string {
   const seasonOne = competitiveSeasonOne()
   if (now.getTime() < Date.parse(seasonOne.startDate)) {
-    return `Season 1 starts ${pacificDay(seasonOne.startDate)}`
+    const days = daysUntil(Date.parse(seasonOne.startDate), now)
+    return `Season 1 starts ${pacificDay(seasonOne.startDate)} · ${days} day${days === 1 ? '' : 's'}`
   }
   const active = resolveActiveSeasonByDate(now)
-  if (active.kind === 'preseason' || !active.seasonNumber) return `Season 1 starts ${pacificDay(seasonOne.startDate)}`
+  if (active.kind === 'preseason' || !active.seasonNumber) {
+    const days = daysUntil(Date.parse(seasonOne.startDate), now)
+    return `Season 1 starts ${pacificDay(seasonOne.startDate)} · ${days} day${days === 1 ? '' : 's'}`
+  }
   return `Season ${active.seasonNumber}`
 }
 

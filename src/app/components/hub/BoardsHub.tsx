@@ -8,7 +8,7 @@ import type { LeaderboardCategory, LeaderboardEntry, LeaderboardPeriod, SeasonWi
 import { OVERVIEW_REFRESH_EVENT } from '@/lib/destiny/syncEvents'
 import { navigateDestinyTab, navigateGuardianSearch } from '@/lib/routing/tabUrl'
 import { RateButton } from '@/app/components/hub/QuickRate'
-import { BOARD_BANNER_URL } from '@/lib/destiny/featuredBuilds'
+import { liveBoardPeriodLabel } from '@/lib/destiny/seasonConfig'
 
 const CATEGORIES: { id: LeaderboardCategory; label: string }[] = [
   { id: 'raid', label: 'Raid' },
@@ -16,12 +16,14 @@ const CATEGORIES: { id: LeaderboardCategory; label: string }[] = [
   { id: 'new_bonds', label: 'New Teammates' },
 ]
 
-const PERIODS: { id: LeaderboardPeriod; label: string }[] = [
-  { id: 'season', label: 'Season' },
-  { id: 'all_time', label: 'All-time' },
-  { id: 'weekly', label: 'Week' },
-  { id: 'monthly', label: 'Month' },
-]
+function periodOptions(now = new Date()): { id: LeaderboardPeriod; label: string }[] {
+  return [
+    { id: 'season', label: liveBoardPeriodLabel(now) },
+    { id: 'all_time', label: 'All-time' },
+    { id: 'weekly', label: 'Week' },
+    { id: 'monthly', label: 'Month' },
+  ]
+}
 
 function boardFromLocation(): LeaderboardCategory {
   if (typeof window === 'undefined') return 'raid'
@@ -102,6 +104,8 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
     () => filterLeaderboardEntries(entries, { name, platform, activity }),
     [entries, name, platform, activity]
   )
+  const periods = periodOptions()
+  const showingPreseason = periods[0]?.label === 'Preseason'
 
   return (
     <section className="gh-stack" aria-labelledby="gh-boards-title">
@@ -131,7 +135,7 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
           ))}
         </div>
         <div className="gh-tabs" role="tablist" aria-label="Time range">
-          {PERIODS.map((item) => (
+          {periods.map((item) => (
             <button
               key={item.id}
               type="button"
@@ -145,6 +149,9 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
           ))}
         </div>
       </div>
+      {showingPreseason && period === 'season' ? (
+        <p className="gh-explainer">Live Preseason (Oct–Dec 2026) standings. Season 1 starts at 0 on Jan 1.</p>
+      ) : null}
 
       <details className="gh-disclosure">
         <summary>Filter</summary>
@@ -175,10 +182,6 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
       </details>
 
       <div id="gh-board-panel" role="tabpanel" aria-labelledby={`gh-board-tab-${category}`}>
-      <div
-        className="gh-board-art gh-board-art-wide"
-        style={{ backgroundImage: `url(${category === 'dungeon' ? BOARD_BANNER_URL.dungeon : category === 'new_bonds' ? BOARD_BANNER_URL.new_bonds : BOARD_BANNER_URL.raid})` }}
-      />
       {loading ? <p className="gh-muted">Loading the board…</p> : null}
       {error ? (
         <NextStep
@@ -190,8 +193,12 @@ export default function BoardsHub({ onLogin }: { onLogin?: () => void }) {
       ) : null}
       {!loading && !error && visible.length === 0 ? (
         <NextStep
-          title="No scores on this board yet"
-          body="Sync a verified clear from this window. Season 1 starts at 0 on Jan 1. Preseason clears stay archived."
+          title={showingPreseason && period === 'season' ? 'No preseason scores yet' : 'No scores on this board yet'}
+          body={
+            showingPreseason && period === 'season'
+              ? 'A verified clear since Oct 1 shows up here. Season 1 starts at 0 on Jan 1.'
+              : 'A verified clear from this window shows up here.'
+          }
           actions={[
             { label: 'Find people', onClick: () => navigateDestinyTab('guardians') },
             { label: 'Read prize rules', onClick: () => navigateDestinyTab('season') },

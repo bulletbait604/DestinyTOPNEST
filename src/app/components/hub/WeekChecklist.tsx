@@ -88,7 +88,6 @@ export function WeekChecklistView({
         ) : null}
       </div>
       <p className="gh-week-note">{model.note}</p>
-      <p className="gh-week-source">{model.sourceLabel}</p>
       {model.error ? (
         <p className="gh-alert" role="alert">
           {model.error}{' '}
@@ -128,17 +127,19 @@ export function WeekChecklistView({
       ) : (
         <p className="gh-empty-card">No featured raids or dungeons are listed for this week yet.</p>
       )}
-      <p className="gh-week-personal" role="status">
-        {model.personal.message}
-      </p>
+      {showSignIn ? null : (
+        <p className="gh-week-personal" role="status">
+          {model.personal.message}
+        </p>
+      )}
       {showSignIn && onLogin ? (
         <button type="button" className="gh-btn gh-btn-primary" onClick={onLogin}>
           {model.personal.status === 'needs_link' ? 'Link Bungie again' : 'Sign in to check your clears'}
         </button>
       ) : null}
-      <p className="gh-muted">
-        <a href="/passport">Passport</a> keeps older verified clears. Scoring and votes stay on their own pages.
-      </p>
+      <a className="gh-text-btn" href="/passport">
+        Passport
+      </a>
       </div>
     </section>
   )

@@ -440,6 +440,18 @@ h1, h2, h3, h4,
   border: 0 !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+/* The shell is always dark, so a light selected pill needs dark text. */
+.d2-site-shell {
+  --ios-segment-on: #f4f6fa;
+}
+.d2-site-shell .gh-tab[aria-selected='true'],
+.d2-site-shell .d2-filter-chip-active,
+.d2-site-shell .d2-tab-active,
+.d2-site-shell .gh-segments .gh-tab[aria-selected='true'],
+.d2-site-shell .gh-board-switch .gh-tab[aria-selected='true'] {
+  background: #f4f6fa !important;
+  color: #12151c !important;
+}
 
 .gh-list,
 .gh-feature-list,

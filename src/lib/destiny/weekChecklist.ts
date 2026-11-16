@@ -65,8 +65,7 @@ export interface WeekPayload {
   personal: PersonalWeekStatus
 }
 
-export const WEEK_CLEAR_NOTE =
-  'A clear means Bungie recorded a completion since Tuesday 17:00 UTC. A finish that started at a checkpoint still counts. It is not a TopNest leaderboard score.'
+export const WEEK_CLEAR_NOTE = 'Featured raids and dungeons this week.'
 
 export const SIGNED_OUT_MESSAGE =
   'Sign in with Bungie to see which of these you already cleared this week.'

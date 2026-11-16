@@ -131,7 +131,7 @@ describe('preseason and Season 1 restart', () => {
   })
 
   it('labels Season 1 as starting Jan 1 until that midnight, then as Season 1', () => {
-    expect(seasonBannerLabel(new Date('2026-11-16T18:00:00Z'))).toBe('Season 1 starts Jan 1')
+    expect(seasonBannerLabel(new Date('2026-11-16T18:00:00Z'))).toBe('Season 1 starts Jan 1 · 46 days')
     expect(seasonBannerLabel(new Date(season1.startDate))).toBe('Season 1')
     expect(seasonBannerLabel(new Date('2027-02-10T18:00:00Z'))).toBe('Season 1')
     expect(seasonBannerLabel(new Date(season2.startDate))).toBe('Season 2')
